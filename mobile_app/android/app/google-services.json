@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "611009879331",
+    "project_id": "student-talent-profiling-eaede",
+    "storage_bucket": "student-talent-profiling-eaede.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:611009879331:android:cee3432f4da5c541328096",
+        "android_client_info": {
+          "package_name": "com.example.student_talent_profiling_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQQ73XZsQTxwL_QpiQbOImyPdXRNn5M3E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
