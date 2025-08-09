@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:provider/provider.dart';
 import '../../../services/search_service.dart';
+import '../../../services/auth_service.dart';
 import '../../../models/search_models.dart';
 import '../../../widgets/search_widgets.dart';
+import '../../../widgets/modern/modern_search_bar.dart';
+import '../../../widgets/modern/modern_filter_bottom_sheet.dart';
+import '../../../utils/app_theme.dart';
 import '../../shared/profile_view_screen.dart';
 
 class EnhancedSearchScreen extends StatefulWidget {
@@ -14,6 +19,7 @@ class EnhancedSearchScreen extends StatefulWidget {
 
 class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   final SearchService _searchService = SearchService();
 
   Timer? _debounceTimer;
@@ -27,6 +33,10 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
   String _currentQuery = '';
   bool _showFilters = false;
 
+  // Range filter values
+  RangeValues _semesterRange = const RangeValues(1, 8);
+  RangeValues _cgpaRange = const RangeValues(0, 4);
+
   @override
   void initState() {
     super.initState();
@@ -36,8 +46,15 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
     _debounceTimer?.cancel();
     super.dispose();
+  }
+
+  /// Get current user ID from AuthService
+  String? get _currentUserId {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    return authService.currentUserId;
   }
 
   Future<void> _initializeSearch() async {
@@ -114,9 +131,19 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
           .where((filter) => filter.isSelected)
           .toList();
 
+      // Track filter usage if filters are applied
+      if (selectedFilters.isNotEmpty) {
+        await _searchService.trackFilterUsage(
+          filters: _availableFilters.values.expand((f) => f).toList(),
+          query: query,
+          userId: _currentUserId,
+        );
+      }
+
       final results = await _searchService.searchUsersAndProfiles(
         query: query,
         filters: selectedFilters,
+        userId: _currentUserId,
       );
 
       if (mounted) {
@@ -171,6 +198,9 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
             .map((filter) => filter.copyWith(isSelected: false))
             .toList();
       }
+      // Reset range values
+      _semesterRange = const RangeValues(1, 8);
+      _cgpaRange = const RangeValues(0, 4);
     });
 
     // Re-run search if there's a current query
@@ -183,15 +213,24 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => FilterBottomSheet(
+      backgroundColor: Colors.transparent,
+      builder: (context) => ModernFilterBottomSheet(
         availableFilters: _availableFilters,
         onFilterToggle: _onFilterToggle,
         onClearAll: _clearAllFilters,
+        semesterRange: _semesterRange,
+        cgpaRange: _cgpaRange,
+        onSemesterRangeChanged: (range) {
+          setState(() {
+            _semesterRange = range;
+          });
+        },
+        onCgpaRangeChanged: (range) {
+          setState(() {
+            _cgpaRange = range;
+          });
+        },
         onApply: () {
-          Navigator.pop(context);
           if (_currentQuery.isNotEmpty) {
             _performSearch(_currentQuery);
           }
@@ -200,21 +239,31 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
     );
   }
 
-  void _navigateToProfile(SearchResult result) {
+  void _navigateToProfile(SearchResult result) async {
     debugPrint(
         'EnhancedSearchScreen: Navigating to profile for user: ${result.user.name} (${result.user.uid})');
     debugPrint('EnhancedSearchScreen: Has profile: ${result.profile != null}');
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ProfileViewScreen(
-          userId: result.user.uid,
-          isViewOnly: true,
-          searchResult: result,
-        ),
-      ),
+    // Track analytics for profile view interaction
+    await _searchService.trackResultInteraction(
+      query: _currentQuery,
+      result: result,
+      interactionType: SearchInteractionType.view,
+      userId: _currentUserId,
     );
+
+    if (mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ProfileViewScreen(
+            userId: result.user.uid,
+            isViewOnly: true,
+            searchResult: result,
+          ),
+        ),
+      );
+    }
   }
 
   /// Merge available filters with saved filter states
@@ -252,47 +301,488 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isInitialLoad) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        backgroundColor: AppTheme.backgroundColor,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppTheme.spaceLg),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceColor,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: const CircularProgressIndicator(
+                  valueColor:
+                      AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceLg),
+              Text(
+                'Preparing search...',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: AppTheme.textSecondaryColor,
+                    ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
-      appBar: AppBar(
-        title: const Text('Search People'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0.5,
-        centerTitle: true,
+      backgroundColor: AppTheme.backgroundColor,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildModernSearchHeader(),
+            _buildFilterChips(),
+            Expanded(
+              child: _buildSearchContent(),
+            ),
+          ],
+        ),
       ),
-      body: Column(
-        children: [
-          // Search bar
-          SearchBarWidget(
-            controller: _searchController,
-            hintText: 'Search students and lecturers...',
-            onChanged: _onSearchChanged,
-            onSubmitted: _onSearchSubmitted,
-            onFilterTap: _showFilterBottomSheet,
-            searchHistory: _searchHistory,
-            onHistoryItemTap: _onHistoryItemTap,
-            isLoading: _isLoading,
-            enableRealTimeSuggestions: true,
-          ),
+    );
+  }
 
-          // Active filters
-          FilterChipsWidget(
-            availableFilters: _availableFilters,
-            onFilterToggle: _onFilterToggle,
-            onClearAll: _clearAllFilters,
-          ),
-
-          // Search results
-          Expanded(
-            child: _buildSearchResults(),
+  Widget _buildModernSearchHeader() {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spaceMd),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceColor,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
         ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Discover Talents',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimaryColor,
+                ),
+          ),
+          const SizedBox(height: AppTheme.spaceSm),
+          ModernSearchBar(
+            controller: _searchController,
+            focusNode: _searchFocusNode,
+            hintText: 'Search students, lecturers, skills...',
+            onChanged: _onSearchChanged,
+            onSubmitted: _onSearchSubmitted,
+            showFilterButton: true,
+            onFilter: _showFilterBottomSheet,
+            enableSuggestions: true,
+            searchHistory: _searchHistory,
+            onSuggestionTap: _onSearchSubmitted,
+            onClear: () {
+              setState(() {
+                _searchController.clear();
+                _currentQuery = '';
+                _searchResults.clear();
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChips() {
+    final activeFilters = _availableFilters.values
+        .expand((filters) => filters)
+        .where((filter) => filter.isSelected)
+        .toList();
+
+    if (activeFilters.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      height: 60,
+      padding: const EdgeInsets.symmetric(vertical: AppTheme.spaceSm),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceMd),
+        itemCount: activeFilters.length + 1, // +1 for clear all button
+        itemBuilder: (context, index) {
+          if (index == 0) {
+            return Container(
+              margin: const EdgeInsets.only(right: AppTheme.spaceSm),
+              child: FilterChip(
+                label: const Text('Clear All'),
+                onSelected: (selected) => _clearAllFilters(),
+                backgroundColor: AppTheme.errorColor.withValues(alpha: 0.1),
+                selectedColor: AppTheme.errorColor,
+                side: BorderSide.none,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                ),
+              ),
+            );
+          }
+
+          final filter = activeFilters[index - 1];
+          return Container(
+            margin: const EdgeInsets.only(right: AppTheme.spaceSm),
+            child: FilterChip(
+              label: Text(filter.name),
+              selected: true,
+              onSelected: (selected) => _onFilterToggle(filter),
+              backgroundColor: AppTheme.surfaceVariant,
+              selectedColor: AppTheme.primaryColor,
+              checkmarkColor: Colors.white,
+              side: BorderSide.none,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSearchContent() {
+    if (_isLoading) {
+      return _buildModernLoadingState();
+    }
+
+    if (_currentQuery.isNotEmpty && _searchResults.isEmpty) {
+      return _buildModernEmptyState();
+    }
+
+    if (_searchResults.isNotEmpty) {
+      return _buildModernSearchResults();
+    }
+
+    return _buildModernDiscoverContent();
+  }
+
+  Widget _buildModernLoadingState() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+          ),
+          SizedBox(height: AppTheme.spaceMd),
+          Text(
+            'Searching...',
+            style: TextStyle(
+              color: AppTheme.textSecondaryColor,
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModernEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.spaceLg),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppTheme.spaceLg),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+              ),
+              child: const Icon(
+                Icons.search_off_rounded,
+                size: 64,
+                color: AppTheme.primaryColor,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spaceLg),
+            Text(
+              'No Results Found',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimaryColor,
+                  ),
+            ),
+            const SizedBox(height: AppTheme.spaceSm),
+            Text(
+              'Try adjusting your search terms or filters',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: AppTheme.textSecondaryColor,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernSearchResults() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(AppTheme.spaceMd),
+      itemCount: _searchResults.length,
+      itemBuilder: (context, index) {
+        final result = _searchResults[index];
+        return _buildModernResultCard(result);
+      },
+    );
+  }
+
+  Widget _buildModernResultCard(SearchResult result) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppTheme.spaceMd),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceColor,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(AppTheme.spaceMd),
+        leading: CircleAvatar(
+          radius: 28,
+          backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+          child: Text(
+            result.displayName.substring(0, 1).toUpperCase(),
+            style: const TextStyle(
+              color: AppTheme.primaryColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+        ),
+        title: Text(
+          result.displayName,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimaryColor,
+              ),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (result.department != null && result.department!.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                result.department!,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.textSecondaryColor,
+                    ),
+              ),
+            ],
+            if (result.matchedFields.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spaceSm,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXs),
+                ),
+                child: Text(
+                  'Matches: ${result.matchedFields.join(', ')}',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: AppTheme.primaryColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        trailing: Container(
+          padding: const EdgeInsets.all(AppTheme.spaceXs),
+          decoration: BoxDecoration(
+            color: AppTheme.primaryColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+          ),
+          child: Text(
+            result.roleDisplay.toUpperCase(),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: AppTheme.primaryColor,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        ),
+        onTap: () {
+          // Navigate to profile view
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ProfileViewScreen(userId: result.user.id),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildModernDiscoverContent() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppTheme.spaceMd),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (_searchHistory.isNotEmpty) _buildRecentSearches(),
+          const SizedBox(height: AppTheme.spaceLg),
+          _buildTrendingTopics(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentSearches() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Recent Searches',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimaryColor,
+                  ),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _searchHistory.clear();
+                });
+              },
+              child: const Text('Clear All'),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppTheme.spaceSm),
+        ...(_searchHistory.take(5).map((item) => _buildRecentSearchItem(item))),
+      ],
+    );
+  }
+
+  Widget _buildRecentSearchItem(SearchHistoryItem item) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppTheme.spaceXs),
+      child: ListTile(
+        leading: const Icon(
+          Icons.history_rounded,
+          color: AppTheme.textSecondaryColor,
+        ),
+        title: Text(item.query),
+        subtitle: Text('${item.resultCount} results'),
+        trailing: IconButton(
+          icon: const Icon(Icons.close_rounded),
+          onPressed: () {
+            setState(() {
+              _searchHistory.remove(item);
+            });
+          },
+        ),
+        onTap: () {
+          _searchController.text = item.query;
+          _onSearchSubmitted(item.query);
+        },
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTrendingTopics() {
+    final trendingTopics = [
+      'Web Development',
+      'Mobile Apps',
+      'Data Science',
+      'UI/UX Design',
+      'Machine Learning',
+      'Cybersecurity',
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Trending Topics',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimaryColor,
+              ),
+        ),
+        const SizedBox(height: AppTheme.spaceMd),
+        Wrap(
+          spacing: AppTheme.spaceSm,
+          runSpacing: AppTheme.spaceSm,
+          children:
+              trendingTopics.map((topic) => _buildTrendingChip(topic)).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTrendingChip(String topic) {
+    return GestureDetector(
+      onTap: () {
+        _searchController.text = topic;
+        _onSearchSubmitted(topic);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spaceMd,
+          vertical: AppTheme.spaceSm,
+        ),
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceColor,
+          borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+          border: Border.all(
+            color: AppTheme.primaryColor.withValues(alpha: 0.2),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.trending_up_rounded,
+              size: 16,
+              color: AppTheme.primaryColor,
+            ),
+            const SizedBox(width: AppTheme.spaceXs),
+            Text(
+              topic,
+              style: const TextStyle(
+                color: AppTheme.primaryColor,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

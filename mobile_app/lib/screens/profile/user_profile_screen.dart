@@ -233,76 +233,151 @@ class _UserProfileScreenState extends State<UserProfileScreen>
 
   Widget _buildProfileHeader() {
     return Container(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const SizedBox(height: 40), // Account for status bar
-
-          // Profile image
-          CircleAvatar(
-            radius: 50,
-            backgroundImage: _profile?.profileImageUrl != null
-                ? NetworkImage(_profile!.profileImageUrl!)
-                : null,
-            backgroundColor:
-                Theme.of(context).primaryColor.withValues(alpha: 0.1),
-            child: _profile?.profileImageUrl == null
-                ? Text(
-                    _user!.name[0].toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                  )
-                : null,
-          ),
-
-          const SizedBox(height: 16),
-
-          // Name and role
-          Text(
-            _user!.name,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 4),
-
-          Text(
-            '${_user!.role.toString().split('.').last.toUpperCase()} • ${_user!.department}',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-            ),
-          ),
-
-          if (_profile?.bio != null) ...[
-            const SizedBox(height: 12),
-            Text(
-              _profile!.bio!,
-              style: const TextStyle(fontSize: 14),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF3B82F6),
+            const Color(0xFF1D4ED8),
           ],
-
-          const SizedBox(height: 16),
-
-          // Stats row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildStatItem('Posts', _userPosts.length.toString()),
-              _buildStatItem('Followers', '0'), // Placeholder
-              _buildStatItem('Following', '0'), // Placeholder
+        ),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Colors.transparent,
+              Colors.white.withValues(alpha: 0.1),
             ],
           ),
-        ],
+        ),
+        padding: const EdgeInsets.fromLTRB(24, 60, 24, 32),
+        child: Column(
+          children: [
+            // Profile Image with modern styling
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: CircleAvatar(
+                radius: 60,
+                backgroundColor: Colors.white,
+                child: CircleAvatar(
+                  radius: 56,
+                  backgroundImage: _profile?.profileImageUrl != null
+                      ? NetworkImage(_profile!.profileImageUrl!)
+                      : null,
+                  backgroundColor:
+                      const Color(0xFF3B82F6).withValues(alpha: 0.1),
+                  child: _profile?.profileImageUrl == null
+                      ? Text(
+                          _user!.name[0].toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 36,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF3B82F6),
+                          ),
+                        )
+                      : null,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Name and role with modern styling
+            Text(
+              _user!.name,
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                height: 1.2,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 8),
+
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                '${_user!.role.toString().split('.').last.toUpperCase()} • ${_user!.department}',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+
+            if (_profile?.bio != null) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  _profile!.bio!,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 24),
+
+            // Modern Stats Row
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildModernStatItem('Posts', _userPosts.length.toString(),
+                      Icons.article_rounded),
+                  _buildModernStatItem('Department', _user!.department ?? 'N/A',
+                      Icons.business_rounded),
+                  _buildModernStatItem(
+                      'Semester',
+                      _profile?.semester?.toString() ?? 'N/A',
+                      Icons.school_rounded),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -322,6 +397,45 @@ class _UserProfileScreenState extends State<UserProfileScreen>
           style: TextStyle(
             fontSize: 12,
             color: Colors.grey[600],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildModernStatItem(String label, String value, IconData icon) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            icon,
+            color: Colors.white,
+            size: 20,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.white,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],

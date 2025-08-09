@@ -2,31 +2,70 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Primary colors
-  static const Color primaryColor = Color(0xFF1976D2);
-  static const Color primaryLightColor = Color(0xFF42A5F5);
-  static const Color primaryDarkColor = Color(0xFF1565C0);
+  // Modern Primary colors - Professional Blue Gradient
+  static const Color primaryColor = Color(0xFF2563EB);
+  static const Color primaryLightColor = Color(0xFF3B82F6);
+  static const Color primaryDarkColor = Color(0xFF1D4ED8);
+  static const Color primaryAccent = Color(0xFF60A5FA);
 
-  // Secondary colors
-  static const Color secondaryColor = Color(0xFFFF6B35);
-  static const Color secondaryLightColor = Color(0xFFFF8A65);
-  static const Color secondaryDarkColor = Color(0xFFE64A19);
+  // Secondary colors - Warm Orange for CTAs
+  static const Color secondaryColor = Color(0xFFEF4444);
+  static const Color secondaryLightColor = Color(0xFFF87171);
+  static const Color secondaryDarkColor = Color(0xFFDC2626);
+  static const Color secondaryAccent = Color(0xFFFCA5A5);
 
-  // Background colors
-  static const Color backgroundColor = Color(0xFFF5F5F5);
+  // Modern Background colors with depth
+  static const Color backgroundColor = Color(0xFFF8FAFC);
   static const Color surfaceColor = Color(0xFFFFFFFF);
   static const Color cardColor = Color(0xFFFFFFFF);
+  static const Color surfaceVariant = Color(0xFFF1F5F9);
+
+  // Gradient colors for modern appeal
+  static const LinearGradient primaryGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [primaryColor, primaryLightColor],
+  );
+
+  static const LinearGradient secondaryGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [secondaryColor, secondaryLightColor],
+  );
 
   // Text colors
   static const Color textPrimaryColor = Color(0xFF212121);
   static const Color textSecondaryColor = Color(0xFF757575);
   static const Color textLightColor = Color(0xFFBDBDBD);
 
-  // Error colors
-  static const Color errorColor = Color(0xFFD32F2F);
-  static const Color successColor = Color(0xFF388E3C);
-  static const Color warningColor = Color(0xFFFFA000);
-  static const Color infoColor = Color(0xFF1976D2);
+  // Status colors with modern palette
+  static const Color errorColor = Color(0xFFEF4444);
+  static const Color successColor = Color(0xFF10B981);
+  static const Color warningColor = Color(0xFFF59E0B);
+  static const Color infoColor = Color(0xFF3B82F6);
+
+  // Modern spacing system
+  static const double spaceXs = 4.0;
+  static const double spaceSm = 8.0;
+  static const double spaceMd = 16.0;
+  static const double spaceLg = 24.0;
+  static const double spaceXl = 32.0;
+  static const double space2xl = 48.0;
+  static const double space3xl = 64.0;
+
+  // Border radius system
+  static const double radiusXs = 4.0;
+  static const double radiusSm = 8.0;
+  static const double radiusMd = 12.0;
+  static const double radiusLg = 16.0;
+  static const double radiusXl = 24.0;
+  static const double radiusFull = 999.0;
+
+  // Elevation system
+  static const double elevationSm = 2.0;
+  static const double elevationMd = 4.0;
+  static const double elevationLg = 8.0;
+  static const double elevationXl = 16.0;
 
   // Light theme
   static ThemeData get lightTheme {

@@ -76,15 +76,6 @@ class ShareWidget extends StatelessWidget {
             onTap: () => _shareExternally(context),
           ),
 
-          _buildShareOption(
-            context,
-            icon: Icons.report,
-            title: 'Report Post',
-            subtitle: 'Report inappropriate content',
-            onTap: () => _reportPost(context),
-            isDestructive: true,
-          ),
-
           const SizedBox(height: 20),
 
           // Cancel button
@@ -257,37 +248,6 @@ View the full post: $postLink
         );
       }
     }
-  }
-
-  void _reportPost(BuildContext context) {
-    Navigator.pop(context);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Report Post'),
-        content: const Text(
-            'Are you sure you want to report this post for inappropriate content?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content:
-                        Text('Post reported. Thank you for your feedback.')),
-              );
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Report'),
-          ),
-        ],
-      ),
-    );
   }
 }
 

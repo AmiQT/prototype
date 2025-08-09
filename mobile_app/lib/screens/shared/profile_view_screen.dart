@@ -5,6 +5,8 @@ import '../../services/auth_service.dart';
 import '../../models/profile_model.dart';
 import '../../models/user_model.dart';
 import '../../models/search_models.dart';
+import '../../utils/app_theme.dart';
+import '../auth/comprehensive_profile_setup_screen.dart';
 
 class ProfileViewScreen extends StatefulWidget {
   final String userId;
@@ -238,11 +240,12 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                   ElevatedButton(
                     onPressed: () {
                       Navigator.pop(context);
-                      // TODO: Navigate to profile setup/edit screen
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                              'Go to your profile tab to complete your profile'),
+                      // Navigate to comprehensive profile setup screen
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const ComprehensiveProfileSetupScreen(),
                         ),
                       );
                     },
@@ -313,17 +316,26 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: Text(_profile!.fullName),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0.5,
+        title: Text(
+          _profile!.fullName,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            color: AppTheme.textPrimaryColor,
+          ),
+        ),
+        backgroundColor: AppTheme.surfaceColor,
+        foregroundColor: AppTheme.textPrimaryColor,
+        elevation: 0,
         centerTitle: true,
         actions: [
-          if (!_isCurrentUser && !widget.isViewOnly)
+          if (!_isCurrentUser && !widget.isViewOnly) ...[
             IconButton(
-              icon: const Icon(Icons.message),
+              icon: const Icon(
+                Icons.message_rounded,
+                color: AppTheme.primaryColor,
+              ),
               onPressed: () {
                 // TODO: Implement messaging (for future)
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -332,6 +344,16 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                 );
               },
             ),
+            IconButton(
+              icon: const Icon(
+                Icons.more_vert_rounded,
+                color: AppTheme.textSecondaryColor,
+              ),
+              onPressed: () {
+                // TODO: Show more options menu
+              },
+            ),
+          ],
         ],
       ),
       body: SingleChildScrollView(
@@ -356,165 +378,229 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
     final completeness = _calculateProfileCompleteness();
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: AppTheme.spaceMd),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: AppTheme.surfaceColor,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         children: [
-          // Profile Picture and Basic Info
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 40,
-                backgroundImage: _profile!.profileImageUrl != null &&
-                        _profile!.profileImageUrl!.isNotEmpty
-                    ? NetworkImage(_profile!.profileImageUrl!)
-                    : null,
-                backgroundColor:
-                    Theme.of(context).primaryColor.withOpacity(0.1),
-                child: _profile!.profileImageUrl == null ||
-                        _profile!.profileImageUrl!.isEmpty
-                    ? Text(
-                        _profile!.fullName.isNotEmpty
-                            ? _profile!.fullName[0].toUpperCase()
-                            : 'U',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).primaryColor,
-                        ),
-                      )
-                    : null,
+          // Cover Photo Area (LinkedIn-style)
+          Container(
+            height: 120,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppTheme.primaryColor.withValues(alpha: 0.8),
+                  AppTheme.primaryColor.withValues(alpha: 0.6),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 4,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _profile!.fullName,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _getRoleColor(_user!.role).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Text(
-                        _getRoleDisplayName(_user!.role),
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: _getRoleColor(_user!.role),
-                        ),
-                      ),
-                    ),
-                    if (_profile!.headline != null &&
-                        _profile!.headline!.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        _profile!.headline!,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.blue[700],
-                          fontWeight: FontWeight.w500,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 2,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              // Profile Completeness
-              Flexible(
-                child: Column(
-                  children: [
-                    SizedBox(
-                      width: 50,
-                      height: 50,
-                      child: CircularProgressIndicator(
-                        value: completeness / 100,
-                        strokeWidth: 3,
-                        backgroundColor: Colors.grey[300],
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          _getCompletenessColor(completeness),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${completeness.round()}%',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const Text(
-                      'Complete',
-                      style: TextStyle(
-                        fontSize: 9,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          // Bio
-          if (_profile!.bio != null && _profile!.bio!.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Text(
-                _profile!.bio!,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                  height: 1.4,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(AppTheme.radiusLg),
+                topRight: Radius.circular(AppTheme.radiusLg),
               ),
             ),
-          ],
+          ),
 
-          // Contact Info
-          const SizedBox(height: 16),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _buildInfoChip(Icons.email, _user!.email),
-              if (_profile!.academicInfo?.department != null)
-                _buildInfoChip(
-                    Icons.school, _profile!.academicInfo!.department!),
-            ],
+          // Profile Content
+          Padding(
+            padding: const EdgeInsets.all(AppTheme.spaceLg),
+            child: Column(
+              children: [
+                // Profile Picture positioned over cover
+                Transform.translate(
+                  offset: const Offset(0, -60),
+                  child: Column(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppTheme.surfaceColor,
+                            width: 4,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: CircleAvatar(
+                          radius: 50,
+                          backgroundImage: _profile!.profileImageUrl != null &&
+                                  _profile!.profileImageUrl!.isNotEmpty
+                              ? NetworkImage(_profile!.profileImageUrl!)
+                              : null,
+                          backgroundColor:
+                              AppTheme.primaryColor.withValues(alpha: 0.1),
+                          child: _profile!.profileImageUrl == null ||
+                                  _profile!.profileImageUrl!.isEmpty
+                              ? Text(
+                                  _profile!.fullName.isNotEmpty
+                                      ? _profile!.fullName[0].toUpperCase()
+                                      : 'U',
+                                  style: const TextStyle(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.primaryColor,
+                                  ),
+                                )
+                              : null,
+                        ),
+                      ),
+
+                      const SizedBox(height: AppTheme.spaceMd),
+
+                      // Name and Title
+                      Text(
+                        _profile!.fullName,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textPrimaryColor,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+
+                      const SizedBox(height: AppTheme.spaceXs),
+
+                      // Role Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spaceMd,
+                          vertical: AppTheme.spaceXs,
+                        ),
+                        decoration: BoxDecoration(
+                          color:
+                              _getRoleColor(_user!.role).withValues(alpha: 0.1),
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusFull),
+                          border: Border.all(
+                            color: _getRoleColor(_user!.role)
+                                .withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          _getRoleDisplayName(_user!.role),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: _getRoleColor(_user!.role),
+                          ),
+                        ),
+                      ),
+
+                      // Headline
+                      if (_profile!.headline != null &&
+                          _profile!.headline!.isNotEmpty) ...[
+                        const SizedBox(height: AppTheme.spaceSm),
+                        Text(
+                          _profile!.headline!,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: AppTheme.textSecondaryColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+
+                // Profile Stats and Completeness
+                Transform.translate(
+                  offset: const Offset(0, -40),
+                  child: Column(
+                    children: [
+                      // Profile Completeness Card
+                      Container(
+                        padding: const EdgeInsets.all(AppTheme.spaceMd),
+                        decoration: BoxDecoration(
+                          color: AppTheme.surfaceVariant,
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusMd),
+                          border: Border.all(
+                            color: AppTheme.primaryColor.withValues(alpha: 0.2),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 40,
+                              height: 40,
+                              child: CircularProgressIndicator(
+                                value: completeness / 100,
+                                strokeWidth: 3,
+                                backgroundColor: AppTheme.textSecondaryColor
+                                    .withValues(alpha: 0.2),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  _getCompletenessColor(completeness),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: AppTheme.spaceSm),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${completeness.round()}% Complete',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.textPrimaryColor,
+                                  ),
+                                ),
+                                Text(
+                                  'Profile Strength',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppTheme.textSecondaryColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Quick Info Chips
+                      const SizedBox(height: AppTheme.spaceMd),
+                      Wrap(
+                        spacing: AppTheme.spaceXs,
+                        runSpacing: AppTheme.spaceXs,
+                        alignment: WrapAlignment.center,
+                        children: [
+                          _buildInfoChip(Icons.email_rounded, _user!.email),
+                          if (_profile!.academicInfo?.department != null)
+                            _buildInfoChip(Icons.school_rounded,
+                                _profile!.academicInfo!.department!),
+                          if (_profile!.skills.isNotEmpty)
+                            _buildInfoChip(Icons.star_rounded,
+                                '${_profile!.skills.length} Skills'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -523,23 +609,34 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
 
   Widget _buildInfoChip(IconData icon, String text) {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 160),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      constraints: const BoxConstraints(maxWidth: 180),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spaceSm,
+        vertical: AppTheme.spaceXs,
+      ),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(20),
+        color: AppTheme.surfaceVariant,
+        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+        border: Border.all(
+          color: AppTheme.primaryColor.withValues(alpha: 0.2),
+          width: 1,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: Colors.grey[600]),
-          const SizedBox(width: 6),
+          Icon(
+            icon,
+            size: 16,
+            color: AppTheme.primaryColor,
+          ),
+          const SizedBox(width: AppTheme.spaceXs),
           Flexible(
             child: Text(
               text,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
-                color: Colors.grey[600],
+                color: AppTheme.textSecondaryColor,
                 fontWeight: FontWeight.w500,
               ),
               overflow: TextOverflow.ellipsis,
@@ -601,15 +698,48 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
   Widget _buildSkillsSection() {
     return _buildSection(
       title: 'Skills',
-      icon: Icons.build,
+      icon: Icons.psychology_rounded,
       child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
+        spacing: AppTheme.spaceXs,
+        runSpacing: AppTheme.spaceXs,
         children: _profile!.skills
-            .map((skill) => Chip(
-                  label: Text(skill),
-                  backgroundColor: Colors.blue[50],
-                  labelStyle: TextStyle(color: Colors.blue[700]),
+            .map((skill) => Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spaceSm,
+                    vertical: AppTheme.spaceXs,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppTheme.primaryColor.withValues(alpha: 0.1),
+                        AppTheme.primaryColor.withValues(alpha: 0.05),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                    border: Border.all(
+                      color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.star_rounded,
+                        size: 14,
+                        color: AppTheme.primaryColor,
+                      ),
+                      const SizedBox(width: AppTheme.spaceXs),
+                      Text(
+                        skill,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.primaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
                 ))
             .toList(),
       ),
@@ -619,15 +749,48 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
   Widget _buildInterestsSection() {
     return _buildSection(
       title: 'Interests',
-      icon: Icons.favorite,
+      icon: Icons.favorite_rounded,
       child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
+        spacing: AppTheme.spaceXs,
+        runSpacing: AppTheme.spaceXs,
         children: _profile!.interests
-            .map((interest) => Chip(
-                  label: Text(interest),
-                  backgroundColor: Colors.green[50],
-                  labelStyle: TextStyle(color: Colors.green[700]),
+            .map((interest) => Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spaceSm,
+                    vertical: AppTheme.spaceXs,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.green.withValues(alpha: 0.1),
+                        Colors.green.withValues(alpha: 0.05),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                    border: Border.all(
+                      color: Colors.green.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.favorite_rounded,
+                        size: 14,
+                        color: Colors.green,
+                      ),
+                      const SizedBox(width: AppTheme.spaceXs),
+                      Text(
+                        interest,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.green,
+                        ),
+                      ),
+                    ],
+                  ),
                 ))
             .toList(),
       ),
@@ -797,37 +960,70 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
     required Widget child,
   }) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spaceMd,
+        vertical: AppTheme.spaceXs,
+      ),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: AppTheme.surfaceColor,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
           ),
         ],
+        border: Border.all(
+          color: AppTheme.primaryColor.withValues(alpha: 0.1),
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(icon, color: Theme.of(context).primaryColor),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+          // Section Header
+          Container(
+            padding: const EdgeInsets.all(AppTheme.spaceLg),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor.withValues(alpha: 0.05),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(AppTheme.radiusLg),
+                topRight: Radius.circular(AppTheme.radiusLg),
               ),
-            ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppTheme.spaceXs),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: AppTheme.primaryColor,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: AppTheme.spaceSm),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimaryColor,
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          child,
+
+          // Section Content
+          Padding(
+            padding: const EdgeInsets.all(AppTheme.spaceLg),
+            child: child,
+          ),
         ],
       ),
     );

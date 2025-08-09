@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/showcase_models.dart';
 import '../../models/user_model.dart';
 import '../../services/showcase_service.dart';
+import '../moderation/report_dialog.dart';
 
 /// Widget for displaying a single comment
 class CommentWidget extends StatefulWidget {
@@ -273,9 +274,7 @@ class _CommentWidgetState extends State<CommentWidget>
         _showDeleteConfirmation();
         break;
       case 'report':
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Report feature coming soon!')),
-        );
+        _showReportDialog();
         break;
     }
   }
@@ -300,6 +299,18 @@ class _CommentWidgetState extends State<CommentWidget>
             child: const Text('Delete'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showReportDialog() {
+    if (widget.currentUser == null) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => ReportDialog(
+        comment: widget.comment,
+        currentUser: widget.currentUser!,
       ),
     );
   }

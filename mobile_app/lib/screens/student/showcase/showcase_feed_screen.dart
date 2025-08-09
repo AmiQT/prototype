@@ -6,8 +6,9 @@ import '../../../models/user_model.dart';
 import '../../../services/showcase_service.dart';
 import '../../../services/auth_service.dart';
 import '../../../widgets/showcase/post_card_widget.dart';
+import '../../../widgets/modern/modern_post_card.dart';
 import '../../../widgets/showcase/feed_widgets.dart';
-import '../../../widgets/showcase/comment_widgets.dart';
+import '../../../utils/app_theme.dart';
 import '../../../widgets/showcase/share_widget.dart';
 import 'post_creation_screen.dart';
 import 'post_detail_screen.dart';
@@ -178,11 +179,9 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
   Widget build(BuildContext context) {
     super.build(context);
 
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: _buildAppBar(),
-      body: _buildBody(),
-      floatingActionButton: _buildFloatingActionButton(),
+    return Container(
+      color: Colors.transparent,
+      child: _buildBody(),
     );
   }
 
@@ -235,7 +234,7 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
             delegate: SliverChildBuilderDelegate(
               (context, index) {
                 if (index < _posts.length) {
-                  return PostCardWidget(
+                  return ModernPostCard(
                     post: _posts[index],
                     currentUser: _currentUser,
                     onLike: _handleLike,
@@ -243,8 +242,6 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
                     onShare: _handleShare,
                     onUserTap: _handleUserTap,
                     onPostTap: _handlePostTap,
-                    onEdit: _handleEdit,
-                    onDelete: _handleDelete,
                   );
                 } else if (_hasMore) {
                   return _buildLoadingIndicator();
@@ -288,13 +285,34 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
   }
 
   Widget _buildLoadingState() {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(),
-          SizedBox(height: 16),
-          Text('Loading posts...'),
+          Container(
+            padding: const EdgeInsets.all(AppTheme.spaceLg),
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceColor,
+              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: const CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+            ),
+          ),
+          const SizedBox(height: AppTheme.spaceLg),
+          Text(
+            'Loading amazing content...',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: AppTheme.textSecondaryColor,
+                ),
+          ),
         ],
       ),
     );
@@ -333,31 +351,82 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
 
   Widget _buildEmptyState() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.post_add,
-            size: 64,
-            color: Colors.grey,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'No posts yet',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Be the first to share your talents!',
-            style: TextStyle(color: Colors.grey[600]),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: _navigateToCreatePost,
-            icon: const Icon(Icons.add),
-            label: const Text('Create Post'),
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.spaceLg),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppTheme.space2xl),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+              ),
+              child: const Icon(
+                Icons.auto_awesome_rounded,
+                size: 64,
+                color: AppTheme.primaryColor,
+              ),
+            ),
+            const SizedBox(height: AppTheme.spaceLg),
+            Text(
+              'Ready to Shine?',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimaryColor,
+                  ),
+            ),
+            const SizedBox(height: AppTheme.spaceSm),
+            Text(
+              'Share your talents, achievements, and connect with the UTHM community!',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: AppTheme.textSecondaryColor,
+                    height: 1.5,
+                  ),
+            ),
+            const SizedBox(height: AppTheme.spaceLg),
+            Container(
+              decoration: BoxDecoration(
+                gradient: AppTheme.primaryGradient,
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PostCreationScreen(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.spaceLg,
+                    vertical: AppTheme.spaceMd,
+                  ),
+                ),
+                icon: const Icon(Icons.add_rounded, color: Colors.white),
+                label: const Text(
+                  'Create Your First Post',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -371,23 +440,7 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
     );
   }
 
-  Widget _buildFloatingActionButton() {
-    return FloatingActionButton(
-      onPressed: _navigateToCreatePost,
-      child: const Icon(Icons.add),
-      tooltip: 'Create Post',
-    );
-  }
-
   // Navigation and interaction methods
-  void _navigateToCreatePost() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const PostCreationScreen(),
-      ),
-    );
-  }
 
   void _handleLike(ShowcasePostModel post) async {
     if (_currentUser == null) return;

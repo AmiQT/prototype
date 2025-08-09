@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../models/user_model.dart';
 import 'auth/login_screen.dart';
-import 'student/student_dashboard.dart';
+import 'student/enhanced_student_dashboard.dart';
 import 'lecturer/lecturer_dashboard.dart';
 import 'admin/admin_dashboard.dart';
 
@@ -96,7 +96,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     switch (user.role) {
       case UserRole.student:
-        targetScreen = const StudentDashboard();
+        targetScreen = const EnhancedStudentDashboard();
         break;
       case UserRole.lecturer:
         targetScreen = const LecturerDashboard();

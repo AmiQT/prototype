@@ -6,10 +6,14 @@ import '../models/user_model.dart';
 import '../models/profile_model.dart';
 import '../models/search_models.dart';
 import '../services/profile_service.dart';
+import 'search_analytics_service.dart';
+import 'search_cache_service.dart';
 
 class SearchService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final ProfileService _profileService = ProfileService();
+  final SearchAnalyticsService _analyticsService = SearchAnalyticsService();
+  final SearchCacheService _cacheService = SearchCacheService();
 
   static const String _searchHistoryKey = 'search_history';
   static const String _searchSuggestionsKey = 'search_suggestions';
@@ -37,10 +41,41 @@ class SearchService {
     required String query,
     List<SearchFilter> filters = const [],
     int limit = 50,
+    String? userId,
   }) async {
+    final startTime = DateTime.now();
+
     try {
       debugPrint(
           'SearchService: Searching for "$query" with ${filters.length} filters');
+
+      // Check cache first
+      final cachedResults = await _cacheService.getCachedResults(
+        query: query,
+        filters: filters,
+      );
+
+      if (cachedResults != null) {
+        debugPrint(
+            'SearchService: Retrieved ${cachedResults.length} results from cache');
+        return cachedResults;
+      }
+
+      // Check if online for fresh search
+      final isOnline = await _cacheService.isOnline();
+      if (!isOnline) {
+        // Queue search for when back online
+        await _cacheService.queueOfflineSearch(
+          query: query,
+          filters: filters,
+        );
+
+        // Return popular results for offline experience
+        final popularResults = await _cacheService.getPopularResults();
+        debugPrint(
+            'SearchService: Offline - returning ${popularResults.length} popular results');
+        return popularResults;
+      }
 
       // Get all users (students and lecturers only)
       final usersQuery = await _firestore
@@ -91,7 +126,26 @@ class SearchService {
         await _saveSearchToHistory(query, results.length, filters);
       }
 
-      debugPrint('SearchService: Found ${results.length} results');
+      // Cache results for future use
+      await _cacheService.cacheSearchResults(
+        query: query,
+        filters: filters,
+        results: results,
+        isPopular: results.length > 5, // Consider popular if many results
+      );
+
+      // Track analytics
+      final searchDuration = DateTime.now().difference(startTime);
+      await _analyticsService.trackSearch(
+        query: query,
+        results: results,
+        searchDuration: searchDuration,
+        appliedFilters: filters,
+        userId: userId,
+      );
+
+      debugPrint(
+          'SearchService: Found ${results.length} results in ${searchDuration.inMilliseconds}ms');
       return results;
     } catch (e) {
       debugPrint('SearchService: Error searching: $e');
@@ -105,6 +159,15 @@ class SearchService {
       // Load popular search terms and user data for suggestions
       await _loadPopularSearchTerms();
       await _loadUserDataForSuggestions();
+
+      // Initialize analytics
+      await _analyticsService.loadAnalyticsData();
+
+      // Initialize cache
+      await _cacheService.loadOfflineQueue();
+
+      // Cache popular results for offline use
+      await _cachePopularResultsForOffline();
     } catch (e) {
       debugPrint('SearchService: Error initializing search data: $e');
     }
@@ -580,6 +643,95 @@ class SearchService {
     _searchCache.clear();
     _suggestionCache.clear();
     _cacheTimestamps.clear();
+  }
+
+  /// Track user interaction with search result
+  Future<void> trackResultInteraction({
+    required String query,
+    required SearchResult result,
+    required SearchInteractionType interactionType,
+    String? userId,
+  }) async {
+    await _analyticsService.trackResultInteraction(
+      query: query,
+      result: result,
+      interactionType: interactionType,
+      userId: userId,
+    );
+  }
+
+  /// Track filter usage
+  Future<void> trackFilterUsage({
+    required List<SearchFilter> filters,
+    required String query,
+    String? userId,
+  }) async {
+    await _analyticsService.trackFilterUsage(
+      filters: filters,
+      query: query,
+      userId: userId,
+    );
+  }
+
+  /// Get popular search terms
+  List<PopularSearchTerm> getPopularSearchTerms({int limit = 10}) {
+    return _analyticsService.getPopularSearchTerms(limit: limit);
+  }
+
+  /// Get search performance metrics
+  SearchPerformanceMetrics getSearchPerformanceMetrics() {
+    return _analyticsService.getPerformanceMetrics();
+  }
+
+  /// Get user engagement metrics
+  UserEngagementMetrics getUserEngagementMetrics() {
+    return _analyticsService.getUserEngagementMetrics();
+  }
+
+  /// Cache popular results for offline use
+  Future<void> _cachePopularResultsForOffline() async {
+    try {
+      // Get popular search terms and cache their results
+      final popularTerms = getPopularSearchTerms(limit: 5);
+      final allPopularResults = <SearchResult>[];
+
+      for (final term in popularTerms) {
+        final results = await searchUsersAndProfiles(
+          query: term.term,
+          filters: [],
+          limit: 10,
+        );
+        allPopularResults.addAll(results);
+      }
+
+      // Remove duplicates and cache
+      final uniqueResults = <String, SearchResult>{};
+      for (final result in allPopularResults) {
+        uniqueResults[result.user.uid] = result;
+      }
+
+      await _cacheService.cachePopularResults(uniqueResults.values.toList());
+      debugPrint(
+          'SearchService: Cached ${uniqueResults.length} popular results for offline use');
+    } catch (e) {
+      debugPrint('SearchService: Error caching popular results: $e');
+    }
+  }
+
+  /// Get cache statistics
+  Future<CacheStatistics> getCacheStatistics() async {
+    return await _cacheService.getCacheStatistics();
+  }
+
+  /// Check if device is online
+  Future<bool> isOnline() async {
+    return await _cacheService.isOnline();
+  }
+
+  /// Clear all cache data
+  Future<void> clearAllCache() async {
+    await _cacheService.clearCache();
+    clearCache(); // Clear existing search cache
   }
 
   /// Save current filter state

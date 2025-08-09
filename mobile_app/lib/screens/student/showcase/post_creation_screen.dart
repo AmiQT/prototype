@@ -12,6 +12,7 @@ import '../../../models/profile_model.dart';
 import '../../../services/media_upload_manager.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/profile_service.dart';
+import '../../../services/content_moderation_service.dart';
 import '../../../widgets/showcase/post_creation_widgets.dart';
 
 class PostCreationScreen extends StatefulWidget {
@@ -1165,6 +1166,53 @@ class _PostCreationScreenState extends State<PostCreationScreen>
     });
   }
 
+  Future<bool> _showContentWarnings(List<String> warnings) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Row(
+              children: [
+                Icon(Icons.warning_amber, color: Colors.orange[600]),
+                const SizedBox(width: 8),
+                const Text('Content Warning'),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                    'We noticed some potential issues with your content:'),
+                const SizedBox(height: 12),
+                ...warnings.map((warning) => Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('• '),
+                          Expanded(child: Text(warning)),
+                        ],
+                      ),
+                    )),
+                const SizedBox(height: 12),
+                const Text('Would you like to continue posting anyway?'),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Edit Content'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Continue'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
   // Core functionality methods
   bool _canPost() {
     return (_contentController.text.trim().isNotEmpty ||
@@ -1180,6 +1228,27 @@ class _PostCreationScreenState extends State<PostCreationScreen>
 
   Future<void> _createPost() async {
     if (!_canPost()) return;
+
+    // Validate content before posting
+    final moderationService = ContentModerationService();
+    final validation = moderationService.validateContent(
+      content: _contentController.text.trim(),
+      mediaUrls: _selectedMedia.map((f) => f.path).toList(),
+    );
+
+    if (!validation['isValid']) {
+      setState(() {
+        _error =
+            'Content validation failed: ${validation['issues'].join(', ')}';
+      });
+      return;
+    }
+
+    // Show warnings if any
+    if (validation['warnings'].isNotEmpty) {
+      final shouldContinue = await _showContentWarnings(validation['warnings']);
+      if (!shouldContinue) return;
+    }
 
     setState(() {
       _isUploading = true;

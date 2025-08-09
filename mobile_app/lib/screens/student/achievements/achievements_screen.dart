@@ -288,6 +288,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
                   },
                 ),
           floatingActionButton: FloatingActionButton.extended(
+            heroTag: "achievements_add_fab",
             onPressed: _showAddAchievementDialog,
             tooltip: 'Add Achievement',
             icon: const Icon(Icons.add),

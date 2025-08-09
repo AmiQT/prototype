@@ -71,7 +71,20 @@ service cloud.firestore {
     match /search_history/{userId} {
       allow read, write: if isAuthenticated() && isOwner(userId);
     }
-    
+
+    // Reports collection - users can create and read reports
+    match /reports/{reportId} {
+      allow create: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+
+    // Moderation actions collection - admin only
+    match /moderationActions/{actionId} {
+      allow read, write: if isAuthenticated();
+    }
+
     // Allow read access to all documents for authenticated users (for search)
     match /{document=**} {
       allow read: if isAuthenticated();

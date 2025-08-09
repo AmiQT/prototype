@@ -139,8 +139,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
         elevation: 12,
       ),
       floatingActionButton:
-          (userRole == UserRole.student || userRole == UserRole.lecturer)
+          (userRole == UserRole.student || userRole == UserRole.lecturer) &&
+                  _selectedIndex != 0
               ? FloatingActionButton(
+                  heroTag: "student_dashboard_chat_fab",
                   onPressed: () {
                     Navigator.push(
                       context,

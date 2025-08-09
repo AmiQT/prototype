@@ -526,6 +526,7 @@ class _LecturerDashboardState extends State<LecturerDashboard> {
       floatingActionButton:
           (userRole == UserRole.student || userRole == UserRole.lecturer)
               ? FloatingActionButton(
+                  heroTag: "lecturer_dashboard_chat_fab",
                   onPressed: () {
                     Navigator.push(
                       context,
