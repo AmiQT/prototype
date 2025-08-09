@@ -4,7 +4,7 @@ class UserModel {
   final String id;
   final String uid; // Firebase UID
   final String email;
-  final String password; // For local storage
+  // Password removed for security - Firebase handles authentication
   final String name;
   final UserRole role;
   final String? studentId; // For students
@@ -12,12 +12,12 @@ class UserModel {
   final DateTime createdAt;
   final DateTime? lastLoginAt;
   final bool isActive;
+  final bool profileCompleted; // New field for profile completion status
 
   UserModel({
     required this.id,
     required this.uid,
     required this.email,
-    required this.password,
     required this.name,
     required this.role,
     this.studentId,
@@ -25,15 +25,28 @@ class UserModel {
     required this.createdAt,
     this.lastLoginAt,
     this.isActive = true,
+    this.profileCompleted = false, // Default to false
   });
 
   // Factory constructor to create UserModel from JSON
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    DateTime parseDateTime(dynamic value) {
+      if (value == null) return DateTime.now();
+      if (value is DateTime) return value;
+      if (value is String) {
+        try {
+          return DateTime.parse(value);
+        } catch (e) {
+          return DateTime.now();
+        }
+      }
+      return DateTime.now();
+    }
+
     return UserModel(
       id: json['id'] ?? '',
       uid: json['uid'] ?? '',
       email: json['email'] ?? '',
-      password: json['password'] ?? '',
       name: json['name'] ?? '',
       role: UserRole.values.firstWhere(
         (role) => role.toString().split('.').last == json['role'],
@@ -41,11 +54,12 @@ class UserModel {
       ),
       studentId: json['studentId'],
       department: json['department'],
-      createdAt: DateTime.parse(json['createdAt']),
+      createdAt: parseDateTime(json['createdAt']),
       lastLoginAt: json['lastLoginAt'] != null
-          ? DateTime.parse(json['lastLoginAt'])
+          ? parseDateTime(json['lastLoginAt'])
           : null,
       isActive: json['isActive'] ?? true,
+      profileCompleted: json['profileCompleted'] ?? false,
     );
   }
 
@@ -55,7 +69,6 @@ class UserModel {
       'id': id,
       'uid': uid,
       'email': email,
-      'password': password,
       'name': name,
       'role': role.toString().split('.').last,
       'studentId': studentId,
@@ -63,6 +76,7 @@ class UserModel {
       'createdAt': createdAt.toIso8601String(),
       'lastLoginAt': lastLoginAt?.toIso8601String(),
       'isActive': isActive,
+      'profileCompleted': profileCompleted,
     };
   }
 
@@ -71,7 +85,6 @@ class UserModel {
     String? id,
     String? uid,
     String? email,
-    String? password,
     String? name,
     UserRole? role,
     String? studentId,
@@ -79,12 +92,12 @@ class UserModel {
     DateTime? createdAt,
     DateTime? lastLoginAt,
     bool? isActive,
+    bool? profileCompleted,
   }) {
     return UserModel(
       id: id ?? this.id,
       uid: uid ?? this.uid,
       email: email ?? this.email,
-      password: password ?? this.password,
       name: name ?? this.name,
       role: role ?? this.role,
       studentId: studentId ?? this.studentId,
@@ -92,12 +105,13 @@ class UserModel {
       createdAt: createdAt ?? this.createdAt,
       lastLoginAt: lastLoginAt ?? this.lastLoginAt,
       isActive: isActive ?? this.isActive,
+      profileCompleted: profileCompleted ?? this.profileCompleted,
     );
   }
 
   @override
   String toString() {
-    return 'UserModel(id: $id, email: $email, name: $name, role: $role)';
+    return 'UserModel(id: $id, email: $email, name: $name, role: $role, profileCompleted: $profileCompleted)';
   }
 
   @override

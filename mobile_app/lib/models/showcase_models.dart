@@ -1,0 +1,499 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+/// Enum for different types of showcase posts
+enum PostType {
+  text,
+  image,
+  video,
+  mixed, // Text + media combination
+}
+
+/// Enum for post privacy settings
+enum PostPrivacy {
+  public, // Visible to everyone
+  department, // Visible to same department only
+  friends, // Visible to connections only
+}
+
+/// Enum for post categories
+enum PostCategory {
+  academic,
+  creative,
+  technical,
+  sports,
+  volunteer,
+  achievement,
+  project,
+  general,
+}
+
+/// Model for media content (images/videos)
+class MediaModel {
+  final String id;
+  final String url;
+  final String type; // 'image' or 'video'
+  final String? thumbnailUrl; // For videos
+  final int? duration; // For videos in seconds
+  final double? aspectRatio;
+  final int? fileSize; // In bytes
+  final DateTime uploadedAt;
+
+  MediaModel({
+    required this.id,
+    required this.url,
+    required this.type,
+    this.thumbnailUrl,
+    this.duration,
+    this.aspectRatio,
+    this.fileSize,
+    required this.uploadedAt,
+  });
+
+  factory MediaModel.fromJson(Map<String, dynamic> json) {
+    return MediaModel(
+      id: json['id'] ?? '',
+      url: json['url'] ?? '',
+      type: json['type'] ?? 'image',
+      thumbnailUrl: json['thumbnailUrl'],
+      duration: json['duration'],
+      aspectRatio: json['aspectRatio']?.toDouble(),
+      fileSize: json['fileSize'],
+      uploadedAt: json['uploadedAt'] is Timestamp
+          ? (json['uploadedAt'] as Timestamp).toDate()
+          : DateTime.parse(
+              json['uploadedAt'] ?? DateTime.now().toIso8601String()),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'url': url,
+      'type': type,
+      'thumbnailUrl': thumbnailUrl,
+      'duration': duration,
+      'aspectRatio': aspectRatio,
+      'fileSize': fileSize,
+      'uploadedAt': uploadedAt.toIso8601String(),
+    };
+  }
+}
+
+/// Model for user mentions in posts/comments
+class MentionModel {
+  final String userId;
+  final String userName;
+  final int startIndex;
+  final int endIndex;
+
+  MentionModel({
+    required this.userId,
+    required this.userName,
+    required this.startIndex,
+    required this.endIndex,
+  });
+
+  factory MentionModel.fromJson(Map<String, dynamic> json) {
+    return MentionModel(
+      userId: json['userId'] ?? '',
+      userName: json['userName'] ?? '',
+      startIndex: json['startIndex'] ?? 0,
+      endIndex: json['endIndex'] ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'userId': userId,
+      'userName': userName,
+      'startIndex': startIndex,
+      'endIndex': endIndex,
+    };
+  }
+}
+
+/// Model for comments on posts
+class CommentModel {
+  final String id;
+  final String postId;
+  final String userId;
+  final String userName;
+  final String? userProfileImage;
+  final String content;
+  final List<String> likes;
+  final List<MentionModel> mentions;
+  final String? parentCommentId; // For threaded replies
+  final List<CommentModel> replies;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isEdited;
+
+  CommentModel({
+    required this.id,
+    required this.postId,
+    required this.userId,
+    required this.userName,
+    this.userProfileImage,
+    required this.content,
+    this.likes = const [],
+    this.mentions = const [],
+    this.parentCommentId,
+    this.replies = const [],
+    required this.createdAt,
+    required this.updatedAt,
+    this.isEdited = false,
+  });
+
+  factory CommentModel.fromJson(Map<String, dynamic> json) {
+    return CommentModel(
+      id: json['id'] ?? '',
+      postId: json['postId'] ?? '',
+      userId: json['userId'] ?? '',
+      userName: json['userName'] ?? '',
+      userProfileImage: json['userProfileImage'],
+      content: json['content'] ?? '',
+      likes: List<String>.from(json['likes'] ?? []),
+      mentions: (json['mentions'] as List?)
+              ?.map((m) => MentionModel.fromJson(m))
+              .toList() ??
+          [],
+      parentCommentId: json['parentCommentId'],
+      replies: (json['replies'] as List?)
+              ?.map((r) => CommentModel.fromJson(r))
+              .toList() ??
+          [],
+      createdAt: json['createdAt'] is Timestamp
+          ? (json['createdAt'] as Timestamp).toDate()
+          : DateTime.parse(
+              json['createdAt'] ?? DateTime.now().toIso8601String()),
+      updatedAt: json['updatedAt'] is Timestamp
+          ? (json['updatedAt'] as Timestamp).toDate()
+          : DateTime.parse(
+              json['updatedAt'] ?? DateTime.now().toIso8601String()),
+      isEdited: json['isEdited'] ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'postId': postId,
+      'userId': userId,
+      'userName': userName,
+      'userProfileImage': userProfileImage,
+      'content': content,
+      'likes': likes,
+      'mentions': mentions.map((m) => m.toJson()).toList(),
+      'parentCommentId': parentCommentId,
+      'replies': replies.map((r) => r.toJson()).toList(),
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+      'isEdited': isEdited,
+    };
+  }
+
+  CommentModel copyWith({
+    String? id,
+    String? postId,
+    String? userId,
+    String? userName,
+    String? userProfileImage,
+    String? content,
+    List<String>? likes,
+    List<MentionModel>? mentions,
+    String? parentCommentId,
+    List<CommentModel>? replies,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    bool? isEdited,
+  }) {
+    return CommentModel(
+      id: id ?? this.id,
+      postId: postId ?? this.postId,
+      userId: userId ?? this.userId,
+      userName: userName ?? this.userName,
+      userProfileImage: userProfileImage ?? this.userProfileImage,
+      content: content ?? this.content,
+      likes: likes ?? this.likes,
+      mentions: mentions ?? this.mentions,
+      parentCommentId: parentCommentId ?? this.parentCommentId,
+      replies: replies ?? this.replies,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isEdited: isEdited ?? this.isEdited,
+    );
+  }
+
+  // Helper methods
+  bool get hasReplies => replies.isNotEmpty;
+  int get likesCount => likes.length;
+  bool isLikedBy(String userId) => likes.contains(userId);
+  bool isOwnedBy(String userId) => this.userId == userId;
+
+  String get timeAgo {
+    final now = DateTime.now();
+    final difference = now.difference(createdAt);
+
+    if (difference.inDays > 7) {
+      return '${createdAt.day}/${createdAt.month}/${createdAt.year}';
+    } else if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
+  }
+}
+
+/// Main model for showcase posts
+class ShowcasePostModel {
+  final String id;
+  final String userId;
+  final String userName;
+  final String? userProfileImage;
+  final String? userRole; // 'student' or 'lecturer'
+  final String? userDepartment;
+  final String? userHeadline;
+
+  // Post content
+  final String content;
+  final PostType type;
+  final PostCategory category;
+  final PostPrivacy privacy;
+  final List<MediaModel> media;
+  final List<String> tags;
+  final List<MentionModel> mentions;
+
+  // Engagement
+  final List<String> likes;
+  final List<CommentModel> comments;
+  final List<String> shares;
+  final int viewCount;
+
+  // Metadata
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isEdited;
+  final bool isPinned;
+  final bool isArchived;
+  final String? location;
+
+  ShowcasePostModel({
+    required this.id,
+    required this.userId,
+    required this.userName,
+    this.userProfileImage,
+    this.userRole,
+    this.userDepartment,
+    this.userHeadline,
+    required this.content,
+    required this.type,
+    this.category = PostCategory.general,
+    this.privacy = PostPrivacy.public,
+    this.media = const [],
+    this.tags = const [],
+    this.mentions = const [],
+    this.likes = const [],
+    this.comments = const [],
+    this.shares = const [],
+    this.viewCount = 0,
+    required this.createdAt,
+    required this.updatedAt,
+    this.isEdited = false,
+    this.isPinned = false,
+    this.isArchived = false,
+    this.location,
+  });
+
+  factory ShowcasePostModel.fromJson(Map<String, dynamic> json) {
+    return ShowcasePostModel(
+      id: json['id'] ?? '',
+      userId: json['userId'] ?? '',
+      userName: json['userName'] ?? '',
+      userProfileImage: json['userProfileImage'],
+      userRole: json['userRole'],
+      userDepartment: json['userDepartment'],
+      userHeadline: json['userHeadline'],
+      content: json['content'] ?? '',
+      type: PostType.values.firstWhere(
+        (e) => e.toString().split('.').last == json['type'],
+        orElse: () => PostType.text,
+      ),
+      category: PostCategory.values.firstWhere(
+        (e) => e.toString().split('.').last == json['category'],
+        orElse: () => PostCategory.general,
+      ),
+      privacy: PostPrivacy.values.firstWhere(
+        (e) => e.toString().split('.').last == json['privacy'],
+        orElse: () => PostPrivacy.public,
+      ),
+      media: (json['media'] as List?)
+              ?.map((m) => MediaModel.fromJson(m))
+              .toList() ??
+          [],
+      tags: List<String>.from(json['tags'] ?? []),
+      mentions: (json['mentions'] as List?)
+              ?.map((m) => MentionModel.fromJson(m))
+              .toList() ??
+          [],
+      likes: List<String>.from(json['likes'] ?? []),
+      comments: (json['comments'] as List?)
+              ?.map((c) => CommentModel.fromJson(c))
+              .toList() ??
+          [],
+      shares: List<String>.from(json['shares'] ?? []),
+      viewCount: json['viewCount'] ?? 0,
+      createdAt: json['createdAt'] is Timestamp
+          ? (json['createdAt'] as Timestamp).toDate()
+          : DateTime.parse(
+              json['createdAt'] ?? DateTime.now().toIso8601String()),
+      updatedAt: json['updatedAt'] is Timestamp
+          ? (json['updatedAt'] as Timestamp).toDate()
+          : DateTime.parse(
+              json['updatedAt'] ?? DateTime.now().toIso8601String()),
+      isEdited: json['isEdited'] ?? false,
+      isPinned: json['isPinned'] ?? false,
+      isArchived: json['isArchived'] ?? false,
+      location: json['location'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'userId': userId,
+      'userName': userName,
+      'userProfileImage': userProfileImage,
+      'userRole': userRole,
+      'userDepartment': userDepartment,
+      'userHeadline': userHeadline,
+      'content': content,
+      'type': type.toString().split('.').last,
+      'category': category.toString().split('.').last,
+      'privacy': privacy.toString().split('.').last,
+      'media': media.map((m) => m.toJson()).toList(),
+      'tags': tags,
+      'mentions': mentions.map((m) => m.toJson()).toList(),
+      'likes': likes,
+      'comments': comments.map((c) => c.toJson()).toList(),
+      'shares': shares,
+      'viewCount': viewCount,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+      'isEdited': isEdited,
+      'isPinned': isPinned,
+      'isArchived': isArchived,
+      'location': location,
+    };
+  }
+
+  ShowcasePostModel copyWith({
+    String? id,
+    String? userId,
+    String? userName,
+    String? userProfileImage,
+    String? userRole,
+    String? userDepartment,
+    String? userHeadline,
+    String? content,
+    PostType? type,
+    PostCategory? category,
+    PostPrivacy? privacy,
+    List<MediaModel>? media,
+    List<String>? tags,
+    List<MentionModel>? mentions,
+    List<String>? likes,
+    List<CommentModel>? comments,
+    List<String>? shares,
+    int? viewCount,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    bool? isEdited,
+    bool? isPinned,
+    bool? isArchived,
+    String? location,
+  }) {
+    return ShowcasePostModel(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      userName: userName ?? this.userName,
+      userProfileImage: userProfileImage ?? this.userProfileImage,
+      userRole: userRole ?? this.userRole,
+      userDepartment: userDepartment ?? this.userDepartment,
+      userHeadline: userHeadline ?? this.userHeadline,
+      content: content ?? this.content,
+      type: type ?? this.type,
+      category: category ?? this.category,
+      privacy: privacy ?? this.privacy,
+      media: media ?? this.media,
+      tags: tags ?? this.tags,
+      mentions: mentions ?? this.mentions,
+      likes: likes ?? this.likes,
+      comments: comments ?? this.comments,
+      shares: shares ?? this.shares,
+      viewCount: viewCount ?? this.viewCount,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isEdited: isEdited ?? this.isEdited,
+      isPinned: isPinned ?? this.isPinned,
+      isArchived: isArchived ?? this.isArchived,
+      location: location ?? this.location,
+    );
+  }
+
+  // Helper methods
+  int get likesCount => likes.length;
+  int get commentsCount => comments.length;
+  int get sharesCount => shares.length;
+
+  bool isLikedBy(String userId) => likes.contains(userId);
+  bool isSharedBy(String userId) => shares.contains(userId);
+  bool isOwnedBy(String userId) => this.userId == userId;
+
+  bool get hasMedia => media.isNotEmpty;
+  bool get hasImages => media.any((m) => m.type == 'image');
+  bool get hasVideos => media.any((m) => m.type == 'video');
+  bool get hasTags => tags.isNotEmpty;
+  bool get hasMentions => mentions.isNotEmpty;
+
+  String get timeAgo {
+    final now = DateTime.now();
+    final difference = now.difference(createdAt);
+
+    if (difference.inDays > 7) {
+      return '${createdAt.day}/${createdAt.month}/${createdAt.year}';
+    } else if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
+  }
+
+  String get categoryDisplayName {
+    switch (category) {
+      case PostCategory.academic:
+        return 'Academic';
+      case PostCategory.creative:
+        return 'Creative';
+      case PostCategory.technical:
+        return 'Technical';
+      case PostCategory.sports:
+        return 'Sports';
+      case PostCategory.volunteer:
+        return 'Volunteer';
+      case PostCategory.achievement:
+        return 'Achievement';
+      case PostCategory.project:
+        return 'Project';
+      case PostCategory.general:
+        return 'General';
+    }
+  }
+}

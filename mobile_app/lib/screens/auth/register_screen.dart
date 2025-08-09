@@ -11,7 +11,7 @@ class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  _RegisterScreenState createState() => _RegisterScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
@@ -61,9 +61,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       if (!smapValid) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Invalid SMAP credentials.')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Invalid SMAP credentials.')),
+          );
+        }
         setState(() {
           _isLoading = false;
         });
@@ -81,24 +83,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
         department: _departmentController.text.trim(),
       );
 
-      print('Registration successful: ${result.email}');
+      debugPrint('Registration successful: ${result.email}');
 
       // Route to dashboard
-      if (_selectedRole == UserRole.student) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const StudentDashboard()),
-          (route) => false,
-        );
-      } else if (_selectedRole == UserRole.lecturer) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const LecturerDashboard()),
-          (route) => false,
-        );
+      if (mounted) {
+        if (_selectedRole == UserRole.student) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const StudentDashboard()),
+            (route) => false,
+          );
+        } else if (_selectedRole == UserRole.lecturer) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const LecturerDashboard()),
+            (route) => false,
+          );
+        }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {

@@ -1,69 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../../../services/auth_service.dart';
+import '../../../services/profile_service.dart';
+import '../../../services/achievement_service.dart';
 import '../../../models/user_model.dart';
 import '../../../widgets/custom_button.dart';
+import '../settings/settings_screen.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
 
   @override
-  _AdminDashboardState createState() => _AdminDashboardState();
+  State<AdminDashboard> createState() => _AdminDashboardState();
 }
 
 class _AdminDashboardState extends State<AdminDashboard> {
   UserModel? _currentUser;
   bool _isLoading = true;
 
-  // Mock data for demonstration
-  final Map<String, dynamic> _stats = {
-    'totalUsers': 1247,
-    'totalStudents': 1156,
-    'totalLecturers': 89,
-    'pendingVerifications': 67,
-    'verifiedAchievements': 892,
-    'totalDepartments': 12,
-    'activeUsers': 987,
-    'systemHealth': 'Excellent',
-  };
+  Map<String, dynamic> _stats = {};
+  List<Map<String, dynamic>> _topDepartments = [];
 
+  // Recent activities would typically come from an activity log service
+  // For now, we'll keep a simple structure but note this should be from Firebase
   final List<Map<String, dynamic>> _recentActivities = [
     {
-      'type': 'user_registration',
-      'description': 'New student registered: Ahmad Zulkarnain',
-      'time': '2 minutes ago',
-      'icon': Icons.person_add,
-      'color': Colors.green,
-    },
-    {
-      'type': 'achievement_verified',
-      'description': 'Achievement verified by Dr. Sarah Johnson',
-      'time': '15 minutes ago',
-      'icon': Icons.verified,
+      'type': 'system_info',
+      'description': 'Dashboard loaded successfully',
+      'time': 'Just now',
+      'icon': Icons.info,
       'color': Colors.blue,
     },
-    {
-      'type': 'system_alert',
-      'description': 'System backup completed successfully',
-      'time': '1 hour ago',
-      'icon': Icons.backup,
-      'color': Colors.orange,
-    },
-    {
-      'type': 'user_login',
-      'description': 'Unusual login activity detected',
-      'time': '2 hours ago',
-      'icon': Icons.security,
-      'color': Colors.red,
-    },
-  ];
-
-  final List<Map<String, dynamic>> _topDepartments = [
-    {'name': 'Computer Science', 'students': 234, 'achievements': 156},
-    {'name': 'Electrical Engineering', 'students': 198, 'achievements': 134},
-    {'name': 'Mechanical Engineering', 'students': 187, 'achievements': 98},
-    {'name': 'Civil Engineering', 'students': 165, 'achievements': 87},
-    {'name': 'Business Administration', 'students': 142, 'achievements': 76},
   ];
 
   @override
@@ -75,19 +43,90 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Future<void> _loadUserData() async {
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
+      final profileService =
+          Provider.of<ProfileService>(context, listen: false);
+      final achievementService =
+          Provider.of<AchievementService>(context, listen: false);
 
       final user = authService.currentUser;
       if (user != null) {
         _currentUser = await authService.getUserData(user.uid);
       }
+
+      // Load real statistics from Firebase
+      await _loadStatistics(authService, profileService, achievementService);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading dashboard: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading dashboard: $e')),
+        );
+      }
     } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadStatistics(
+      AuthService authService,
+      ProfileService profileService,
+      AchievementService achievementService) async {
+    try {
+      // Get all users
+      final allUsers = await authService.getAllUsers();
+      final students =
+          allUsers.where((user) => user.role == UserRole.student).toList();
+      final lecturers =
+          allUsers.where((user) => user.role == UserRole.lecturer).toList();
+
+      // Get all profiles
+      final allProfiles = await profileService.getAllProfiles();
+
+      // Get achievement statistics
+      final achievementStats = await achievementService.getAchievementStats();
+
+      // Calculate department statistics
+      final departmentCounts = <String, Map<String, int>>{};
+      for (var profile in allProfiles) {
+        if (!departmentCounts.containsKey(profile.department)) {
+          departmentCounts[profile.department] = {
+            'students': 0,
+            'achievements': 0
+          };
+        }
+        departmentCounts[profile.department]!['students'] =
+            (departmentCounts[profile.department]!['students'] ?? 0) + 1;
+      }
+
       setState(() {
-        _isLoading = false;
+        _stats = {
+          'totalUsers': allUsers.length,
+          'totalStudents': students.length,
+          'totalLecturers': lecturers.length,
+          'pendingVerifications':
+              achievementStats['unverifiedAchievements'] ?? 0,
+          'verifiedAchievements': achievementStats['verifiedAchievements'] ?? 0,
+          'totalDepartments': departmentCounts.length,
+          'activeUsers':
+              allUsers.length, // Simplified - all users considered active
+          'systemHealth': 'Excellent',
+        };
+
+        _topDepartments = departmentCounts.entries
+            .map((entry) => {
+                  'name': entry.key,
+                  'students': entry.value['students'] ?? 0,
+                  'achievements': entry.value['achievements'] ?? 0,
+                })
+            .toList()
+          ..sort(
+              (a, b) => (b['students'] as int).compareTo(a['students'] as int));
       });
+    } catch (e) {
+      debugPrint('Error loading statistics: $e');
     }
   }
 
@@ -122,8 +161,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('System Settings coming soon!')),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SettingsScreen(),
+                ),
               );
             },
           ),
@@ -153,6 +195,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
             onSelected: (value) {
               if (value == 'logout') {
                 Provider.of<AuthService>(context, listen: false).signOut();
+              } else if (value == 'profile') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SettingsScreen(),
+                  ),
+                );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('$value feature coming soon!')),

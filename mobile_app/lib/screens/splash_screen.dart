@@ -11,7 +11,7 @@ class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  _SplashScreenState createState() => _SplashScreenState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen>
@@ -63,20 +63,28 @@ class _SplashScreenState extends State<SplashScreen>
 
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
+
+      // First, try to restore user session from Firebase Auth
+      debugPrint('SplashScreen: Attempting to restore user session...');
+      await authService.initialize();
+
+      if (_disposed || !mounted) return;
+
       final user = authService.currentUser;
+      debugPrint('SplashScreen: currentUser after restore = \\${user?.uid}');
 
       if (_disposed || !mounted) return;
 
       if (user != null) {
-        UserModel? userData = await authService.getUserData(user.uid);
-
-        if (_disposed || !mounted) return;
-
-        _navigateBasedOnRole(userData!);
+        debugPrint(
+            'SplashScreen: User found, navigating based on role: ${user.role}');
+        _navigateBasedOnRole(user);
       } else {
+        debugPrint('SplashScreen: No user found, navigating to login');
         _navigateToLogin();
       }
     } catch (e) {
+      debugPrint('SplashScreen: Error during auth check: $e');
       if (!_disposed && mounted) {
         _navigateToLogin();
       }
@@ -133,7 +141,7 @@ class _SplashScreenState extends State<SplashScreen>
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 10,
                             offset: const Offset(0, 5),
                           ),
@@ -159,7 +167,7 @@ class _SplashScreenState extends State<SplashScreen>
                     Text(
                       'Profiling App',
                       style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                             fontWeight: FontWeight.w500,
                           ),
                     ),
@@ -176,9 +184,19 @@ class _SplashScreenState extends State<SplashScreen>
                     Text(
                       'UTHM FSKTM',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Colors.white.withOpacity(0.8),
+                            color: Colors.white.withValues(alpha: 0.8),
                           ),
                     ),
+
+                    // Error message if navigation fails
+                    if (!_disposed && !mounted)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 24),
+                        child: Text(
+                          'An error occurred. Please restart the app.',
+                          style: TextStyle(color: Colors.red, fontSize: 16),
+                        ),
+                      ),
                   ],
                 ),
               ),

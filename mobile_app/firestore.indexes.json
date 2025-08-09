@@ -1,0 +1,63 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "showcase_posts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "privacy", "order": "ASCENDING"},
+        {"fieldPath": "createdAt", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "showcase_posts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "category", "order": "ASCENDING"},
+        {"fieldPath": "createdAt", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "showcase_posts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "userId", "order": "ASCENDING"},
+        {"fieldPath": "createdAt", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "showcase_posts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "userDepartment", "order": "ASCENDING"},
+        {"fieldPath": "privacy", "order": "ASCENDING"},
+        {"fieldPath": "createdAt", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "showcase_posts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "category", "order": "ASCENDING"},
+        {"fieldPath": "privacy", "order": "ASCENDING"},
+        {"fieldPath": "createdAt", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "profiles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "role", "order": "ASCENDING"},
+        {"fieldPath": "department", "order": "ASCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "profiles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "skills", "arrayConfig": "CONTAINS"},
+        {"fieldPath": "role", "order": "ASCENDING"}
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

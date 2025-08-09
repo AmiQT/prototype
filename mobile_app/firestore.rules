@@ -1,0 +1,80 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isValidPostData(data) {
+      return data.keys().hasAll(['userId', 'userName', 'content', 'type', 
+                                'category', 'privacy', 'createdAt', 'updatedAt']) &&
+             data.userId is string &&
+             data.userName is string &&
+             data.content is string &&
+             data.type in ['text', 'image', 'video', 'mixed'] &&
+             data.category in ['academic', 'creative', 'technical', 'sports', 
+                              'volunteer', 'achievement', 'project', 'general'] &&
+             data.privacy in ['public', 'department', 'friends'] &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp &&
+             data.likes is list &&
+             data.comments is list &&
+             data.shares is list;
+    }
+    
+    function canReadPost(postData) {
+      return postData.privacy == 'public' ||
+             (postData.privacy == 'department' && 
+              request.auth.token.department == postData.userDepartment) ||
+             (postData.privacy == 'friends' && 
+              (request.auth.uid == postData.userId || 
+               isConnectedUser(request.auth.uid, postData.userId)));
+    }
+    
+    function isConnectedUser(currentUserId, targetUserId) {
+      // Placeholder for friend/connection system
+      return false;
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isOwner(userId);
+    }
+    
+    // Profiles collection
+    match /profiles/{profileId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+    
+    // Showcase Posts Collection
+    match /showcase_posts/{postId} {
+      allow read: if isAuthenticated() && canReadPost(resource.data);
+      allow create: if isAuthenticated() && 
+        isOwner(request.resource.data.userId) &&
+        isValidPostData(request.resource.data);
+      allow update: if isAuthenticated() && 
+        isOwner(resource.data.userId) &&
+        request.resource.data.userId == resource.data.userId &&
+        request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+    
+    // Search history
+    match /search_history/{userId} {
+      allow read, write: if isAuthenticated() && isOwner(userId);
+    }
+    
+    // Allow read access to all documents for authenticated users (for search)
+    match /{document=**} {
+      allow read: if isAuthenticated();
+    }
+  }
+}

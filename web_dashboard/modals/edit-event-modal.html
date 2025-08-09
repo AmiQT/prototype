@@ -1,0 +1,72 @@
+<!-- Edit Event Modal -->
+<div id="edit-event-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-edit"></i> Edit Event</h3>
+            <span class="close" onclick="closeModal('edit-event-modal')">&times;</span>
+        </div>
+        <form id="edit-event-form">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="edit-event-title">
+                        <i class="fas fa-heading"></i> Event Title *
+                    </label>
+                    <input type="text" id="edit-event-title" required placeholder="Event title" title="Event title">
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-event-category">
+                        <i class="fas fa-tag"></i> Category *
+                    </label>
+                    <select id="edit-event-category" required title="Event category">
+                        <option value="">Select a category</option>
+                        <option value="Academic">Academic</option>
+                        <option value="Competition">Competition</option>
+                        <option value="Workshop">Workshop</option>
+                        <option value="Seminar">Seminar</option>
+                        <option value="Conference">Conference</option>
+                        <option value="Training">Training</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="edit-event-description">
+                    <i class="fas fa-align-left"></i> Event Description *
+                </label>
+                <textarea id="edit-event-description" required placeholder="Event description" title="Event description" rows="4"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <i class="fas fa-image"></i> Event Image
+                </label>
+                <div class="image-upload-container">
+                    <input type="file" id="edit-event-image-file" accept="image/*" style="margin-bottom:0.5em;" title="Upload event image">
+                    <div class="upload-divider">or</div>
+                    <input type="url" id="edit-event-image" placeholder="Enter image URL" title="Image URL">
+                    <img id="edit-event-image-preview" src="" alt="Image Preview" style="display:none;margin-top:0.5em;max-width:100%;max-height:120px;border-radius:8px;border:2px solid #e5e7eb;">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="edit-event-register-url">
+                    <i class="fas fa-link"></i> Registration URL *
+                </label>
+                <input type="url" id="edit-event-register-url" required placeholder="Registration URL" title="Registration URL">
+            </div>
+
+            <input type="hidden" id="edit-event-id" name="id">
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('edit-event-modal')">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

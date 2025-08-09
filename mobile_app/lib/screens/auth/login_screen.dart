@@ -1,18 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/auth_service.dart';
 import '../../models/user_model.dart';
+import '../../utils/error_handler.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../student/student_dashboard.dart';
 import '../lecturer/lecturer_dashboard.dart';
 import '../admin/admin_dashboard.dart';
 import 'register_screen.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../student/profile/student_profile_screen.dart';
-import '../../../models/profile_model.dart';
-import '../../../services/profile_service.dart';
+import 'comprehensive_profile_setup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -47,112 +45,80 @@ class _LoginScreenState extends State<LoginScreen> {
         _isLoading = true;
       });
       try {
-        final userCredential =
-            await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-        );
-        final user = userCredential.user;
-        if (user != null) {
-          // Fetch user data from Firestore
-          final authService = Provider.of<AuthService>(context, listen: false);
-          final userData = await authService.getUserData(user.uid);
-          if (userData == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  content: Text('User data not found. Please contact admin.')),
-            );
-          } else {
-            // Check if profile exists
-            final profileService =
-                Provider.of<ProfileService>(context, listen: false);
-            final profile = await profileService.getProfileByUserId(user.uid);
-            if (profile == null) {
-              // No profile, force user to create one
-              final result = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => EditProfilePage(
-                    name: userData.name ?? '',
-                    year: '',
-                    headline: '',
-                    about: '',
-                    experience: [],
-                    projects: [],
-                    achievements: [],
-                    gpa: 0.0,
-                    coCurriculum: 0.0,
-                    profileImage: '',
-                  ),
-                ),
-              );
-              if (result != null) {
-                // Save the new profile to Firestore
-                await profileService.saveProfile(ProfileModel(
-                  id: user.uid,
-                  userId: user.uid,
-                  fullName: result['name'],
-                  studentId: userData.studentId ?? '',
-                  program: userData.department ?? '',
-                  department: userData.department ?? '',
-                  semester: 1,
-                  phoneNumber: '',
-                  address: '',
-                  bio: result['about'],
-                  profileImageUrl: result['profileImage'],
-                  skills: [],
-                  interests: [],
-                  createdAt: DateTime.now(),
-                  updatedAt: DateTime.now(),
-                ));
-              } else {
-                // User backed out, log them out and return
-                await FirebaseAuth.instance.signOut();
-                setState(() => _isLoading = false);
-                return;
-              }
-            }
-            // Navigate based on role
-            Widget targetScreen;
-            switch (userData.role) {
-              case UserRole.student:
-                targetScreen = const StudentDashboard();
-                break;
-              case UserRole.lecturer:
-                targetScreen = const LecturerDashboard();
-                break;
-              case UserRole.admin:
-                targetScreen = const AdminDashboard();
-                break;
-              default:
-                targetScreen = const StudentDashboard();
-            }
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (_) => targetScreen),
-              (route) => false,
-            );
-          }
+        final authService = Provider.of<AuthService>(context, listen: false);
+        final email = _emailController.text.trim();
+        final password = _passwordController.text.trim();
+
+        // Validate input
+        if (email.isEmpty || password.isEmpty) {
+          throw Exception('Please enter both email and password');
+        }
+
+        // Sign in with Firebase
+        final user =
+            await authService.signInWithEmailAndPassword(email, password);
+
+        if (!mounted) return;
+
+        // Check if user has completed their profile
+        final hasCompletedProfile =
+            await authService.hasCompletedProfile(user.uid);
+
+        if (!mounted) return;
+
+        if (!hasCompletedProfile) {
+          // Redirect to profile setup
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(
+                builder: (_) => const ComprehensiveProfileSetupScreen()),
+            (route) => false,
+          );
+        } else {
+          // Navigate to appropriate dashboard based on role
+          _navigateToDashboard(user.role);
         }
       } on FirebaseAuthException catch (e) {
-        String message = 'Sign in failed';
-        if (e.code == 'user-not-found')
-          message = 'No user found for that email.';
-        else if (e.code == 'wrong-password')
-          message = 'Wrong password provided.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        if (mounted) {
+          ErrorHandler.showErrorSnackBar(
+            context,
+            ErrorHandler.getFirebaseAuthErrorMessage(e),
+          );
+        }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sign in error: $e')),
-        );
+        if (mounted) {
+          ErrorHandler.showErrorSnackBar(
+            context,
+            ErrorHandler.getGenericErrorMessage(e),
+          );
+        }
       } finally {
-        if (mounted)
+        if (mounted) {
           setState(() {
             _isLoading = false;
           });
+        }
       }
     }
+  }
+
+  void _navigateToDashboard(UserRole role) {
+    Widget dashboard;
+    switch (role) {
+      case UserRole.student:
+        dashboard = const StudentDashboard();
+        break;
+      case UserRole.lecturer:
+        dashboard = const LecturerDashboard();
+        break;
+      case UserRole.admin:
+        dashboard = const AdminDashboard();
+        break;
+    }
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => dashboard),
+      (route) => false,
+    );
   }
 
   @override
@@ -163,137 +129,155 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Center(
           child: SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              padding: const EdgeInsets.all(24.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  // Logo and Title
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Image.asset(
+                          'assets/images/uthm.png',
+                          height: 80,
+                          width: 80,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Talent Hub',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Showcase your skills and connect with opportunities.\nSign in or register to get started.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.black54,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 32),
-                  Text(
-                    'Talent Hub',
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue[800],
-                        ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Showcase your skills and connect with opportunities. Sign in or register to get started.',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.grey[700],
-                        ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 48),
+
+                  // Login Form
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          blurRadius: 16,
-                          offset: const Offset(0, 8),
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
                     child: Form(
                       key: _formKey,
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          TextFormField(
+                          CustomTextField(
                             controller: _emailController,
+                            labelText: 'Email',
+                            hintText: 'Enter your email address',
                             keyboardType: TextInputType.emailAddress,
-                            decoration: InputDecoration(
-                              labelText: 'Email',
-                              prefixIcon: const Icon(Icons.email_outlined),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
                             validator: (value) {
-                              if (value == null || value.isEmpty) {
+                              if (value == null || value.trim().isEmpty) {
                                 return 'Please enter your email';
                               }
-                              if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+                              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
                                   .hasMatch(value)) {
                                 return 'Please enter a valid email';
                               }
                               return null;
                             },
                           ),
-                          const SizedBox(height: 20),
-                          TextFormField(
+                          const SizedBox(height: 16),
+                          CustomTextField(
                             controller: _passwordController,
+                            labelText: 'Password',
+                            hintText: 'Enter your password',
                             obscureText: _obscurePassword,
-                            decoration: InputDecoration(
-                              labelText: 'Password',
-                              prefixIcon: const Icon(Icons.lock_outline),
-                              suffixIcon: IconButton(
-                                icon: Icon(_obscurePassword
-                                    ? Icons.visibility_off
-                                    : Icons.visibility),
-                                onPressed: () {
-                                  setState(() {
-                                    _obscurePassword = !_obscurePassword;
-                                  });
-                                },
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                                color: Colors.grey,
                               ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
                             ),
                             validator: (value) {
-                              if (value == null || value.isEmpty) {
+                              if (value == null || value.trim().isEmpty) {
                                 return 'Please enter your password';
+                              }
+                              if (value.length < 6) {
+                                return 'Password must be at least 6 characters';
                               }
                               return null;
                             },
                           ),
-                          const SizedBox(height: 12),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton(
-                              onPressed: () {
-                                // TODO: Implement forgot password
-                              },
-                              child: const Text('Forgot Password?'),
-                            ),
+                          const SizedBox(height: 24),
+                          CustomButton(
+                            text: _isLoading ? 'Signing In...' : 'Sign In',
+                            onPressed: _isLoading ? null : _onSignIn,
+                            isLoading: _isLoading,
                           ),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 24),
+
+                  // Register Button
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _onSignIn,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue[700],
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 18),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            textStyle: const TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
+                      const Text(
+                        "Don't have an account? ",
+                        style: TextStyle(
+                          color: Colors.black54,
+                          fontSize: 14,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: _navigateToRegister,
+                        child: const Text(
+                          'Register',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
                           ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 24,
-                                  width: 24,
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2, color: Colors.white),
-                                )
-                              : const Text('Sign In'),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 32),
                 ],
               ),
             ),

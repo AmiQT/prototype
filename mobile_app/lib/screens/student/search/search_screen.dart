@@ -1,154 +1,141 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'dart:async';
+import '../../../services/profile_service.dart';
+import '../../../services/search_service.dart';
+import '../../../models/profile_model.dart';
+import '../../../models/search_models.dart';
+import '../../../utils/error_handler.dart';
+import '../../../widgets/search_widgets.dart';
+import '../profile/student_profile_screen.dart';
 
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({Key? key}) : super(key: key);
+  const SearchScreen({super.key});
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  final List<String> _categories = ['Talent', 'Course', 'Year', 'Gender'];
-  String _selectedCategory = 'Talent';
-  String? _selectedFilterValue;
-  bool _isRefreshing = false;
+  final TextEditingController _searchController = TextEditingController();
+  final SearchService _searchService = SearchService();
 
-  // Expanded mock user data for all filter categories
-  final List<Map<String, String>> _users = [
-    {
-      'name': 'Ahmad Zaki',
-      'headline': 'Professional IoT',
-      'talent': 'IoT, Robotics',
-      'course': 'Computer Science',
-      'year': '3',
-      'gender': 'Male',
-      'image': 'https://randomuser.me/api/portraits/men/11.jpg',
-    },
-    {
-      'name': 'Nur Aina',
-      'headline': 'Data Science Enthusiast',
-      'talent': 'Data Analysis, Python',
-      'course': 'Data Science',
-      'year': '2',
-      'gender': 'Female',
-      'image': 'https://randomuser.me/api/portraits/women/12.jpg',
-    },
-    {
-      'name': 'Lim Wei',
-      'headline': 'Mobile App Developer',
-      'talent': 'Flutter, UI/UX',
-      'course': 'Software Engineering',
-      'year': '4',
-      'gender': 'Male',
-      'image': 'https://randomuser.me/api/portraits/men/13.jpg',
-    },
-    {
-      'name': 'Siti Aminah',
-      'headline': 'AI Researcher',
-      'talent': 'AI, Machine Learning',
-      'course': 'Artificial Intelligence',
-      'year': '1',
-      'gender': 'Female',
-      'image': 'https://randomuser.me/api/portraits/women/14.jpg',
-    },
-    {
-      'name': 'John Tan',
-      'headline': 'Cybersecurity Specialist',
-      'talent': 'Cybersecurity, Networking',
-      'course': 'Information Security',
-      'year': '2',
-      'gender': 'Male',
-      'image': 'https://randomuser.me/api/portraits/men/15.jpg',
-    },
-    {
-      'name': 'Aisyah Rahman',
-      'headline': 'Cloud Computing',
-      'talent': 'Cloud, DevOps',
-      'course': 'Computer Science',
-      'year': '3',
-      'gender': 'Female',
-      'image': 'https://randomuser.me/api/portraits/women/16.jpg',
-    },
-    {
-      'name': 'Faizal Hassan',
-      'headline': 'Game Developer',
-      'talent': 'Game Dev, Unity',
-      'course': 'Software Engineering',
-      'year': '1',
-      'gender': 'Male',
-      'image': 'https://randomuser.me/api/portraits/men/17.jpg',
-    },
-    {
-      'name': 'Chong Mei Ling',
-      'headline': 'Web Developer',
-      'talent': 'Web, JavaScript',
-      'course': 'Information Technology',
-      'year': '4',
-      'gender': 'Female',
-      'image': 'https://randomuser.me/api/portraits/women/18.jpg',
-    },
-  ];
+  Timer? _debounceTimer;
+  bool _isLoading = false;
+  bool _isInitialLoad = true;
+
+  List<SearchResult> _searchResults = [];
+  List<SearchHistoryItem> _searchHistory = [];
+  Map<String, List<SearchFilter>> _availableFilters = {};
+
+  String _currentQuery = '';
+  bool _showFilters = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfiles();
+  }
+
+  Future<void> _loadProfiles() async {
+    try {
+      final profileService =
+          Provider.of<ProfileService>(context, listen: false);
+      final profiles = await profileService.getAllProfiles();
+
+      if (mounted) {
+        setState(() {
+          _allProfiles = profiles;
+          _filteredProfiles = profiles;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        // Show user-friendly error message
+        ErrorHandler.showErrorSnackBar(
+          context,
+          'Failed to load profiles. Please check your connection and try again.',
+        );
+      }
+    }
+  }
 
   // Helper to get unique values for dropdowns
   List<String> get _dropdownOptions {
-    if (_selectedCategory == 'Talent') {
-      final skills = _users
-          .expand((u) => u['talent']!.split(','))
-          .map((s) => s.trim())
-          .toSet()
-          .toList();
+    if (_selectedCategory == 'Skills') {
+      final skills =
+          _allProfiles.expand((profile) => profile.skills).toSet().toList();
       skills.sort();
       return skills;
-    } else if (_selectedCategory == 'Course') {
-      final courses = _users.map((u) => u['course']!).toSet().toList();
-      courses.sort();
-      return courses;
-    } else if (_selectedCategory == 'Year') {
-      final years = _users.map((u) => u['year']!).toSet().toList();
-      years.sort();
-      return years;
-    } else if (_selectedCategory == 'Gender') {
-      return ['Male', 'Female'];
+    } else if (_selectedCategory == 'Department') {
+      final departments =
+          _allProfiles.map((profile) => profile.department).toSet().toList();
+      departments.sort();
+      return departments;
+    } else if (_selectedCategory == 'Semester') {
+      final semesters = _allProfiles
+          .map((profile) => profile.semester.toString())
+          .toSet()
+          .toList();
+      semesters.sort();
+      return semesters;
+    } else if (_selectedCategory == 'Program') {
+      final programs =
+          _allProfiles.map((profile) => profile.program).toSet().toList();
+      programs.sort();
+      return programs;
     }
     return [];
   }
 
-  List<Map<String, String>> get _filteredUsers {
-    if (_selectedFilterValue == null || _selectedFilterValue!.isEmpty)
-      return _users;
-    if (_selectedCategory == 'Talent') {
-      return _users
-          .where((user) => user['talent']!
-              .split(',')
-              .map((s) => s.trim().toLowerCase())
-              .contains(_selectedFilterValue!.toLowerCase()))
+  void _applyFilter() {
+    if (_selectedFilterValue == null || _selectedFilterValue!.isEmpty) {
+      setState(() {
+        _filteredProfiles = _allProfiles;
+      });
+      return;
+    }
+
+    List<ProfileModel> filtered = [];
+    if (_selectedCategory == 'Skills') {
+      filtered = _allProfiles
+          .where((profile) => profile.skills.any((skill) => skill
+              .toLowerCase()
+              .contains(_selectedFilterValue!.toLowerCase())))
           .toList();
-    } else if (_selectedCategory == 'Course') {
-      return _users
-          .where((user) => user['course'] == _selectedFilterValue)
+    } else if (_selectedCategory == 'Department') {
+      filtered = _allProfiles
+          .where((profile) => profile.department == _selectedFilterValue)
           .toList();
-    } else if (_selectedCategory == 'Year') {
-      return _users
-          .where((user) => user['year'] == _selectedFilterValue)
+    } else if (_selectedCategory == 'Semester') {
+      filtered = _allProfiles
+          .where(
+              (profile) => profile.semester.toString() == _selectedFilterValue)
           .toList();
-    } else if (_selectedCategory == 'Gender') {
-      return _users
-          .where((user) => user['gender'] == _selectedFilterValue)
+    } else if (_selectedCategory == 'Program') {
+      filtered = _allProfiles
+          .where((profile) => profile.program == _selectedFilterValue)
           .toList();
     }
-    return _users;
+
+    setState(() {
+      _filteredProfiles = filtered;
+    });
   }
 
-  void _navigateToProfile(Map<String, String> user) {
+  void _navigateToProfile(ProfileModel profile) {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => ProfileDetailScreen(user: user)),
+      MaterialPageRoute(builder: (_) => ProfileDetailScreen(profile: profile)),
     );
   }
 
   Future<void> _refreshUsers() async {
-    setState(() => _isRefreshing = true);
-    await Future.delayed(const Duration(seconds: 1));
-    setState(() => _isRefreshing = false);
+    await _loadProfiles();
   }
 
   @override
@@ -160,7 +147,7 @@ class _SearchScreenState extends State<SearchScreen> {
         elevation: 0.5,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           children: [
             // Filter chips
@@ -190,7 +177,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     .toList(),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             // Dropdown for filter value
             DropdownButton<String>(
               value: _selectedFilterValue,
@@ -206,39 +193,49 @@ class _SearchScreenState extends State<SearchScreen> {
                 setState(() {
                   _selectedFilterValue = val;
                 });
+                _applyFilter();
               },
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             // Results
             Expanded(
               child: RefreshIndicator(
                 onRefresh: _refreshUsers,
-                child: _isRefreshing
+                child: _isLoading
                     ? const Center(child: CircularProgressIndicator())
-                    : _filteredUsers.isEmpty
+                    : _filteredProfiles.isEmpty
                         ? const Center(
                             child: Text(
-                                'No users found. Try adjusting your filters or search.',
+                                'No profiles found. Try adjusting your filters.',
                                 style: TextStyle(
                                     fontSize: 16, color: Colors.grey)))
                         : ListView.builder(
-                            itemCount: _filteredUsers.length,
+                            itemCount: _filteredProfiles.length,
                             itemBuilder: (context, index) {
-                              final user = _filteredUsers[index];
+                              final profile = _filteredProfiles[index];
                               return Card(
                                 color: Colors.white,
                                 elevation: 2,
-                                margin: const EdgeInsets.only(bottom: 14),
+                                margin: const EdgeInsets.only(bottom: 8),
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16)),
                                 child: ListTile(
-                                  onTap: () => _navigateToProfile(user),
+                                  onTap: () => _navigateToProfile(profile),
                                   leading: CircleAvatar(
-                                    backgroundImage:
-                                        NetworkImage(user['image']!),
+                                    backgroundImage: profile.profileImageUrl !=
+                                                null &&
+                                            profile.profileImageUrl!.isNotEmpty
+                                        ? NetworkImage(profile.profileImageUrl!)
+                                        : null,
                                     radius: 28,
+                                    child: profile.profileImageUrl == null ||
+                                            profile.profileImageUrl!.isEmpty
+                                        ? Text(profile.fullName.isNotEmpty
+                                            ? profile.fullName[0].toUpperCase()
+                                            : 'U')
+                                        : null,
                                   ),
-                                  title: Text(user['name']!,
+                                  title: Text(profile.fullName,
                                       style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                           color: Colors.black)),
@@ -246,23 +243,22 @@ class _SearchScreenState extends State<SearchScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      if (user['headline'] != null)
-                                        Text(user['headline']!,
+                                      if (profile.bio != null &&
+                                          profile.bio!.isNotEmpty)
+                                        Text(profile.bio!,
                                             style: TextStyle(
                                                 color: Colors.blue[700],
                                                 fontWeight: FontWeight.w500)),
-                                      Text('Talent: ${user['talent']}',
+                                      Text(
+                                          'Skills: ${profile.skills.join(', ')}',
                                           style: const TextStyle(
                                               color: Colors.black)),
-                                      Text('Course: ${user['course']}',
+                                      Text('Program: ${profile.program}',
                                           style: const TextStyle(
-                                              color: Colors.black)),
-                                      Text('Year: ${user['year']}',
+                                              color: Colors.grey)),
+                                      Text('Department: ${profile.department}',
                                           style: const TextStyle(
-                                              color: Colors.black)),
-                                      Text('Gender: ${user['gender']}',
-                                          style: const TextStyle(
-                                              color: Colors.black)),
+                                              color: Colors.grey)),
                                     ],
                                   ),
                                   isThreeLine: true,
@@ -280,14 +276,14 @@ class _SearchScreenState extends State<SearchScreen> {
 }
 
 class ProfileDetailScreen extends StatelessWidget {
-  final Map<String, String> user;
-  const ProfileDetailScreen({required this.user, Key? key}) : super(key: key);
+  final ProfileModel profile;
+  const ProfileDetailScreen({required this.profile, super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(user['name'] ?? 'Profile'),
+        title: Text(profile.fullName),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),
@@ -295,17 +291,28 @@ class ProfileDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             CircleAvatar(
-              backgroundImage: NetworkImage(user['image']!),
+              backgroundImage: profile.profileImageUrl != null &&
+                      profile.profileImageUrl!.isNotEmpty
+                  ? NetworkImage(profile.profileImageUrl!)
+                  : null,
               radius: 50,
+              child: profile.profileImageUrl == null ||
+                      profile.profileImageUrl!.isEmpty
+                  ? Text(
+                      profile.fullName.isNotEmpty
+                          ? profile.fullName[0].toUpperCase()
+                          : 'U',
+                      style: const TextStyle(fontSize: 24))
+                  : null,
             ),
             const SizedBox(height: 18),
-            Text(user['name']!,
+            Text(profile.fullName,
                 style:
                     const TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
-            if (user['headline'] != null)
+            if (profile.bio != null && profile.bio!.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 6.0),
-                child: Text(user['headline']!,
+                child: Text(profile.bio!,
                     style: TextStyle(
                         fontSize: 16,
                         color: Colors.blue[700],
@@ -321,13 +328,17 @@ class ProfileDetailScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Talent: ${user['talent']}',
+                    Text('Student ID: ${profile.studentId}',
                         style: const TextStyle(fontSize: 16)),
-                    Text('Course: ${user['course']}',
+                    Text('Program: ${profile.program}',
                         style: const TextStyle(fontSize: 16)),
-                    Text('Year: ${user['year']}',
+                    Text('Department: ${profile.department}',
                         style: const TextStyle(fontSize: 16)),
-                    Text('Gender: ${user['gender']}',
+                    Text('Semester: ${profile.semester}',
+                        style: const TextStyle(fontSize: 16)),
+                    Text('Skills: ${profile.skills.join(', ')}',
+                        style: const TextStyle(fontSize: 16)),
+                    Text('Interests: ${profile.interests.join(', ')}',
                         style: const TextStyle(fontSize: 16)),
                   ],
                 ),

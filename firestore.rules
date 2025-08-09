@@ -1,0 +1,165 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // User authentication check
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Check if user is student
+    function isStudent() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'student';
+    }
+    
+    // Check if user is lecturer
+    function isLecturer() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'lecturer';
+    }
+    
+    // Rate limiting for QR code claims (max 10 claims per hour per user)
+    function checkRateLimit() {
+      let oneHourAgo = timestamp.date(2023, 1, 1, 0, 0, 0, 0, 0).toMillis() - 3600000;
+      let recentClaims = getAfter(/databases/$(database)/documents/badgeClaims)
+        .where('userId', '==', request.auth.uid)
+        .where('createdAt', '>', oneHourAgo);
+      return recentClaims.size() < 10;
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+    }
+    
+    // Events collection
+    match /events/{eventId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isLecturer();
+    }
+    
+    // Achievements collection
+    match /achievements/{achievementId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        request.auth.uid == resource.data.userId || 
+        isAdmin() || 
+        isLecturer()
+      );
+      allow delete: if isAdmin();
+    }
+    
+    // Badge Claims collection - NEW SECURITY RULES FOR QR CODE SYSTEM
+    match /badgeClaims/{claimId} {
+      // Allow reading own claims or admin can read all
+      allow read: if isAuthenticated() && (
+        request.auth.uid == resource.data.userId || 
+        isAdmin() || 
+        isLecturer()
+      );
+      
+      // Allow creating claims with strict validation
+      allow create: if isAuthenticated() && 
+        isStudent() && 
+        checkRateLimit() && 
+        validateBadgeClaim();
+      
+      // Allow updating claims (for admin approval/rejection)
+      allow update: if isAuthenticated() && (
+        isAdmin() || 
+        isLecturer()
+      );
+      
+      // Allow deleting claims (admin only)
+      allow delete: if isAdmin();
+    }
+    
+    // User Achievements collection
+    match /userAchievements/{userAchievementId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid == resource.data.userId || 
+        isAdmin() || 
+        isLecturer()
+      );
+      allow write: if isAuthenticated() && (
+        request.auth.uid == resource.data.userId || 
+        isAdmin() || 
+        isLecturer()
+      );
+    }
+    
+    // Profiles collection
+    match /profiles/{profileId} {
+      allow read: if isAuthenticated(); // Allow all authenticated users to read profiles
+      allow write: if isAuthenticated() && (
+        request.auth.uid == profileId ||
+        isAdmin()
+      );
+    }
+    
+    // Showcase posts collection
+    match /showcase_posts/{postId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+        request.auth.uid == request.resource.data.userId;
+      allow update, delete: if isAuthenticated() && (
+        request.auth.uid == resource.data.userId ||
+        isAdmin()
+      );
+    }
+    
+    // Chat messages collection
+    match /chatMessages/{messageId} {
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Validation function for badge claims
+    function validateBadgeClaim() {
+      let claim = request.resource.data;
+      
+      // Required fields
+      let hasRequiredFields = 
+        claim.userId != null &&
+        claim.eventId != null &&
+        claim.badgeId != null &&
+        claim.uniqueCode != null &&
+        claim.claimedAt != null &&
+        claim.status != null &&
+        claim.claimMethod != null;
+      
+      // User can only claim for themselves
+      let isOwnClaim = claim.userId == request.auth.uid;
+      
+      // Status must be 'pending' for new claims
+      let isValidStatus = claim.status == 'pending';
+      
+      // Claim method validation
+      let isValidMethod = claim.claimMethod in ['qr_code', 'manual'];
+      
+      // Unique code format validation (alphanumeric with hyphens)
+      let isValidUniqueCode = claim.uniqueCode.matches('^[A-Z0-9-]+$');
+      
+      // Timestamp validation (not in the future)
+      let isValidTimestamp = claim.claimedAt <= request.time;
+      
+      return hasRequiredFields && 
+             isOwnClaim && 
+             isValidStatus && 
+             isValidMethod && 
+             isValidUniqueCode && 
+             isValidTimestamp;
+    }
+  }
+} 

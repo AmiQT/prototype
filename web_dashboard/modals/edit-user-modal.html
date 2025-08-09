@@ -1,0 +1,75 @@
+<!-- Edit User Modal -->
+<div id="edit-user-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-edit"></i> Edit User</h3>
+            <span class="close" onclick="closeModal('edit-user-modal')">&times;</span>
+        </div>
+        <form id="edit-user-form">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="edit-user-name">
+                        <i class="fas fa-user"></i> Full Name *
+                    </label>
+                    <input type="text" id="edit-user-name" name="name" required placeholder="Full name" title="Full name">
+                </div>
+                <div class="form-group">
+                    <label for="edit-user-email">
+                        <i class="fas fa-envelope"></i> Email *
+                    </label>
+                    <input type="email" id="edit-user-email" name="email" required placeholder="Email address" title="Email address">
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="edit-user-role">
+                        <i class="fas fa-user-tag"></i> Role *
+                    </label>
+                    <select id="edit-user-role" name="role" required onchange="toggleEditDepartmentField()" title="User role">
+                        <option value="">Select Role</option>
+                        <option value="student">Student</option>
+                        <option value="lecturer">Lecturer</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit-user-status">
+                        <i class="fas fa-toggle-on"></i> Status *
+                    </label>
+                    <select id="edit-user-status" name="status" required title="Account status">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Course/Department Field (conditionally shown) -->
+            <div class="form-group" id="edit-department-field-group" style="display: none;">
+                <label for="edit-user-course" id="edit-user-department-label">
+                    <i class="fas fa-graduation-cap"></i> Course Code *
+                </label>
+                <input type="text" id="edit-user-course" name="course" placeholder="Course code or Department" title="Course code for students, Department for lecturers">
+            </div>
+
+            <!-- Matrix/Staff ID Field (conditionally shown) -->
+            <div class="form-group" id="edit-id-field-group" style="display: none;">
+                <label for="edit-user-matrix-id" id="edit-id-field-label">
+                    <i class="fas fa-id-card"></i> Matrix Number *
+                </label>
+                <input type="text" id="edit-user-matrix-id" name="matrixId" placeholder="Matrix number or Staff ID" title="Matrix number for students, Staff ID for lecturers">
+            </div>
+
+            <input type="hidden" id="edit-user-id" name="id">
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('edit-user-modal')">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

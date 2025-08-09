@@ -1,177 +1,323 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import '../models/achievement_model.dart';
+import '../utils/error_handler.dart';
+import 'dart:io';
 
 class AchievementService {
-  final List<AchievementModel> _mockAchievements = [
-    AchievementModel(
-      id: 'a1',
-      userId: '1',
-      title: "Dean's List",
-      description: 'Awarded for academic excellence in 2023.',
-      type: AchievementType.academic,
-      organization: 'UTHM',
-      dateAchieved: DateTime(2023, 6, 1),
-      certificateUrl: '',
-      imageUrl: '',
-      points: 100,
-      isVerified: true,
-      verifiedBy: 'Dr. Siti Aminah',
-      verifiedAt: DateTime(2023, 6, 5),
-      createdAt: DateTime(2023, 6, 2),
-      updatedAt: DateTime(2023, 6, 2),
-    ),
-    AchievementModel(
-      id: 'a2',
-      userId: '1',
-      title: 'Hackathon Winner',
-      description: 'Won 1st place in UTHM Hackathon 2023.',
-      type: AchievementType.competition,
-      organization: 'UTHM',
-      dateAchieved: DateTime(2023, 8, 15),
-      certificateUrl: '',
-      imageUrl: '',
-      points: 150,
-      isVerified: false,
-      createdAt: DateTime(2023, 8, 16),
-      updatedAt: DateTime(2023, 8, 16),
-    ),
-  ];
+  final CollectionReference achievementsCollection =
+      FirebaseFirestore.instance.collection('achievements');
+
+  Stream<List<AchievementModel>> streamAllAchievements() {
+    return achievementsCollection.snapshots().map((snapshot) => snapshot.docs
+        .map((doc) =>
+            AchievementModel.fromJson(doc.data() as Map<String, dynamic>))
+        .toList());
+  }
+
+  Future<List<AchievementModel>> getAllAchievements() async {
+    try {
+      debugPrint('AchievementService: Fetching all achievements');
+
+      final querySnapshot = await achievementsCollection.get();
+      final achievements = querySnapshot.docs
+          .map((doc) =>
+              AchievementModel.fromJson(doc.data() as Map<String, dynamic>))
+          .toList();
+
+      debugPrint(
+          'AchievementService: Found ${achievements.length} achievements');
+      return achievements;
+    } on FirebaseException catch (e) {
+      debugPrint(
+          'AchievementService: Firebase error fetching achievements: ${e.code} - ${e.message}');
+      throw Exception(
+          'Failed to fetch achievements: ${ErrorHandler.getFirestoreErrorMessage(e)}');
+    } catch (e) {
+      debugPrint(
+          'AchievementService: Unexpected error fetching achievements: $e');
+      throw Exception('Failed to fetch achievements: ${e.toString()}');
+    }
+  }
+
+  Future<List<AchievementModel>> getAchievementsByUserId(String userId) async {
+    try {
+      final querySnapshot =
+          await achievementsCollection.where('userId', isEqualTo: userId).get();
+      return querySnapshot.docs
+          .map((doc) =>
+              AchievementModel.fromJson(doc.data() as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      debugPrint('Error fetching achievements by user ID: $e');
+      return [];
+    }
+  }
 
   Future<void> createAchievement(AchievementModel achievement) async {
-    _mockAchievements.add(achievement);
+    try {
+      // Validate achievement data
+      if (achievement.title.isEmpty || achievement.userId.isEmpty) {
+        throw Exception('Achievement title and user ID are required');
+      }
+
+      debugPrint(
+          'AchievementService: Creating achievement: ${achievement.title}');
+
+      await achievementsCollection
+          .doc(achievement.id)
+          .set(achievement.toJson());
+
+      debugPrint('AchievementService: Achievement created successfully');
+    } on FirebaseException catch (e) {
+      debugPrint(
+          'AchievementService: Firebase error creating achievement: ${e.code} - ${e.message}');
+      throw Exception(
+          'Failed to create achievement: ${ErrorHandler.getFirestoreErrorMessage(e)}');
+    } catch (e) {
+      debugPrint(
+          'AchievementService: Unexpected error creating achievement: $e');
+      throw Exception('Failed to create achievement: ${e.toString()}');
+    }
   }
 
   Future<void> updateAchievement(AchievementModel achievement) async {
-    final idx = _mockAchievements.indexWhere((a) => a.id == achievement.id);
-    if (idx != -1) {
-      _mockAchievements[idx] = achievement;
+    try {
+      await achievementsCollection
+          .doc(achievement.id)
+          .update(achievement.toJson());
+    } catch (e) {
+      debugPrint('Error updating achievement: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteAchievement(String achievementId) async {
+    try {
+      await achievementsCollection.doc(achievementId).delete();
+    } catch (e) {
+      debugPrint('Error deleting achievement: $e');
+      rethrow;
     }
   }
 
   Future<AchievementModel?> getAchievementById(String achievementId) async {
     try {
-      return _mockAchievements.firstWhere((a) => a.id == achievementId,
-          orElse: () => throw Exception('Achievement not found'));
+      final doc = await achievementsCollection.doc(achievementId).get();
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        return AchievementModel.fromJson(data);
+      }
+      return null;
     } catch (e) {
+      debugPrint('Error fetching achievement by ID: $e');
       return null;
     }
   }
 
-  Future<List<AchievementModel>> getAchievementsByUserId(String userId) async {
-    return _mockAchievements.where((a) => a.userId == userId).toList();
-  }
-
-  Future<List<AchievementModel>> getAllAchievements() async {
-    return List<AchievementModel>.from(_mockAchievements);
-  }
-
   Future<List<AchievementModel>> getAchievementsByType(
       AchievementType type) async {
-    return _mockAchievements.where((a) => a.type == type).toList();
+    try {
+      final querySnapshot = await achievementsCollection
+          .where('type', isEqualTo: type.toString().split('.').last)
+          .get();
+      return querySnapshot.docs
+          .map((doc) =>
+              AchievementModel.fromJson(doc.data() as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      debugPrint('Error fetching achievements by type: $e');
+      return [];
+    }
   }
 
   Future<List<AchievementModel>> searchAchievements(String query) async {
-    final q = query.toLowerCase();
-    return _mockAchievements
-        .where((a) =>
-            a.title.toLowerCase().contains(q) ||
-            a.description.toLowerCase().contains(q) ||
-            (a.organization?.toLowerCase().contains(q) ?? false))
-        .toList();
+    try {
+      final q = query.toLowerCase();
+      final allAchievements = await getAllAchievements();
+      return allAchievements
+          .where((a) =>
+              a.title.toLowerCase().contains(q) ||
+              a.description.toLowerCase().contains(q) ||
+              (a.organization?.toLowerCase().contains(q) ?? false))
+          .toList();
+    } catch (e) {
+      debugPrint('Error searching achievements: $e');
+      return [];
+    }
   }
 
-  Future<String> uploadCertificate(String userId, dynamic file) async {
-    return '';
+  Future<List<AchievementModel>> getPendingVerifications() async {
+    try {
+      final querySnapshot = await achievementsCollection
+          .where('isVerified', isEqualTo: false)
+          .get();
+      return querySnapshot.docs
+          .map((doc) =>
+              AchievementModel.fromJson(doc.data() as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      debugPrint('Error fetching pending verifications: $e');
+      return [];
+    }
   }
 
-  Future<String> uploadAchievementImage(
-      String userId, dynamic imageFile) async {
-    return '';
+  Future<void> verifyAchievement(
+      String achievementId, String verifiedBy) async {
+    try {
+      await achievementsCollection.doc(achievementId).update({
+        'isVerified': true,
+        'verifiedBy': verifiedBy,
+        'verifiedAt': DateTime.now().toIso8601String(),
+        'updatedAt': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      debugPrint('Error verifying achievement: $e');
+      rethrow;
+    }
   }
 
-  Future<void> deleteAchievementFile(String fileUrl) async {}
+  Future<void> rejectAchievement(
+      String achievementId, String rejectedBy, String reason) async {
+    try {
+      await achievementsCollection.doc(achievementId).update({
+        'isVerified': false,
+        'rejectedBy': rejectedBy,
+        'rejectedAt': DateTime.now().toIso8601String(),
+        'rejectionReason': reason,
+        'updatedAt': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      debugPrint('Error rejecting achievement: $e');
+      rethrow;
+    }
+  }
 
-  // Get achievement statistics (for admin dashboard)
-  Future<Map<String, dynamic>> getAchievementStatistics() async {
+  Future<Map<String, dynamic>> getAchievementStats() async {
     try {
       final allAchievements = await getAllAchievements();
 
-      int totalAchievements = allAchievements.length;
-      int verifiedAchievements =
-          allAchievements.where((a) => a.isVerified).length;
-      int pendingAchievements = totalAchievements - verifiedAchievements;
-
-      Map<String, int> typeCount = {};
-      Map<String, int> userCount = {};
-
+      // Count by type
+      final typeCounts = <String, int>{};
       for (var achievement in allAchievements) {
-        // Count by type
-        String typeName = achievement.type.toString().split('.').last;
-        typeCount[typeName] = (typeCount[typeName] ?? 0) + 1;
-
-        // Count by user
-        userCount[achievement.userId] =
-            (userCount[achievement.userId] ?? 0) + 1;
+        final type = achievement.type.toString().split('.').last;
+        typeCounts[type] = (typeCounts[type] ?? 0) + 1;
       }
+
+      // Count verified vs unverified
+      final verifiedCount = allAchievements.where((a) => a.isVerified).length;
+      final unverifiedCount = allAchievements.length - verifiedCount;
+
+      // Total points
+      final totalPoints = allAchievements
+          .where((a) => a.isVerified)
+          .fold(0, (accumulator, a) => accumulator + (a.points ?? 0));
 
       return {
-        'totalAchievements': totalAchievements,
-        'verifiedAchievements': verifiedAchievements,
-        'pendingAchievements': pendingAchievements,
-        'typeCount': typeCount,
-        'userCount': userCount,
+        'totalAchievements': allAchievements.length,
+        'verifiedAchievements': verifiedCount,
+        'unverifiedAchievements': unverifiedCount,
+        'totalPoints': totalPoints,
+        'typeCounts': typeCounts,
       };
     } catch (e) {
-      throw Exception('Failed to get achievement statistics: $e');
+      debugPrint('Error getting achievement stats: $e');
+      return {
+        'totalAchievements': 0,
+        'verifiedAchievements': 0,
+        'unverifiedAchievements': 0,
+        'totalPoints': 0,
+        'typeCounts': {},
+      };
     }
   }
 
-  // Create demo achievements for testing
-  Future<void> createDemoAchievements() async {
-    // This method is not needed in the mock implementation
+  Stream<List<AchievementModel>> streamAchievementsByUserId(String userId) {
+    return achievementsCollection
+        .where('userId', isEqualTo: userId)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) =>
+                AchievementModel.fromJson(doc.data() as Map<String, dynamic>))
+            .toList());
   }
 
-  // Get user's total points
-  Future<int> getUserTotalPoints(String userId) async {
+  Stream<List<AchievementModel>> streamPendingVerifications() {
+    return achievementsCollection
+        .where('isVerified', isEqualTo: false)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) =>
+                AchievementModel.fromJson(doc.data() as Map<String, dynamic>))
+            .toList());
+  }
+
+  /// Upload certificate file
+  Future<String> uploadCertificate(String userId, File file) async {
     try {
-      final allAchievements = await getAllAchievements();
-      int totalPoints = 0;
+      debugPrint(
+          'AchievementService: Uploading certificate for user $userId from: ${file.path}');
 
-      for (var achievement in allAchievements) {
-        if (achievement.userId == userId && achievement.isVerified) {
-          totalPoints += achievement.points ?? 0;
-        }
-      }
+      // Create a unique filename
+      final fileName =
+          'certificates/${userId}_${DateTime.now().millisecondsSinceEpoch}_${file.path.split('/').last}';
 
-      return totalPoints;
+      // Upload to Firebase Storage
+      final ref = FirebaseStorage.instance.ref().child(fileName);
+      final uploadTask = await ref.putFile(file);
+
+      // Get download URL
+      final downloadUrl = await uploadTask.ref.getDownloadURL();
+      debugPrint(
+          'AchievementService: Certificate uploaded successfully: $downloadUrl');
+
+      return downloadUrl;
     } catch (e) {
-      throw Exception('Failed to get user total points: $e');
+      debugPrint('AchievementService: Error uploading certificate: $e');
+      rethrow;
     }
   }
 
-  // Validate achievement data
-  bool validateAchievement(AchievementModel achievement) {
-    return achievement.title.isNotEmpty &&
-        achievement.description.isNotEmpty &&
-        achievement.userId.isNotEmpty;
+  /// Upload achievement image
+  Future<String> uploadAchievementImage(String userId, File file) async {
+    try {
+      debugPrint(
+          'AchievementService: Uploading achievement image for user $userId from: ${file.path}');
+
+      // Create a unique filename
+      final fileName =
+          'achievement_images/${userId}_${DateTime.now().millisecondsSinceEpoch}_${file.path.split('/').last}';
+
+      // Upload to Firebase Storage
+      final ref = FirebaseStorage.instance.ref().child(fileName);
+      final uploadTask = await ref.putFile(file);
+
+      // Get download URL
+      final downloadUrl = await uploadTask.ref.getDownloadURL();
+      debugPrint(
+          'AchievementService: Achievement image uploaded successfully: $downloadUrl');
+
+      return downloadUrl;
+    } catch (e) {
+      debugPrint('AchievementService: Error uploading achievement image: $e');
+      rethrow;
+    }
   }
 
-  // Get default points for achievement type
+  /// Get default points for achievement type
   int getDefaultPoints(AchievementType type) {
     switch (type) {
       case AchievementType.academic:
-        return 50;
-      case AchievementType.competition:
-        return 100;
-      case AchievementType.leadership:
-        return 75;
-      case AchievementType.skill:
-        return 25;
-      case AchievementType.other:
         return 10;
+      case AchievementType.competition:
+        return 15;
+      case AchievementType.leadership:
+        return 12;
+      case AchievementType.skill:
+        return 8;
+      case AchievementType.other:
+        return 5;
     }
-  }
-
-  Future<void> deleteAchievement(String achievementId) async {
-    _mockAchievements.removeWhere((a) => a.id == achievementId);
   }
 }

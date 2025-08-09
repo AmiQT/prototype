@@ -1,0 +1,208 @@
+// Firebase Security Rules for Talent Showcase Module
+// These rules should be added to your Firestore security rules
+
+// Firestore Security Rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Showcase Posts Collection Rules
+    match /showcase_posts/{postId} {
+      // Allow read access based on privacy settings
+      allow read: if isAuthenticated() && 
+        (resource.data.privacy == 'public' ||
+         (resource.data.privacy == 'department' && 
+          request.auth.token.department == resource.data.userDepartment) ||
+         (resource.data.privacy == 'friends' && 
+          (request.auth.uid == resource.data.userId || 
+           isConnectedUser(request.auth.uid, resource.data.userId))));
+      
+      // Allow create if user is authenticated and owns the post
+      allow create: if isAuthenticated() && 
+        request.auth.uid == request.resource.data.userId &&
+        isValidPostData(request.resource.data);
+      
+      // Allow update if user owns the post and maintains data integrity
+      allow update: if isAuthenticated() && 
+        request.auth.uid == resource.data.userId &&
+        isValidPostUpdate(request.resource.data, resource.data);
+      
+      // Allow delete if user owns the post
+      allow delete: if isAuthenticated() && 
+        request.auth.uid == resource.data.userId;
+    }
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isValidPostData(data) {
+      return data.keys().hasAll(['userId', 'userName', 'content', 'type', 
+                                'category', 'privacy', 'createdAt', 'updatedAt']) &&
+             data.userId is string &&
+             data.userName is string &&
+             data.content is string &&
+             data.type in ['text', 'image', 'video', 'mixed'] &&
+             data.category in ['academic', 'creative', 'technical', 'sports', 
+                              'volunteer', 'achievement', 'project', 'general'] &&
+             data.privacy in ['public', 'department', 'friends'] &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp &&
+             data.likes is list &&
+             data.comments is list &&
+             data.shares is list;
+    }
+    
+    function isValidPostUpdate(newData, oldData) {
+      // Ensure critical fields are not changed
+      return newData.userId == oldData.userId &&
+             newData.createdAt == oldData.createdAt &&
+             // Allow updating content, privacy, category, and engagement data
+             newData.keys().hasAll(oldData.keys());
+    }
+    
+    function isConnectedUser(currentUserId, targetUserId) {
+      // This would check if users are connected/friends
+      // Implementation depends on your connection/friendship system
+      return false; // Placeholder - implement based on your needs
+    }
+  }
+}
+
+// Firebase Storage Security Rules
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Showcase Images Rules
+    match /showcase_images/{imageId} {
+      // Allow read if user is authenticated
+      allow read: if request.auth != null;
+      
+      // Allow write if user is authenticated and follows naming convention
+      allow write: if request.auth != null && 
+        imageId.matches('.*_' + request.auth.uid + '_.*') &&
+        request.resource.size < 10 * 1024 * 1024 && // 10MB limit
+        request.resource.contentType.matches('image/.*');
+      
+      // Allow delete if user owns the file
+      allow delete: if request.auth != null && 
+        imageId.matches('.*_' + request.auth.uid + '_.*');
+    }
+    
+    // Showcase Videos Rules
+    match /showcase_videos/{videoId} {
+      // Allow read if user is authenticated
+      allow read: if request.auth != null;
+      
+      // Allow write if user is authenticated and follows naming convention
+      allow write: if request.auth != null && 
+        videoId.matches('.*_' + request.auth.uid + '_.*') &&
+        request.resource.size < 100 * 1024 * 1024 && // 100MB limit
+        request.resource.contentType.matches('video/.*');
+      
+      // Allow delete if user owns the file
+      allow delete: if request.auth != null && 
+        videoId.matches('.*_' + request.auth.uid + '_.*');
+    }
+    
+    // Showcase Thumbnails Rules
+    match /showcase_thumbnails/{thumbnailId} {
+      // Allow read if user is authenticated
+      allow read: if request.auth != null;
+      
+      // Allow write if user is authenticated and follows naming convention
+      allow write: if request.auth != null && 
+        thumbnailId.matches('thumb_.*_' + request.auth.uid + '_.*') &&
+        request.resource.size < 5 * 1024 * 1024 && // 5MB limit
+        request.resource.contentType.matches('image/.*');
+      
+      // Allow delete if user owns the file
+      allow delete: if request.auth != null && 
+        thumbnailId.matches('thumb_.*_' + request.auth.uid + '_.*');
+    }
+  }
+}
+
+// Additional Rules for Enhanced Security
+
+// Rate Limiting (implement in your app logic)
+// - Limit posts per user per day (e.g., 10 posts)
+// - Limit media uploads per user per hour (e.g., 50 files)
+// - Limit comment frequency (e.g., 1 comment per minute)
+
+// Content Validation (implement in your app logic)
+// - Text content length limits
+// - Profanity filtering
+// - Spam detection
+// - Inappropriate content detection
+
+// Privacy Controls
+// - Department-based visibility
+// - Friend/connection-based visibility
+// - Blocked users handling
+// - Report and moderation system
+
+// Performance Optimization
+// - Pagination for large collections
+// - Efficient querying with composite indexes
+// - Caching strategies for frequently accessed data
+
+// Monitoring and Analytics
+// - Track upload success/failure rates
+// - Monitor storage usage per user
+// - Track engagement metrics (likes, comments, shares)
+// - Performance monitoring for upload times
+
+// Backup and Recovery
+// - Regular backups of showcase posts
+// - Media file backup strategies
+// - User data export capabilities
+// - Disaster recovery procedures
+
+// Compliance and Legal
+// - GDPR compliance for user data
+// - Content ownership and licensing
+// - Terms of service enforcement
+// - Privacy policy compliance
+
+// Example Firestore Indexes (add to firestore.indexes.json)
+/*
+{
+  "indexes": [
+    {
+      "collectionGroup": "showcase_posts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "privacy", "order": "ASCENDING"},
+        {"fieldPath": "createdAt", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "showcase_posts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "category", "order": "ASCENDING"},
+        {"fieldPath": "createdAt", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "showcase_posts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "userId", "order": "ASCENDING"},
+        {"fieldPath": "createdAt", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "showcase_posts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "userDepartment", "order": "ASCENDING"},
+        {"fieldPath": "privacy", "order": "ASCENDING"},
+        {"fieldPath": "createdAt", "order": "DESCENDING"}
+      ]
+    }
+  ]
+}
+*/

@@ -1,19 +1,38 @@
-// No Firestore import
+import 'academic_info_model.dart';
+import 'experience_model.dart';
+import 'project_model.dart';
+import 'achievement_model.dart';
 
 class ProfileModel {
   final String id;
   final String userId;
   final String fullName;
-  final String studentId;
-  final String program;
-  final String department;
-  final int semester;
   final String? phoneNumber;
   final String? address;
   final String? bio;
+  final String? headline;
   final String? profileImageUrl;
+
+  // Academic Information
+  final AcademicInfoModel? academicInfo;
+
+  // Skills and Interests
   final List<String> skills;
   final List<String> interests;
+
+  // Experience
+  final List<ExperienceModel> experiences;
+
+  // Projects
+  final List<ProjectModel> projects;
+
+  // Achievements
+  final List<AchievementModel> achievements;
+
+  // Profile completion tracking
+  final bool isProfileComplete;
+  final List<String> completedSections;
+
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -21,38 +40,68 @@ class ProfileModel {
     required this.id,
     required this.userId,
     required this.fullName,
-    required this.studentId,
-    required this.program,
-    required this.department,
-    required this.semester,
     this.phoneNumber,
     this.address,
     this.bio,
+    this.headline,
     this.profileImageUrl,
-    required this.skills,
-    required this.interests,
+    this.academicInfo,
+    this.skills = const [],
+    this.interests = const [],
+    this.experiences = const [],
+    this.projects = const [],
+    this.achievements = const [],
+    this.isProfileComplete = false,
+    this.completedSections = const [],
     required this.createdAt,
     required this.updatedAt,
   });
 
   // Factory constructor to create ProfileModel from JSON
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
+    DateTime parseDateTime(dynamic value) {
+      if (value == null) return DateTime.now();
+      if (value is DateTime) return value;
+      if (value is String) {
+        try {
+          return DateTime.parse(value);
+        } catch (e) {
+          return DateTime.now();
+        }
+      }
+      return DateTime.now();
+    }
+
     return ProfileModel(
       id: json['id'] ?? '',
       userId: json['userId'] ?? '',
       fullName: json['fullName'] ?? '',
-      studentId: json['studentId'] ?? '',
-      program: json['program'] ?? '',
-      department: json['department'] ?? '',
-      semester: json['semester'] ?? 1,
       phoneNumber: json['phoneNumber'],
       address: json['address'],
       bio: json['bio'],
+      headline: json['headline'],
       profileImageUrl: json['profileImageUrl'],
+      academicInfo: json['academicInfo'] != null
+          ? AcademicInfoModel.fromJson(json['academicInfo'])
+          : null,
       skills: List<String>.from(json['skills'] ?? []),
       interests: List<String>.from(json['interests'] ?? []),
-      createdAt: DateTime.parse(json['createdAt']),
-      updatedAt: DateTime.parse(json['updatedAt']),
+      experiences: (json['experiences'] as List?)
+              ?.map((e) => ExperienceModel.fromJson(e))
+              .toList() ??
+          [],
+      projects: (json['projects'] as List?)
+              ?.map((p) => ProjectModel.fromJson(p))
+              .toList() ??
+          [],
+      achievements: (json['achievements'] as List?)
+              ?.map((a) => AchievementModel.fromJson(a))
+              .toList() ??
+          [],
+      isProfileComplete: json['isProfileComplete'] ?? false,
+      completedSections: List<String>.from(json['completedSections'] ?? []),
+      createdAt: parseDateTime(json['createdAt']),
+      updatedAt: parseDateTime(json['updatedAt']),
     );
   }
 
@@ -62,16 +111,19 @@ class ProfileModel {
       'id': id,
       'userId': userId,
       'fullName': fullName,
-      'studentId': studentId,
-      'program': program,
-      'department': department,
-      'semester': semester,
       'phoneNumber': phoneNumber,
       'address': address,
       'bio': bio,
+      'headline': headline,
       'profileImageUrl': profileImageUrl,
+      'academicInfo': academicInfo?.toJson(),
       'skills': skills,
       'interests': interests,
+      'experiences': experiences.map((e) => e.toJson()).toList(),
+      'projects': projects.map((p) => p.toJson()).toList(),
+      'achievements': achievements.map((a) => a.toJson()).toList(),
+      'isProfileComplete': isProfileComplete,
+      'completedSections': completedSections,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
@@ -92,16 +144,19 @@ class ProfileModel {
     String? id,
     String? userId,
     String? fullName,
-    String? studentId,
-    String? program,
-    String? department,
-    int? semester,
     String? phoneNumber,
     String? address,
     String? bio,
+    String? headline,
     String? profileImageUrl,
+    AcademicInfoModel? academicInfo,
     List<String>? skills,
     List<String>? interests,
+    List<ExperienceModel>? experiences,
+    List<ProjectModel>? projects,
+    List<AchievementModel>? achievements,
+    bool? isProfileComplete,
+    List<String>? completedSections,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -109,20 +164,29 @@ class ProfileModel {
       id: id ?? this.id,
       userId: userId ?? this.userId,
       fullName: fullName ?? this.fullName,
-      studentId: studentId ?? this.studentId,
-      program: program ?? this.program,
-      department: department ?? this.department,
-      semester: semester ?? this.semester,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       address: address ?? this.address,
       bio: bio ?? this.bio,
+      headline: headline ?? this.headline,
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      academicInfo: academicInfo ?? this.academicInfo,
       skills: skills ?? this.skills,
       interests: interests ?? this.interests,
+      experiences: experiences ?? this.experiences,
+      projects: projects ?? this.projects,
+      achievements: achievements ?? this.achievements,
+      isProfileComplete: isProfileComplete ?? this.isProfileComplete,
+      completedSections: completedSections ?? this.completedSections,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
+
+  // Helper getters for backward compatibility
+  String get studentId => academicInfo?.studentId ?? '';
+  String get program => academicInfo?.program ?? '';
+  String get department => academicInfo?.department ?? '';
+  int get semester => academicInfo?.currentSemester ?? 1;
 
   @override
   String toString() {

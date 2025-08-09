@@ -1,54 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../services/auth_service.dart';
+import '../../../services/achievement_service.dart';
+import '../../../services/profile_service.dart';
 import '../../../models/user_model.dart';
+import '../../../models/achievement_model.dart';
 import '../../../widgets/feedback_list_widget.dart';
+import '../chat/chat_screen.dart';
+import '../settings/settings_screen.dart';
 
 class LecturerDashboard extends StatefulWidget {
   const LecturerDashboard({super.key});
 
   @override
-  _LecturerDashboardState createState() => _LecturerDashboardState();
+  State<LecturerDashboard> createState() => _LecturerDashboardState();
 }
 
 class _LecturerDashboardState extends State<LecturerDashboard> {
   UserModel? _currentUser;
   bool _isLoading = true;
 
-  // Mock data for demonstration
-  final Map<String, dynamic> _stats = {
-    'totalStudents': 156,
-    'pendingVerifications': 23,
-    'verifiedAchievements': 89,
-    'departmentEvents': 5,
-  };
-
-  final List<Map<String, dynamic>> _recentAchievements = [
-    {
-      'studentName': 'Ahmad Zulkarnain',
-      'studentId': '2021234567',
-      'achievement': 'Dean\'s List Award',
-      'type': 'Academic',
-      'status': 'Pending',
-      'date': '2024-01-15',
-    },
-    {
-      'studentName': 'Sarah Johnson',
-      'studentId': '2021234568',
-      'achievement': 'Innovation Challenge Winner',
-      'type': 'Competition',
-      'status': 'Verified',
-      'date': '2024-01-14',
-    },
-    {
-      'studentName': 'Mohammed Ali',
-      'studentId': '2021234569',
-      'achievement': 'Leadership Award',
-      'type': 'Leadership',
-      'status': 'Pending',
-      'date': '2024-01-13',
-    },
-  ];
+  Map<String, dynamic> _stats = {};
+  List<AchievementModel> _recentAchievements = [];
 
   @override
   void initState() {
@@ -59,19 +32,61 @@ class _LecturerDashboardState extends State<LecturerDashboard> {
   Future<void> _loadUserData() async {
     try {
       final authService = Provider.of<AuthService>(context, listen: false);
+      final achievementService =
+          Provider.of<AchievementService>(context, listen: false);
+      final profileService =
+          Provider.of<ProfileService>(context, listen: false);
 
       final user = authService.currentUser;
       if (user != null) {
         _currentUser = await authService.getUserData(user.uid);
       }
+
+      // Load real statistics
+      await _loadStatistics(achievementService, profileService);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading dashboard: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading dashboard: $e')),
+        );
+      }
     } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadStatistics(AchievementService achievementService,
+      ProfileService profileService) async {
+    try {
+      // Get all achievements
+      final allAchievements = await achievementService.getAllAchievements();
+      final pendingAchievements =
+          await achievementService.getPendingVerifications();
+      final verifiedAchievements =
+          allAchievements.where((a) => a.isVerified).toList();
+
+      // Get all profiles to count students
+      final allProfiles = await profileService.getAllProfiles();
+
+      // Get recent achievements (last 10)
+      final recentAchievements = allAchievements.take(10).toList();
+
       setState(() {
-        _isLoading = false;
+        _stats = {
+          'totalStudents': allProfiles.length,
+          'pendingVerifications': pendingAchievements.length,
+          'verifiedAchievements': verifiedAchievements.length,
+          'departmentEvents': 0, // This would need an events service
+        };
+
+        _recentAchievements = recentAchievements;
       });
+    } catch (e) {
+      debugPrint('Error loading statistics: $e');
     }
   }
 
@@ -81,11 +96,57 @@ class _LecturerDashboardState extends State<LecturerDashboard> {
     );
   }
 
+  void _viewAchievementDetails(AchievementModel achievement) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(achievement.title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Description: ${achievement.description}'),
+            const SizedBox(height: 8),
+            Text('Type: ${achievement.type.toString().split('.').last}'),
+            const SizedBox(height: 8),
+            Text('Points: ${achievement.points ?? 0}'),
+            const SizedBox(height: 8),
+            Text('Status: ${achievement.isVerified ? 'Verified' : 'Pending'}'),
+            const SizedBox(height: 8),
+            Text('Created: ${achievement.createdAt.toString().split(' ')[0]}'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          if (!achievement.isVerified)
+            ElevatedButton(
+              onPressed: () {
+                // TODO: Implement verification logic
+                Navigator.pop(context);
+                _navigateToFeature('Achievement Verification');
+              },
+              child: const Text('Verify'),
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final userRole = authService.currentUser?.role;
     if (_isLoading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (userRole == null) {
+      return const Scaffold(
+        body: Center(child: Text('No user role found.')),
       );
     }
 
@@ -137,6 +198,13 @@ class _LecturerDashboardState extends State<LecturerDashboard> {
             onSelected: (value) {
               if (value == 'logout') {
                 Provider.of<AuthService>(context, listen: false).signOut();
+              } else if (value == 'settings') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SettingsScreen(),
+                  ),
+                );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('$value feature coming soon!')),
@@ -334,25 +402,28 @@ class _LecturerDashboardState extends State<LecturerDashboard> {
                 itemCount: _recentAchievements.length,
                 itemBuilder: (context, index) {
                   final achievement = _recentAchievements[index];
+                  final status =
+                      achievement.isVerified ? 'Verified' : 'Pending';
                   return ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: _getStatusColor(achievement['status']),
+                      backgroundColor: _getStatusColor(status),
                       child: Icon(
-                        _getStatusIcon(achievement['status']),
+                        _getStatusIcon(status),
                         color: Colors.white,
                         size: 20,
                       ),
                     ),
                     title: Text(
-                      achievement['studentName'],
+                      achievement
+                          .userId, // This would need to be resolved to student name
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(achievement['achievement']),
+                        Text(achievement.title),
                         Text(
-                          '${achievement['studentId']} • ${achievement['type']}',
+                          '${achievement.type.toString().split('.').last} • ${achievement.createdAt.toString().split(' ')[0]}',
                           style:
                               TextStyle(fontSize: 12, color: Colors.grey[600]),
                         ),
@@ -366,28 +437,28 @@ class _LecturerDashboardState extends State<LecturerDashboard> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: _getStatusColor(achievement['status'])
-                                .withOpacity(0.1),
+                            color:
+                                _getStatusColor(status).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            achievement['status'],
+                            status,
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: _getStatusColor(achievement['status']),
+                              color: _getStatusColor(status),
                             ),
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          achievement['date'],
+                          achievement.createdAt.toString().split(' ')[0],
                           style:
                               const TextStyle(fontSize: 12, color: Colors.grey),
                         ),
                       ],
                     ),
-                    onTap: () => _navigateToFeature('View Achievement Details'),
+                    onTap: () => _viewAchievementDetails(achievement),
                   );
                 },
               ),
@@ -448,10 +519,23 @@ class _LecturerDashboardState extends State<LecturerDashboard> {
             const Text('Student Showcase Feedback',
                 style: TextStyle(fontSize: 18)),
             const SizedBox(height: 20),
-            Expanded(child: FeedbackListWidget()),
+            const Expanded(child: FeedbackListWidget(feedbackList: [])),
           ],
         ),
       ),
+      floatingActionButton:
+          (userRole == UserRole.student || userRole == UserRole.lecturer)
+              ? FloatingActionButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ChatScreen()),
+                    );
+                  },
+                  tooltip: 'Chatbot',
+                  child: const Icon(Icons.chat),
+                )
+              : null,
     );
   }
 

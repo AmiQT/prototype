@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UTHM Talent Profiling - Admin Dashboard</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components/analytics.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -13,8 +15,8 @@
         <!-- Sidebar Navigation -->
         <nav class="sidebar">
             <div class="sidebar-header">
-                <img src="../mobile_app/assets/images/uthm.png" alt="UTHM Logo" class="logo" style="width: 110px; height: auto; object-fit: contain; display: block; margin: 0 auto 10px auto;">
-                <h2>Admin Dashboard</h2>
+                <img src="uthm.png" alt="UTHM Logo" class="sidebar-logo">
+                <h2>Admin Portal</h2>
             </div>
             <ul class="nav-menu">
                 <li class="nav-item active" data-section="overview">
@@ -24,6 +26,18 @@
                 <li class="nav-item" data-section="users">
                     <i class="fas fa-users"></i>
                     <span>User Management</span>
+                </li>
+                <li class="nav-item" data-section="events">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Event Management</span>
+                </li>
+                <li class="nav-item" data-section="achievements">
+                    <i class="fas fa-trophy"></i>
+                    <span>Achievement Management</span>
+                </li>
+                <li class="nav-item" data-section="student-claiming">
+                    <i class="fas fa-user-graduate"></i>
+                    <span>Student Badge Claiming</span>
                 </li>
                 <li class="nav-item" data-section="analytics">
                     <i class="fas fa-chart-bar"></i>
@@ -35,266 +49,427 @@
                 </li>
             </ul>
         </nav>
-        <!-- Main Content Area -->
+
+        <!-- Main Content -->
         <main class="main-content">
             <!-- Top Header -->
             <header class="top-header">
                 <div class="header-left">
+                    <button class="menu-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
                     <h1 id="page-title">Dashboard Overview</h1>
                 </div>
-                <div class="header-right" style="display: flex; align-items: center; gap: 1.5rem;">
-                    <div class="admin-profile" style="display: flex; align-items: center; gap: 0.7rem;">
-                        <i class="fas fa-user-circle" style="font-size: 2.1em; color: #2563eb;"></i>
-                        <span style="font-weight: 500; font-size: 1.1em;">Admin</span>
-                    </div>
-                    <button class="btn btn-secondary" style="padding: 0.5em 1.1em; font-size: 1em; border-radius: 6px;" onclick="logout()">
+                <div class="header-right">
+                    <button class="btn btn-primary" onclick="logout()">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </button>
                 </div>
             </header>
-            <!-- Content Sections -->
+            
+            <!-- Content Wrapper -->
             <div class="content-wrapper">
                 <!-- Overview Section -->
                 <section id="overview" class="content-section active">
-                    <div class="stats-grid" id="overview-stats">
-                        <!-- Stats will be loaded dynamically -->
+                    <div class="section-header">
+                        <h2><i class="fas fa-tachometer-alt"></i> Dashboard Overview</h2>
                     </div>
-                    <div class="charts-grid">
-                        <div class="chart-card">
-                            <h3>User Growth</h3>
-                            <canvas id="userGrowthChart"></canvas>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card clickable" onclick="navigateToSection('users')">
+                            <div class="stat-value" id="total-users">0</div>
+                            <div class="stat-label">Total Users</div>
+                            <div class="stat-action">View all users →</div>
                         </div>
-                        <div class="chart-card">
-                            <h3>Achievement Distribution</h3>
-                            <canvas id="achievementChart"></canvas>
+                        
+                        <div class="stat-card clickable" onclick="navigateToSection('events')">
+                            <div class="stat-value" id="total-events">0</div>
+                            <div class="stat-label">Total Events</div>
+                            <div class="stat-action">Manage events →</div>
                         </div>
-                        <div class="chart-card">
-                            <h3>Department Performance</h3>
-                            <canvas id="departmentChart"></canvas>
+                        
+                        <div class="stat-card clickable" onclick="navigateToSection('achievements')">
+                            <div class="stat-value" id="total-achievements">0</div>
+                            <div class="stat-label">Achievement Badges</div>
+                            <div class="stat-action">View achievements →</div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-value" id="pending-verification">0</div>
+                            <div class="stat-label">Pending Verification</div>
+                            <div class="stat-action">Awaiting approval</div>
                         </div>
                     </div>
                 </section>
+
                 <!-- User Management Section -->
                 <section id="users" class="content-section">
                     <div class="section-header">
-                        <h2>User Management</h2>
+                        <h2><i class="fas fa-users"></i> User Management</h2>
                         <button class="btn btn-primary" onclick="showAddUserModal()">
                             <i class="fas fa-plus"></i> Add User
                         </button>
                     </div>
+
                     <div class="filters">
-                        <select id="user-role-filter" title="Filter by user role">
+                        <select id="role-filter">
                             <option value="">All Roles</option>
-                            <option value="student">Student</option>
-                            <option value="lecturer">Lecturer</option>
-                            <option value="admin">Admin</option>
+                            <option value="student">Students</option>
+                            <option value="lecturer">Lecturers</option>
+                            <option value="admin">Administrators</option>
                         </select>
-                        <select id="user-department-filter" title="Filter by department">
-                            <option value="">All Departments</option>
-                            <option value="HEPA">HEPA</option>
-                            <option value="Lecturer">Lecturer</option>
-                            <option value="KJ">Ketua Jabatan (KJ)</option>
+                        <select id="status-filter">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
                         </select>
-                        <input type="text" id="user-search" placeholder="Search users...">
+                        <input type="text" id="user-search" placeholder="Search users..." />
                     </div>
+
                     <div class="table-container">
                         <table class="data-table">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
+                                    <th>Actions</th>
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Role</th>
-                                    <th>Department/Faculty</th>
-                                    <th>Matrix/Staff ID</th>
-                                    <th>Actions</th>
+                                    <th>Department</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody id="users-table-body">
-                                <!-- Users will be loaded here -->
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 2rem;">Loading users...</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
                 </section>
-                <!-- Analytics Section -->
-                <section id="analytics" class="content-section">
+
+                <!-- Event Management Section -->
+                <section id="events" class="content-section">
                     <div class="section-header">
-                        <h2>Analytics & Reports</h2>
-                        <div class="date-range">
-                            <label for="start-date" class="sr-only">Start Date</label>
-                            <input type="date" id="start-date" title="Start date">
-                            <span>to</span>
-                            <label for="end-date" class="sr-only">End Date</label>
-                            <input type="date" id="end-date" title="End date">
-                            <button class="btn btn-secondary" onclick="generateReport()">Generate Report</button>
+                        <h2><i class="fas fa-calendar-alt"></i> Event Management</h2>
+                        <button class="btn btn-primary" onclick="showAddEventModal()">
+                            <i class="fas fa-plus"></i> Add Event
+                        </button>
+                    </div>
+
+                    <div class="filters">
+                        <input type="text" id="event-search" placeholder="Search events..." />
+                        <select id="event-category-filter">
+                            <option value="">All Categories</option>
+                            <option value="Academic">Academic</option>
+                            <option value="Competition">Competition</option>
+                            <option value="Workshop">Workshop</option>
+                            <option value="Seminar">Seminar</option>
+                            <option value="Conference">Conference</option>
+                            <option value="Training">Training</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Description</th>
+                                    <th>Category</th>
+                                    <th>Image</th>
+                                    <th>Registration</th>
+                                    <th>Badges</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="events-table-body">
+                                <tr>
+                                    <td colspan="7" style="text-align: center; padding: 2rem;">Loading events...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Achievement Management Section -->
+                <section id="achievements" class="content-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-trophy"></i> Achievement Management</h2>
+                                        <div class="section-actions">
+                    <button class="btn btn-primary" onclick="showAddAchievementModal()">
+                        <i class="fas fa-plus"></i> Create Badge
+                    </button>
+                </div>
+                    </div>
+
+                    <div class="achievement-categories">
+                        <div class="category-card" data-category="competition">
+                            <div class="category-icon">🏆</div>
+                            <h3>Competition Badges</h3>
+                            <p>Awards for contest participation and achievements</p>
+                        </div>
+                        <div class="category-card" data-category="learning">
+                            <div class="category-icon">📚</div>
+                            <h3>Learning Badges</h3>
+                            <p>Recognition for educational milestones</p>
+                        </div>
+                        <div class="category-card" data-category="academic">
+                            <div class="category-icon">🎓</div>
+                            <h3>Academic Badges</h3>
+                            <p>Academic excellence and performance</p>
+                        </div>
+                        <div class="category-card" data-category="leadership">
+                            <div class="category-icon">🤝</div>
+                            <h3>Leadership Badges</h3>
+                            <p>Leadership and teamwork achievements</p>
                         </div>
                     </div>
-                    <div class="analytics-grid">
-                        <div class="analytics-card">
-                            <h3>User Engagement</h3>
-                            <canvas id="engagementChart"></canvas>
+
+                    <!-- Badge Management Table -->
+                    <div class="badge-management-section">
+                        <div class="section-subheader">
+                            <h3><i class="fas fa-list"></i> Manage Badges</h3>
+                            <div class="table-controls">
+                                <div class="search-box">
+                                    <input type="text" id="badge-search" placeholder="Search badges..." title="Search badges">
+                                    <i class="fas fa-search"></i>
+                                </div>
+                                <select id="badge-category-filter" title="Filter by category">
+                                    <option value="">All Categories</option>
+                                    <option value="competition">Competition</option>
+                                    <option value="learning">Learning</option>
+                                    <option value="academic">Academic</option>
+                                    <option value="leadership">Leadership</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="analytics-card">
-                            <h3>Achievement Trends</h3>
-                            <canvas id="trendsChart"></canvas>
+
+                        <div class="table-container">
+                            <table class="data-table" id="badges-table">
+                                <thead>
+                                    <tr>
+                                        <th>Badge</th>
+                                        <th>Category</th>
+                                        <th>Points</th>
+                                        <th>Difficulty</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="badges-table-body">
+                                    <tr>
+                                        <td colspan="6" class="loading-message">
+                                            <i class="fas fa-spinner fa-spin"></i> Loading badges...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="analytics-card">
-                            <h3>Department Comparison</h3>
-                            <canvas id="comparisonChart"></canvas>
+                    </div>
+
+                    <div class="verification-queue">
+                        <h3><i class="fas fa-clock"></i> Pending Verification <span class="badge" id="pending-count">0</span></h3>
+                        <div class="verification-list">
+                            <!-- Verification items will be loaded dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="achievement-stats">
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <h4>Total Badges</h4>
+                                <span class="stat-number" id="total-badges">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <h4>Monthly Awards</h4>
+                                <span class="stat-number" id="monthly-awards">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <h4>Top Achiever</h4>
+                                <span class="stat-text" id="top-achiever">No data</span>
+                            </div>
                         </div>
                     </div>
                 </section>
+
+                <!-- Student Badge Claiming Section -->
+                <section id="student-claiming" class="content-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-user-graduate"></i> Student Badge Assignment</h2>
+                        <div class="section-actions">
+                            <button class="btn btn-primary" onclick="loadAllEventsForAssignment()" title="Load all events">
+                                <i class="fas fa-calendar"></i> Load All Events
+                            </button>
+                            
+                        </div>
+                    </div>
+
+                    <div class="student-interface">
+                        <div class="interface-tabs">
+                            <button class="tab-btn active" onclick="switchStudentTab('available-events')">
+                                <i class="fas fa-calendar"></i> All Events
+                            </button>
+                            <button class="tab-btn" onclick="switchStudentTab('my-claims')">
+                                <i class="fas fa-trophy"></i> Recent Claims
+                            </button>
+                        </div>
+
+                        <div class="tab-content">
+                            <div id="available-events-tab" class="tab-pane active">
+                                <div class="events-grid" id="available-events-container">
+                                    <div class="empty-state">
+                                        <i class="fas fa-calendar-times"></i>
+                                        <h3>No Events Loaded</h3>
+                                        <p>Click "Load All Events" to see all events in the system.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="my-claims-tab" class="tab-pane">
+                                <div class="claims-grid" id="student-claims-container">
+                                    <div class="empty-state">
+                                        <i class="fas fa-inbox"></i>
+                                        <h3>No Recent Claims</h3>
+                                        <p>No badge claims have been submitted recently.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- Analytics Section -->
+                <section id="analytics" class="content-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-chart-bar"></i> Analytics & Reports</h2>
+                        <div class="analytics-actions">
+                        <div class="date-range">
+                                <label for="date-from">From:</label>
+                                <input type="date" id="date-from">
+                                <label for="date-to">To:</label>
+                                <input type="date" id="date-to">
+                            </div>
+                            <button class="btn btn-primary" onclick="generateReport()">
+                                <i class="fas fa-chart-line"></i> Generate Report
+                            </button>
+                            <div class="export-buttons">
+                                <button class="btn btn-secondary" onclick="exportToCSV()">
+                                    <i class="fas fa-file-csv"></i> Export CSV
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <h3>User Registration Trends</h3>
+                            <div class="chart-container">
+                                <canvas id="userChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Event Participation</h3>
+                            <div class="chart-container">
+                                <canvas id="eventChart"></canvas>
+                    </div>
+                        </div>
+                        <div class="chart-card">
+                            <h3>Achievement Distribution</h3>
+                            <div class="chart-container">
+                                <canvas id="achievementChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Settings Section -->
                 <section id="settings" class="content-section">
                     <div class="section-header">
-                        <h2>System Settings</h2>
+                        <h2><i class="fas fa-cog"></i> Settings</h2>
                     </div>
+                    
                     <div class="settings-grid">
                         <div class="settings-card">
-                            <h3>General Settings</h3>
-                            <form class="settings-form">
+                            <h3><i class="fas fa-palette"></i> Appearance</h3>
+                            <div class="form-group">
+                                <label>
+                                    <i class="fas fa-moon"></i> Theme
+                                </label>
+                                <select id="theme-select" onchange="changeTheme(this.value)">
+                                    <option value="light">Light Mode</option>
+                                    <option value="dark">Dark Mode</option>
+                                </select>
+                            </div>
                                 <div class="form-group">
-                                    <label for="system-name">System Name</label>
-                                    <input type="text" id="system-name" value="UTHM Talent Profiling System" disabled placeholder="System name" title="System name">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="reduced-motion" onchange="toggleReducedMotion()">
+                                    <span class="checkmark-custom">
+                                        <i class="fas fa-check"></i>
+                                    </span>
+                                    <span class="checkbox-text">
+                                        <i class="fas fa-stopwatch"></i> Reduce Motion
+                                    </span>
+                                </label>
+                                <small class="form-help">Reduces animations for better accessibility</small>
                                 </div>
                                 <div class="form-group">
-                                    <label for="admin-email">Admin Email</label>
-                                    <input type="email" id="admin-email" value="admin@uthm.edu.my" disabled placeholder="Admin email" title="Admin email">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="high-contrast" onchange="toggleHighContrast()">
+                                    <span class="checkmark-custom">
+                                        <i class="fas fa-check"></i>
+                                    </span>
+                                    <span class="checkbox-text">
+                                        <i class="fas fa-adjust"></i> High Contrast
+                                    </span>
+                                </label>
+                                <small class="form-help">Increases contrast for better visibility</small>
                                 </div>
                                 <div class="form-group">
-                                    <label>Dark Mode</label>
-                                    <label class="switch">
-                                        <input type="checkbox" id="dark-mode-toggle" title="Toggle dark mode" aria-label="Toggle dark mode">
-                                        <span class="slider"></span>
+                                <button type="button" class="btn btn-primary" onclick="saveSettings()">
+                                    <i class="fas fa-save"></i> Save Preferences
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="resetSettings()">
+                                    <i class="fas fa-undo"></i> Reset to Default
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <h3><i class="fas fa-shield-alt"></i> Security</h3>
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="two-factor-auth">
+                                    <span class="checkmark-custom">
+                                        <i class="fas fa-check"></i>
+                                    </span>
+                                    <span class="checkbox-text">
+                                        <i class="fas fa-lock"></i> Two-Factor Authentication
+                                    </span>
                                     </label>
+                                <small class="form-help">Add extra security to your account</small>
+                            </div>
+                            <div class="form-group">
+                                <button type="button" class="btn btn-danger btn-sm" onclick="changePassword()">
+                                    <i class="fas fa-key"></i> Change Password
+                                </button>
                                 </div>
-                            </form>
                         </div>
                     </div>
                 </section>
             </div>
         </main>
     </div>
-    <!-- Add User Modal -->
-    <div id="add-user-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Add New User</h3>
-                <span class="close" onclick="closeModal('add-user-modal')">&times;</span>
-            </div>
-            <form id="add-user-form" onsubmit="event.preventDefault(); handleAddUser(this);">
-                <div class="form-group">
-                    <label for="add-user-name">Full Name</label>
-                    <input type="text" id="add-user-name" required placeholder="Enter full name" title="Full name">
-                </div>
-                <div class="form-group">
-                    <label for="add-user-email">Email</label>
-                    <input type="email" id="add-user-email" required placeholder="Enter email address" title="Email address">
-                </div>
-                <div class="form-group">
-                    <label for="add-user-role">Role</label>
-                    <select id="add-user-role" required onchange="toggleDepartmentField()" title="Select user role">
-                        <option value="">Select Role</option>
-                        <option value="student">Student</option>
-                        <option value="lecturer">Lecturer</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
-                <div class="form-group" id="department-field-group">
-                    <label for="add-user-department">Department/Faculty</label>
-                    <select id="add-user-department" title="Select department">
-                        <option value="FSKTM">Faculty of Computer Science (FSKTM)</option>
-                        <option value="FKAAS">Faculty of Civil Engineering (FKAAS)</option>
-                        <option value="FKE">Faculty of Electrical Engineering (FKE)</option>
-                        <option value="FKM">Faculty of Mechanical Engineering (FKM)</option>
-                    </select>
-                </div>
-                <div class="form-group" id="id-field-group">
-                    <label for="add-user-id" id="id-field-label">Matrix Number</label>
-                    <input type="text" id="add-user-id" required placeholder="Enter matrix/staff ID">
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('add-user-modal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add User</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    <!-- Edit User Modal -->
-    <div id="edit-user-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Edit User</h3>
-                <span class="close" onclick="closeModal('edit-user-modal')">&times;</span>
-            </div>
-            <form id="edit-user-form" onsubmit="event.preventDefault(); handleEditUser(this);">
-                <input type="hidden" id="edit-user-id">
-                <div class="form-group">
-                    <label for="edit-user-name">Full Name</label>
-                    <input type="text" id="edit-user-name" required placeholder="Enter full name" title="Full name">
-                </div>
-                <div class="form-group">
-                    <label for="edit-user-email">Email</label>
-                    <input type="email" id="edit-user-email" required placeholder="Enter email address" title="Email address">
-                </div>
-                <div class="form-group">
-                    <label for="edit-user-role">Role</label>
-                    <select id="edit-user-role" required onchange="toggleDepartmentField('edit')" title="Select user role">
-                        <option value="student">Student</option>
-                        <option value="lecturer">Lecturer</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
-                <div class="form-group" id="edit-department-field-group">
-                    <label for="edit-user-department">Department/Faculty</label>
-                    <select id="edit-user-department" title="Select department">
-                        <option value="FSKTM">Faculty of Computer Science (FSKTM)</option>
-                        <option value="FKAAS">Faculty of Civil Engineering (FKAAS)</option>
-                        <option value="FKE">Faculty of Electrical Engineering (FKE)</option>
-                        <option value="FKM">Faculty of Mechanical Engineering (FKM)</option>
-                    </select>
-                </div>
-                <div class="form-group" id="edit-id-field-group">
-                    <label for="edit-user-matrix-id" id="edit-id-field-label">Matrix Number</label>
-                    <input type="text" id="edit-user-matrix-id" required placeholder="Enter matrix/staff ID">
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('edit-user-modal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    <div class="chart-placeholder"></div>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <script>
-      const firebaseConfig = {
-        apiKey: "AIzaSyBEKSg01gWA8Z4Kv0NPCUfH_DCu4D1jO6Q",
-        authDomain: "student-talent-profiling-eaede.firebaseapp.com",
-        projectId: "student-talent-profiling-eaede",
-        storageBucket: "student-talent-profiling-eaede.firebasestorage.app",
-        messagingSenderId: "611009879331",
-        appId: "1:611009879331:web:4c4382fe7d606e29328096"
-      };
-      firebase.initializeApp(firebaseConfig);
-      const db = firebase.firestore();
-    </script>
-    <script src="js/dashboard.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.7.0/jspdf.plugin.autotable.min.js"></script>
-    <style>
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0,0,0,0);
-      border: 0;
-    }
-    </style>
+    
+    <!-- Modals will be loaded dynamically via component-loader.js -->
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Application Scripts -->
+    <script src="js/dashboard.js" type="module"></script>
 </body>
 </html> 

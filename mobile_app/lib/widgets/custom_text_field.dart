@@ -84,16 +84,16 @@ class CustomTextField extends StatelessWidget {
         filled: true,
         fillColor: enabled
             ? Theme.of(context).colorScheme.surface
-            : Theme.of(context).colorScheme.surface.withOpacity(0.5),
+            : Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 12,
         ),
         labelStyle: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
         ),
         hintStyle: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
         ),
       ),
     );

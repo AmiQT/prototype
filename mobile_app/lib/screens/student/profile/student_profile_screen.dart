@@ -1,63 +1,111 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
 import 'dart:io';
 import '../../../services/auth_service.dart';
 import '../../../services/profile_service.dart';
-import '../../../models/user_model.dart';
 import '../../../models/profile_model.dart';
-import '../../../widgets/custom_button.dart';
-import '../../../widgets/custom_text_field.dart';
+import '../../../models/achievement_model.dart';
+import '../../../models/experience_model.dart';
+import '../../../models/project_model.dart';
 import 'package:share_plus/share_plus.dart';
+import '../achievements/achievements_screen.dart';
+import '../../settings/settings_screen.dart';
+import '../../debug/sample_data_debug_screen.dart';
 
 class StudentProfileScreen extends StatefulWidget {
-  const StudentProfileScreen({Key? key}) : super(key: key);
+  const StudentProfileScreen({super.key});
 
   @override
   State<StudentProfileScreen> createState() => _StudentProfileScreenState();
 }
 
 class _StudentProfileScreenState extends State<StudentProfileScreen> {
-  String profileImage = 'assets/images/profile.png';
-  String name = 'Muhammad Noor Azami Bin Wahid';
-  String year = 'Year 3';
-  String headline = 'Expert Prompt Engineer | IT Profession';
-  double gpa = 4.00;
-  double coCurriculum = 80; // out of 100
-  String about = 'A little angel born with dream over the heaven';
-  List<Map<String, String>> experience = [
-    {
-      'title': 'ITC Co-President',
-      'desc': '',
-    },
-  ];
-  List<Map<String, String>> projects = [
-    {
-      'title': 'Dean List',
-      'desc': '',
-    },
-  ];
-  List<Map<String, String>> achievements = [
-    {
-      'title': 'Dean List',
-      'desc': '',
-    },
-  ];
+  ProfileModel? _profile;
+  bool _isLoading = true;
 
-  double get performanceScore {
-    // Combine GPA (out of 4.0) and co-curriculum (out of 100) for a balanced metric
-    return ((gpa / 4.0) * 0.6 + (coCurriculum / 100) * 0.4) * 100;
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
   }
 
-  String get performanceMessage {
-    if (performanceScore > 80) return 'Excellent, keep up the work!';
-    if (performanceScore > 60) return 'Good, keep up the work';
-    if (performanceScore > 40) return 'Balance your activities and studies!';
-    return 'Needs improvement. Focus on both academics and activities.';
+  ImageProvider _getProfileImage(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) {
+      // Return default asset image
+      return const AssetImage('assets/images/default_profile.png');
+    } else if (imageUrl.startsWith('data:image')) {
+      // Handle base64 images
+      final base64String = imageUrl.split(',')[1];
+      final bytes = base64Decode(base64String);
+      return MemoryImage(bytes);
+    } else if (imageUrl.startsWith('http')) {
+      // Handle network images
+      return NetworkImage(imageUrl);
+    } else {
+      // Handle file images
+      return FileImage(File(imageUrl));
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh profile when returning to this screen
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final profileService =
+          Provider.of<ProfileService>(context, listen: false);
+
+      final userId = authService.currentUserId;
+      if (userId != null) {
+        final profile = await profileService.getProfileByUserId(userId);
+        setState(() {
+          _profile = profile;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading profile: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_profile == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Profile'),
+        ),
+        body: const Center(
+          child: Text(
+            'No profile found. Please complete your profile setup.',
+            style: TextStyle(fontSize: 16),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
+    final profile = _profile!;
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
@@ -68,43 +116,151 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         foregroundColor: Colors.black,
         actions: [
           Tooltip(
+            message: 'Sample Data Manager',
+            child: IconButton(
+              icon: const Icon(Icons.bug_report),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SampleDataDebugScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+          Tooltip(
+            message: 'Settings',
+            child: IconButton(
+              icon: const Icon(Icons.settings),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SettingsScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+          Tooltip(
             message: 'Edit profile',
             child: IconButton(
               icon: const Icon(Icons.edit),
               onPressed: () async {
                 final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => EditProfilePage(
-                        name: name,
-                        year: year,
-                        headline: headline,
-                        about: about,
-                        experience: experience,
-                        projects: projects,
-                        achievements: achievements,
-                        gpa: gpa,
-                        coCurriculum: coCurriculum,
-                        profileImage: profileImage,
-                      ),
-                    ));
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EditProfilePage(
+                      name: profile.fullName,
+                      year: 'Year ${profile.semester}',
+                      headline: profile.headline ?? '',
+                      about: profile.bio ?? '',
+                      experience: profile.experiences
+                          .map((exp) => {
+                                'title': exp.title,
+                                'desc': exp.description,
+                              })
+                          .toList(),
+                      projects: profile.projects
+                          .map((proj) => {
+                                'title': proj.title,
+                                'desc': proj.description,
+                              })
+                          .toList(),
+                      achievements: profile.achievements
+                          .map((ach) => {
+                                'title': ach.title,
+                                'desc': ach.description,
+                              })
+                          .toList(),
+                      gpa: profile.academicInfo?.cgpa ?? 0.0,
+                      coCurriculum: 80.0,
+                      profileImage: profile.profileImageUrl ?? '',
+                    ),
+                  ),
+                );
                 if (result != null) {
-                  setState(() {
-                    // Update all fields from result map
-                    name = result['name'];
-                    year = result['year'];
-                    headline = result['headline'];
-                    about = result['about'];
-                    experience =
-                        List<Map<String, String>>.from(result['experience']);
-                    projects =
-                        List<Map<String, String>>.from(result['projects']);
-                    achievements =
-                        List<Map<String, String>>.from(result['achievements']);
-                    gpa = result['gpa'];
-                    coCurriculum = result['coCurriculum'];
-                    profileImage = result['profileImage'];
-                  });
+                  // Update the profile in Firebase
+                  try {
+                    if (!mounted) return;
+                    final profileService =
+                        Provider.of<ProfileService>(context, listen: false);
+
+                    // Convert experience data to ExperienceModel
+                    final experiences =
+                        (result['experience'] as List<Map<String, String>>)
+                            .map((exp) => ExperienceModel(
+                                  id: DateTime.now()
+                                      .millisecondsSinceEpoch
+                                      .toString(),
+                                  title: exp['title'] ?? '',
+                                  company: exp['company'] ?? 'Company',
+                                  description: exp['desc'] ?? '',
+                                  startDate: DateTime.now(),
+                                  endDate: DateTime.now(),
+                                ))
+                            .toList();
+
+                    // Convert projects data to ProjectModel
+                    final projects =
+                        (result['projects'] as List<Map<String, String>>)
+                            .map((proj) => ProjectModel(
+                                  id: DateTime.now()
+                                      .millisecondsSinceEpoch
+                                      .toString(),
+                                  title: proj['title'] ?? '',
+                                  description: proj['desc'] ?? '',
+                                  technologies: [],
+                                  startDate: DateTime.now(),
+                                  endDate: DateTime.now(),
+                                ))
+                            .toList();
+
+                    // Convert achievements data to AchievementModel
+                    final achievements =
+                        (result['achievements'] as List<Map<String, String>>)
+                            .map((ach) => AchievementModel(
+                                  id: DateTime.now()
+                                      .millisecondsSinceEpoch
+                                      .toString(),
+                                  userId: profile.userId,
+                                  title: ach['title'] ?? '',
+                                  description: ach['desc'] ?? '',
+                                  type: AchievementType.other,
+                                  dateAchieved: DateTime.now(),
+                                  createdAt: DateTime.now(),
+                                  updatedAt: DateTime.now(),
+                                ))
+                            .toList();
+
+                    final updatedProfile = profile.copyWith(
+                      fullName: result['name'],
+                      bio: result['about'],
+                      headline: result['headline'],
+                      profileImageUrl: result['profileImage'],
+                      experiences: experiences,
+                      projects: projects,
+                      achievements: achievements,
+                      updatedAt: DateTime.now(),
+                    );
+                    await profileService.updateProfile(updatedProfile);
+                    setState(() {
+                      _profile = updatedProfile;
+                    });
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Profile updated successfully!')),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error updating profile: $e')),
+                      );
+                    }
+                  }
                 }
               },
             ),
@@ -114,12 +270,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             child: IconButton(
               icon: const Icon(Icons.share),
               onPressed: () {
-                final summary =
-                    'Check out my profile!\nName: $name\nHeadline: $headline\nYear: $year';
-                Share.share(summary, subject: 'Student Talent Profile');
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Profile shared!')),
-                );
+                _shareProfile(context);
               },
             ),
           ),
@@ -129,7 +280,6 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Profile Header
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
@@ -137,7 +287,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   CircleAvatar(
                     radius: 36,
                     backgroundColor: Colors.white,
-                    child: _buildProfileImage(),
+                    child: Tooltip(
+                      message: 'Profile image',
+                      child: CircleAvatar(
+                        radius: 33,
+                        backgroundImage:
+                            _getProfileImage(profile.profileImageUrl),
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -148,7 +305,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           children: [
                             Flexible(
                               child: Text(
-                                name,
+                                profile.fullName,
                                 style: const TextStyle(
                                     fontSize: 22,
                                     fontWeight: FontWeight.bold,
@@ -160,7 +317,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                             const SizedBox(width: 8),
                             Flexible(
                               child: Text(
-                                year,
+                                'Semester ${profile.academicInfo?.currentSemester ?? 'N/A'}',
                                 style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w500,
@@ -173,7 +330,18 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          headline,
+                          profile.bio ?? '', // Headline as bio
+                          style: const TextStyle(
+                              fontSize: 15,
+                              color: Colors.deepPurple,
+                              fontWeight: FontWeight.w500),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          profile.academicInfo?.program ??
+                              'Program not specified',
                           style: TextStyle(
                               fontSize: 14,
                               color: Colors.blue[700],
@@ -187,151 +355,95 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                 ],
               ),
             ),
-            // Performance Meter
-            GestureDetector(
-              onTap: () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => MetricDetailPage())),
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                color: Colors.white,
-                child: Column(
-                  children: [
-                    const Text('Performance Status',
-                        style: TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16)),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
-                      child: Column(
-                        children: [
-                          Stack(
-                            alignment: Alignment.centerLeft,
-                            children: [
-                              Container(
-                                height: 18,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(8),
-                                  gradient: const LinearGradient(
-                                    colors: [
-                                      Colors.red,
-                                      Colors.yellow,
-                                      Colors.green
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              // Indicator thumb
-                              Positioned(
-                                left: (performanceScore.clamp(0, 100) / 100) *
-                                    (MediaQuery.of(context).size.width -
-                                        64 -
-                                        18),
-                                child: Container(
-                                  width: 18,
-                                  height: 18,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    border: Border.all(
-                                        color: Colors.blue[700]!, width: 2),
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: const [
-                              Text('Bad',
-                                  style: TextStyle(
-                                      color: Colors.black, fontSize: 12)),
-                              Text('Good',
-                                  style: TextStyle(
-                                      color: Colors.black, fontSize: 12)),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(performanceMessage,
-                        style: const TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 15)),
+            if (profile.headline?.isNotEmpty == true)
+              _buildSectionCard('Headline', profile.headline!, onTap: () {}),
+            _buildSectionCard('About', profile.bio ?? '', onTap: () {}),
+            _buildSectionCard('Academic Information', null,
+                items: [
+                  {
+                    'title': 'Student ID',
+                    'desc': profile.academicInfo?.studentId ?? 'Not specified'
+                  },
+                  {
+                    'title': 'Faculty',
+                    'desc': profile.academicInfo?.faculty ?? 'Not specified'
+                  },
+                  {
+                    'title': 'Department',
+                    'desc': profile.academicInfo?.department ?? 'Not specified'
+                  },
+                  {
+                    'title': 'Program',
+                    'desc': profile.academicInfo?.program ?? 'Not specified'
+                  },
+                  {
+                    'title': 'Semester',
+                    'desc':
+                        'Semester ${profile.academicInfo?.currentSemester ?? 'N/A'}'
+                  },
+                  if (profile.academicInfo?.cgpa != null)
+                    {
+                      'title': 'CGPA',
+                      'desc': profile.academicInfo!.cgpa!.toStringAsFixed(2)
+                    },
+                  if (profile.academicInfo?.totalCredits != null)
+                    {
+                      'title': 'Total Credits',
+                      'desc': profile.academicInfo!.totalCredits.toString()
+                    },
+                ],
+                onTap: () {}),
+            if (profile.phoneNumber?.isNotEmpty == true ||
+                profile.address?.isNotEmpty == true)
+              _buildSectionCard('Contact Information', null,
+                  items: [
+                    if (profile.phoneNumber?.isNotEmpty == true)
+                      {'title': 'Phone', 'desc': profile.phoneNumber!},
+                    if (profile.address?.isNotEmpty == true)
+                      {'title': 'Address', 'desc': profile.address!},
                   ],
-                ),
-              ),
-            ),
-            // Details Cards
-            _buildSectionCard('About', about,
-                onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => AboutDetailPage(about: about)))),
-            _buildSectionCard('Experience', null,
-                items: experience,
-                onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) =>
-                            ExperienceDetailPage(experience: experience)))),
-            _buildSectionCard('Project', null,
-                items: projects,
-                onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) =>
-                            ProjectDetailPage(projects: projects)))),
-            _buildSectionCard('Achievements', null,
-                items: achievements,
-                onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => AchievementsDetailPage(
-                            achievements: achievements)))),
-            const SizedBox(height: 24),
+                  onTap: () {}),
+            _buildSectionCard('Skills', null,
+                items: profile.skills
+                    .map((s) => {'title': s, 'desc': ''})
+                    .toList(),
+                onTap: () {}),
+            _buildSectionCard('Interests', null,
+                items: profile.interests
+                    .map((i) => {'title': i, 'desc': ''})
+                    .toList(),
+                onTap: () {}),
+            if (profile.experiences.isNotEmpty)
+              _buildSectionCard('Experience', null,
+                  items: profile.experiences
+                      .map((exp) => {
+                            'title': exp.title,
+                            'desc': '${exp.company} • ${exp.description}',
+                          })
+                      .toList(),
+                  onTap: () {}),
+            if (profile.projects.isNotEmpty)
+              _buildSectionCard('Projects', null,
+                  items: profile.projects
+                      .map((proj) => {
+                            'title': proj.title,
+                            'desc': proj.description,
+                          })
+                      .toList(),
+                  onTap: () {}),
+            if (profile.achievements.isNotEmpty)
+              _buildSectionCard('Achievements', null,
+                  items: profile.achievements
+                      .map((ach) => {
+                            'title': ach.title,
+                            'desc': ach.description,
+                          })
+                      .toList(),
+                  onTap: () {}),
           ],
         ),
       ),
     );
-  }
-
-  Widget _buildProfileImage() {
-    if (profileImage.startsWith('http')) {
-      return Tooltip(
-        message: 'Profile image',
-        child: CircleAvatar(
-          radius: 33,
-          backgroundImage: NetworkImage(profileImage),
-          onBackgroundImageError: (_, __) {},
-          child: Image.network(
-            profileImage,
-            errorBuilder: (context, error, stackTrace) =>
-                const Icon(Icons.broken_image, size: 48, color: Colors.grey),
-            semanticLabel: 'Profile image',
-          ),
-        ),
-      );
-    } else {
-      return Tooltip(
-        message: 'Profile image',
-        child: CircleAvatar(
-          radius: 33,
-          backgroundImage: AssetImage(profileImage),
-          child: Image.asset(
-            profileImage,
-            errorBuilder: (context, error, stackTrace) =>
-                const Icon(Icons.broken_image, size: 48, color: Colors.grey),
-            semanticLabel: 'Profile image',
-          ),
-        ),
-      );
-    }
   }
 
   Widget _buildSectionCard(String title, String? content,
@@ -381,11 +493,16 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       ),
     );
   }
+
+  void _shareProfile(BuildContext context) {
+    // For demo, just share a string
+    Share.share('Check out my profile!');
+  }
 }
 
 class AboutDetailPage extends StatelessWidget {
   final String about;
-  const AboutDetailPage({required this.about, Key? key}) : super(key: key);
+  const AboutDetailPage({required this.about, super.key});
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -400,8 +517,7 @@ class AboutDetailPage extends StatelessWidget {
 
 class ExperienceDetailPage extends StatelessWidget {
   final List<Map<String, String>> experience;
-  const ExperienceDetailPage({required this.experience, Key? key})
-      : super(key: key);
+  const ExperienceDetailPage({required this.experience, super.key});
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -421,7 +537,7 @@ class ExperienceDetailPage extends StatelessWidget {
 
 class ProjectDetailPage extends StatelessWidget {
   final List<Map<String, String>> projects;
-  const ProjectDetailPage({required this.projects, Key? key}) : super(key: key);
+  const ProjectDetailPage({required this.projects, super.key});
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -440,22 +556,119 @@ class ProjectDetailPage extends StatelessWidget {
 }
 
 class AchievementsDetailPage extends StatelessWidget {
-  final List<Map<String, String>> achievements;
-  const AchievementsDetailPage({required this.achievements, Key? key})
-      : super(key: key);
+  final List<Map<String, dynamic>> achievements;
+  const AchievementsDetailPage({required this.achievements, super.key});
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Achievements Details')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: achievements
-            .map((item) => ListTile(
-                  title: Text(item['title'] ?? ''),
-                  subtitle: Text(item['desc'] ?? ''),
-                ))
-            .toList(),
-      ),
+      body: achievements.isEmpty
+          ? const Center(
+              child: Text(
+                'No achievements yet.\nAdd some achievements to showcase your talents!',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: achievements.length,
+              itemBuilder: (context, index) {
+                final achievement = achievements[index];
+                final isVerified = achievement['status'] == 'Verified';
+                final achievementModel =
+                    achievement['achievement'] as AchievementModel?;
+
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                achievement['title'] ?? '',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color:
+                                    isVerified ? Colors.green : Colors.orange,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                achievement['status'] ?? '',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          achievement['desc'] ?? '',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.star,
+                              size: 16,
+                              color: Colors.amber[600],
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${achievement['points'] ?? '0'} points',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.amber[600],
+                              ),
+                            ),
+                            const Spacer(),
+                            if (achievementModel != null && !isVerified)
+                              IconButton(
+                                icon: const Icon(Icons.edit, size: 20),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          const AchievementsScreen(),
+                                    ),
+                                  );
+                                },
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
     );
   }
 }
@@ -482,8 +695,7 @@ class EditProfilePage extends StatefulWidget {
       required this.gpa,
       required this.coCurriculum,
       required this.profileImage,
-      Key? key})
-      : super(key: key);
+      super.key});
   @override
   State<EditProfilePage> createState() => _EditProfilePageState();
 }
@@ -516,12 +728,46 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _achievements = List<Map<String, String>>.from(widget.achievements);
   }
 
+  ImageProvider _getEditProfileImage(String imageUrl) {
+    if (imageUrl.isEmpty) {
+      return const AssetImage('assets/images/default_profile.png');
+    } else if (imageUrl.startsWith('data:image')) {
+      // Handle base64 images
+      final base64String = imageUrl.split(',')[1];
+      final bytes = base64Decode(base64String);
+      return MemoryImage(bytes);
+    } else if (imageUrl.startsWith('http')) {
+      // Handle network images
+      return NetworkImage(imageUrl);
+    } else {
+      // Handle file images
+      return FileImage(File(imageUrl));
+    }
+  }
+
   Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 70,
+    );
     if (image != null) {
-      setState(() {
-        _profileImage = image.path;
-      });
+      try {
+        // Convert image to base64 for free storage
+        final bytes = await image.readAsBytes();
+        final base64String = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+
+        setState(() {
+          _profileImage = base64String;
+        });
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error processing image: $e')),
+          );
+        }
+      }
     }
   }
 
@@ -591,13 +837,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
               onTap: _pickImage,
               child: CircleAvatar(
                 radius: 40,
-                backgroundImage: _profileImage.startsWith('http')
-                    ? NetworkImage(_profileImage)
-                    : FileImage(File(_profileImage)) as ImageProvider,
+                backgroundImage: _getEditProfileImage(_profileImage),
                 child: Align(
                   alignment: Alignment.bottomRight,
                   child: Container(
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: Colors.white,
                       shape: BoxShape.circle,
                     ),
@@ -699,15 +943,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
 }
 
 class MetricDetailPage extends StatelessWidget {
+  const MetricDetailPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Performance Metric Details')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
+      body: const Padding(
+        padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
+          children: [
             Text('How is your performance measured?',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
             SizedBox(height: 12),

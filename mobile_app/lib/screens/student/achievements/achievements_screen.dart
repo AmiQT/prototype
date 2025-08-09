@@ -6,7 +6,6 @@ import '../../../services/auth_service.dart';
 import '../../../services/achievement_service.dart';
 import '../../../models/user_model.dart';
 import '../../../models/achievement_model.dart';
-import '../../../widgets/custom_button.dart';
 import '../../../widgets/custom_text_field.dart';
 
 class AchievementsScreen extends StatefulWidget {
@@ -19,15 +18,11 @@ class AchievementsScreen extends StatefulWidget {
 class _AchievementsScreenState extends State<AchievementsScreen>
     with SingleTickerProviderStateMixin {
   UserModel? _currentUser;
-  List<AchievementModel> _achievements = [];
-  bool _isLoading = true;
   bool _showAddDialog = false;
   bool _isGridView = false;
   AchievementModel? _editingAchievement;
   late AnimationController _animationController;
   late Animation<double> _animation;
-  List<bool> _expanded = [];
-  bool _isRefreshing = false;
 
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
@@ -43,17 +38,15 @@ class _AchievementsScreenState extends State<AchievementsScreen>
   @override
   void initState() {
     super.initState();
-    _loadAchievements();
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
     _animation = CurvedAnimation(
       parent: _animationController,
-      curve: Curves.easeInOut,
+      curve: Curves.easeIn,
     );
     _animationController.forward();
-    _expanded = List.generate(_achievements.length, (index) => false);
   }
 
   @override
@@ -63,43 +56,6 @@ class _AchievementsScreenState extends State<AchievementsScreen>
     _organizationController.dispose();
     _animationController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadAchievements() async {
-    try {
-      setState(() {
-        _isLoading = true;
-      });
-
-      final authService = Provider.of<AuthService>(context, listen: false);
-      final achievementService =
-          Provider.of<AchievementService>(context, listen: false);
-
-      UserModel? user = authService.currentUser;
-      if (user?.uid != null) {
-        _currentUser = await authService.getUserData(user!.uid);
-        // Get achievements using Future instead of Stream
-        final achievements =
-            await achievementService.getAchievementsByUserId(user.uid);
-        setState(() {
-          _achievements = achievements;
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _currentUser = null;
-          _achievements = [];
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading achievements: $e')),
-      );
-      setState(() {
-        _isLoading = false;
-      });
-    }
   }
 
   void _showAddAchievementDialog() {
@@ -180,9 +136,11 @@ class _AchievementsScreenState extends State<AchievementsScreen>
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error picking image: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking image: $e')),
+        );
+      }
     }
   }
 
@@ -260,67 +218,30 @@ class _AchievementsScreenState extends State<AchievementsScreen>
 
       _resetForm();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_editingAchievement != null
-              ? 'Achievement updated successfully!'
-              : 'Achievement added successfully!'),
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error saving achievement: $e')),
-      );
-    }
-  }
-
-  Future<void> _deleteAchievement(AchievementModel achievement) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Achievement'),
-        content:
-            Text('Are you sure you want to delete "${achievement.title}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        final achievementService =
-            Provider.of<AchievementService>(context, listen: false);
-        await achievementService.deleteAchievement(achievement.id);
-
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Achievement deleted successfully!')),
+          SnackBar(
+            content: Text(_editingAchievement != null
+                ? 'Achievement updated successfully!'
+                : 'Achievement added successfully!'),
+          ),
         );
-      } catch (e) {
+      }
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error deleting achievement: $e')),
+          SnackBar(content: Text('Error saving achievement: $e')),
         );
       }
     }
   }
 
-  Future<void> _refreshAchievements() async {
-    setState(() => _isRefreshing = true);
-    await Future.delayed(const Duration(seconds: 1));
-    await _loadAchievements();
-    setState(() => _isRefreshing = false);
-  }
-
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final achievementService =
+        Provider.of<AchievementService>(context, listen: false);
+    final userId = authService.currentUser?.uid;
     return Stack(
       children: [
         Scaffold(
@@ -349,18 +270,23 @@ class _AchievementsScreenState extends State<AchievementsScreen>
               ),
             ],
           ),
-          body: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _achievements.isEmpty
-                  ? _buildEmptyState()
-                  : RefreshIndicator(
-                      onRefresh: _refreshAchievements,
-                      child: _isGridView
-                          ? _buildAchievementsGrid()
-                          : _isRefreshing
-                              ? const Center(child: CircularProgressIndicator())
-                              : _buildAchievementsList(),
-                    ),
+          body: userId == null
+              ? const Center(child: Text('No user found.'))
+              : StreamBuilder<List<AchievementModel>>(
+                  stream: achievementService.streamAchievementsByUserId(userId),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    final achievements = snapshot.data ?? [];
+                    if (achievements.isEmpty) {
+                      return _buildEmptyState();
+                    }
+                    return _isGridView
+                        ? _buildAchievementsGridWithData(achievements)
+                        : _buildAchievementsListWithData(achievements);
+                  },
+                ),
           floatingActionButton: FloatingActionButton.extended(
             onPressed: _showAddAchievementDialog,
             tooltip: 'Add Achievement',
@@ -380,14 +306,14 @@ class _AchievementsScreenState extends State<AchievementsScreen>
     );
   }
 
-  Widget _buildAchievementsList() {
+  Widget _buildAchievementsListWithData(List<AchievementModel> achievements) {
     return FadeTransition(
       opacity: _animation,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: _achievements.length,
+        itemCount: achievements.length,
         itemBuilder: (context, index) {
-          final achievement = _achievements[index];
+          final achievement = achievements[index];
           return Card(
             elevation: 3,
             margin: const EdgeInsets.only(bottom: 16),
@@ -404,9 +330,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
                 style:
                     const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
-              initiallyExpanded: _expanded[index],
-              onExpansionChanged: (val) =>
-                  setState(() => _expanded[index] = val),
+              initiallyExpanded: false,
               children: [
                 Padding(
                   padding:
@@ -424,7 +348,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
     );
   }
 
-  Widget _buildAchievementsGrid() {
+  Widget _buildAchievementsGridWithData(List<AchievementModel> achievements) {
     return FadeTransition(
       opacity: _animation,
       child: GridView.builder(
@@ -435,9 +359,9 @@ class _AchievementsScreenState extends State<AchievementsScreen>
           mainAxisSpacing: 16,
           childAspectRatio: 0.8,
         ),
-        itemCount: _achievements.length,
+        itemCount: achievements.length,
         itemBuilder: (context, index) {
-          final achievement = _achievements[index];
+          final achievement = achievements[index];
           return Card(
             elevation: 2,
             shape: RoundedRectangleBorder(
@@ -454,7 +378,8 @@ class _AchievementsScreenState extends State<AchievementsScreen>
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: _getTypeColor(achievement.type).withOpacity(0.1),
+                        color: _getTypeColor(achievement.type)
+                            .withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
@@ -499,38 +424,13 @@ class _AchievementsScreenState extends State<AchievementsScreen>
     );
   }
 
-  Widget _buildInfoChip(IconData icon, String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildVerificationBadge(bool isVerified) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: isVerified
-            ? Colors.green.withOpacity(0.1)
-            : Colors.orange.withOpacity(0.1),
+            ? Colors.green.withValues(alpha: 0.1)
+            : Colors.orange.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(

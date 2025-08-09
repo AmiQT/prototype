@@ -6,12 +6,12 @@ import '../../services/achievement_service.dart';
 import '../../models/user_model.dart';
 import '../../models/profile_model.dart';
 import '../../models/achievement_model.dart';
-import '../../widgets/custom_button.dart';
 import 'profile/student_profile_screen.dart';
-import 'achievements/achievements_screen.dart';
 import 'showcase/showcase_screen.dart';
-import 'search/search_screen.dart';
+import 'search/enhanced_search_screen.dart';
 import 'event_program/event_program_screen.dart';
+import '../chat/chat_screen.dart';
+import '../debug/sample_data_debug_screen.dart';
 
 class StudentDashboard extends StatefulWidget {
   const StudentDashboard({super.key});
@@ -25,12 +25,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
 
   final List<Widget> _pages = [
     const ShowcaseScreen(),
-    const SearchScreen(),
+    const EnhancedSearchScreen(),
     const EventProgramScreen(),
     const StudentProfileScreen(),
-    const Center(
-        child: Text('Notifications (Coming Soon)',
-            style: TextStyle(color: Colors.grey, fontSize: 18))),
   ];
 
   final List<BottomNavigationBarItem> _navItems = const [
@@ -39,8 +36,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
     BottomNavigationBarItem(
         icon: Icon(Icons.event_available), label: 'Event/Program'),
     BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-    BottomNavigationBarItem(
-        icon: Icon(Icons.notifications), label: 'Notifications'),
   ];
 
   UserModel? _currentUser;
@@ -48,7 +43,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
   List<AchievementModel> _recentAchievements = [];
   List<AchievementModel> _allAchievements = [];
   bool _isLoading = true;
-
   Map<String, dynamic> _stats = {
     'totalAchievements': 0,
     'verifiedAchievements': 0,
@@ -57,30 +51,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
     'rank': 0,
     'departmentRank': 0,
   };
-
-  final List<Map<String, dynamic>> _recentActivities = [
-    {
-      'type': 'achievement_added',
-      'description': 'Added new achievement: Dean\'s List Award',
-      'time': '2 hours ago',
-      'icon': Icons.add_circle,
-      'color': Colors.green,
-    },
-    {
-      'type': 'achievement_verified',
-      'description': 'Innovation Challenge achievement verified',
-      'time': '1 day ago',
-      'icon': Icons.verified,
-      'color': Colors.blue,
-    },
-    {
-      'type': 'showcase_post',
-      'description': 'Created showcase post about project completion',
-      'time': '2 days ago',
-      'icon': Icons.post_add,
-      'color': Colors.purple,
-    },
-  ];
 
   @override
   void initState() {
@@ -126,9 +96,11 @@ class _StudentDashboardState extends State<StudentDashboard> {
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading dashboard: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading dashboard: $e')),
+        );
+      }
     } finally {
       setState(() {
         _isLoading = false;
@@ -136,14 +108,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
     }
   }
 
-  void _navigateToScreen(Widget screen) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => screen),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final userRole = authService.currentUser?.role;
     if (_isLoading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -170,152 +138,19 @@ class _StudentDashboardState extends State<StudentDashboard> {
         iconSize: 28,
         elevation: 12,
       ),
+      floatingActionButton:
+          (userRole == UserRole.student || userRole == UserRole.lecturer)
+              ? FloatingActionButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const ChatScreen()),
+                    );
+                  },
+                  tooltip: 'Chatbot',
+                  child: const Icon(Icons.chat),
+                )
+              : null,
     );
-  }
-
-  Widget _buildStatCard(
-      String title, String value, IconData icon, Color color) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 32,
-              color: color,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionCard(
-      String title, IconData icon, Color color, VoidCallback onTap) {
-    return Card(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 32,
-                color: color,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProgressItem(String title, double progress, Color color) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
-            Text(
-              '${(progress * 100).toInt()}%',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        LinearProgressIndicator(
-          value: progress,
-          backgroundColor: Colors.grey[200],
-          valueColor: AlwaysStoppedAnimation<Color>(color),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTipItem(String tip) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(Icons.check_circle, size: 16, color: Colors.blue[700]),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            tip,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.blue[700],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Color _getTypeColor(AchievementType type) {
-    switch (type) {
-      case AchievementType.academic:
-        return Colors.blue;
-      case AchievementType.competition:
-        return Colors.purple;
-      case AchievementType.leadership:
-        return Colors.green;
-      case AchievementType.skill:
-        return Colors.orange;
-      case AchievementType.other:
-        return Colors.grey;
-    }
-  }
-
-  IconData _getTypeIcon(AchievementType type) {
-    switch (type) {
-      case AchievementType.academic:
-        return Icons.school;
-      case AchievementType.competition:
-        return Icons.emoji_events;
-      case AchievementType.leadership:
-        return Icons.people;
-      case AchievementType.skill:
-        return Icons.psychology;
-      case AchievementType.other:
-        return Icons.star;
-    }
   }
 }
