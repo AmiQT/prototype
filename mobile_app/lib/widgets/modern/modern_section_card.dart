@@ -28,10 +28,11 @@ class ModernSectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: margin ?? const EdgeInsets.symmetric(
-        horizontal: AppTheme.spaceMd,
-        vertical: AppTheme.spaceXs,
-      ),
+      margin: margin ??
+          const EdgeInsets.symmetric(
+            horizontal: AppTheme.spaceMd,
+            vertical: AppTheme.spaceXs,
+          ),
       decoration: BoxDecoration(
         color: AppTheme.surfaceColor,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
@@ -87,15 +88,14 @@ class ModernSectionCard extends StatelessWidget {
             child: Text(
               title,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimaryColor,
-              ),
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimaryColor,
+                  ),
             ),
           ),
-          if (showAddButton && onAdd != null)
-            _buildAddButton(context),
+          if (showAddButton && onAdd != null) _buildAddButton(context),
           if (onTap != null)
-            Icon(
+            const Icon(
               Icons.chevron_right_rounded,
               color: AppTheme.textSecondaryColor,
             ),
@@ -129,9 +129,9 @@ class ModernSectionCard extends StatelessWidget {
               Text(
                 addButtonText!,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
             ],
           ],
@@ -204,17 +204,17 @@ class ModernInfoCard extends StatelessWidget {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.textPrimaryColor,
-                    ),
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textPrimaryColor,
+                        ),
                   ),
                   if (subtitle != null) ...[
                     const SizedBox(height: 2),
                     Text(
                       subtitle!,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textSecondaryColor,
-                      ),
+                            color: AppTheme.textSecondaryColor,
+                          ),
                     ),
                   ],
                   if (description != null) ...[
@@ -222,9 +222,9 @@ class ModernInfoCard extends StatelessWidget {
                     Text(
                       description!,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.textSecondaryColor,
-                        height: 1.4,
-                      ),
+                            color: AppTheme.textSecondaryColor,
+                            height: 1.4,
+                          ),
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -248,7 +248,7 @@ class ModernInfoCard extends StatelessWidget {
 
   Widget _buildActionsMenu(BuildContext context) {
     return PopupMenuButton<String>(
-      icon: Icon(
+      icon: const Icon(
         Icons.more_vert_rounded,
         color: AppTheme.textSecondaryColor,
         size: 20,
@@ -283,7 +283,8 @@ class ModernInfoCard extends StatelessWidget {
             value: 'delete',
             child: Row(
               children: [
-                Icon(Icons.delete_rounded, size: 16, color: AppTheme.errorColor),
+                Icon(Icons.delete_rounded,
+                    size: 16, color: AppTheme.errorColor),
                 SizedBox(width: 8),
                 Text('Delete', style: TextStyle(color: AppTheme.errorColor)),
               ],
@@ -318,9 +319,9 @@ class ModernSkillChip extends StatelessWidget {
           vertical: AppTheme.spaceXs,
         ),
         decoration: BoxDecoration(
-          color: isSelected 
-            ? AppTheme.primaryColor 
-            : AppTheme.primaryColor.withValues(alpha: 0.1),
+          color: isSelected
+              ? AppTheme.primaryColor
+              : AppTheme.primaryColor.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(AppTheme.radiusFull),
           border: Border.all(
             color: AppTheme.primaryColor.withValues(alpha: 0.3),
@@ -333,9 +334,9 @@ class ModernSkillChip extends StatelessWidget {
             Text(
               skill,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: isSelected ? Colors.white : AppTheme.primaryColor,
-                fontWeight: FontWeight.w600,
-              ),
+                    color: isSelected ? Colors.white : AppTheme.primaryColor,
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
             if (onDelete != null) ...[
               const SizedBox(width: AppTheme.spaceXs),

@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
 import 'package:video_compress/video_compress.dart';
@@ -9,15 +8,23 @@ class MediaUtils {
   // File size limits (in bytes)
   static const int maxImageSize = 10 * 1024 * 1024; // 10MB
   static const int maxVideoSize = 100 * 1024 * 1024; // 100MB
-  
+
   // Supported formats
   static const List<String> supportedImageFormats = [
-    'jpg', 'jpeg', 'png', 'gif', 'webp'
+    'jpg',
+    'jpeg',
+    'png',
+    'gif',
+    'webp'
   ];
   static const List<String> supportedVideoFormats = [
-    'mp4', 'mov', 'avi', 'mkv', 'webm'
+    'mp4',
+    'mov',
+    'avi',
+    'mkv',
+    'webm'
   ];
-  
+
   // Image compression settings
   static const int maxImageWidth = 1920;
   static const int maxImageHeight = 1080;
@@ -50,7 +57,7 @@ class MediaUtils {
     try {
       final bytes = await file.readAsBytes();
       final image = img.decodeImage(bytes);
-      
+
       if (image == null) return null;
 
       // Resize if necessary
@@ -65,11 +72,11 @@ class MediaUtils {
 
       // Compress
       final compressedBytes = img.encodeJpg(resized, quality: imageQuality);
-      
+
       // Create new file
       final compressedFile = File('${file.path}_compressed.jpg');
       await compressedFile.writeAsBytes(compressedBytes);
-      
+
       return compressedFile;
     } catch (e) {
       debugPrint('Error compressing image: $e');
@@ -86,7 +93,7 @@ class MediaUtils {
         deleteOrigin: false,
         includeAudio: true,
       );
-      
+
       return info?.file;
     } catch (e) {
       debugPrint('Error compressing video: $e');
@@ -102,7 +109,7 @@ class MediaUtils {
         quality: 50,
         position: -1, // Get thumbnail from middle of video
       );
-      
+
       return thumbnail;
     } catch (e) {
       debugPrint('Error generating video thumbnail: $e');
@@ -126,9 +133,9 @@ class MediaUtils {
     try {
       final bytes = await imageFile.readAsBytes();
       final image = img.decodeImage(bytes);
-      
+
       if (image == null) return null;
-      
+
       return {
         'width': image.width,
         'height': image.height,
@@ -168,7 +175,7 @@ class MediaUtils {
           error: 'Image size exceeds ${formatFileSize(maxImageSize)} limit',
         );
       }
-      
+
       final dimensions = await getImageDimensions(file);
       return MediaValidationResult(
         isValid: true,
@@ -187,7 +194,7 @@ class MediaUtils {
           error: 'Video size exceeds ${formatFileSize(maxVideoSize)} limit',
         );
       }
-      
+
       final duration = await getVideoDuration(file);
       return MediaValidationResult(
         isValid: true,

@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/showcase_models.dart';
 import '../../models/user_model.dart';
-import '../../services/showcase_service.dart';
 import '../moderation/report_dialog.dart';
 import 'media_display_widget.dart';
-import 'comment_widgets.dart';
-import 'share_widget.dart';
 
 class PostCardWidget extends StatelessWidget {
   final ShowcasePostModel post;

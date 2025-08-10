@@ -262,7 +262,7 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
                   Padding(
                     padding: EdgeInsets.fromLTRB(
                         16, _realTimeSuggestions.isNotEmpty ? 8 : 16, 16, 8),
-                    child: Text(
+                    child: const Text(
                       'Recent Searches',
                       style: TextStyle(
                         fontWeight: FontWeight.w600,

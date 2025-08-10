@@ -25,9 +25,9 @@ class ModernProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: AppTheme.primaryGradient,
-        borderRadius: const BorderRadius.only(
+        borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(AppTheme.radiusXl),
           bottomRight: Radius.circular(AppTheme.radiusXl),
         ),
@@ -56,9 +56,9 @@ class ModernProfileHeader extends StatelessWidget {
           Text(
             'Profile',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           Row(
             children: [
@@ -112,9 +112,9 @@ class ModernProfileHeader extends StatelessWidget {
           Text(
             profile.fullName,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppTheme.spaceXs),
@@ -122,8 +122,8 @@ class ModernProfileHeader extends StatelessWidget {
             Text(
               profile.department,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Colors.white.withValues(alpha: 0.9),
-              ),
+                    color: Colors.white.withValues(alpha: 0.9),
+                  ),
               textAlign: TextAlign.center,
             ),
           if (profile.academicLevel.isNotEmpty) ...[
@@ -140,9 +140,9 @@ class ModernProfileHeader extends StatelessWidget {
               child: Text(
                 profile.academicLevel,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
             ),
           ],
@@ -151,9 +151,9 @@ class ModernProfileHeader extends StatelessWidget {
             Text(
               profile.bio,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Colors.white.withValues(alpha: 0.9),
-                height: 1.5,
-              ),
+                    color: Colors.white.withValues(alpha: 0.9),
+                    height: 1.5,
+                  ),
               textAlign: TextAlign.center,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
@@ -187,15 +187,15 @@ class ModernProfileHeader extends StatelessWidget {
           backgroundColor: Colors.white,
           backgroundImage: _getProfileImage(profile.profilePictureUrl),
           child: profile.profilePictureUrl.isEmpty
-            ? Text(
-                _getInitials(),
-                style: const TextStyle(
-                  color: AppTheme.primaryColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 32,
-                ),
-              )
-            : null,
+              ? Text(
+                  _getInitials(),
+                  style: const TextStyle(
+                    color: AppTheme.primaryColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 32,
+                  ),
+                )
+              : null,
         ),
       ),
     );
@@ -258,15 +258,15 @@ class ModernProfileHeader extends StatelessWidget {
         Text(
           value,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
         ),
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Colors.white.withValues(alpha: 0.8),
-          ),
+                color: Colors.white.withValues(alpha: 0.8),
+              ),
         ),
       ],
     );
@@ -340,9 +340,9 @@ class ModernProfileHeader extends StatelessWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
           ],
         ),

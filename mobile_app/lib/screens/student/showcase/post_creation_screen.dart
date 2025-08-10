@@ -43,11 +43,11 @@ class _PostCreationScreenState extends State<PostCreationScreen>
 
   // State variables
   String? _uploadSessionId;
-  List<File> _selectedMedia = [];
+  final List<File> _selectedMedia = [];
   PostCategory _selectedCategory = PostCategory.general;
   PostPrivacy _selectedPrivacy = PostPrivacy.public;
   List<String> _tags = [];
-  List<MentionModel> _mentions = [];
+  final List<MentionModel> _mentions = [];
   String? _location;
   bool _isUploading = false;
   bool _hasUnsavedChanges = false;

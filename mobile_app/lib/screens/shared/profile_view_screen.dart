@@ -567,7 +567,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                                     color: AppTheme.textPrimaryColor,
                                   ),
                                 ),
-                                Text(
+                                const Text(
                                   'Profile Strength',
                                   style: TextStyle(
                                     fontSize: 12,
@@ -590,7 +590,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                           _buildInfoChip(Icons.email_rounded, _user!.email),
                           if (_profile!.academicInfo?.department != null)
                             _buildInfoChip(Icons.school_rounded,
-                                _profile!.academicInfo!.department!),
+                                _profile!.academicInfo!.department),
                           if (_profile!.skills.isNotEmpty)
                             _buildInfoChip(Icons.star_rounded,
                                 '${_profile!.skills.length} Skills'),
@@ -680,16 +680,12 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
       icon: Icons.school,
       child: Column(
         children: [
-          if (academic.program != null)
-            _buildInfoRow('Program', academic.program!),
-          if (academic.department != null)
-            _buildInfoRow('Department', academic.department!),
-          if (academic.currentSemester != null)
-            _buildInfoRow('Semester', academic.currentSemester.toString()),
+          _buildInfoRow('Program', academic.program!),
+          _buildInfoRow('Department', academic.department!),
+          _buildInfoRow('Semester', academic.currentSemester.toString()),
           if (academic.cgpa != null)
             _buildInfoRow('CGPA', academic.cgpa!.toStringAsFixed(2)),
-          if (academic.studentId != null)
-            _buildInfoRow('Student ID', academic.studentId!),
+          _buildInfoRow('Student ID', academic.studentId!),
         ],
       ),
     );
@@ -724,7 +720,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.star_rounded,
                         size: 14,
                         color: AppTheme.primaryColor,
@@ -775,7 +771,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.favorite_rounded,
                         size: 14,
                         color: Colors.green,
@@ -1062,10 +1058,13 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
 
     if (_profile!.fullName.isNotEmpty) completedFields++;
     if (_profile!.bio != null && _profile!.bio!.isNotEmpty) completedFields++;
-    if (_profile!.headline != null && _profile!.headline!.isNotEmpty)
+    if (_profile!.headline != null && _profile!.headline!.isNotEmpty) {
       completedFields++;
+    }
     if (_profile!.profileImageUrl != null &&
-        _profile!.profileImageUrl!.isNotEmpty) completedFields++;
+        _profile!.profileImageUrl!.isNotEmpty) {
+      completedFields++;
+    }
     if (_profile!.skills.isNotEmpty) completedFields++;
     if (_profile!.interests.isNotEmpty) completedFields++;
     if (_profile!.experiences.isNotEmpty) completedFields++;

@@ -22,14 +22,14 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Timer? _debounceTimer;
   bool _isLoading = false;
-  bool _isInitialLoad = true;
+  final bool _isInitialLoad = true;
 
-  List<SearchResult> _searchResults = [];
-  List<SearchHistoryItem> _searchHistory = [];
-  Map<String, List<SearchFilter>> _availableFilters = {};
+  final List<SearchResult> _searchResults = [];
+  final List<SearchHistoryItem> _searchHistory = [];
+  final Map<String, List<SearchFilter>> _availableFilters = {};
 
-  String _currentQuery = '';
-  bool _showFilters = false;
+  final String _currentQuery = '';
+  final bool _showFilters = false;
 
   @override
   void initState() {

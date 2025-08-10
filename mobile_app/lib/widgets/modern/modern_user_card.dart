@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../models/profile_model.dart';
-import '../../models/user_model.dart';
 import '../../utils/app_theme.dart';
 
 class ModernUserCard extends StatefulWidget {
@@ -31,7 +30,7 @@ class _ModernUserCardState extends State<ModernUserCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
-  
+
   bool _isPressed = false;
 
   @override
@@ -111,7 +110,8 @@ class _ModernUserCardState extends State<ModernUserCard>
                       const SizedBox(height: AppTheme.spaceMd),
                       _buildSkills(),
                     ],
-                    if (widget.showFollowButton || widget.showMessageButton) ...[
+                    if (widget.showFollowButton ||
+                        widget.showMessageButton) ...[
                       const SizedBox(height: AppTheme.spaceMd),
                       _buildActionButtons(),
                     ],
@@ -140,9 +140,9 @@ class _ModernUserCardState extends State<ModernUserCard>
                     child: Text(
                       widget.profile.fullName,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.textPrimaryColor,
-                      ),
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textPrimaryColor,
+                          ),
                     ),
                   ),
                   _buildRoleBadge(),
@@ -153,15 +153,15 @@ class _ModernUserCardState extends State<ModernUserCard>
                 Text(
                   widget.profile.department,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.textSecondaryColor,
-                  ),
+                        color: AppTheme.textSecondaryColor,
+                      ),
                 ),
               if (widget.profile.academicLevel.isNotEmpty)
                 Text(
                   widget.profile.academicLevel,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textSecondaryColor,
-                  ),
+                        color: AppTheme.textSecondaryColor,
+                      ),
                 ),
             ],
           ),
@@ -183,18 +183,18 @@ class _ModernUserCardState extends State<ModernUserCard>
         radius: 28,
         backgroundColor: _getRoleColor().withValues(alpha: 0.1),
         backgroundImage: widget.profile.profilePictureUrl.isNotEmpty
-          ? NetworkImage(widget.profile.profilePictureUrl)
-          : null,
+            ? NetworkImage(widget.profile.profilePictureUrl)
+            : null,
         child: widget.profile.profilePictureUrl.isEmpty
-          ? Text(
-              _getInitials(),
-              style: TextStyle(
-                color: _getRoleColor(),
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            )
-          : null,
+            ? Text(
+                _getInitials(),
+                style: TextStyle(
+                  color: _getRoleColor(),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              )
+            : null,
       ),
     );
   }
@@ -202,7 +202,7 @@ class _ModernUserCardState extends State<ModernUserCard>
   Widget _buildRoleBadge() {
     final roleColor = _getRoleColor();
     final roleText = _getRoleText();
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppTheme.spaceXs,
@@ -215,9 +215,9 @@ class _ModernUserCardState extends State<ModernUserCard>
       child: Text(
         roleText,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: roleColor,
-          fontWeight: FontWeight.w600,
-        ),
+              color: roleColor,
+              fontWeight: FontWeight.w600,
+            ),
       ),
     );
   }
@@ -226,9 +226,9 @@ class _ModernUserCardState extends State<ModernUserCard>
     return Text(
       widget.profile.bio,
       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-        color: AppTheme.textSecondaryColor,
-        height: 1.4,
-      ),
+            color: AppTheme.textSecondaryColor,
+            height: 1.4,
+          ),
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
     );
@@ -237,16 +237,16 @@ class _ModernUserCardState extends State<ModernUserCard>
   Widget _buildSkills() {
     final displaySkills = widget.profile.skills.take(3).toList();
     final remainingCount = widget.profile.skills.length - 3;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Skills',
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            color: AppTheme.textSecondaryColor,
-            fontWeight: FontWeight.w600,
-          ),
+                color: AppTheme.textSecondaryColor,
+                fontWeight: FontWeight.w600,
+              ),
         ),
         const SizedBox(height: AppTheme.spaceXs),
         Wrap(
@@ -254,8 +254,7 @@ class _ModernUserCardState extends State<ModernUserCard>
           runSpacing: AppTheme.spaceXs,
           children: [
             ...displaySkills.map((skill) => _buildSkillChip(skill)),
-            if (remainingCount > 0)
-              _buildMoreSkillsChip(remainingCount),
+            if (remainingCount > 0) _buildMoreSkillsChip(remainingCount),
           ],
         ),
       ],
@@ -275,9 +274,9 @@ class _ModernUserCardState extends State<ModernUserCard>
       child: Text(
         skill,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: AppTheme.primaryColor,
-          fontWeight: FontWeight.w500,
-        ),
+              color: AppTheme.primaryColor,
+              fontWeight: FontWeight.w500,
+            ),
       ),
     );
   }
@@ -295,9 +294,9 @@ class _ModernUserCardState extends State<ModernUserCard>
       child: Text(
         '+$count more',
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: AppTheme.textSecondaryColor,
-          fontWeight: FontWeight.w500,
-        ),
+              color: AppTheme.textSecondaryColor,
+              fontWeight: FontWeight.w500,
+            ),
       ),
     );
   }
@@ -336,9 +335,8 @@ class _ModernUserCardState extends State<ModernUserCard>
         child: Text(
           widget.isFollowing ? 'Following' : 'Follow',
           style: TextStyle(
-            color: widget.isFollowing 
-              ? AppTheme.textSecondaryColor 
-              : Colors.white,
+            color:
+                widget.isFollowing ? AppTheme.textSecondaryColor : Colors.white,
             fontWeight: FontWeight.w600,
           ),
         ),

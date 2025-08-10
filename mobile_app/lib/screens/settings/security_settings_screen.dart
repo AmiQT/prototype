@@ -4,7 +4,6 @@ import '../../services/auth_service.dart';
 import '../../services/settings_service.dart';
 import '../../widgets/settings_widgets.dart';
 import '../../widgets/custom_text_field.dart';
-import '../../widgets/custom_button.dart';
 
 class SecuritySettingsScreen extends StatefulWidget {
   const SecuritySettingsScreen({super.key});
@@ -21,7 +20,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
   final _resetEmailController = TextEditingController();
 
   final SettingsService _settingsService = SettingsService();
-  
+
   bool _isChangingPassword = false;
   bool _isSendingReset = false;
   bool _showCurrentPassword = false;
@@ -68,16 +67,16 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
   String? _validateNewPassword(String? value) {
     final baseValidation = _validatePassword(value);
     if (baseValidation != null) return baseValidation;
-    
+
     if (value == _currentPasswordController.text) {
       return 'New password must be different from current password';
     }
-    
+
     // Check for password strength
     if (!RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)').hasMatch(value!)) {
       return 'Password should contain uppercase, lowercase, and numbers';
     }
-    
+
     return null;
   }
 
@@ -107,12 +106,11 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
       );
 
       _showSuccessSnackBar('Password changed successfully');
-      
+
       // Clear form
       _currentPasswordController.clear();
       _newPasswordController.clear();
       _confirmPasswordController.clear();
-      
     } catch (e) {
       _showErrorSnackBar(e.toString());
     } finally {
@@ -212,7 +210,8 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
 
             // Security Info Banner
             const SettingsInfoBanner(
-              message: 'Keep your account secure by using a strong password and updating it regularly.',
+              message:
+                  'Keep your account secure by using a strong password and updating it regularly.',
               icon: Icons.security,
               backgroundColor: Colors.orange,
               textColor: Colors.white,
@@ -238,7 +237,9 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                       validator: _validatePassword,
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _showCurrentPassword ? Icons.visibility_off : Icons.visibility,
+                          _showCurrentPassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                         ),
                         onPressed: () {
                           setState(() {
@@ -248,7 +249,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    
+
                     CustomTextField(
                       controller: _newPasswordController,
                       labelText: 'New Password',
@@ -257,7 +258,9 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                       validator: _validateNewPassword,
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _showNewPassword ? Icons.visibility_off : Icons.visibility,
+                          _showNewPassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                         ),
                         onPressed: () {
                           setState(() {
@@ -267,7 +270,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    
+
                     CustomTextField(
                       controller: _confirmPasswordController,
                       labelText: 'Confirm New Password',
@@ -276,7 +279,9 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                       validator: _validateConfirmPassword,
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _showConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                          _showConfirmPassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                         ),
                         onPressed: () {
                           setState(() {
@@ -286,7 +291,7 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    
+
                     // Password requirements
                     Container(
                       padding: const EdgeInsets.all(12),

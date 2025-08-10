@@ -108,10 +108,13 @@ class SearchResult {
 
     if (profile!.fullName.isNotEmpty) completedFields++;
     if (profile!.bio != null && profile!.bio!.isNotEmpty) completedFields++;
-    if (profile!.headline != null && profile!.headline!.isNotEmpty)
+    if (profile!.headline != null && profile!.headline!.isNotEmpty) {
       completedFields++;
+    }
     if (profile!.profileImageUrl != null &&
-        profile!.profileImageUrl!.isNotEmpty) completedFields++;
+        profile!.profileImageUrl!.isNotEmpty) {
+      completedFields++;
+    }
     if (profile!.skills.isNotEmpty) completedFields++;
     if (profile!.interests.isNotEmpty) completedFields++;
     if (profile!.experiences.isNotEmpty) completedFields++;

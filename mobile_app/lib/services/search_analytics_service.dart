@@ -3,7 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../models/search_models.dart';
-import '../models/user_model.dart';
 
 /// Service for tracking search analytics and performance metrics
 class SearchAnalyticsService {
@@ -42,21 +41,21 @@ class SearchAnalyticsService {
       );
 
       _analyticsEvents.add(event);
-      
+
       // Update frequency tracking
-      _searchTermFrequency[query.toLowerCase()] = 
+      _searchTermFrequency[query.toLowerCase()] =
           (_searchTermFrequency[query.toLowerCase()] ?? 0) + 1;
 
       // Calculate average relevance score
       if (results.isNotEmpty) {
-        final avgRelevance = results
-            .map((r) => r.relevanceScore)
-            .reduce((a, b) => a + b) / results.length;
+        final avgRelevance =
+            results.map((r) => r.relevanceScore).reduce((a, b) => a + b) /
+                results.length;
         _searchTermRelevance[query.toLowerCase()] = avgRelevance;
       }
 
       // Store result user IDs for this query
-      _searchTermResults[query.toLowerCase()] = 
+      _searchTermResults[query.toLowerCase()] =
           results.map((r) => r.user.uid).toList();
 
       // Update performance metrics
@@ -65,7 +64,8 @@ class SearchAnalyticsService {
       // Save analytics data
       await _saveAnalyticsData();
 
-      debugPrint('SearchAnalytics: Tracked search for "$query" - ${results.length} results in ${searchDuration.inMilliseconds}ms');
+      debugPrint(
+          'SearchAnalytics: Tracked search for "$query" - ${results.length} results in ${searchDuration.inMilliseconds}ms');
     } catch (e) {
       debugPrint('SearchAnalytics: Error tracking search: $e');
     }
@@ -92,7 +92,8 @@ class SearchAnalyticsService {
       _analyticsEvents.add(event);
       await _saveAnalyticsData();
 
-      debugPrint('SearchAnalytics: Tracked ${interactionType.name} for "$query" -> ${result.user.name}');
+      debugPrint(
+          'SearchAnalytics: Tracked ${interactionType.name} for "$query" -> ${result.user.name}');
     } catch (e) {
       debugPrint('SearchAnalytics: Error tracking interaction: $e');
     }
@@ -106,7 +107,7 @@ class SearchAnalyticsService {
   }) async {
     try {
       final selectedFilters = filters.where((f) => f.isSelected).toList();
-      
+
       final event = SearchAnalyticsEvent(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         type: SearchEventType.filter,
@@ -119,7 +120,8 @@ class SearchAnalyticsService {
       _analyticsEvents.add(event);
       await _saveAnalyticsData();
 
-      debugPrint('SearchAnalytics: Tracked filter usage - ${selectedFilters.length} filters applied');
+      debugPrint(
+          'SearchAnalytics: Tracked filter usage - ${selectedFilters.length} filters applied');
     } catch (e) {
       debugPrint('SearchAnalytics: Error tracking filter usage: $e');
     }
@@ -158,17 +160,21 @@ class SearchAnalyticsService {
 
     final avgDuration = Duration(
       milliseconds: (_performanceMetrics.values
-          .map((m) => m.averageSearchDuration.inMilliseconds)
-          .reduce((a, b) => a + b) / _performanceMetrics.length).round(),
+                  .map((m) => m.averageSearchDuration.inMilliseconds)
+                  .reduce((a, b) => a + b) /
+              _performanceMetrics.length)
+          .round(),
     );
 
     final avgResultCount = _performanceMetrics.values
-        .map((m) => m.averageResultCount)
-        .reduce((a, b) => a + b) / _performanceMetrics.length;
+            .map((m) => m.averageResultCount)
+            .reduce((a, b) => a + b) /
+        _performanceMetrics.length;
 
     final successRate = _performanceMetrics.values
-        .map((m) => m.searchSuccessRate)
-        .reduce((a, b) => a + b) / _performanceMetrics.length;
+            .map((m) => m.searchSuccessRate)
+            .reduce((a, b) => a + b) /
+        _performanceMetrics.length;
 
     return SearchPerformanceMetrics(
       totalSearches: totalSearches,
@@ -201,21 +207,27 @@ class SearchAnalyticsService {
   }
 
   /// Update performance metrics for a search
-  void _updatePerformanceMetrics(String query, Duration duration, int resultCount) {
+  void _updatePerformanceMetrics(
+      String query, Duration duration, int resultCount) {
     final key = query.toLowerCase();
     final existing = _performanceMetrics[key];
 
     if (existing != null) {
       final newTotal = existing.totalSearches + 1;
       final newAvgDuration = Duration(
-        milliseconds: ((existing.averageSearchDuration.inMilliseconds * existing.totalSearches) + 
-                      duration.inMilliseconds) ~/ newTotal,
+        milliseconds: ((existing.averageSearchDuration.inMilliseconds *
+                    existing.totalSearches) +
+                duration.inMilliseconds) ~/
+            newTotal,
       );
-      final newAvgResults = ((existing.averageResultCount * existing.totalSearches) + 
-                           resultCount) / newTotal;
-      final newSuccessRate = resultCount > 0 ? 
-          ((existing.searchSuccessRate * existing.totalSearches) + 1) / newTotal :
-          (existing.searchSuccessRate * existing.totalSearches) / newTotal;
+      final newAvgResults =
+          ((existing.averageResultCount * existing.totalSearches) +
+                  resultCount) /
+              newTotal;
+      final newSuccessRate = resultCount > 0
+          ? ((existing.searchSuccessRate * existing.totalSearches) + 1) /
+              newTotal
+          : (existing.searchSuccessRate * existing.totalSearches) / newTotal;
 
       _performanceMetrics[key] = SearchPerformanceMetrics(
         totalSearches: newTotal,
@@ -239,13 +251,14 @@ class SearchAnalyticsService {
   Future<void> _saveAnalyticsData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       // Save events (keep only recent 1000 events)
-      final recentEvents = _analyticsEvents.length > 1000 
+      final recentEvents = _analyticsEvents.length > 1000
           ? _analyticsEvents.sublist(_analyticsEvents.length - 1000)
           : _analyticsEvents;
-      
-      final eventsJson = jsonEncode(recentEvents.map((e) => e.toJson()).toList());
+
+      final eventsJson =
+          jsonEncode(recentEvents.map((e) => e.toJson()).toList());
       await prefs.setString(_analyticsKey, eventsJson);
 
       // Save frequency data
@@ -257,7 +270,6 @@ class SearchAnalyticsService {
         (key, value) => MapEntry(key, value.toJson()),
       ));
       await prefs.setString(_performanceKey, performanceJson);
-
     } catch (e) {
       debugPrint('SearchAnalytics: Error saving analytics data: $e');
     }
@@ -267,7 +279,7 @@ class SearchAnalyticsService {
   Future<void> loadAnalyticsData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       // Load events
       final eventsJson = prefs.getString(_analyticsKey);
       if (eventsJson != null) {
@@ -291,15 +303,17 @@ class SearchAnalyticsService {
       // Load performance metrics
       final performanceJson = prefs.getString(_performanceKey);
       if (performanceJson != null) {
-        final performanceMap = jsonDecode(performanceJson) as Map<String, dynamic>;
+        final performanceMap =
+            jsonDecode(performanceJson) as Map<String, dynamic>;
         _performanceMetrics.clear();
         _performanceMetrics.addAll(
-          performanceMap.map((key, value) => 
-            MapEntry(key, SearchPerformanceMetrics.fromJson(value))),
+          performanceMap.map((key, value) =>
+              MapEntry(key, SearchPerformanceMetrics.fromJson(value))),
         );
       }
 
-      debugPrint('SearchAnalytics: Loaded ${_analyticsEvents.length} events, ${_searchTermFrequency.length} terms');
+      debugPrint(
+          'SearchAnalytics: Loaded ${_analyticsEvents.length} events, ${_searchTermFrequency.length} terms');
     } catch (e) {
       debugPrint('SearchAnalytics: Error loading analytics data: $e');
     }
@@ -308,9 +322,10 @@ class SearchAnalyticsService {
   /// Helper methods
   DateTime? _getLastSearchTime(String term) {
     final events = _analyticsEvents
-        .where((e) => e.query?.toLowerCase() == term && e.type == SearchEventType.search)
+        .where((e) =>
+            e.query?.toLowerCase() == term && e.type == SearchEventType.search)
         .toList();
-    
+
     if (events.isEmpty) return null;
     events.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     return events.first.timestamp;
@@ -318,7 +333,7 @@ class SearchAnalyticsService {
 
   List<String> _getPopularFilters() {
     final filterCounts = <String, int>{};
-    
+
     for (final event in _analyticsEvents) {
       if (event.appliedFilters != null) {
         for (final filter in event.appliedFilters!) {
@@ -338,20 +353,22 @@ class SearchAnalyticsService {
   Duration _calculateAverageSessionDuration() {
     // Simple calculation based on time between first and last event
     if (_analyticsEvents.length < 2) return Duration.zero;
-    
+
     _analyticsEvents.sort((a, b) => a.timestamp.compareTo(b.timestamp));
     final duration = _analyticsEvents.last.timestamp
         .difference(_analyticsEvents.first.timestamp);
-    
-    return Duration(milliseconds: duration.inMilliseconds ~/ _analyticsEvents.length);
+
+    return Duration(
+        milliseconds: duration.inMilliseconds ~/ _analyticsEvents.length);
   }
 
   Map<SearchInteractionType, int> _getTopInteractionTypes() {
     final counts = <SearchInteractionType, int>{};
-    
+
     for (final event in _analyticsEvents) {
       if (event.interactionType != null) {
-        counts[event.interactionType!] = (counts[event.interactionType!] ?? 0) + 1;
+        counts[event.interactionType!] =
+            (counts[event.interactionType!] ?? 0) + 1;
       }
     }
 

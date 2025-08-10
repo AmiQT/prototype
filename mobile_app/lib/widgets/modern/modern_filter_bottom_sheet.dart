@@ -27,7 +27,8 @@ class ModernFilterBottomSheet extends StatefulWidget {
   });
 
   @override
-  State<ModernFilterBottomSheet> createState() => _ModernFilterBottomSheetState();
+  State<ModernFilterBottomSheet> createState() =>
+      _ModernFilterBottomSheetState();
 }
 
 class _ModernFilterBottomSheetState extends State<ModernFilterBottomSheet> {
@@ -62,7 +63,7 @@ class _ModernFilterBottomSheetState extends State<ModernFilterBottomSheet> {
         children: [
           // Header
           _buildHeader(),
-          
+
           // Content
           Expanded(
             child: SingleChildScrollView(
@@ -72,37 +73,37 @@ class _ModernFilterBottomSheetState extends State<ModernFilterBottomSheet> {
                 children: [
                   // Range filters
                   _buildRangeFilters(),
-                  
+
                   const SizedBox(height: AppTheme.spaceLg),
-                  
+
                   // Role filters
                   if (widget.availableFilters['role']?.isNotEmpty == true)
                     _buildRoleFilters(),
-                  
+
                   const SizedBox(height: AppTheme.spaceLg),
-                  
+
                   // Department filters
                   if (widget.availableFilters['department']?.isNotEmpty == true)
                     _buildDepartmentFilters(),
-                  
+
                   const SizedBox(height: AppTheme.spaceLg),
-                  
+
                   // Skills filters
                   if (widget.availableFilters['skills']?.isNotEmpty == true)
                     _buildSkillsFilters(),
-                  
+
                   const SizedBox(height: AppTheme.spaceLg),
-                  
+
                   // Program filters
                   if (widget.availableFilters['program']?.isNotEmpty == true)
                     _buildProgramFilters(),
-                  
+
                   const SizedBox(height: 100), // Space for bottom buttons
                 ],
               ),
             ),
           ),
-          
+
           // Bottom action buttons
           _buildBottomActions(),
         ],
@@ -137,9 +138,9 @@ class _ModernFilterBottomSheetState extends State<ModernFilterBottomSheet> {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          
+
           const SizedBox(height: AppTheme.spaceMd),
-          
+
           // Title and close
           Row(
             children: [
@@ -164,7 +165,7 @@ class _ModernFilterBottomSheetState extends State<ModernFilterBottomSheet> {
                     if (_totalActiveFilters > 0)
                       Text(
                         '$_totalActiveFilters active filters',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 14,
                           color: AppTheme.textSecondaryColor,
                         ),
@@ -205,9 +206,9 @@ class _ModernFilterBottomSheetState extends State<ModernFilterBottomSheet> {
             widget.onSemesterRangeChanged(range);
           },
         ),
-        
+
         const SizedBox(height: AppTheme.spaceMd),
-        
+
         // CGPA range
         ModernRangeSlider(
           title: 'CGPA Range',
@@ -286,32 +287,35 @@ class _ModernFilterBottomSheetState extends State<ModernFilterBottomSheet> {
             // Clear all button
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: _totalActiveFilters > 0 ? () {
-                  widget.onClearAll();
-                  setState(() {
-                    _semesterRange = const RangeValues(1, 8);
-                    _cgpaRange = const RangeValues(0, 4);
-                  });
-                } : null,
+                onPressed: _totalActiveFilters > 0
+                    ? () {
+                        widget.onClearAll();
+                        setState(() {
+                          _semesterRange = const RangeValues(1, 8);
+                          _cgpaRange = const RangeValues(0, 4);
+                        });
+                      }
+                    : null,
                 icon: const Icon(Icons.clear_all_rounded),
                 label: const Text('Clear All'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppTheme.errorColor,
                   side: BorderSide(
-                    color: _totalActiveFilters > 0 
-                        ? AppTheme.errorColor 
+                    color: _totalActiveFilters > 0
+                        ? AppTheme.errorColor
                         : AppTheme.textSecondaryColor.withValues(alpha: 0.3),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: AppTheme.spaceMd),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: AppTheme.spaceMd),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                   ),
                 ),
               ),
             ),
-            
+
             const SizedBox(width: AppTheme.spaceMd),
-            
+
             // Apply button
             Expanded(
               flex: 2,
@@ -321,13 +325,14 @@ class _ModernFilterBottomSheetState extends State<ModernFilterBottomSheet> {
                   Navigator.pop(context);
                 },
                 icon: const Icon(Icons.check_rounded),
-                label: Text(_totalActiveFilters > 0 
-                    ? 'Apply ($_totalActiveFilters)' 
+                label: Text(_totalActiveFilters > 0
+                    ? 'Apply ($_totalActiveFilters)'
                     : 'Apply Filters'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryColor,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: AppTheme.spaceMd),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: AppTheme.spaceMd),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                   ),

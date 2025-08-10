@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../models/user_model.dart';
-import '../utils/error_handler.dart';
 
 class SettingsService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -36,15 +35,18 @@ class SettingsService {
 
       debugPrint('SettingsService: Password updated successfully');
     } on FirebaseAuthException catch (e) {
-      debugPrint('SettingsService: Firebase Auth error changing password: ${e.code} - ${e.message}');
-      
+      debugPrint(
+          'SettingsService: Firebase Auth error changing password: ${e.code} - ${e.message}');
+
       switch (e.code) {
         case 'wrong-password':
           throw Exception('Current password is incorrect');
         case 'weak-password':
-          throw Exception('New password is too weak. Please choose a stronger password');
+          throw Exception(
+              'New password is too weak. Please choose a stronger password');
         case 'requires-recent-login':
-          throw Exception('Please log out and log back in before changing your password');
+          throw Exception(
+              'Please log out and log back in before changing your password');
         default:
           throw Exception('Failed to change password: ${e.message}');
       }
@@ -85,8 +87,9 @@ class SettingsService {
 
       debugPrint('SettingsService: Email updated successfully');
     } on FirebaseAuthException catch (e) {
-      debugPrint('SettingsService: Firebase Auth error updating email: ${e.code} - ${e.message}');
-      
+      debugPrint(
+          'SettingsService: Firebase Auth error updating email: ${e.code} - ${e.message}');
+
       switch (e.code) {
         case 'wrong-password':
           throw Exception('Current password is incorrect');
@@ -95,7 +98,8 @@ class SettingsService {
         case 'invalid-email':
           throw Exception('Please enter a valid email address');
         case 'requires-recent-login':
-          throw Exception('Please log out and log back in before changing your email');
+          throw Exception(
+              'Please log out and log back in before changing your email');
         default:
           throw Exception('Failed to update email: ${e.message}');
       }
@@ -201,13 +205,13 @@ class SettingsService {
 
       // Delete user data from Firestore
       await _firestore.collection('users').doc(user.uid).delete();
-      
+
       // Delete user profile if exists
       final profileQuery = await _firestore
           .collection('profiles')
           .where('userId', isEqualTo: user.uid)
           .get();
-      
+
       for (final doc in profileQuery.docs) {
         await doc.reference.delete();
       }
@@ -217,13 +221,15 @@ class SettingsService {
 
       debugPrint('SettingsService: Account deleted successfully');
     } on FirebaseAuthException catch (e) {
-      debugPrint('SettingsService: Firebase Auth error deleting account: ${e.code} - ${e.message}');
-      
+      debugPrint(
+          'SettingsService: Firebase Auth error deleting account: ${e.code} - ${e.message}');
+
       switch (e.code) {
         case 'wrong-password':
           throw Exception('Current password is incorrect');
         case 'requires-recent-login':
-          throw Exception('Please log out and log back in before deleting your account');
+          throw Exception(
+              'Please log out and log back in before deleting your account');
         default:
           throw Exception('Failed to delete account: ${e.message}');
       }
@@ -239,8 +245,9 @@ class SettingsService {
       await _auth.sendPasswordResetEmail(email: email);
       debugPrint('SettingsService: Password reset email sent successfully');
     } on FirebaseAuthException catch (e) {
-      debugPrint('SettingsService: Firebase Auth error sending password reset: ${e.code} - ${e.message}');
-      
+      debugPrint(
+          'SettingsService: Firebase Auth error sending password reset: ${e.code} - ${e.message}');
+
       switch (e.code) {
         case 'user-not-found':
           throw Exception('No account found with this email address');
@@ -250,7 +257,8 @@ class SettingsService {
           throw Exception('Failed to send password reset email: ${e.message}');
       }
     } catch (e) {
-      debugPrint('SettingsService: Unexpected error sending password reset: $e');
+      debugPrint(
+          'SettingsService: Unexpected error sending password reset: $e');
       throw Exception('Failed to send password reset email: ${e.toString()}');
     }
   }

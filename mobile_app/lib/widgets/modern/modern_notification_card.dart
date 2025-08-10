@@ -20,13 +20,13 @@ class ModernNotificationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: notification.isRead 
-            ? AppTheme.surfaceColor 
+        color: notification.isRead
+            ? AppTheme.surfaceColor
             : AppTheme.primaryColor.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
         border: Border.all(
-          color: notification.isRead 
-              ? AppTheme.borderColor 
+          color: notification.isRead
+              ? AppTheme.borderColor
               : AppTheme.primaryColor.withValues(alpha: 0.2),
           width: 1,
         ),
@@ -89,7 +89,9 @@ class ModernNotificationCard extends StatelessWidget {
               child: Text(
                 notification.title,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: notification.isRead ? FontWeight.w500 : FontWeight.w600,
+                      fontWeight: notification.isRead
+                          ? FontWeight.w500
+                          : FontWeight.w600,
                       color: AppTheme.textPrimaryColor,
                     ),
                 maxLines: 1,
@@ -155,7 +157,7 @@ class ModernNotificationCard extends StatelessWidget {
 
   Widget _buildActions() {
     return PopupMenuButton<String>(
-      icon: Icon(
+      icon: const Icon(
         Icons.more_vert_rounded,
         color: AppTheme.textSecondaryColor,
         size: 18,
@@ -190,7 +192,8 @@ class ModernNotificationCard extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.delete_outline_rounded, size: 16, color: AppTheme.errorColor),
+              Icon(Icons.delete_outline_rounded,
+                  size: 16, color: AppTheme.errorColor),
               SizedBox(width: 8),
               Text('Delete', style: TextStyle(color: AppTheme.errorColor)),
             ],

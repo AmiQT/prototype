@@ -6,8 +6,6 @@ import 'dart:async';
 import '../models/showcase_models.dart';
 import '../models/post_creation_models.dart';
 import '../utils/media_utils.dart';
-import '../models/user_model.dart';
-import '../models/profile_model.dart';
 
 class ShowcaseService {
   final CollectionReference showcaseCollection =

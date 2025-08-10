@@ -20,9 +20,9 @@ class ModernHomeHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: AppTheme.primaryGradient,
-        borderRadius: const BorderRadius.only(
+        borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(AppTheme.radiusXl),
           bottomRight: Radius.circular(AppTheme.radiusXl),
         ),
@@ -146,7 +146,7 @@ class ModernHomeHeader extends StatelessWidget {
               radius: 16,
               backgroundColor: Colors.white,
               child: Text(
-                user?.name?.substring(0, 1).toUpperCase() ?? 'U',
+                user?.name.substring(0, 1).toUpperCase() ?? 'U',
                 style: const TextStyle(
                   color: AppTheme.primaryColor,
                   fontWeight: FontWeight.bold,
@@ -170,7 +170,7 @@ class ModernHomeHeader extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '$timeOfDay, ${user?.name?.split(' ').first ?? 'Student'}!',
+              '$timeOfDay, ${user?.name.split(' ').first ?? 'Student'}!',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,

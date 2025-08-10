@@ -104,7 +104,7 @@ class _ModernRangeSliderState extends State<ModernRangeSlider> {
                   ),
                 ),
               ),
-              Text(
+              const Text(
                 'to',
                 style: TextStyle(
                   fontSize: 14,
@@ -373,7 +373,7 @@ class _ModernMultiSelectChipsState extends State<ModernMultiSelectChips> {
     return ActionChip(
       label: Text(
         _showAll ? 'Show Less' : 'Show $remainingCount More',
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w500,
           color: AppTheme.textSecondaryColor,

@@ -11,7 +11,6 @@ import 'showcase/showcase_screen.dart';
 import 'search/enhanced_search_screen.dart';
 import 'event_program/event_program_screen.dart';
 import '../chat/chat_screen.dart';
-import '../debug/sample_data_debug_screen.dart';
 
 class StudentDashboard extends StatefulWidget {
   const StudentDashboard({super.key});

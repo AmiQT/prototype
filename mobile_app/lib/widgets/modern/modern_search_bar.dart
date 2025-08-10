@@ -221,7 +221,7 @@ class _ModernSearchBarState extends State<ModernSearchBar>
                                   padding:
                                       const EdgeInsets.all(AppTheme.spaceXs),
                                   child: IconButton(
-                                    icon: Icon(
+                                    icon: const Icon(
                                       Icons.clear_rounded,
                                       color: AppTheme.textSecondaryColor,
                                       size: 20,
@@ -310,8 +310,8 @@ class _ModernSearchBarState extends State<ModernSearchBar>
               children: [
                 // Real-time suggestions
                 if (_suggestions.isNotEmpty) ...[
-                  Padding(
-                    padding: const EdgeInsets.all(AppTheme.spaceMd),
+                  const Padding(
+                    padding: EdgeInsets.all(AppTheme.spaceMd),
                     child: Text(
                       'Suggestions',
                       style: TextStyle(
@@ -329,8 +329,8 @@ class _ModernSearchBarState extends State<ModernSearchBar>
                 // Search history
                 if (widget.searchHistory.isNotEmpty &&
                     _suggestions.isEmpty) ...[
-                  Padding(
-                    padding: const EdgeInsets.all(AppTheme.spaceMd),
+                  const Padding(
+                    padding: EdgeInsets.all(AppTheme.spaceMd),
                     child: Text(
                       'Recent Searches',
                       style: TextStyle(
@@ -388,7 +388,7 @@ class _ModernSearchBarState extends State<ModernSearchBar>
                   ),
                   Text(
                     _getSuggestionTypeLabel(suggestion.type),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 12,
                       color: AppTheme.textSecondaryColor,
                     ),
@@ -436,7 +436,7 @@ class _ModernSearchBarState extends State<ModernSearchBar>
             ),
             Text(
               '${item.resultCount} results',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
                 color: AppTheme.textSecondaryColor,
               ),

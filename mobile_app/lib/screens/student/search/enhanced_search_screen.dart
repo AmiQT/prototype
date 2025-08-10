@@ -31,7 +31,7 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
   Map<String, List<SearchFilter>> _availableFilters = {};
 
   String _currentQuery = '';
-  bool _showFilters = false;
+  final bool _showFilters = false;
 
   // Range filter values
   RangeValues _semesterRange = const RangeValues(1, 8);
@@ -768,7 +768,7 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
+            const Icon(
               Icons.trending_up_rounded,
               size: 16,
               color: AppTheme.primaryColor,
@@ -853,7 +853,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet>
 
   // Range filter values
   RangeValues _semesterRange = const RangeValues(1, 8);
-  RangeValues _cgpaRange = const RangeValues(0, 4);
+  final RangeValues _cgpaRange = const RangeValues(0, 4);
 
   @override
   void initState() {

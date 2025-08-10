@@ -271,17 +271,20 @@ class SearchService {
 
     // Department matches
     if (user.department?.toLowerCase().contains(q) == true) score += 4.0;
-    if (profile?.academicInfo?.department?.toLowerCase().contains(q) == true)
+    if (profile?.academicInfo?.department.toLowerCase().contains(q) == true) {
       score += 4.0;
+    }
 
     // Program matches
-    if (profile?.academicInfo?.program?.toLowerCase().contains(q) == true)
+    if (profile?.academicInfo?.program.toLowerCase().contains(q) == true) {
       score += 3.0;
+    }
 
     // Student ID matches
     if (user.studentId?.toLowerCase().contains(q) == true) score += 6.0;
-    if (profile?.academicInfo?.studentId?.toLowerCase().contains(q) == true)
+    if (profile?.academicInfo?.studentId.toLowerCase().contains(q) == true) {
       score += 6.0;
+    }
 
     // Experience and project matches
     final experienceMatches = profile?.experiences
@@ -318,16 +321,21 @@ class SearchService {
     List<String> matchedFields = [];
 
     if (user.name.toLowerCase().contains(q)) matchedFields.add('name');
-    if (profile?.fullName.toLowerCase().contains(q) == true)
+    if (profile?.fullName.toLowerCase().contains(q) == true) {
       matchedFields.add('fullName');
-    if (profile?.bio?.toLowerCase().contains(q) == true)
+    }
+    if (profile?.bio?.toLowerCase().contains(q) == true) {
       matchedFields.add('bio');
-    if (profile?.headline?.toLowerCase().contains(q) == true)
+    }
+    if (profile?.headline?.toLowerCase().contains(q) == true) {
       matchedFields.add('headline');
-    if (user.department?.toLowerCase().contains(q) == true)
+    }
+    if (user.department?.toLowerCase().contains(q) == true) {
       matchedFields.add('department');
-    if (user.studentId?.toLowerCase().contains(q) == true)
+    }
+    if (user.studentId?.toLowerCase().contains(q) == true) {
       matchedFields.add('studentId');
+    }
 
     // Check skills
     if (profile?.skills.any((skill) => skill.toLowerCase().contains(q)) ==
@@ -365,8 +373,9 @@ class SearchService {
           if (profile?.skills.contains(filter.name) != true) return false;
           break;
         case 'semester':
-          if (profile?.academicInfo?.currentSemester.toString() != filter.id)
+          if (profile?.academicInfo?.currentSemester.toString() != filter.id) {
             return false;
+          }
           break;
         case 'program':
           if (profile?.academicInfo?.program != filter.name) return false;
@@ -383,10 +392,13 @@ class SearchService {
 
     if (profile.fullName.isNotEmpty) completedFields++;
     if (profile.bio != null && profile.bio!.isNotEmpty) completedFields++;
-    if (profile.headline != null && profile.headline!.isNotEmpty)
+    if (profile.headline != null && profile.headline!.isNotEmpty) {
       completedFields++;
-    if (profile.profileImageUrl != null && profile.profileImageUrl!.isNotEmpty)
+    }
+    if (profile.profileImageUrl != null &&
+        profile.profileImageUrl!.isNotEmpty) {
       completedFields++;
+    }
     if (profile.skills.isNotEmpty) completedFields++;
     if (profile.interests.isNotEmpty) completedFields++;
     if (profile.experiences.isNotEmpty) completedFields++;
@@ -484,7 +496,7 @@ class SearchService {
       }
       for (final profile in profiles) {
         if (profile.academicInfo?.department != null) {
-          departments.add(profile.academicInfo!.department!);
+          departments.add(profile.academicInfo!.department);
         }
       }
       filters['department'] = departments
@@ -524,7 +536,7 @@ class SearchService {
       final programs = <String>{};
       for (final profile in profiles) {
         if (profile.academicInfo?.program != null) {
-          programs.add(profile.academicInfo!.program!);
+          programs.add(profile.academicInfo!.program);
         }
       }
       filters['program'] = programs
