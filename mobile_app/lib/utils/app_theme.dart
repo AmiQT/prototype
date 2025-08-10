@@ -67,6 +67,54 @@ class AppTheme {
   static const double elevationLg = 8.0;
   static const double elevationXl = 16.0;
 
+  // Touch target system (Material Design guidelines)
+  static const double touchTargetMin = 48.0;
+  static const double touchTargetComfortable = 56.0;
+  static const double touchTargetLarge = 64.0;
+
+  // Responsive breakpoints
+  static const double mobileBreakpoint = 600.0;
+  static const double tabletBreakpoint = 900.0;
+  static const double desktopBreakpoint = 1200.0;
+
+  // Helper methods for responsive design
+  static bool isMobile(BuildContext context) {
+    return MediaQuery.of(context).size.width < mobileBreakpoint;
+  }
+
+  static bool isTablet(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    return width >= mobileBreakpoint && width < tabletBreakpoint;
+  }
+
+  static bool isDesktop(BuildContext context) {
+    return MediaQuery.of(context).size.width >= tabletBreakpoint;
+  }
+
+  // Responsive spacing
+  static double getResponsiveSpacing(
+    BuildContext context, {
+    double mobile = spaceMd,
+    double tablet = spaceLg,
+    double desktop = spaceXl,
+  }) {
+    if (isMobile(context)) return mobile;
+    if (isTablet(context)) return tablet;
+    return desktop;
+  }
+
+  // Responsive font sizes
+  static double getResponsiveFontSize(
+    BuildContext context, {
+    double mobile = 16.0,
+    double tablet = 18.0,
+    double desktop = 20.0,
+  }) {
+    if (isMobile(context)) return mobile;
+    if (isTablet(context)) return tablet;
+    return desktop;
+  }
+
   // Light theme
   static ThemeData get lightTheme {
     return ThemeData(

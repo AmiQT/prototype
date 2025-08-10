@@ -280,215 +280,147 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
+            // Modern Profile Header
+            _buildModernProfileHeader(profile),
+            const SizedBox(height: 24),
+            // About Section
+            if (profile.bio?.isNotEmpty == true)
+              _buildModernInfoCard(
+                title: 'About',
+                icon: Icons.info_outline,
+                child: Text(
+                  profile.bio!,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    color: Colors.black87,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+
+            // Academic Information Card
+            _buildModernInfoCard(
+              title: 'Academic Information',
+              icon: Icons.school_rounded,
+              child: Column(
                 children: [
-                  CircleAvatar(
-                    radius: 36,
-                    backgroundColor: Colors.white,
-                    child: Tooltip(
-                      message: 'Profile image',
-                      child: CircleAvatar(
-                        radius: 33,
-                        backgroundImage:
-                            _getProfileImage(profile.profileImageUrl),
-                      ),
-                    ),
+                  _buildModernInfoItem(
+                    Icons.badge_rounded,
+                    'Student ID',
+                    profile.academicInfo?.studentId ?? 'Not specified',
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                profile.fullName,
-                                style: const TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                'Semester ${profile.academicInfo?.currentSemester ?? 'N/A'}',
-                                style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.black),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          profile.bio ?? '', // Headline as bio
-                          style: const TextStyle(
-                              fontSize: 15,
-                              color: Colors.deepPurple,
-                              fontWeight: FontWeight.w500),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          profile.academicInfo?.program ??
-                              'Program not specified',
-                          style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.blue[700],
-                              fontWeight: FontWeight.w500),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
+                  _buildModernInfoItem(
+                    Icons.business_rounded,
+                    'Faculty',
+                    profile.academicInfo?.faculty ?? 'Not specified',
                   ),
+                  _buildModernInfoItem(
+                    Icons.apartment_rounded,
+                    'Department',
+                    profile.academicInfo?.department ?? 'Not specified',
+                  ),
+                  _buildModernInfoItem(
+                    Icons.book_rounded,
+                    'Program',
+                    profile.academicInfo?.program ?? 'Not specified',
+                  ),
+                  _buildModernInfoItem(
+                    Icons.calendar_today_rounded,
+                    'Semester',
+                    'Semester ${profile.academicInfo?.currentSemester ?? 'N/A'}',
+                  ),
+                  if (profile.academicInfo?.cgpa != null)
+                    _buildModernInfoItem(
+                      Icons.grade_rounded,
+                      'CGPA',
+                      profile.academicInfo!.cgpa!.toStringAsFixed(2),
+                    ),
+                  if (profile.academicInfo?.totalCredits != null)
+                    _buildModernInfoItem(
+                      Icons.credit_score_rounded,
+                      'Total Credits',
+                      profile.academicInfo!.totalCredits.toString(),
+                    ),
                 ],
               ),
             ),
-            if (profile.headline?.isNotEmpty == true)
-              _buildSectionCard('Headline', profile.headline!, onTap: () {}),
-            _buildSectionCard('About', profile.bio ?? '', onTap: () {}),
-            _buildSectionCard('Academic Information', null,
-                items: [
-                  {
-                    'title': 'Student ID',
-                    'desc': profile.academicInfo?.studentId ?? 'Not specified'
-                  },
-                  {
-                    'title': 'Faculty',
-                    'desc': profile.academicInfo?.faculty ?? 'Not specified'
-                  },
-                  {
-                    'title': 'Department',
-                    'desc': profile.academicInfo?.department ?? 'Not specified'
-                  },
-                  {
-                    'title': 'Program',
-                    'desc': profile.academicInfo?.program ?? 'Not specified'
-                  },
-                  {
-                    'title': 'Semester',
-                    'desc':
-                        'Semester ${profile.academicInfo?.currentSemester ?? 'N/A'}'
-                  },
-                  if (profile.academicInfo?.cgpa != null)
-                    {
-                      'title': 'CGPA',
-                      'desc': profile.academicInfo!.cgpa!.toStringAsFixed(2)
-                    },
-                  if (profile.academicInfo?.totalCredits != null)
-                    {
-                      'title': 'Total Credits',
-                      'desc': profile.academicInfo!.totalCredits.toString()
-                    },
-                ],
-                onTap: () {}),
+            // Contact Information
             if (profile.phoneNumber?.isNotEmpty == true ||
                 profile.address?.isNotEmpty == true)
-              _buildSectionCard('Contact Information', null,
-                  items: [
+              _buildModernInfoCard(
+                title: 'Contact Information',
+                icon: Icons.contact_phone_rounded,
+                child: Column(
+                  children: [
                     if (profile.phoneNumber?.isNotEmpty == true)
-                      {'title': 'Phone', 'desc': profile.phoneNumber!},
-                    if (profile.address?.isNotEmpty == true)
-                      {'title': 'Address', 'desc': profile.address!},
-                  ],
-                  onTap: () {}),
-            _buildSectionCard('Skills', null,
-                items: profile.skills
-                    .map((s) => {'title': s, 'desc': ''})
-                    .toList(),
-                onTap: () {}),
-            _buildSectionCard('Interests', null,
-                items: profile.interests
-                    .map((i) => {'title': i, 'desc': ''})
-                    .toList(),
-                onTap: () {}),
-            if (profile.experiences.isNotEmpty)
-              _buildSectionCard('Experience', null,
-                  items: profile.experiences
-                      .map((exp) => {
-                            'title': exp.title,
-                            'desc': '${exp.company} • ${exp.description}',
-                          })
-                      .toList(),
-                  onTap: () {}),
-            if (profile.projects.isNotEmpty)
-              _buildSectionCard('Projects', null,
-                  items: profile.projects
-                      .map((proj) => {
-                            'title': proj.title,
-                            'desc': proj.description,
-                          })
-                      .toList(),
-                  onTap: () {}),
-            if (profile.achievements.isNotEmpty)
-              _buildSectionCard('Achievements', null,
-                  items: profile.achievements
-                      .map((ach) => {
-                            'title': ach.title,
-                            'desc': ach.description,
-                          })
-                      .toList(),
-                  onTap: () {}),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionCard(String title, String? content,
-      {List<Map<String, String>>? items, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Card(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        color: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: Colors.black)),
-              const SizedBox(height: 8),
-              if (content != null)
-                Text(content,
-                    style: const TextStyle(fontSize: 15, color: Colors.black)),
-              if (items != null)
-                ...items.map((item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(item['title'] ?? '',
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 15,
-                                  color: Colors.black)),
-                          if (item['desc'] != null)
-                            Text(item['desc']!,
-                                style: const TextStyle(
-                                    fontSize: 14, color: Colors.black87)),
-                        ],
+                      _buildModernInfoItem(
+                        Icons.phone_rounded,
+                        'Phone',
+                        profile.phoneNumber!,
                       ),
-                    )),
-            ],
-          ),
+                    if (profile.address?.isNotEmpty == true)
+                      _buildModernInfoItem(
+                        Icons.location_on_rounded,
+                        'Address',
+                        profile.address!,
+                      ),
+                  ],
+                ),
+              ),
+
+            // Skills Section
+            if (profile.skills.isNotEmpty)
+              _buildModernInfoCard(
+                title: 'Skills & Expertise',
+                icon: Icons.psychology_rounded,
+                child: _buildSkillsGrid(profile.skills),
+              ),
+
+            // Interests Section
+            if (profile.interests.isNotEmpty)
+              _buildModernInfoCard(
+                title: 'Interests',
+                icon: Icons.favorite_outline_rounded,
+                child: _buildInterestsGrid(profile.interests),
+              ),
+            // Experience Section
+            if (profile.experiences.isNotEmpty)
+              _buildModernInfoCard(
+                title: 'Experience',
+                icon: Icons.work_rounded,
+                child: Column(
+                  children: profile.experiences.map((exp) {
+                    return _buildExperienceItem(exp);
+                  }).toList(),
+                ),
+              ),
+
+            // Projects Section
+            if (profile.projects.isNotEmpty)
+              _buildModernInfoCard(
+                title: 'Projects',
+                icon: Icons.code_rounded,
+                child: Column(
+                  children: profile.projects.map((proj) {
+                    return _buildProjectItem(proj);
+                  }).toList(),
+                ),
+              ),
+
+            // Achievements Section
+            if (profile.achievements.isNotEmpty)
+              _buildModernInfoCard(
+                title: 'Achievements',
+                icon: Icons.emoji_events_rounded,
+                child: Column(
+                  children: profile.achievements.map((ach) {
+                    return _buildAchievementItem(ach);
+                  }).toList(),
+                ),
+              ),
+
+            const SizedBox(height: 32),
+          ],
         ),
       ),
     );
@@ -497,6 +429,512 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   void _shareProfile(BuildContext context) {
     // For demo, just share a string
     Share.share('Check out my profile!');
+  }
+
+  Widget _buildModernProfileHeader(ProfileModel profile) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.blue.shade600,
+            Colors.purple.shade600,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            // Profile Image with enhanced styling
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white,
+                  width: 4,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: CircleAvatar(
+                radius: 50,
+                backgroundImage: _getProfileImage(profile.profileImageUrl),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Name and role with improved layout
+            Text(
+              profile.fullName,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 4),
+
+            Text(
+              profile.bio ?? 'No bio available',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.white.withValues(alpha: 0.9),
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+
+            const SizedBox(height: 8),
+
+            Text(
+              profile.academicInfo?.program ?? 'Program not specified',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.white.withValues(alpha: 0.8),
+              ),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: 20),
+
+            // Enhanced Stats Row
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildStatItem(
+                    'Student ID',
+                    profile.academicInfo?.studentId ?? 'N/A',
+                    Icons.badge_rounded,
+                  ),
+                  _buildStatDivider(),
+                  _buildStatItem(
+                    'Faculty',
+                    profile.academicInfo?.faculty.split(' ').first ?? 'N/A',
+                    Icons.business_rounded,
+                  ),
+                  _buildStatDivider(),
+                  _buildStatItem(
+                    'Semester',
+                    profile.academicInfo?.currentSemester.toString() ?? 'N/A',
+                    Icons.school_rounded,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String label, String value, IconData icon) {
+    return Expanded(
+      child: Column(
+        children: [
+          Icon(
+            icon,
+            color: Colors.white,
+            size: 20,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.white.withValues(alpha: 0.8),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatDivider() {
+    return Container(
+      height: 40,
+      width: 1,
+      color: Colors.white.withValues(alpha: 0.3),
+    );
+  }
+
+  Widget _buildModernInfoCard({
+    required String title,
+    required IconData icon,
+    required Widget child,
+  }) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: Colors.blue.shade600,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernInfoItem(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 18,
+            color: Colors.grey.shade600,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSkillsGrid(List<String> skills) {
+    if (skills.isEmpty) {
+      return const Text(
+        'No skills added yet',
+        style: TextStyle(
+          color: Colors.grey,
+          fontStyle: FontStyle.italic,
+        ),
+      );
+    }
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: skills.map((skill) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.blue.shade50,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.blue.shade200,
+              width: 1,
+            ),
+          ),
+          child: Text(
+            skill,
+            style: TextStyle(
+              color: Colors.blue.shade700,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildInterestsGrid(List<String> interests) {
+    if (interests.isEmpty) {
+      return const Text(
+        'No interests added yet',
+        style: TextStyle(
+          color: Colors.grey,
+          fontStyle: FontStyle.italic,
+        ),
+      );
+    }
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: interests.map((interest) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.purple.shade50,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.purple.shade200,
+              width: 1,
+            ),
+          ),
+          child: Text(
+            interest,
+            style: TextStyle(
+              color: Colors.purple.shade700,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildExperienceItem(ExperienceModel experience) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey.shade200,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            experience.title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            experience.company,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.blue.shade600,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          if (experience.description.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              experience.description,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black54,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProjectItem(ProjectModel project) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey.shade200,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            project.title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          if (project.description.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              project.description,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black54,
+                height: 1.4,
+              ),
+            ),
+          ],
+          if (project.technologies.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: project.technologies.map((tech) {
+                return Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.green.shade200,
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    tech,
+                    style: TextStyle(
+                      color: Colors.green.shade700,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAchievementItem(AchievementModel achievement) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey.shade200,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.emoji_events,
+                color: Colors.amber.shade600,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  achievement.title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (achievement.description.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              achievement.description,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black54,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }
 
