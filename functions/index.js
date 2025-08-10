@@ -47,3 +47,126 @@ exports.createUserProfile = functions.auth.user().onCreate((user) => {
     isActive: true,
   });
 });
+
+// Function to create a notification
+async function createNotification(userId, title, message, type, data = null, actionUrl = null) {
+  const notificationData = {
+    userId: userId,
+    title: title,
+    message: message,
+    type: type,
+    isRead: false,
+    createdAt: new Date().toISOString(),
+    data: data,
+    actionUrl: actionUrl,
+  };
+
+  return admin.firestore().collection('notifications').add(notificationData);
+}
+
+// Trigger when a new event is created
+exports.onEventCreated = functions.firestore
+  .document('events/{eventId}')
+  .onCreate(async (snap, context) => {
+    const eventData = snap.data();
+    const eventId = context.params.eventId;
+
+    try {
+      // Get all users to notify about new events
+      const usersSnapshot = await admin.firestore().collection('users').get();
+      const batch = admin.firestore().batch();
+
+      usersSnapshot.docs.forEach((userDoc) => {
+        const userData = userDoc.data();
+        if (userData.role === 'student' || userData.role === 'lecturer') {
+          const notificationRef = admin.firestore().collection('notifications').doc();
+          batch.set(notificationRef, {
+            userId: userData.uid,
+            title: 'New Event Available!',
+            message: `Check out the new event: ${eventData.title}`,
+            type: 'event',
+            isRead: false,
+            createdAt: new Date().toISOString(),
+            data: {
+              eventId: eventId,
+              eventTitle: eventData.title,
+            },
+            actionUrl: `/event/${eventId}`,
+          });
+        }
+      });
+
+      await batch.commit();
+      console.log(`Created notifications for new event: ${eventData.title}`);
+    } catch (error) {
+      console.error('Error creating event notifications:', error);
+    }
+  });
+
+// Trigger when a badge claim is updated (approved/rejected)
+exports.onBadgeClaimUpdated = functions.firestore
+  .document('badgeClaims/{claimId}')
+  .onUpdate(async (change, context) => {
+    const beforeData = change.before.data();
+    const afterData = change.after.data();
+
+    // Check if status changed from pending to approved/rejected
+    if (beforeData.status === 'pending' && afterData.status !== 'pending') {
+      const isApproved = afterData.status === 'approved';
+      const userId = afterData.userId;
+
+      try {
+        await createNotification(
+          userId,
+          isApproved ? 'Badge Claim Approved!' : 'Badge Claim Rejected',
+          isApproved
+            ? `Your badge claim has been approved! The badge has been added to your profile.`
+            : `Your badge claim was not approved. Please contact an administrator for more information.`,
+          'achievement',
+          {
+            claimId: context.params.claimId,
+            badgeId: afterData.badgeId,
+            status: afterData.status,
+          }
+        );
+
+        console.log(`Created notification for badge claim ${context.params.claimId}`);
+      } catch (error) {
+        console.error('Error creating badge claim notification:', error);
+      }
+    }
+  });
+
+// Trigger when an achievement is verified
+exports.onAchievementUpdated = functions.firestore
+  .document('achievements/{achievementId}')
+  .onUpdate(async (change, context) => {
+    const beforeData = change.before.data();
+    const afterData = change.after.data();
+
+    // Check if verification status changed
+    if (beforeData.isVerified !== afterData.isVerified) {
+      const userId = afterData.userId;
+      const isVerified = afterData.isVerified;
+
+      try {
+        await createNotification(
+          userId,
+          isVerified ? 'Achievement Verified!' : 'Achievement Verification Removed',
+          isVerified
+            ? `Your achievement "${afterData.title}" has been verified!`
+            : `The verification for your achievement "${afterData.title}" has been removed.`,
+          'achievement',
+          {
+            achievementId: context.params.achievementId,
+            achievementTitle: afterData.title,
+            isVerified: isVerified,
+          }
+        );
+
+        console.log(`Created notification for achievement ${context.params.achievementId}`);
+      } catch (error) {
+        console.error('Error creating achievement notification:', error);
+      }
+    }
+  });

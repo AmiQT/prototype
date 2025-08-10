@@ -5,6 +5,7 @@ import '../../services/auth_service.dart';
 import '../../models/notification_model.dart';
 import '../../utils/app_theme.dart';
 import '../../widgets/modern/modern_notification_card.dart';
+import '../settings/notification_settings_screen.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -17,7 +18,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     with SingleTickerProviderStateMixin {
   final NotificationService _notificationService = NotificationService();
   late TabController _tabController;
-  
+
   List<AppNotification> _notifications = [];
   NotificationType? _selectedFilter;
   bool _showUnreadOnly = false;
@@ -39,7 +40,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
   Future<void> _initializeNotifications() async {
     final authService = Provider.of<AuthService>(context, listen: false);
     final userId = authService.currentUserId;
-    
+
     if (userId != null) {
       await _notificationService.initialize(userId);
       _notificationService.addListener(_onNotificationsUpdated);
@@ -218,7 +219,9 @@ class _NotificationsScreenState extends State<NotificationsScreen>
           IconButton(
             icon: Icon(
               _showUnreadOnly ? Icons.visibility_off : Icons.visibility,
-              color: _showUnreadOnly ? AppTheme.primaryColor : AppTheme.textSecondaryColor,
+              color: _showUnreadOnly
+                  ? AppTheme.primaryColor
+                  : AppTheme.textSecondaryColor,
             ),
             tooltip: _showUnreadOnly ? 'Show all' : 'Show unread only',
             onPressed: () {
@@ -284,7 +287,8 @@ class _NotificationsScreenState extends State<NotificationsScreen>
             child: ModernNotificationCard(
               notification: notification,
               onTap: () => _handleNotificationTap(notification),
-              onMarkAsRead: () => _notificationService.markAsRead(notification.id),
+              onMarkAsRead: () =>
+                  _notificationService.markAsRead(notification.id),
               onDelete: () => _showDeleteDialog(notification),
             ),
           );
@@ -305,7 +309,9 @@ class _NotificationsScreenState extends State<NotificationsScreen>
           ),
           const SizedBox(height: AppTheme.spaceMd),
           Text(
-            _tabController.index == 0 ? 'No notifications yet' : 'No unread notifications',
+            _tabController.index == 0
+                ? 'No notifications yet'
+                : 'No unread notifications',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: AppTheme.textSecondaryColor,
                 ),
@@ -332,14 +338,50 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     }
 
     // Handle action URL or navigation
-    if (notification.actionUrl != null) {
-      // TODO: Implement navigation based on actionUrl
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Navigate to: ${notification.actionUrl}'),
-          backgroundColor: AppTheme.infoColor,
-        ),
-      );
+    if (notification.actionUrl != null && mounted) {
+      // Implement navigation based on actionUrl
+      final actionUrl = notification.actionUrl!;
+
+      try {
+        // Parse the action URL to determine navigation
+        if (actionUrl.startsWith('/profile/')) {
+          // Navigate to profile screen
+          final userId = actionUrl.replaceFirst('/profile/', '');
+          Navigator.pushNamed(context, '/profile',
+              arguments: {'userId': userId});
+        } else if (actionUrl.startsWith('/achievement/')) {
+          // Navigate to achievement details
+          final achievementId = actionUrl.replaceFirst('/achievement/', '');
+          Navigator.pushNamed(context, '/achievement',
+              arguments: {'achievementId': achievementId});
+        } else if (actionUrl.startsWith('/event/')) {
+          // Navigate to event details
+          final eventId = actionUrl.replaceFirst('/event/', '');
+          Navigator.pushNamed(context, '/event',
+              arguments: {'eventId': eventId});
+        } else if (actionUrl.startsWith('/showcase/')) {
+          // Navigate to showcase post
+          final postId = actionUrl.replaceFirst('/showcase/', '');
+          Navigator.pushNamed(context, '/showcase',
+              arguments: {'postId': postId});
+        } else {
+          // Generic navigation or external URL
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Navigation to: ${notification.title}'),
+              backgroundColor: AppTheme.infoColor,
+            ),
+          );
+        }
+      } catch (e) {
+        // Fallback for invalid URLs
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Unable to navigate: ${notification.title}'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
     }
   }
 
@@ -348,7 +390,8 @@ class _NotificationsScreenState extends State<NotificationsScreen>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Notification'),
-        content: const Text('Are you sure you want to delete this notification?'),
+        content:
+            const Text('Are you sure you want to delete this notification?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -372,7 +415,8 @@ class _NotificationsScreenState extends State<NotificationsScreen>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Clear All Notifications'),
-        content: const Text('Are you sure you want to clear all notifications? This action cannot be undone.'),
+        content: const Text(
+            'Are you sure you want to clear all notifications? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -392,11 +436,13 @@ class _NotificationsScreenState extends State<NotificationsScreen>
   }
 
   void _showNotificationSettings() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Notification settings coming soon!'),
-        backgroundColor: AppTheme.infoColor,
-      ),
-    );
+    if (mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const NotificationSettingsScreen(),
+        ),
+      );
+    }
   }
 }

@@ -4,6 +4,7 @@ import '../../services/auth_service.dart';
 import '../../services/settings_service.dart';
 import '../../widgets/settings_widgets.dart';
 import '../../widgets/custom_text_field.dart';
+import '../../utils/app_theme.dart';
 
 class SecuritySettingsScreen extends StatefulWidget {
   const SecuritySettingsScreen({super.key});
@@ -135,11 +136,15 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
 
     try {
       await _settingsService.sendPasswordResetEmail(email);
-      _showSuccessSnackBar('Password reset email sent to $email');
-      _resetEmailController.clear();
-      Navigator.pop(context);
+      if (mounted) {
+        _showSuccessSnackBar('Password reset email sent to $email');
+        _resetEmailController.clear();
+        Navigator.pop(context);
+      }
     } catch (e) {
-      _showErrorSnackBar(e.toString());
+      if (mounted) {
+        _showErrorSnackBar(e.toString());
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -198,9 +203,9 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         title: const Text('Security Settings'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0.5,
+        backgroundColor: AppTheme.surfaceColor,
+        foregroundColor: AppTheme.textPrimaryColor,
+        elevation: 0,
         centerTitle: true,
       ),
       body: SingleChildScrollView(

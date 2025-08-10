@@ -250,7 +250,6 @@ class PrivacySelectorWidget extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           ...PostPrivacy.values.map((privacy) {
-            final isSelected = privacy == selectedPrivacy;
             return Container(
               margin: const EdgeInsets.only(bottom: 8),
               child: RadioListTile<PostPrivacy>(

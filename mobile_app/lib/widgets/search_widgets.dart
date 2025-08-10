@@ -149,7 +149,7 @@ class _SearchBarWidgetState extends State<SearchBarWidget> {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -356,7 +356,7 @@ class FilterChipsWidget extends StatelessWidget {
                       onDeleted: () => onFilterToggle(filter),
                       backgroundColor: Colors.grey[100],
                       selectedColor:
-                          Theme.of(context).primaryColor.withOpacity(0.2),
+                          Theme.of(context).primaryColor.withValues(alpha: 0.2),
                       checkmarkColor: Theme.of(context).primaryColor,
                     ))
                 .toList(),

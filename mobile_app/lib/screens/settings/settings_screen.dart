@@ -3,8 +3,11 @@ import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import '../../models/user_model.dart';
 import '../../widgets/settings_widgets.dart';
+import '../../widgets/settings/language_selector.dart';
+import '../../l10n/generated/app_localizations.dart';
 import 'account_settings_screen.dart';
 import 'security_settings_screen.dart';
+import 'notification_settings_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -78,6 +81,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  void _navigateToNotificationSettings() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const NotificationSettingsScreen(),
+      ),
+    );
+  }
+
   void _showAboutDialog() {
     showAboutDialog(
       context: context,
@@ -112,7 +124,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
 
-    if (confirmed == true) {
+    if (confirmed == true && mounted) {
       try {
         await Provider.of<AuthService>(context, listen: false).signOut();
         if (mounted) {
@@ -163,7 +175,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               radius: 30,
                               backgroundColor: Theme.of(context)
                                   .primaryColor
-                                  .withOpacity(0.1),
+                                  .withValues(alpha: 0.1),
                               child: Text(
                                 _currentUser!.name.isNotEmpty
                                     ? _currentUser!.name[0].toUpperCase()
@@ -204,7 +216,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     decoration: BoxDecoration(
                                       color: Theme.of(context)
                                           .primaryColor
-                                          .withOpacity(0.1),
+                                          .withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Text(
@@ -229,23 +241,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
 
                   // Account Section
-                  const SettingsSectionHeader(
-                    title: 'Account',
-                    subtitle: 'Manage your account information',
+                  SettingsSectionHeader(
+                    title: AppLocalizations.of(context).account,
+                    subtitle: AppLocalizations.of(context).manageYourAccount,
                   ),
                   SettingsCard(
                     child: Column(
                       children: [
                         SettingsItem(
                           icon: Icons.person,
-                          title: 'Account Information',
-                          subtitle: 'Update your personal details',
+                          title:
+                              AppLocalizations.of(context).accountInformation,
+                          subtitle: AppLocalizations.of(context)
+                              .updatePersonalDetails,
                           onTap: _navigateToAccountSettings,
                         ),
                         SettingsItem(
                           icon: Icons.security,
-                          title: 'Security',
-                          subtitle: 'Password and security settings',
+                          title: AppLocalizations.of(context).security,
+                          subtitle:
+                              AppLocalizations.of(context).passwordAndSecurity,
                           onTap: _navigateToSecuritySettings,
                           showDivider: false,
                         ),
@@ -254,55 +269,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
 
                   // Preferences Section
-                  const SettingsSectionHeader(
-                    title: 'Preferences',
-                    subtitle: 'Customize your app experience',
+                  SettingsSectionHeader(
+                    title: AppLocalizations.of(context).preferences,
+                    subtitle:
+                        AppLocalizations.of(context).customizeYourExperience,
                   ),
                   SettingsCard(
                     child: Column(
                       children: [
                         SettingsItem(
                           icon: Icons.notifications,
-                          title: 'Notifications',
-                          subtitle: 'Manage notification preferences',
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content:
-                                    Text('Notification settings coming soon!'),
-                              ),
-                            );
-                          },
+                          title: AppLocalizations.of(context).notifications,
+                          subtitle: AppLocalizations.of(context)
+                              .manageNotificationPreferences,
+                          onTap: _navigateToNotificationSettings,
                         ),
-                        SettingsItem(
-                          icon: Icons.language,
-                          title: 'Language',
-                          subtitle: 'English',
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Language settings coming soon!'),
-                              ),
-                            );
-                          },
-                          showDivider: false,
-                        ),
+                        const LanguageSelector(),
                       ],
                     ),
                   ),
 
                   // Support Section
-                  const SettingsSectionHeader(
-                    title: 'Support',
-                    subtitle: 'Get help and information',
+                  SettingsSectionHeader(
+                    title: AppLocalizations.of(context).support,
+                    subtitle:
+                        AppLocalizations.of(context).getHelpAndInformation,
                   ),
                   SettingsCard(
                     child: Column(
                       children: [
                         SettingsItem(
                           icon: Icons.help,
-                          title: 'Help & Support',
-                          subtitle: 'Get help with the app',
+                          title: AppLocalizations.of(context).helpSupport,
+                          subtitle: AppLocalizations.of(context).getHelpWithApp,
                           onTap: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -313,14 +312,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                         SettingsItem(
                           icon: Icons.info,
-                          title: 'About',
-                          subtitle: 'App version and information',
+                          title: AppLocalizations.of(context).about,
+                          subtitle: AppLocalizations.of(context)
+                              .appVersionAndInformation,
                           onTap: _showAboutDialog,
                         ),
                         SettingsItem(
                           icon: Icons.privacy_tip,
-                          title: 'Privacy Policy',
-                          subtitle: 'Read our privacy policy',
+                          title: AppLocalizations.of(context).privacyPolicy,
+                          subtitle:
+                              AppLocalizations.of(context).readPrivacyPolicy,
                           onTap: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -337,7 +338,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   // Sign Out
                   const SizedBox(height: 16),
                   SettingsActionButton(
-                    text: 'Sign Out',
+                    text: AppLocalizations.of(context).logout,
                     icon: Icons.logout,
                     onPressed: _handleSignOut,
                     isDestructive: true,

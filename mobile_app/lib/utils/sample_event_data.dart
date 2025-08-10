@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 class SampleEventData {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -91,9 +92,9 @@ class SampleEventData {
       }
 
       await batch.commit();
-      print('✅ Sample events added successfully!');
+      debugPrint('✅ Sample events added successfully!');
     } catch (e) {
-      print('❌ Error adding sample events: $e');
+      debugPrint('❌ Error adding sample events: $e');
     }
   }
 
@@ -107,9 +108,9 @@ class SampleEventData {
       }
 
       await batch.commit();
-      print('✅ All events cleared successfully!');
+      debugPrint('✅ All events cleared successfully!');
     } catch (e) {
-      print('❌ Error clearing events: $e');
+      debugPrint('❌ Error clearing events: $e');
     }
   }
 
@@ -119,7 +120,7 @@ class SampleEventData {
       final eventDoc = await eventRef.get();
 
       if (!eventDoc.exists) {
-        print('❌ Event not found: $eventId');
+        debugPrint('❌ Event not found: $eventId');
         return;
       }
 
@@ -131,23 +132,24 @@ class SampleEventData {
 
       if (isFavorite) {
         favoriteUserIds.remove(userId);
-        print('🔄 Removing user $userId from favorites for event $eventId');
+        debugPrint(
+            '🔄 Removing user $userId from favorites for event $eventId');
       } else {
         favoriteUserIds.add(userId);
-        print('🔄 Adding user $userId to favorites for event $eventId');
+        debugPrint('🔄 Adding user $userId to favorites for event $eventId');
       }
 
       await eventRef.update({'favoriteUserIds': favoriteUserIds});
-      print('✅ Favorite status updated successfully!');
+      debugPrint('✅ Favorite status updated successfully!');
 
       // Verify the update
       final updatedDoc = await eventRef.get();
       final updatedData = updatedDoc.data() as Map<String, dynamic>;
       final updatedFavorites =
           List<String>.from(updatedData['favoriteUserIds'] ?? []);
-      print('📊 Current favorites for event $eventId: $updatedFavorites');
+      debugPrint('📊 Current favorites for event $eventId: $updatedFavorites');
     } catch (e) {
-      print('❌ Error testing favorite feature: $e');
+      debugPrint('❌ Error testing favorite feature: $e');
     }
   }
 }

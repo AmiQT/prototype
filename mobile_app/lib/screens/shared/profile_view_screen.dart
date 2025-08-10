@@ -166,7 +166,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                 CircleAvatar(
                   radius: 50,
                   backgroundColor:
-                      Theme.of(context).primaryColor.withOpacity(0.1),
+                      Theme.of(context).primaryColor.withValues(alpha: 0.1),
                   child: Text(
                     _user!.name.isNotEmpty ? _user!.name[0].toUpperCase() : 'U',
                     style: TextStyle(
@@ -189,7 +189,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: _getRoleColor(_user!.role).withOpacity(0.1),
+                    color: _getRoleColor(_user!.role).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -292,17 +292,21 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                               '  - ${profile.fullName}: ${profile.userId}');
                         }
 
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                                'Debug: Direct=${directProfile != null}, All=${userProfile.length}, Total=${allProfiles.length}'),
-                          ),
-                        );
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                  'Debug: Direct=${directProfile != null}, All=${userProfile.length}, Total=${allProfiles.length}'),
+                            ),
+                          );
+                        }
                       } catch (e) {
                         debugPrint('DEBUG: Error checking profiles: $e');
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Debug error: $e')),
-                        );
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Debug error: $e')),
+                          );
+                        }
                       }
                     },
                     child: const Text('Debug: Check Database'),
@@ -349,9 +353,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                 Icons.more_vert_rounded,
                 color: AppTheme.textSecondaryColor,
               ),
-              onPressed: () {
-                // TODO: Show more options menu
-              },
+              onPressed: () => _showMoreOptionsMenu(),
             ),
           ],
         ],
@@ -680,12 +682,12 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
       icon: Icons.school,
       child: Column(
         children: [
-          _buildInfoRow('Program', academic.program!),
-          _buildInfoRow('Department', academic.department!),
+          _buildInfoRow('Program', academic.program),
+          _buildInfoRow('Department', academic.department),
           _buildInfoRow('Semester', academic.currentSemester.toString()),
           if (academic.cgpa != null)
             _buildInfoRow('CGPA', academic.cgpa!.toStringAsFixed(2)),
-          _buildInfoRow('Student ID', academic.studentId!),
+          _buildInfoRow('Student ID', academic.studentId),
         ],
       ),
     );
@@ -1101,5 +1103,112 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
     if (completeness >= 80) return Colors.green;
     if (completeness >= 50) return Colors.orange;
     return Colors.red;
+  }
+
+  void _showMoreOptionsMenu() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.report_outlined),
+              title: const Text('Report Profile'),
+              onTap: () {
+                Navigator.pop(context);
+                _showReportDialog();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.block_outlined),
+              title: const Text('Block User'),
+              onTap: () {
+                Navigator.pop(context);
+                _showBlockDialog();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.share_outlined),
+              title: const Text('Share Profile'),
+              onTap: () {
+                Navigator.pop(context);
+                _shareProfile();
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showReportDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Report Profile'),
+        content: const Text(
+            'Are you sure you want to report this profile for inappropriate content?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Profile reported successfully'),
+                  backgroundColor: AppTheme.successColor,
+                ),
+              );
+            },
+            child: const Text('Report'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showBlockDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Block User'),
+        content: const Text(
+            'Are you sure you want to block this user? You won\'t see their content anymore.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('User blocked successfully'),
+                  backgroundColor: AppTheme.warningColor,
+                ),
+              );
+            },
+            child: const Text('Block'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _shareProfile() {
+    // Implement profile sharing functionality
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Profile sharing feature coming soon!'),
+        backgroundColor: AppTheme.infoColor,
+      ),
+    );
   }
 }

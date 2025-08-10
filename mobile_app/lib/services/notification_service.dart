@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/notification_model.dart';
+import 'notification_preferences_service.dart';
 
 /// Service for managing in-app notifications
 class NotificationService {
@@ -13,17 +14,25 @@ class NotificationService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final List<AppNotification> _notifications = [];
   final List<Function(List<AppNotification>)> _listeners = [];
-  
+  final NotificationPreferencesService _preferencesService =
+      NotificationPreferencesService();
+
   int _unreadCount = 0;
-  
+  String? _currentUserId;
+
   /// Get current unread count
   int get unreadCount => _unreadCount;
-  
+
   /// Get all notifications
   List<AppNotification> get notifications => List.unmodifiable(_notifications);
 
+  /// Get notification preferences service
+  NotificationPreferencesService get preferencesService => _preferencesService;
+
   /// Initialize notification service
   Future<void> initialize(String userId) async {
+    _currentUserId = userId;
+    await _preferencesService.initialize();
     await _loadStoredNotifications();
     await _loadUnreadCount();
     _startListeningToFirestore(userId);
@@ -51,7 +60,8 @@ class NotificationService {
     _firestore
         .collection('notifications')
         .where('userId', isEqualTo: userId)
-        .where('createdAt', isGreaterThan: DateTime.now().subtract(const Duration(days: 30)))
+        .where('createdAt',
+            isGreaterThan: DateTime.now().subtract(const Duration(days: 30)))
         .orderBy('createdAt', descending: true)
         .limit(50)
         .snapshots()
@@ -69,12 +79,12 @@ class NotificationService {
 
     // Merge with local notifications, avoiding duplicates
     final allNotifications = <String, AppNotification>{};
-    
+
     // Add existing local notifications
     for (final notification in _notifications) {
       allNotifications[notification.id] = notification;
     }
-    
+
     // Add/update Firestore notifications
     for (final notification in firestoreNotifications) {
       allNotifications[notification.id] = notification;
@@ -86,7 +96,8 @@ class NotificationService {
 
     // Keep only the most recent notifications
     if (_notifications.length > _maxStoredNotifications) {
-      _notifications.removeRange(_maxStoredNotifications, _notifications.length);
+      _notifications.removeRange(
+          _maxStoredNotifications, _notifications.length);
     }
 
     _updateUnreadCount();
@@ -94,16 +105,26 @@ class NotificationService {
     _notifyListeners();
   }
 
-  /// Create a local notification
-  Future<void> createLocalNotification({
+  /// Create a notification (saves both locally and to Firestore)
+  Future<void> createNotification({
     required String title,
     required String message,
     required NotificationType type,
+    String? userId,
     Map<String, dynamic>? data,
     String? actionUrl,
   }) async {
+    // Check if this notification type is enabled and if notifications should be shown
+    if (!_preferencesService.isTypeEnabled(type) ||
+        !_preferencesService.shouldShowNotification()) {
+      debugPrint(
+          'NotificationService: Notification blocked by preferences - $title');
+      return;
+    }
+
+    final notificationId = DateTime.now().millisecondsSinceEpoch.toString();
     final notification = AppNotification(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: notificationId,
       title: title,
       message: message,
       type: type,
@@ -113,18 +134,58 @@ class NotificationService {
       actionUrl: actionUrl,
     );
 
+    // Add to local list
     _notifications.insert(0, notification);
-    
+
     // Keep only the most recent notifications
     if (_notifications.length > _maxStoredNotifications) {
-      _notifications.removeRange(_maxStoredNotifications, _notifications.length);
+      _notifications.removeRange(
+          _maxStoredNotifications, _notifications.length);
     }
 
     _updateUnreadCount();
     await _saveNotifications();
     _notifyListeners();
 
-    debugPrint('NotificationService: Created local notification - $title');
+    // Save to Firestore if userId is provided
+    if (userId != null) {
+      try {
+        await _firestore.collection('notifications').doc(notificationId).set({
+          'userId': userId,
+          'title': title,
+          'message': message,
+          'type': type.toString().split('.').last,
+          'isRead': false,
+          'createdAt': notification.createdAt.toIso8601String(),
+          'data': data,
+          'actionUrl': actionUrl,
+        });
+        debugPrint(
+            'NotificationService: Saved notification to Firestore - $title');
+      } catch (e) {
+        debugPrint('NotificationService: Error saving to Firestore: $e');
+      }
+    }
+
+    debugPrint('NotificationService: Created notification - $title');
+  }
+
+  /// Create a local-only notification (backward compatibility)
+  Future<void> createLocalNotification({
+    required String title,
+    required String message,
+    required NotificationType type,
+    Map<String, dynamic>? data,
+    String? actionUrl,
+  }) async {
+    await createNotification(
+      title: title,
+      message: message,
+      type: type,
+      userId: _currentUserId,
+      data: data,
+      actionUrl: actionUrl,
+    );
   }
 
   /// Mark notification as read
@@ -144,7 +205,8 @@ class NotificationService {
             .update({'isRead': true});
       } catch (e) {
         // Ignore errors for local notifications
-        debugPrint('NotificationService: Could not update Firestore notification: $e');
+        debugPrint(
+            'NotificationService: Could not update Firestore notification: $e');
       }
     }
   }
@@ -178,11 +240,12 @@ class NotificationService {
           }
         }
       }
-      
+
       try {
         await batch.commit();
       } catch (e) {
-        debugPrint('NotificationService: Error updating Firestore notifications: $e');
+        debugPrint(
+            'NotificationService: Error updating Firestore notifications: $e');
       }
     }
   }
@@ -199,7 +262,8 @@ class NotificationService {
       await _firestore.collection('notifications').doc(notificationId).delete();
     } catch (e) {
       // Ignore errors for local notifications
-      debugPrint('NotificationService: Could not delete Firestore notification: $e');
+      debugPrint(
+          'NotificationService: Could not delete Firestore notification: $e');
     }
   }
 
@@ -223,7 +287,7 @@ class NotificationService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final notificationsJson = prefs.getString(_notificationsKey);
-      
+
       if (notificationsJson != null) {
         final List<dynamic> notificationsList = jsonDecode(notificationsJson);
         _notifications.clear();
@@ -284,13 +348,15 @@ class NotificationService {
     required String achievementTitle,
     required bool isApproved,
     String? verifierName,
+    String? userId,
   }) async {
-    await createLocalNotification(
+    await createNotification(
       title: isApproved ? 'Achievement Verified!' : 'Achievement Rejected',
       message: isApproved
           ? 'Your achievement "$achievementTitle" has been verified${verifierName != null ? ' by $verifierName' : ''}.'
           : 'Your achievement "$achievementTitle" was not approved. Please review and resubmit.',
       type: NotificationType.achievement,
+      userId: userId,
       data: {
         'achievementTitle': achievementTitle,
         'isApproved': isApproved,
@@ -304,11 +370,13 @@ class NotificationService {
     required String eventTitle,
     required String message,
     String? eventId,
+    String? userId,
   }) async {
-    await createLocalNotification(
+    await createNotification(
       title: 'Event Update',
       message: message,
       type: NotificationType.event,
+      userId: userId,
       data: {
         'eventTitle': eventTitle,
         'eventId': eventId,
@@ -322,11 +390,13 @@ class NotificationService {
     required String senderName,
     required String messagePreview,
     String? conversationId,
+    String? userId,
   }) async {
-    await createLocalNotification(
+    await createNotification(
       title: 'New Message from $senderName',
       message: messagePreview,
       type: NotificationType.message,
+      userId: userId,
       data: {
         'senderName': senderName,
         'conversationId': conversationId,

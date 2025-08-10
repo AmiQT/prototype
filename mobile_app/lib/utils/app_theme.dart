@@ -38,6 +38,13 @@ class AppTheme {
   static const Color textSecondaryColor = Color(0xFF757575);
   static const Color textLightColor = Color(0xFFBDBDBD);
 
+  // Gray colors for UI elements
+  static const Color grayColor = Color(0xFF9E9E9E);
+  static const Color lightGrayColor = Color(0xFFE0E0E0);
+
+  // Border colors
+  static const Color borderColor = Color(0xFFE0E0E0);
+
   // Status colors with modern palette
   static const Color errorColor = Color(0xFFEF4444);
   static const Color successColor = Color(0xFF10B981);

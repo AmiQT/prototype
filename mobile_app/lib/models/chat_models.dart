@@ -1,0 +1,283 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+/// Optimized chat message model for Firebase free tier
+class ChatMessage {
+  final String id;
+  final String conversationId;
+  final String userId;
+  final String content;
+  final MessageRole role;
+  final DateTime timestamp;
+  final MessageStatus status;
+  final int? tokens; // Track token usage for cost monitoring
+  final Map<String, dynamic>? metadata;
+
+  ChatMessage({
+    required this.id,
+    required this.conversationId,
+    required this.userId,
+    required this.content,
+    required this.role,
+    required this.timestamp,
+    this.status = MessageStatus.sent,
+    this.tokens,
+    this.metadata,
+  });
+
+  // Optimized factory for Firestore - minimal data transfer
+  factory ChatMessage.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return ChatMessage(
+      id: doc.id,
+      conversationId: data['conversationId'] ?? '',
+      userId: data['userId'] ?? '',
+      content: data['content'] ?? '',
+      role: MessageRole.values.firstWhere(
+        (role) => role.toString().split('.').last == data['role'],
+        orElse: () => MessageRole.user,
+      ),
+      timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      status: MessageStatus.values.firstWhere(
+        (status) =>
+            status.toString().split('.').last == (data['status'] ?? 'sent'),
+        orElse: () => MessageStatus.sent,
+      ),
+      tokens: data['tokens'],
+      metadata: data['metadata'],
+    );
+  }
+
+  // Optimized toMap - only essential fields to minimize writes
+  Map<String, dynamic> toFirestore() {
+    return {
+      'conversationId': conversationId,
+      'userId': userId,
+      'content': content.length > 1000
+          ? content.substring(0, 1000)
+          : content, // Limit content size
+      'role': role.toString().split('.').last,
+      'timestamp': FieldValue.serverTimestamp(),
+      'status': status.toString().split('.').last,
+      if (tokens != null) 'tokens': tokens,
+      if (metadata != null && metadata!.isNotEmpty) 'metadata': metadata,
+    };
+  }
+
+  ChatMessage copyWith({
+    String? id,
+    String? conversationId,
+    String? userId,
+    String? content,
+    MessageRole? role,
+    DateTime? timestamp,
+    MessageStatus? status,
+    int? tokens,
+    Map<String, dynamic>? metadata,
+  }) {
+    return ChatMessage(
+      id: id ?? this.id,
+      conversationId: conversationId ?? this.conversationId,
+      userId: userId ?? this.userId,
+      content: content ?? this.content,
+      role: role ?? this.role,
+      timestamp: timestamp ?? this.timestamp,
+      status: status ?? this.status,
+      tokens: tokens ?? this.tokens,
+      metadata: metadata ?? this.metadata,
+    );
+  }
+}
+
+/// Chat conversation model optimized for minimal storage
+class ChatConversation {
+  final String id;
+  final String userId;
+  final String title;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isActive;
+  final int messageCount;
+  final String? lastMessage;
+  final DateTime? lastMessageAt;
+
+  ChatConversation({
+    required this.id,
+    required this.userId,
+    required this.title,
+    required this.createdAt,
+    required this.updatedAt,
+    this.isActive = true,
+    this.messageCount = 0,
+    this.lastMessage,
+    this.lastMessageAt,
+  });
+
+  factory ChatConversation.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return ChatConversation(
+      id: doc.id,
+      userId: data['userId'] ?? '',
+      title: data['title'] ?? 'New Conversation',
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      isActive: data['isActive'] ?? true,
+      messageCount: data['messageCount'] ?? 0,
+      lastMessage: data['lastMessage'],
+      lastMessageAt: (data['lastMessageAt'] as Timestamp?)?.toDate(),
+    );
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'userId': userId,
+      'title': title,
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+      'isActive': isActive,
+      'messageCount': messageCount,
+      if (lastMessage != null)
+        'lastMessage': lastMessage!.length > 100
+            ? lastMessage!.substring(0, 100)
+            : lastMessage,
+      if (lastMessageAt != null)
+        'lastMessageAt': Timestamp.fromDate(lastMessageAt!),
+    };
+  }
+
+  ChatConversation copyWith({
+    String? id,
+    String? userId,
+    String? title,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    bool? isActive,
+    int? messageCount,
+    String? lastMessage,
+    DateTime? lastMessageAt,
+  }) {
+    return ChatConversation(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      title: title ?? this.title,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isActive: isActive ?? this.isActive,
+      messageCount: messageCount ?? this.messageCount,
+      lastMessage: lastMessage ?? this.lastMessage,
+      lastMessageAt: lastMessageAt ?? this.lastMessageAt,
+    );
+  }
+}
+
+/// User context for personalized AI responses - cached locally
+class ChatUserContext {
+  final String userId;
+  final String fullName;
+  final String? program;
+  final String? department;
+  final List<String> skills;
+  final List<String> interests;
+  final String? academicLevel;
+  final int achievementCount;
+  final DateTime lastUpdated;
+
+  ChatUserContext({
+    required this.userId,
+    required this.fullName,
+    this.program,
+    this.department,
+    this.skills = const [],
+    this.interests = const [],
+    this.academicLevel,
+    this.achievementCount = 0,
+    required this.lastUpdated,
+  });
+
+  // Generate context string for AI prompt
+  String toContextString() {
+    final buffer = StringBuffer();
+    buffer.writeln('User: $fullName');
+    if (program != null) buffer.writeln('Program: $program');
+    if (department != null) buffer.writeln('Department: $department');
+    if (academicLevel != null) buffer.writeln('Level: $academicLevel');
+    if (skills.isNotEmpty)
+      buffer.writeln('Skills: ${skills.take(5).join(', ')}');
+    if (interests.isNotEmpty)
+      buffer.writeln('Interests: ${interests.take(5).join(', ')}');
+    if (achievementCount > 0) buffer.writeln('Achievements: $achievementCount');
+    return buffer.toString();
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'userId': userId,
+      'fullName': fullName,
+      'program': program,
+      'department': department,
+      'skills': skills,
+      'interests': interests,
+      'academicLevel': academicLevel,
+      'achievementCount': achievementCount,
+      'lastUpdated': lastUpdated.toIso8601String(),
+    };
+  }
+
+  factory ChatUserContext.fromJson(Map<String, dynamic> json) {
+    return ChatUserContext(
+      userId: json['userId'] ?? '',
+      fullName: json['fullName'] ?? '',
+      program: json['program'],
+      department: json['department'],
+      skills: List<String>.from(json['skills'] ?? []),
+      interests: List<String>.from(json['interests'] ?? []),
+      academicLevel: json['academicLevel'],
+      achievementCount: json['achievementCount'] ?? 0,
+      lastUpdated: DateTime.parse(
+          json['lastUpdated'] ?? DateTime.now().toIso8601String()),
+    );
+  }
+}
+
+/// Firebase usage tracking model
+class FirebaseUsageStats {
+  final int dailyReads;
+  final int dailyWrites;
+  final int dailyDeletes;
+  final DateTime date;
+
+  FirebaseUsageStats({
+    required this.dailyReads,
+    required this.dailyWrites,
+    required this.dailyDeletes,
+    required this.date,
+  });
+
+  bool get isNearLimit {
+    return dailyReads > 40000 || dailyWrites > 16000 || dailyDeletes > 16000;
+  }
+
+  double get readUsagePercentage => (dailyReads / 50000) * 100;
+  double get writeUsagePercentage => (dailyWrites / 20000) * 100;
+  double get deleteUsagePercentage => (dailyDeletes / 20000) * 100;
+}
+
+/// Enums
+enum MessageRole { user, assistant, system }
+
+enum MessageStatus { sending, sent, delivered, failed }
+
+/// Chat configuration for optimization
+class ChatConfig {
+  static const int maxMessagesPerConversation = 50;
+  static const int maxMessageLength = 1000;
+  static const int maxConversationsPerUser = 10;
+  static const Duration cacheExpiration = Duration(hours: 2);
+  static const Duration contextCacheExpiration = Duration(hours: 6);
+  static const int batchSize = 10;
+
+  // API Configuration
+  static const String defaultModel = 'qwen/qwen-2.5-coder-32b-instruct:free';
+  static const int maxTokens = 1000;
+  static const double temperature = 0.7;
+  static const Duration apiTimeout = Duration(seconds: 30);
+}

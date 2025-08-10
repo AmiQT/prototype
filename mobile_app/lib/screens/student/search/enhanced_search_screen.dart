@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../../services/search_service.dart';
 import '../../../services/auth_service.dart';
 import '../../../models/search_models.dart';
-import '../../../widgets/search_widgets.dart';
 import '../../../widgets/modern/modern_search_bar.dart';
 import '../../../widgets/modern/modern_filter_bottom_sheet.dart';
 import '../../../utils/app_theme.dart';
@@ -31,7 +30,6 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
   Map<String, List<SearchFilter>> _availableFilters = {};
 
   String _currentQuery = '';
-  final bool _showFilters = false;
 
   // Range filter values
   RangeValues _semesterRange = const RangeValues(1, 8);
@@ -164,11 +162,6 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
     }
   }
 
-  void _onHistoryItemTap(String query) {
-    _searchController.text = query;
-    _onSearchSubmitted(query);
-  }
-
   void _onFilterToggle(SearchFilter filter) {
     setState(() {
       final categoryFilters = _availableFilters[filter.category];
@@ -237,33 +230,6 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
         },
       ),
     );
-  }
-
-  void _navigateToProfile(SearchResult result) async {
-    debugPrint(
-        'EnhancedSearchScreen: Navigating to profile for user: ${result.user.name} (${result.user.uid})');
-    debugPrint('EnhancedSearchScreen: Has profile: ${result.profile != null}');
-
-    // Track analytics for profile view interaction
-    await _searchService.trackResultInteraction(
-      query: _currentQuery,
-      result: result,
-      interactionType: SearchInteractionType.view,
-      userId: _currentUserId,
-    );
-
-    if (mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ProfileViewScreen(
-            userId: result.user.uid,
-            isViewOnly: true,
-            searchResult: result,
-          ),
-        ),
-      );
-    }
   }
 
   /// Merge available filters with saved filter states
@@ -786,44 +752,6 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
       ),
     );
   }
-
-  Widget _buildSearchResults() {
-    if (_currentQuery.isEmpty) {
-      return const SearchEmptyState(
-        message: 'Start typing to search',
-        subtitle:
-            'Find students and lecturers by name, skills, department, and more',
-        icon: Icons.search,
-      );
-    }
-
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_searchResults.isEmpty) {
-      return SearchEmptyState(
-        message: 'No results found',
-        subtitle: 'Try adjusting your search terms or filters',
-        icon: Icons.search_off,
-        actionText: 'Clear Filters',
-        onActionTap: _clearAllFilters,
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 16),
-      itemCount: _searchResults.length,
-      itemBuilder: (context, index) {
-        final result = _searchResults[index];
-        return UserResultCard(
-          result: result,
-          onTap: () => _navigateToProfile(result),
-          showMatchedFields: true,
-        );
-      },
-    );
-  }
 }
 
 /// Filter bottom sheet widget
@@ -853,7 +781,6 @@ class _FilterBottomSheetState extends State<FilterBottomSheet>
 
   // Range filter values
   RangeValues _semesterRange = const RangeValues(1, 8);
-  final RangeValues _cgpaRange = const RangeValues(0, 4);
 
   @override
   void initState() {

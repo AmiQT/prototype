@@ -118,13 +118,13 @@ class _ModernPostCardState extends State<ModernPostCard>
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                 border: Border.all(
-                  color: AppTheme.primaryColor.withOpacity(0.2),
+                  color: AppTheme.primaryColor.withValues(alpha: 0.2),
                   width: 2,
                 ),
               ),
               child: CircleAvatar(
                 radius: 22,
-                backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
                 child: Text(
                   widget.post.userName.substring(0, 1).toUpperCase(),
                   style: const TextStyle(
@@ -158,7 +158,7 @@ class _ModernPostCardState extends State<ModernPostCard>
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: AppTheme.successColor.withOpacity(0.1),
+                          color: AppTheme.successColor.withValues(alpha: 0.1),
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusXs),
                         ),

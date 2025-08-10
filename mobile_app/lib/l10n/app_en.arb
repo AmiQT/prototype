@@ -1,0 +1,649 @@
+{
+  "@@locale": "en",
+  "appTitle": "Student Talent Profiling App",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  
+  "home": "Home",
+  "@home": {
+    "description": "Home tab label"
+  },
+  
+  "search": "Search",
+  "@search": {
+    "description": "Search tab label"
+  },
+  
+  "events": "Events",
+  "@events": {
+    "description": "Events tab label"
+  },
+  
+  "profile": "Profile",
+  "@profile": {
+    "description": "Profile tab label"
+  },
+  
+  "notifications": "Notifications",
+  "@notifications": {
+    "description": "Notifications screen title"
+  },
+  
+  "favorites": "Favorites",
+  "@favorites": {
+    "description": "Favorites button label"
+  },
+  
+  "filterEvents": "Filter Events",
+  "@filterEvents": {
+    "description": "Filter events button label"
+  },
+  
+  "searchEvents": "Search events...",
+  "@searchEvents": {
+    "description": "Search events placeholder text"
+  },
+  
+  "goodMorning": "Good morning",
+  "@goodMorning": {
+    "description": "Morning greeting"
+  },
+  
+  "goodAfternoon": "Good afternoon",
+  "@goodAfternoon": {
+    "description": "Afternoon greeting"
+  },
+  
+  "goodEvening": "Good evening",
+  "@goodEvening": {
+    "description": "Evening greeting"
+  },
+  
+  "discoverEvents": "Discover amazing events happening at UTHM",
+  "@discoverEvents": {
+    "description": "Events discovery subtitle"
+  },
+  
+  "favoriteEvents": "Favorite Events",
+  "@favoriteEvents": {
+    "description": "Favorite events screen title"
+  },
+  
+  "noFavoriteEvents": "No Favorite Events Yet",
+  "@noFavoriteEvents": {
+    "description": "Empty state title for favorite events"
+  },
+  
+  "startExploringEvents": "Start exploring events and add them to your favorites!",
+  "@startExploringEvents": {
+    "description": "Empty state message for favorite events"
+  },
+  
+  "exploreEvents": "Explore Events",
+  "@exploreEvents": {
+    "description": "Button to explore events"
+  },
+  
+  "pleaseLoginToViewFavorites": "Please log in to view your favorite events",
+  "@pleaseLoginToViewFavorites": {
+    "description": "Login prompt for favorites"
+  },
+  
+  "goBack": "Go Back",
+  "@goBack": {
+    "description": "Go back button"
+  },
+  
+  "addedToFavorites": "Added to favorites",
+  "@addedToFavorites": {
+    "description": "Success message when adding to favorites"
+  },
+  
+  "removedFromFavorites": "Removed from favorites",
+  "@removedFromFavorites": {
+    "description": "Success message when removing from favorites"
+  },
+  
+  "errorUpdatingFavorites": "Error updating favorites: {error}",
+  "@errorUpdatingFavorites": {
+    "description": "Error message when updating favorites",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "The error message"
+      }
+    }
+  },
+  
+  "settings": "Settings",
+  "@settings": {
+    "description": "Settings screen title"
+  },
+  
+  "language": "Language",
+  "@language": {
+    "description": "Language setting label"
+  },
+  
+  "english": "English",
+  "@english": {
+    "description": "English language option"
+  },
+  
+  "malayLanguage": "Bahasa Melayu",
+  "@malayLanguage": {
+    "description": "Malay language option"
+  },
+  
+  "selectLanguage": "Select Language",
+  "@selectLanguage": {
+    "description": "Language selection dialog title"
+  },
+  
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button"
+  },
+  
+  "save": "Save",
+  "@save": {
+    "description": "Save button"
+  },
+  
+  "account": "Account",
+  "@account": {
+    "description": "Account section title"
+  },
+  
+  "preferences": "Preferences",
+  "@preferences": {
+    "description": "Preferences section title"
+  },
+  
+  "support": "Support",
+  "@support": {
+    "description": "Support section title"
+  },
+  
+  "accountInformation": "Account Information",
+  "@accountInformation": {
+    "description": "Account information setting"
+  },
+  
+  "security": "Security",
+  "@security": {
+    "description": "Security setting"
+  },
+  
+  "helpSupport": "Help & Support",
+  "@helpSupport": {
+    "description": "Help and support setting"
+  },
+  
+  "about": "About",
+  "@about": {
+    "description": "About setting"
+  },
+  
+  "privacyPolicy": "Privacy Policy",
+  "@privacyPolicy": {
+    "description": "Privacy policy setting"
+  },
+  
+  "logout": "Logout",
+  "@logout": {
+    "description": "Logout button"
+  },
+  
+  "noNotifications": "No notifications yet",
+  "@noNotifications": {
+    "description": "Empty state for notifications"
+  },
+  
+  "markAllAsRead": "Mark all as read",
+  "@markAllAsRead": {
+    "description": "Mark all notifications as read button"
+  },
+  
+  "clearAll": "Clear all",
+  "@clearAll": {
+    "description": "Clear all notifications button"
+  },
+
+  "interested": "interested",
+  "@interested": {
+    "description": "Interested count label"
+  },
+
+  "youHaveFavoriteEvents": "You have {count} favorite events",
+  "@youHaveFavoriteEvents": {
+    "description": "Favorite events count message",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "description": "Number of favorite events"
+      }
+    }
+  },
+
+  "shareEvent": "Share Event",
+  "@shareEvent": {
+    "description": "Share event button"
+  },
+
+  "eventDetails": "Event Details",
+  "@eventDetails": {
+    "description": "Event details screen title"
+  },
+
+  "register": "Register",
+  "@register": {
+    "description": "Register button"
+  },
+
+  "eventProgram": "Event/Program",
+  "@eventProgram": {
+    "description": "Event program tab label"
+  },
+
+  "discover": "Discover",
+  "@discover": {
+    "description": "Discover tab label"
+  },
+
+  "manageYourAccount": "Manage your account information",
+  "@manageYourAccount": {
+    "description": "Account section subtitle"
+  },
+
+  "customizeYourExperience": "Customize your app experience",
+  "@customizeYourExperience": {
+    "description": "Preferences section subtitle"
+  },
+
+  "getHelpAndInformation": "Get help and information",
+  "@getHelpAndInformation": {
+    "description": "Support section subtitle"
+  },
+
+  "updatePersonalDetails": "Update your personal details",
+  "@updatePersonalDetails": {
+    "description": "Account information subtitle"
+  },
+
+  "passwordAndSecurity": "Password and security settings",
+  "@passwordAndSecurity": {
+    "description": "Security subtitle"
+  },
+
+  "manageNotificationPreferences": "Manage notification preferences",
+  "@manageNotificationPreferences": {
+    "description": "Notifications subtitle"
+  },
+
+  "getHelpWithApp": "Get help with the app",
+  "@getHelpWithApp": {
+    "description": "Help support subtitle"
+  },
+
+  "appVersionAndInformation": "App version and information",
+  "@appVersionAndInformation": {
+    "description": "About subtitle"
+  },
+
+  "readPrivacyPolicy": "Read our privacy policy",
+  "@readPrivacyPolicy": {
+    "description": "Privacy policy subtitle"
+  },
+
+  "loading": "Loading...",
+  "@loading": {
+    "description": "Loading indicator text"
+  },
+
+  "error": "Error",
+  "@error": {
+    "description": "Error label"
+  },
+
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retry button"
+  },
+
+  "refresh": "Refresh",
+  "@refresh": {
+    "description": "Refresh button"
+  },
+
+  "readyToShowcase": "Ready to showcase your talents today?",
+  "@readyToShowcase": {
+    "description": "Home welcome message"
+  },
+
+  "createPost": "Create Post",
+  "@createPost": {
+    "description": "Create post button"
+  },
+
+  "shareMoment": "Share Moment",
+  "@shareMoment": {
+    "description": "Share moment button"
+  },
+
+  "editProfile": "Edit Profile",
+  "@editProfile": {
+    "description": "Edit profile screen title"
+  },
+
+  "basic": "Basic",
+  "@basic": {
+    "description": "Basic information tab"
+  },
+
+  "academic": "Academic",
+  "@academic": {
+    "description": "Academic information tab"
+  },
+
+  "skillsAndInterests": "Skills & Interests",
+  "@skillsAndInterests": {
+    "description": "Skills and interests tab"
+  },
+
+  "experience": "Experience",
+  "@experience": {
+    "description": "Experience tab"
+  },
+
+  "basicInformation": "Basic Information",
+  "@basicInformation": {
+    "description": "Basic information section title"
+  },
+
+  "fullName": "Full Name",
+  "@fullName": {
+    "description": "Full name field label"
+  },
+
+  "pleaseEnterFullName": "Please enter your full name",
+  "@pleaseEnterFullName": {
+    "description": "Full name validation message"
+  },
+
+  "headline": "Headline",
+  "@headline": {
+    "description": "Headline field label"
+  },
+
+  "phoneNumber": "Phone Number",
+  "@phoneNumber": {
+    "description": "Phone number field label"
+  },
+
+  "address": "Address",
+  "@address": {
+    "description": "Address field label"
+  },
+
+  "bio": "Bio",
+  "@bio": {
+    "description": "Bio field label"
+  },
+
+  "tellUsAboutYourself": "Tell us about yourself...",
+  "@tellUsAboutYourself": {
+    "description": "Bio field hint text"
+  },
+
+  "academicInformation": "Academic Information",
+  "@academicInformation": {
+    "description": "Academic information section title"
+  },
+
+  "studentId": "Student ID",
+  "@studentId": {
+    "description": "Student ID field label"
+  },
+
+  "pleaseEnterStudentId": "Please enter your student ID",
+  "@pleaseEnterStudentId": {
+    "description": "Student ID validation message"
+  },
+
+  "program": "Program",
+  "@program": {
+    "description": "Program field label"
+  },
+
+  "department": "Department",
+  "@department": {
+    "description": "Department field label"
+  },
+
+  "faculty": "Faculty",
+  "@faculty": {
+    "description": "Faculty field label"
+  },
+
+  "currentSemester": "Current Semester",
+  "@currentSemester": {
+    "description": "Current semester field label"
+  },
+
+  "cgpa": "CGPA",
+  "@cgpa": {
+    "description": "CGPA field label"
+  },
+
+  "skills": "Skills",
+  "@skills": {
+    "description": "Skills section title"
+  },
+
+  "selectYourSkills": "Select your skills to showcase your expertise",
+  "@selectYourSkills": {
+    "description": "Skills selection description"
+  },
+
+  "selectedSkills": "Selected Skills",
+  "@selectedSkills": {
+    "description": "Selected skills label"
+  },
+
+  "addCustomSkill": "Add custom skill...",
+  "@addCustomSkill": {
+    "description": "Add custom skill hint text"
+  },
+
+  "skillCategories": "Skill Categories",
+  "@skillCategories": {
+    "description": "Skill categories section title"
+  },
+
+  "interests": "Interests",
+  "@interests": {
+    "description": "Interests section title"
+  },
+
+  "selectYourInterests": "Select your interests to connect with like-minded people",
+  "@selectYourInterests": {
+    "description": "Interests selection description"
+  },
+
+  "selectedInterests": "Selected Interests",
+  "@selectedInterests": {
+    "description": "Selected interests label"
+  },
+
+  "addCustomInterest": "Add custom interest...",
+  "@addCustomInterest": {
+    "description": "Add custom interest hint text"
+  },
+
+  "interestCategories": "Interest Categories",
+  "@interestCategories": {
+    "description": "Interest categories section title"
+  },
+
+  "saveProfile": "Save Profile",
+  "@saveProfile": {
+    "description": "Save profile button"
+  },
+
+  "profileUpdatedSuccessfully": "Profile updated successfully!",
+  "@profileUpdatedSuccessfully": {
+    "description": "Profile update success message"
+  },
+
+  "errorUpdatingProfile": "Error updating profile",
+  "@errorUpdatingProfile": {
+    "description": "Profile update error message"
+  },
+
+  "imageSelectedSuccessfully": "Image selected successfully",
+  "@imageSelectedSuccessfully": {
+    "description": "Image selection success message"
+  },
+
+  "errorSelectingImage": "Error selecting image",
+  "@errorSelectingImage": {
+    "description": "Image selection error message"
+  },
+
+  "addYourWorkExperience": "Add your work experience and internships",
+  "@addYourWorkExperience": {
+    "description": "Experience section description"
+  },
+
+  "noExperienceAdded": "No Experience Added",
+  "@noExperienceAdded": {
+    "description": "Empty experience state title"
+  },
+
+  "tapAddToStartAdding": "Tap the + button to start adding",
+  "@tapAddToStartAdding": {
+    "description": "Empty state instruction"
+  },
+
+  "addExperience": "Add Experience",
+  "@addExperience": {
+    "description": "Add experience button"
+  },
+
+  "editExperience": "Edit Experience",
+  "@editExperience": {
+    "description": "Edit experience dialog title"
+  },
+
+  "deleteExperience": "Delete Experience",
+  "@deleteExperience": {
+    "description": "Delete experience dialog title"
+  },
+
+  "deleteExperienceConfirmation": "Are you sure you want to delete this experience?",
+  "@deleteExperienceConfirmation": {
+    "description": "Delete experience confirmation message"
+  },
+
+  "jobTitle": "Job Title",
+  "@jobTitle": {
+    "description": "Job title field label"
+  },
+
+  "pleaseEnterJobTitle": "Please enter job title",
+  "@pleaseEnterJobTitle": {
+    "description": "Job title validation message"
+  },
+
+  "company": "Company",
+  "@company": {
+    "description": "Company field label"
+  },
+
+  "location": "Location",
+  "@location": {
+    "description": "Location field label"
+  },
+
+  "description": "Description",
+  "@description": {
+    "description": "Description field label"
+  },
+
+  "currentlyWorking": "Currently working here",
+  "@currentlyWorking": {
+    "description": "Currently working checkbox label"
+  },
+
+  "showcaseYourProjects": "Showcase your projects and achievements",
+  "@showcaseYourProjects": {
+    "description": "Projects section description"
+  },
+
+  "projects": "Projects",
+  "@projects": {
+    "description": "Projects section title"
+  },
+
+  "noProjectsAdded": "No Projects Added",
+  "@noProjectsAdded": {
+    "description": "Empty projects state title"
+  },
+
+  "addProject": "Add Project",
+  "@addProject": {
+    "description": "Add project button"
+  },
+
+  "editProject": "Edit Project",
+  "@editProject": {
+    "description": "Edit project dialog title"
+  },
+
+  "deleteProject": "Delete Project",
+  "@deleteProject": {
+    "description": "Delete project dialog title"
+  },
+
+  "deleteProjectConfirmation": "Are you sure you want to delete this project?",
+  "@deleteProjectConfirmation": {
+    "description": "Delete project confirmation message"
+  },
+
+  "projectTitle": "Project Title",
+  "@projectTitle": {
+    "description": "Project title field label"
+  },
+
+  "pleaseEnterProjectTitle": "Please enter project title",
+  "@pleaseEnterProjectTitle": {
+    "description": "Project title validation message"
+  },
+
+  "technologies": "Technologies",
+  "@technologies": {
+    "description": "Technologies field label"
+  },
+
+  "projectUrl": "Project URL",
+  "@projectUrl": {
+    "description": "Project URL field label"
+  },
+
+  "ongoingProject": "Ongoing project",
+  "@ongoingProject": {
+    "description": "Ongoing project checkbox label"
+  },
+
+  "edit": "Edit",
+  "@edit": {
+    "description": "Edit button"
+  },
+
+  "delete": "Delete",
+  "@delete": {
+    "description": "Delete button"
+  }
+}

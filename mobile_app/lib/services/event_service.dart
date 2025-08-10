@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../models/event_model.dart';
+import 'auto_notification_service.dart';
 
 class EventService {
   final CollectionReference eventsCollection =
@@ -97,6 +98,16 @@ class EventService {
     }
 
     await docRef.update({'favoriteUserIds': favoriteUserIds});
+
+    // Create notification when user favorites an event
+    if (isFavorite && !favoriteUserIds.contains(userId)) {
+      final eventData = doc.data() as Map<String, dynamic>;
+      await AutoNotificationService.onEventFavorited(
+        userId: userId,
+        eventTitle: eventData['title'] ?? 'Event',
+        eventId: eventId,
+      );
+    }
   }
 
   Stream<List<EventModel>> streamAllEvents() {

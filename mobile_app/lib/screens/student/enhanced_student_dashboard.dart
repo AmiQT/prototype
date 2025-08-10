@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../models/user_model.dart';
-import '../../models/profile_model.dart';
 import '../../utils/app_theme.dart';
 import 'showcase/showcase_screen.dart';
 import 'search/enhanced_search_screen.dart';
@@ -25,8 +24,6 @@ class _EnhancedStudentDashboardState extends State<EnhancedStudentDashboard>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
-  UserModel? _currentUser;
-  ProfileModel? _currentProfile;
   bool _isLoading = true;
 
   final List<Widget> _pages = [
@@ -90,8 +87,9 @@ class _EnhancedStudentDashboardState extends State<EnhancedStudentDashboard>
 
       final user = authService.currentUser;
       if (user != null) {
-        _currentUser = await authService.getUserData(user.uid);
-        _currentProfile = await profileService.getProfileByUserId(user.uid);
+        // Load user data if needed in the future
+        await authService.getUserData(user.uid);
+        await profileService.getProfileByUserId(user.uid);
       }
     } catch (e) {
       if (mounted) {
@@ -242,8 +240,7 @@ class _EnhancedStudentDashboardState extends State<EnhancedStudentDashboard>
     final authService = Provider.of<AuthService>(context, listen: false);
     final userRole = authService.currentUser?.role;
 
-    if ((userRole == UserRole.student || userRole == UserRole.lecturer) &&
-        _selectedIndex != 0) {
+    if ((userRole == UserRole.student || userRole == UserRole.lecturer)) {
       return Container(
         decoration: BoxDecoration(
           gradient: AppTheme.primaryGradient,

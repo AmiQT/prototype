@@ -102,7 +102,8 @@ class _ModernUserCardState extends State<ModernUserCard>
                 child: Column(
                   children: [
                     _buildUserHeader(),
-                    if (widget.profile.bio.isNotEmpty) ...[
+                    if (widget.profile.bio != null &&
+                        widget.profile.bio!.isNotEmpty) ...[
                       const SizedBox(height: AppTheme.spaceSm),
                       _buildBio(),
                     ],
@@ -156,9 +157,9 @@ class _ModernUserCardState extends State<ModernUserCard>
                         color: AppTheme.textSecondaryColor,
                       ),
                 ),
-              if (widget.profile.academicLevel.isNotEmpty)
+              if (widget.profile.academicInfo?.currentSemester != null)
                 Text(
-                  widget.profile.academicLevel,
+                  'Semester ${widget.profile.academicInfo!.currentSemester}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppTheme.textSecondaryColor,
                       ),
@@ -182,10 +183,10 @@ class _ModernUserCardState extends State<ModernUserCard>
       child: CircleAvatar(
         radius: 28,
         backgroundColor: _getRoleColor().withValues(alpha: 0.1),
-        backgroundImage: widget.profile.profilePictureUrl.isNotEmpty
-            ? NetworkImage(widget.profile.profilePictureUrl)
+        backgroundImage: (widget.profile.profileImageUrl?.isNotEmpty ?? false)
+            ? NetworkImage(widget.profile.profileImageUrl!)
             : null,
-        child: widget.profile.profilePictureUrl.isEmpty
+        child: (widget.profile.profileImageUrl?.isEmpty ?? true)
             ? Text(
                 _getInitials(),
                 style: TextStyle(
@@ -224,7 +225,7 @@ class _ModernUserCardState extends State<ModernUserCard>
 
   Widget _buildBio() {
     return Text(
-      widget.profile.bio,
+      widget.profile.bio!,
       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: AppTheme.textSecondaryColor,
             height: 1.4,
@@ -375,24 +376,22 @@ class _ModernUserCardState extends State<ModernUserCard>
   }
 
   Color _getRoleColor() {
-    switch (widget.profile.userRole.toLowerCase()) {
-      case 'lecturer':
-        return AppTheme.successColor;
-      case 'student':
-        return AppTheme.primaryColor;
-      default:
-        return AppTheme.textSecondaryColor;
+    // Since ProfileModel doesn't have userRole, we'll use a default approach
+    // In a real app, you'd get this from the UserModel or add it to ProfileModel
+    if (widget.profile.academicInfo?.studentId != null) {
+      return AppTheme.primaryColor; // Student
+    } else {
+      return AppTheme.successColor; // Lecturer (default)
     }
   }
 
   String _getRoleText() {
-    switch (widget.profile.userRole.toLowerCase()) {
-      case 'lecturer':
-        return 'Lecturer';
-      case 'student':
-        return 'Student';
-      default:
-        return 'User';
+    // Since ProfileModel doesn't have userRole, we'll use a default approach
+    // In a real app, you'd get this from the UserModel or add it to ProfileModel
+    if (widget.profile.academicInfo?.studentId != null) {
+      return 'Student';
+    } else {
+      return 'Lecturer';
     }
   }
 }

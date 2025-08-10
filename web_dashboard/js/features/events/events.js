@@ -4,7 +4,7 @@ import { achievementsCache, loadAchievementsData } from '../achievements/achieve
 
 function setupEventsSection() {
     console.log('Setting up events section...');
-    
+
     // Test Firebase connection
     if (!db) {
         console.error('Firebase database not initialized');
@@ -62,14 +62,14 @@ function filterEvents() {
     let filteredEvents = allEventsCache;
 
     if (searchTerm) {
-        filteredEvents = filteredEvents.filter(event => 
+        filteredEvents = filteredEvents.filter(event =>
             (event.title || '').toLowerCase().includes(searchTerm) ||
             (event.description || '').toLowerCase().includes(searchTerm)
         );
     }
 
     if (categoryFilter) {
-        filteredEvents = filteredEvents.filter(event => 
+        filteredEvents = filteredEvents.filter(event =>
             event.category === categoryFilter
         );
     }
@@ -121,25 +121,25 @@ function renderEventsTable(events) {
 
     tableBody.innerHTML = events.map(event => {
         // Format image display
-        const imageDisplay = event.imageUrl ? 
-            `<img src="${event.imageUrl}" alt="Event image" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">` : 
+        const imageDisplay = event.imageUrl ?
+            `<img src="${event.imageUrl}" alt="Event image" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">` :
             '<span style="color: #6b7280;">No image</span>';
-        
+
         // Format register URL
-        const registerUrlDisplay = event.registerUrl ? 
+        const registerUrlDisplay = event.registerUrl ?
             `<a href="${event.registerUrl}" target="_blank" style="color: #2563eb; text-decoration: none;">
                 <i class="fas fa-external-link-alt"></i> Register
-            </a>` : 
+            </a>` :
             '<span style="color: #6b7280;">No URL</span>';
 
         // Truncate description if too long
-        const description = event.description ? 
+        const description = event.description ?
             (event.description.length > 50 ? event.description.substring(0, 50) + '...' : event.description) :
             '<span style="color: #6b7280;">No description</span>';
 
         // Format assigned badges display
-        const badgesDisplay = event.assignedBadges && event.assignedBadges.length > 0 ? 
-            event.assignedBadges.map(badge => 
+        const badgesDisplay = event.assignedBadges && event.assignedBadges.length > 0 ?
+            event.assignedBadges.map(badge =>
                 `<span class="badge-mini" style="display: inline-block; margin: 0.1rem; padding: 0.2rem 0.4rem; background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; border-radius: 12px; font-size: 0.7rem; font-weight: 500;">
                     ${badge.icon} ${badge.name}
                 </span>`
@@ -188,18 +188,18 @@ async function showAddEventModal() {
     if (modal) {
         modal.classList.add('show');
         modal.style.display = 'flex';
-        
+
         // Clear form
         const form = document.getElementById('add-event-form');
         if (form) form.reset();
-        
+
         // Hide image preview
         const preview = document.getElementById('add-event-image-preview');
         if (preview) preview.style.display = 'none';
-        
+
         // Load available badges for assignment
         await loadAvailableBadges();
-        
+
         // Clear any previous badge selections
         clearBadgeSelections();
     }
@@ -211,14 +211,14 @@ function showEditEventModal(id) {
         if (doc.exists) {
             const event = doc.data();
             console.log('Event data for editing:', event);
-            
+
             document.getElementById('edit-event-id').value = id;
             document.getElementById('edit-event-title').value = event.title || '';
             document.getElementById('edit-event-description').value = event.description || '';
             document.getElementById('edit-event-category').value = event.category || '';
             document.getElementById('edit-event-register-url').value = event.registerUrl || '';
             document.getElementById('edit-event-image').value = event.imageUrl || '';
-            
+
             // Show image preview if exists, hide if not
             const preview = document.getElementById('edit-event-image-preview');
             if (preview) {
@@ -230,7 +230,7 @@ function showEditEventModal(id) {
                     preview.src = '';
                 }
             }
-            
+
             const modal = document.getElementById('edit-event-modal');
             modal.classList.add('show');
             modal.style.display = 'flex';
@@ -249,7 +249,7 @@ async function handleAddEvent(form) {
         addNotification('Form error: Invalid form element', 'error');
         return;
     }
-    
+
     // Get form values directly from form elements
     const title = document.getElementById('add-event-title')?.value;
     const description = document.getElementById('add-event-description')?.value;
@@ -265,7 +265,7 @@ async function handleAddEvent(form) {
 
     // Get selected badges for this event
     const selectedBadges = getSelectedBadges();
-    
+
     const eventData = {
         title: title.trim(),
         description: description.trim(),
@@ -282,18 +282,21 @@ async function handleAddEvent(form) {
         console.log('Adding event:', eventData);
         const eventRef = await db.collection('events').add(eventData);
         const eventId = eventRef.id;
-        
 
-        
+
+
         closeModal('add-event-modal');
         form.reset(); // Clear the form
         loadEventsTable();
-        
+
         // Refresh overview stats
         if (typeof window.refreshOverviewStats === 'function') {
             await window.refreshOverviewStats();
         }
-        
+
+        // Send notifications to all users about the new event
+        await sendNewEventNotifications(eventData.title, eventId);
+
         // Show success message with badge info
         if (selectedBadges.length > 0) {
             addNotification(`Event added successfully with ${selectedBadges.length} badge(s) assigned!`, 'success');
@@ -312,7 +315,7 @@ async function handleEditEvent(form) {
         addNotification('Form error: Invalid form element', 'error');
         return;
     }
-    
+
     // Get form values directly from form elements
     const eventId = document.getElementById('edit-event-id')?.value;
     const title = document.getElementById('edit-event-title')?.value;
@@ -342,7 +345,7 @@ async function handleEditEvent(form) {
         closeModal('edit-event-modal');
         loadEventsTable();
         addNotification('Event updated successfully', 'success');
-        
+
         // Refresh overview stats
         if (typeof window.refreshOverviewStats === 'function') {
             await window.refreshOverviewStats();
@@ -360,7 +363,7 @@ async function deleteEvent(id) {
         await db.collection('events').doc(id).delete();
         loadEventsTable();
         addNotification('Event deleted successfully', 'success');
-        
+
         // Refresh overview stats
         if (typeof window.refreshOverviewStats === 'function') {
             await window.refreshOverviewStats();
@@ -376,21 +379,21 @@ async function deleteEvent(id) {
 async function loadAvailableBadges() {
     try {
         console.log('Loading available badges for event assignment...');
-        
+
         // Load achievements data if not already cached
         if (!achievementsCache || achievementsCache.length === 0) {
             await loadAchievementsData();
         }
-        
+
         const badgeSelectionGrid = document.getElementById('add-event-badge-selection');
         if (!badgeSelectionGrid) {
             console.warn('Badge selection grid not found');
             return;
         }
-        
+
         // Clear existing content
         badgeSelectionGrid.innerHTML = '';
-        
+
         if (!achievementsCache || achievementsCache.length === 0) {
             badgeSelectionGrid.innerHTML = `
                 <div class="no-badges-message">
@@ -400,13 +403,13 @@ async function loadAvailableBadges() {
             `;
             return;
         }
-        
+
         // Render available badges
         achievementsCache.forEach(badge => {
             const badgeOption = document.createElement('div');
             badgeOption.className = 'badge-option';
             badgeOption.dataset.badgeId = badge.id;
-            
+
             badgeOption.innerHTML = `
                 <div class="badge-option-icon">${badge.icon || '🏆'}</div>
                 <div class="badge-option-info">
@@ -420,15 +423,15 @@ async function loadAvailableBadges() {
                     <i class="fas fa-check"></i>
                 </div>
             `;
-            
+
             // Add click handler for selection
             badgeOption.addEventListener('click', () => toggleBadgeSelection(badge.id, badgeOption));
-            
+
             badgeSelectionGrid.appendChild(badgeOption);
         });
-        
+
         console.log(`Loaded ${achievementsCache.length} badges for assignment`);
-        
+
     } catch (error) {
         console.error('Error loading available badges:', error);
         addNotification('Error loading badges: ' + error.message, 'error');
@@ -437,7 +440,7 @@ async function loadAvailableBadges() {
 
 function toggleBadgeSelection(badgeId, badgeElement) {
     badgeElement.classList.toggle('selected');
-    
+
     // Update the selection indicator
     const indicator = badgeElement.querySelector('.selection-indicator');
     if (badgeElement.classList.contains('selected')) {
@@ -450,7 +453,7 @@ function toggleBadgeSelection(badgeId, badgeElement) {
 function getSelectedBadges() {
     const selectedBadges = [];
     const selectedElements = document.querySelectorAll('#add-event-badge-selection .badge-option.selected');
-    
+
     selectedElements.forEach(element => {
         const badgeId = element.dataset.badgeId;
         const badge = achievementsCache.find(b => b.id === badgeId);
@@ -463,7 +466,7 @@ function getSelectedBadges() {
             });
         }
     });
-    
+
     return selectedBadges;
 }
 
@@ -482,6 +485,47 @@ function clearBadgeSelections() {
 
 
 
+// Send notifications to all users about new events
+async function sendNewEventNotifications(eventTitle, eventId) {
+    try {
+        console.log('Sending new event notifications...');
+
+        // Get all users (students and lecturers)
+        const usersSnapshot = await db.collection('users')
+            .where('role', 'in', ['student', 'lecturer'])
+            .get();
+
+        const batch = db.batch();
+        let notificationCount = 0;
+
+        usersSnapshot.forEach((userDoc) => {
+            const userData = userDoc.data();
+            const notificationRef = db.collection('notifications').doc();
+
+            batch.set(notificationRef, {
+                userId: userData.uid,
+                title: 'New Event Available!',
+                message: `Check out the new event: ${eventTitle}`,
+                type: 'event',
+                isRead: false,
+                createdAt: new Date().toISOString(),
+                data: {
+                    eventId: eventId,
+                    eventTitle: eventTitle,
+                },
+                actionUrl: `/event/${eventId}`,
+            });
+
+            notificationCount++;
+        });
+
+        await batch.commit();
+        console.log(`Successfully sent ${notificationCount} event notifications`);
+
+    } catch (error) {
+        console.error('Error sending new event notifications:', error);
+    }
+}
 export {
     setupEventsSection,
     loadEventsTable,
@@ -489,5 +533,6 @@ export {
     showEditEventModal,
     handleAddEvent,
     handleEditEvent,
-    deleteEvent
+    deleteEvent,
+    sendNewEventNotifications
 };

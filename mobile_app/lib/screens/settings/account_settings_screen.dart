@@ -3,6 +3,7 @@ import '../../services/settings_service.dart';
 import '../../models/user_model.dart';
 import '../../widgets/settings_widgets.dart';
 import '../../widgets/custom_text_field.dart';
+import '../../utils/app_theme.dart';
 
 class AccountSettingsScreen extends StatefulWidget {
   const AccountSettingsScreen({super.key});
@@ -166,9 +167,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         title: const Text('Account Settings'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0.5,
+        backgroundColor: AppTheme.surfaceColor,
+        foregroundColor: AppTheme.textPrimaryColor,
+        elevation: 0,
         centerTitle: true,
       ),
       body: _isLoading

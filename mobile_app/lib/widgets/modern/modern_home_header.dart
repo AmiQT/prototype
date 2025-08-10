@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/auth_service.dart';
-import '../../models/user_model.dart';
 import '../../utils/app_theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../screens/student/showcase/post_creation_screen.dart';
 
 class ModernHomeHeader extends StatelessWidget {
@@ -164,7 +164,7 @@ class ModernHomeHeader extends StatelessWidget {
     return Consumer<AuthService>(
       builder: (context, authService, child) {
         final user = authService.currentUser;
-        final timeOfDay = _getTimeOfDay();
+        final timeOfDay = _getTimeOfDay(context);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,7 +178,7 @@ class ModernHomeHeader extends StatelessWidget {
             ),
             const SizedBox(height: AppTheme.spaceXs),
             Text(
-              'Ready to showcase your talents today?',
+              AppLocalizations.of(context).readyToShowcase,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Colors.white.withValues(alpha: 0.9),
                   ),
@@ -196,7 +196,7 @@ class ModernHomeHeader extends StatelessWidget {
           child: _buildQuickActionButton(
             context: context,
             icon: Icons.add_rounded,
-            label: 'Create Post',
+            label: AppLocalizations.of(context).createPost,
             onTap: onCreatePost,
           ),
         ),
@@ -205,7 +205,7 @@ class ModernHomeHeader extends StatelessWidget {
           child: _buildQuickActionButton(
             context: context,
             icon: Icons.camera_alt_rounded,
-            label: 'Share Moment',
+            label: AppLocalizations.of(context).shareMoment,
             onTap: () {
               // Navigate to post creation with camera focus
               Navigator.push(
@@ -264,14 +264,15 @@ class ModernHomeHeader extends StatelessWidget {
     );
   }
 
-  String _getTimeOfDay() {
+  String _getTimeOfDay(BuildContext context) {
     final hour = DateTime.now().hour;
+    final l10n = AppLocalizations.of(context);
     if (hour < 12) {
-      return 'Good morning';
+      return l10n.goodMorning;
     } else if (hour < 17) {
-      return 'Good afternoon';
+      return l10n.goodAfternoon;
     } else {
-      return 'Good evening';
+      return l10n.goodEvening;
     }
   }
 }

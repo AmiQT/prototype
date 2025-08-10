@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../services/auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../services/achievement_service.dart';
@@ -29,13 +30,18 @@ class _StudentDashboardState extends State<StudentDashboard> {
     const StudentProfileScreen(),
   ];
 
-  final List<BottomNavigationBarItem> _navItems = const [
-    BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-    BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-    BottomNavigationBarItem(
-        icon: Icon(Icons.event_available), label: 'Event/Program'),
-    BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-  ];
+  List<BottomNavigationBarItem> _getNavItems(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return [
+      BottomNavigationBarItem(icon: const Icon(Icons.home), label: l10n.home),
+      BottomNavigationBarItem(
+          icon: const Icon(Icons.search), label: l10n.discover),
+      BottomNavigationBarItem(
+          icon: const Icon(Icons.event_available), label: l10n.eventProgram),
+      BottomNavigationBarItem(
+          icon: const Icon(Icons.person), label: l10n.profile),
+    ];
+  }
 
   UserModel? _currentUser;
   ProfileModel? _currentProfile;
@@ -127,7 +133,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
-        items: _navItems,
+        items: _getNavItems(context),
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
         selectedItemColor: Colors.blue[800],
@@ -138,8 +144,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
         elevation: 12,
       ),
       floatingActionButton:
-          (userRole == UserRole.student || userRole == UserRole.lecturer) &&
-                  _selectedIndex != 0
+          (userRole == UserRole.student || userRole == UserRole.lecturer)
               ? FloatingActionButton(
                   heroTag: "student_dashboard_chat_fab",
                   onPressed: () {

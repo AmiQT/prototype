@@ -16,8 +16,6 @@ class SearchService {
   final SearchCacheService _cacheService = SearchCacheService();
 
   static const String _searchHistoryKey = 'search_history';
-  static const String _searchSuggestionsKey = 'search_suggestions';
-  static const String _searchCacheKey = 'search_cache';
   static const String _savedFiltersKey = 'saved_filters';
 
   final SearchConfig config = const SearchConfig();

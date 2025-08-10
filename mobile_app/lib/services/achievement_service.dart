@@ -3,6 +3,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import '../models/achievement_model.dart';
 import '../utils/error_handler.dart';
+import 'auto_notification_service.dart';
 import 'dart:io';
 
 class AchievementService {
@@ -68,6 +69,14 @@ class AchievementService {
       await achievementsCollection
           .doc(achievement.id)
           .set(achievement.toJson());
+
+      // Create notification for achievement submission
+      await AutoNotificationService.onMilestoneAchieved(
+        userId: achievement.userId,
+        milestoneTitle: 'Achievement Submitted',
+        description:
+            'Your achievement "${achievement.title}" has been submitted for verification.',
+      );
 
       debugPrint('AchievementService: Achievement created successfully');
     } on FirebaseException catch (e) {
@@ -166,12 +175,33 @@ class AchievementService {
   Future<void> verifyAchievement(
       String achievementId, String verifiedBy) async {
     try {
+      // Get achievement details first
+      final achievementDoc =
+          await achievementsCollection.doc(achievementId).get();
+      if (!achievementDoc.exists) {
+        throw Exception('Achievement not found');
+      }
+
+      final achievementData = achievementDoc.data() as Map<String, dynamic>;
+      final achievement = AchievementModel.fromJson(achievementData);
+
       await achievementsCollection.doc(achievementId).update({
         'isVerified': true,
         'verifiedBy': verifiedBy,
         'verifiedAt': DateTime.now().toIso8601String(),
         'updatedAt': DateTime.now().toIso8601String(),
       });
+
+      // Create notification for achievement verification
+      await AutoNotificationService.onMilestoneAchieved(
+        userId: achievement.userId,
+        milestoneTitle: 'Achievement Verified! 🎉',
+        description:
+            'Your achievement "${achievement.title}" has been verified by $verifiedBy.',
+      );
+
+      // Check for milestone achievements
+      await _checkForMilestones(achievement.userId);
     } catch (e) {
       debugPrint('Error verifying achievement: $e');
       rethrow;
@@ -318,6 +348,63 @@ class AchievementService {
         return 8;
       case AchievementType.other:
         return 5;
+    }
+  }
+
+  /// Check for milestone achievements and create notifications
+  Future<void> _checkForMilestones(String userId) async {
+    try {
+      final userAchievements = await getAchievementsByUserId(userId);
+      final verifiedAchievements =
+          userAchievements.where((a) => a.isVerified).toList();
+
+      final totalPoints =
+          verifiedAchievements.fold(0, (total, a) => total + (a.points ?? 0));
+      final achievementCount = verifiedAchievements.length;
+
+      // Check for point milestones
+      final pointMilestones = [50, 100, 200, 500, 1000];
+      for (final milestone in pointMilestones) {
+        if (totalPoints >= milestone &&
+            totalPoints - (verifiedAchievements.last.points ?? 0) < milestone) {
+          await AutoNotificationService.onMilestoneAchieved(
+            userId: userId,
+            milestoneTitle: 'Points Milestone Reached! 🌟',
+            description:
+                'Congratulations! You\'ve earned $milestone points total!',
+          );
+        }
+      }
+
+      // Check for achievement count milestones
+      final countMilestones = [5, 10, 25, 50];
+      for (final milestone in countMilestones) {
+        if (achievementCount >= milestone && achievementCount - 1 < milestone) {
+          await AutoNotificationService.onMilestoneAchieved(
+            userId: userId,
+            milestoneTitle: 'Achievement Milestone! 🏆',
+            description:
+                'Amazing! You\'ve earned $milestone verified achievements!',
+          );
+        }
+      }
+
+      // Check for category diversity (achievements in multiple categories)
+      final categories = verifiedAchievements.map((a) => a.type).toSet();
+      if (categories.length >= 3 && verifiedAchievements.length >= 3) {
+        // Check if this is the first time reaching 3+ categories
+        final previousCount = verifiedAchievements.length - 1;
+        if (previousCount < 3) {
+          await AutoNotificationService.onMilestoneAchieved(
+            userId: userId,
+            milestoneTitle: 'Well-Rounded Achiever! 🎯',
+            description:
+                'Excellent! You\'ve earned achievements in multiple categories!',
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error checking for milestones: $e');
     }
   }
 }

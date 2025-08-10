@@ -6,7 +6,7 @@ import '../../../models/user_model.dart';
 import '../../../services/showcase_service.dart';
 import '../../../services/auth_service.dart';
 import '../../../widgets/modern/modern_post_card.dart';
-import '../../../widgets/showcase/feed_widgets.dart';
+
 import '../../../utils/app_theme.dart';
 import '../../../widgets/showcase/share_widget.dart';
 import 'post_creation_screen.dart';
@@ -181,27 +181,6 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
     return Container(
       color: Colors.transparent,
       child: _buildBody(),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      title: const Text('Showcase'),
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.black87,
-      elevation: 0,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.filter_list),
-          onPressed: _showFilterDialog,
-          tooltip: 'Filter Posts',
-        ),
-        IconButton(
-          icon: const Icon(Icons.search),
-          onPressed: _showSearchDialog,
-          tooltip: 'Search Posts',
-        ),
-      ],
     );
   }
 
@@ -527,60 +506,6 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
           initialPost: post,
         ),
       ),
-    );
-  }
-
-  void _handleEdit(ShowcasePostModel post) {
-    // Navigate to edit post screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Edit feature coming soon!')),
-    );
-  }
-
-  void _handleDelete(ShowcasePostModel post) async {
-    try {
-      await _showcaseService.deletePost(post.id);
-      setState(() {
-        _posts.removeWhere((p) => p.id == post.id);
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Post deleted successfully')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error deleting post: $e')),
-        );
-      }
-    }
-  }
-
-  void _showFilterDialog() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => FilterBottomSheet(
-        selectedCategory: _selectedCategory,
-        onCategoryChanged: (category) {
-          setState(() {
-            _selectedCategory = category;
-          });
-          _loadInitialPosts();
-          Navigator.pop(context);
-        },
-      ),
-    );
-  }
-
-  void _showSearchDialog() {
-    // TODO: Implement search functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Search feature coming soon!')),
     );
   }
 

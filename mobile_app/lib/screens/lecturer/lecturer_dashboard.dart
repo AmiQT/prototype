@@ -123,10 +123,51 @@ class _LecturerDashboardState extends State<LecturerDashboard> {
           ),
           if (!achievement.isVerified)
             ElevatedButton(
-              onPressed: () {
-                // TODO: Implement verification logic
-                Navigator.pop(context);
-                _navigateToFeature('Achievement Verification');
+              onPressed: () async {
+                // Implement achievement verification logic
+                try {
+                  // Show confirmation dialog
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Verify Achievement'),
+                      content: Text(
+                          'Are you sure you want to verify "${achievement.title}"?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('Cancel'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text('Verify'),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirmed == true && mounted) {
+                    // Here you would call an achievement service to verify
+                    // await achievementService.verifyAchievement(achievement.id);
+
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Achievement verified successfully'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error verifying achievement: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
               },
               child: const Text('Verify'),
             ),

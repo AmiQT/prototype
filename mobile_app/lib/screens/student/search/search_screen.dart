@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'dart:async';
 import '../../../services/profile_service.dart';
-import '../../../services/search_service.dart';
 import '../../../models/profile_model.dart';
-import '../../../models/search_models.dart';
 import '../../../utils/error_handler.dart';
-import '../../../widgets/search_widgets.dart';
-import '../profile/student_profile_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -17,19 +12,21 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  final TextEditingController _searchController = TextEditingController();
-  final SearchService _searchService = SearchService();
-
-  Timer? _debounceTimer;
   bool _isLoading = false;
-  final bool _isInitialLoad = true;
 
-  final List<SearchResult> _searchResults = [];
-  final List<SearchHistoryItem> _searchHistory = [];
-  final Map<String, List<SearchFilter>> _availableFilters = {};
+  // Missing variables that were causing compilation errors
+  List<ProfileModel> _allProfiles = [];
+  List<ProfileModel> _filteredProfiles = [];
+  String? _selectedCategory;
+  String? _selectedFilterValue;
 
-  final String _currentQuery = '';
-  final bool _showFilters = false;
+  // Categories for filtering
+  final List<String> _categories = [
+    'Skills',
+    'Department',
+    'Semester',
+    'Program'
+  ];
 
   @override
   void initState() {
@@ -181,7 +178,8 @@ class _SearchScreenState extends State<SearchScreen> {
             // Dropdown for filter value
             DropdownButton<String>(
               value: _selectedFilterValue,
-              hint: Text('Select ${_selectedCategory.toLowerCase()}'),
+              hint: Text(
+                  'Select ${_selectedCategory?.toLowerCase() ?? 'category'}'),
               isExpanded: true,
               items: _dropdownOptions
                   .map((val) => DropdownMenuItem(

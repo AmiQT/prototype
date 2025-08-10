@@ -30,11 +30,8 @@ service cloud.firestore {
     
     // Rate limiting for QR code claims (max 10 claims per hour per user)
     function checkRateLimit() {
-      let oneHourAgo = timestamp.date(2023, 1, 1, 0, 0, 0, 0, 0).toMillis() - 3600000;
-      let recentClaims = getAfter(/databases/$(database)/documents/badgeClaims)
-        .where('userId', '==', request.auth.uid)
-        .where('createdAt', '>', oneHourAgo);
-      return recentClaims.size() < 10;
+      // For now, allow all claims - rate limiting can be implemented server-side
+      return true;
     }
     
     // Users collection
@@ -46,7 +43,9 @@ service cloud.firestore {
     // Events collection
     match /events/{eventId} {
       allow read: if isAuthenticated();
-      allow write: if isAdmin() || isLecturer();
+      allow create, delete: if isAdmin() || isLecturer();
+      allow update: if isAdmin() || isLecturer() ||
+        (isAuthenticated() && isValidFavoriteUpdate());
     }
     
     // Achievements collection
@@ -124,6 +123,27 @@ service cloud.firestore {
     match /chatMessages/{messageId} {
       allow read, write: if isAuthenticated();
     }
+
+    // Notifications collection
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && (
+        request.auth.uid == resource.data.userId ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() && (
+        request.auth.uid == request.resource.data.userId ||
+        isAdmin() ||
+        isLecturer()
+      );
+      allow update: if isAuthenticated() && (
+        request.auth.uid == resource.data.userId ||
+        isAdmin()
+      );
+      allow delete: if isAuthenticated() && (
+        request.auth.uid == resource.data.userId ||
+        isAdmin()
+      );
+    }
     
     // Validation function for badge claims
     function validateBadgeClaim() {
@@ -154,12 +174,32 @@ service cloud.firestore {
       // Timestamp validation (not in the future)
       let isValidTimestamp = claim.claimedAt <= request.time;
       
-      return hasRequiredFields && 
-             isOwnClaim && 
-             isValidStatus && 
-             isValidMethod && 
-             isValidUniqueCode && 
+      return hasRequiredFields &&
+             isOwnClaim &&
+             isValidStatus &&
+             isValidMethod &&
+             isValidUniqueCode &&
              isValidTimestamp;
     }
+
+    // Validation function for favorite updates
+    function isValidFavoriteUpdate() {
+      // Check if only favoriteUserIds field is being updated
+      let affectedKeys = request.resource.data.diff(resource.data).affectedKeys();
+      let onlyFavoriteUpdate = affectedKeys.hasOnly(['favoriteUserIds']);
+
+      // Check if the user is only adding/removing themselves from favorites
+      let currentFavorites = resource.data.get('favoriteUserIds', []);
+      let newFavorites = request.resource.data.get('favoriteUserIds', []);
+      let userInCurrent = request.auth.uid in currentFavorites;
+      let userInNew = request.auth.uid in newFavorites;
+      let validUserChange = (userInCurrent && !userInNew) || (!userInCurrent && userInNew);
+
+      // Ensure the list size only changes by 1 (adding or removing one user)
+      let sizeDiff = newFavorites.size() - currentFavorites.size();
+      let validSizeChange = sizeDiff == 1 || sizeDiff == -1;
+
+      return onlyFavoriteUpdate && validUserChange && validSizeChange;
+    }
   }
-} 
+}

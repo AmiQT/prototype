@@ -13,6 +13,7 @@ import 'package:share_plus/share_plus.dart';
 import '../achievements/achievements_screen.dart';
 import '../../settings/settings_screen.dart';
 import '../../debug/sample_data_debug_screen.dart';
+import '../../profile/comprehensive_edit_profile_screen.dart';
 
 class StudentProfileScreen extends StatefulWidget {
   const StudentProfileScreen({super.key});
@@ -151,115 +152,20 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => EditProfilePage(
-                      name: profile.fullName,
-                      year: 'Year ${profile.semester}',
-                      headline: profile.headline ?? '',
-                      about: profile.bio ?? '',
-                      experience: profile.experiences
-                          .map((exp) => {
-                                'title': exp.title,
-                                'desc': exp.description,
-                              })
-                          .toList(),
-                      projects: profile.projects
-                          .map((proj) => {
-                                'title': proj.title,
-                                'desc': proj.description,
-                              })
-                          .toList(),
-                      achievements: profile.achievements
-                          .map((ach) => {
-                                'title': ach.title,
-                                'desc': ach.description,
-                              })
-                          .toList(),
-                      gpa: profile.academicInfo?.cgpa ?? 0.0,
-                      coCurriculum: 80.0,
-                      profileImage: profile.profileImageUrl ?? '',
+                    builder: (_) => ComprehensiveEditProfileScreen(
+                      profile: profile,
                     ),
                   ),
                 );
-                if (result != null) {
-                  // Update the profile in Firebase
-                  try {
-                    if (!mounted) return;
-                    final profileService =
-                        Provider.of<ProfileService>(context, listen: false);
-
-                    // Convert experience data to ExperienceModel
-                    final experiences =
-                        (result['experience'] as List<Map<String, String>>)
-                            .map((exp) => ExperienceModel(
-                                  id: DateTime.now()
-                                      .millisecondsSinceEpoch
-                                      .toString(),
-                                  title: exp['title'] ?? '',
-                                  company: exp['company'] ?? 'Company',
-                                  description: exp['desc'] ?? '',
-                                  startDate: DateTime.now(),
-                                  endDate: DateTime.now(),
-                                ))
-                            .toList();
-
-                    // Convert projects data to ProjectModel
-                    final projects =
-                        (result['projects'] as List<Map<String, String>>)
-                            .map((proj) => ProjectModel(
-                                  id: DateTime.now()
-                                      .millisecondsSinceEpoch
-                                      .toString(),
-                                  title: proj['title'] ?? '',
-                                  description: proj['desc'] ?? '',
-                                  technologies: [],
-                                  startDate: DateTime.now(),
-                                  endDate: DateTime.now(),
-                                ))
-                            .toList();
-
-                    // Convert achievements data to AchievementModel
-                    final achievements =
-                        (result['achievements'] as List<Map<String, String>>)
-                            .map((ach) => AchievementModel(
-                                  id: DateTime.now()
-                                      .millisecondsSinceEpoch
-                                      .toString(),
-                                  userId: profile.userId,
-                                  title: ach['title'] ?? '',
-                                  description: ach['desc'] ?? '',
-                                  type: AchievementType.other,
-                                  dateAchieved: DateTime.now(),
-                                  createdAt: DateTime.now(),
-                                  updatedAt: DateTime.now(),
-                                ))
-                            .toList();
-
-                    final updatedProfile = profile.copyWith(
-                      fullName: result['name'],
-                      bio: result['about'],
-                      headline: result['headline'],
-                      profileImageUrl: result['profileImage'],
-                      experiences: experiences,
-                      projects: projects,
-                      achievements: achievements,
-                      updatedAt: DateTime.now(),
+                if (result != null && result is ProfileModel) {
+                  setState(() {
+                    _profile = result;
+                  });
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Profile updated successfully!')),
                     );
-                    await profileService.updateProfile(updatedProfile);
-                    setState(() {
-                      _profile = updatedProfile;
-                    });
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Profile updated successfully!')),
-                      );
-                    }
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error updating profile: $e')),
-                      );
-                    }
                   }
                 }
               },

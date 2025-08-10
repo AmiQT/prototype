@@ -13,7 +13,6 @@ import '../../../services/media_upload_manager.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/profile_service.dart';
 import '../../../services/content_moderation_service.dart';
-import '../../../widgets/showcase/post_creation_widgets.dart';
 
 class PostCreationScreen extends StatefulWidget {
   final PostDraft? draft;

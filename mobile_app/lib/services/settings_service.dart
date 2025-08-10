@@ -76,8 +76,8 @@ class SettingsService {
 
       await user.reauthenticateWithCredential(credential);
 
-      // Update email
-      await user.updateEmail(newEmail);
+      // Update email using the new recommended method
+      await user.verifyBeforeUpdateEmail(newEmail);
 
       // Update email in Firestore user document
       await _firestore.collection('users').doc(user.uid).update({

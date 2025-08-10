@@ -3,6 +3,7 @@ import 'post_creation_screen.dart';
 import 'showcase_feed_screen.dart';
 import '../../../widgets/modern/modern_home_header.dart';
 import '../../../utils/app_theme.dart';
+import '../../shared/notifications_screen.dart';
 
 class ShowcaseScreen extends StatefulWidget {
   const ShowcaseScreen({super.key});
@@ -20,15 +21,7 @@ class _ShowcaseScreenState extends State<ShowcaseScreen> {
         children: [
           ModernHomeHeader(
             onCreatePost: () => _navigateToCreatePost(context),
-            onNotificationTap: () {
-              // Handle notification tap
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Notifications coming soon!'),
-                  backgroundColor: AppTheme.infoColor,
-                ),
-              );
-            },
+            onNotificationTap: () => _navigateToNotifications(context),
             onProfileTap: () {
               // Navigate to profile tab
               _navigateToProfile(context);
@@ -47,6 +40,15 @@ class _ShowcaseScreenState extends State<ShowcaseScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => const PostCreationScreen(),
+      ),
+    );
+  }
+
+  void _navigateToNotifications(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const NotificationsScreen(),
       ),
     );
   }

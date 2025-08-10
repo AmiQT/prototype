@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../models/search_models.dart';
 
@@ -11,7 +10,8 @@ class SearchAnalyticsService {
   static const String _popularTermsKey = 'popular_search_terms';
   static const String _userEngagementKey = 'user_engagement';
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // Note: _firestore will be used when implementing cloud analytics
+  // final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Analytics data structures
   final Map<String, int> _searchTermFrequency = {};

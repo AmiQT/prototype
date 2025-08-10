@@ -196,4 +196,40 @@ extension NotificationTypeExtension on NotificationType {
         return 'Social interactions and updates';
     }
   }
+
+  /// Get icon for notification type
+  IconData get icon {
+    switch (this) {
+      case NotificationType.achievement:
+        return Icons.emoji_events_rounded;
+      case NotificationType.event:
+        return Icons.event_rounded;
+      case NotificationType.message:
+        return Icons.message_rounded;
+      case NotificationType.system:
+        return Icons.info_rounded;
+      case NotificationType.reminder:
+        return Icons.alarm_rounded;
+      case NotificationType.social:
+        return Icons.people_rounded;
+    }
+  }
+
+  /// Get color for notification type
+  Color get color {
+    switch (this) {
+      case NotificationType.achievement:
+        return Colors.amber;
+      case NotificationType.event:
+        return Colors.blue;
+      case NotificationType.message:
+        return Colors.green;
+      case NotificationType.system:
+        return Colors.grey;
+      case NotificationType.reminder:
+        return Colors.orange;
+      case NotificationType.social:
+        return Colors.purple;
+    }
+  }
 }

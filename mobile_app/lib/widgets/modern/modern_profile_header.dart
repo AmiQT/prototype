@@ -126,7 +126,7 @@ class ModernProfileHeader extends StatelessWidget {
                   ),
               textAlign: TextAlign.center,
             ),
-          if (profile.academicLevel.isNotEmpty) ...[
+          if (profile.academicInfo?.currentSemester != null) ...[
             const SizedBox(height: AppTheme.spaceXs),
             Container(
               padding: const EdgeInsets.symmetric(
@@ -138,7 +138,7 @@ class ModernProfileHeader extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppTheme.radiusFull),
               ),
               child: Text(
-                profile.academicLevel,
+                'Semester ${profile.academicInfo!.currentSemester}',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -146,10 +146,10 @@ class ModernProfileHeader extends StatelessWidget {
               ),
             ),
           ],
-          if (profile.bio.isNotEmpty) ...[
+          if (profile.bio != null && profile.bio!.isNotEmpty) ...[
             const SizedBox(height: AppTheme.spaceMd),
             Text(
-              profile.bio,
+              profile.bio!,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Colors.white.withValues(alpha: 0.9),
                     height: 1.5,
@@ -185,8 +185,8 @@ class ModernProfileHeader extends StatelessWidget {
         child: CircleAvatar(
           radius: 60,
           backgroundColor: Colors.white,
-          backgroundImage: _getProfileImage(profile.profilePictureUrl),
-          child: profile.profilePictureUrl.isEmpty
+          backgroundImage: _getProfileImage(profile.profileImageUrl),
+          child: (profile.profileImageUrl?.isEmpty ?? true)
               ? Text(
                   _getInitials(),
                   style: const TextStyle(

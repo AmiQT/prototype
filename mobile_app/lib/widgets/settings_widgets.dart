@@ -23,17 +23,17 @@ class SettingsSectionHeader extends StatelessWidget {
           Text(
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).primaryColor,
-            ),
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).primaryColor,
+                ),
           ),
           if (subtitle != null) ...[
             const SizedBox(height: 4),
             Text(
               subtitle!,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
-              ),
+                    color: Colors.grey[600],
+                  ),
             ),
           ],
         ],
@@ -71,7 +71,8 @@ class SettingsItem extends StatelessWidget {
           leading: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: (iconColor ?? Theme.of(context).primaryColor).withOpacity(0.1),
+              color: (iconColor ?? Theme.of(context).primaryColor)
+                  .withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -95,9 +96,11 @@ class SettingsItem extends StatelessWidget {
                   ),
                 )
               : null,
-          trailing: trailing ?? const Icon(Icons.chevron_right, color: Colors.grey),
+          trailing:
+              trailing ?? const Icon(Icons.chevron_right, color: Colors.grey),
           onTap: onTap,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         ),
         if (showDivider)
           Divider(
@@ -140,7 +143,8 @@ class SettingsToggleItem extends StatelessWidget {
           leading: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: (iconColor ?? Theme.of(context).primaryColor).withOpacity(0.1),
+              color: (iconColor ?? Theme.of(context).primaryColor)
+                  .withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -169,7 +173,8 @@ class SettingsToggleItem extends StatelessWidget {
             onChanged: onChanged,
             activeColor: Theme.of(context).primaryColor,
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         ),
         if (showDivider)
           Divider(
@@ -206,7 +211,7 @@ class SettingsActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = backgroundColor ?? 
+    final bgColor = backgroundColor ??
         (isDestructive ? Colors.red : Theme.of(context).primaryColor);
     final txtColor = textColor ?? Colors.white;
 
@@ -277,7 +282,7 @@ class SettingsCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -314,7 +319,7 @@ class SettingsInfoBanner extends StatelessWidget {
         color: backgroundColor ?? Colors.blue[50],
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: (backgroundColor ?? Colors.blue[50])!.withOpacity(0.3),
+          color: (backgroundColor ?? Colors.blue[50])!.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
