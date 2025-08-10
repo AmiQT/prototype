@@ -72,7 +72,7 @@ class _TypingIndicatorState extends State<TypingIndicator>
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'AI is typing',
+                'STAP UTHM Advisor is typing',
                 style: TextStyle(
                   color: AppTheme.textSecondaryColor,
                   fontSize: 14,
@@ -85,9 +85,10 @@ class _TypingIndicatorState extends State<TypingIndicator>
                   return Row(
                     children: List.generate(3, (index) {
                       final delay = index * 0.2;
-                      final animationValue = (_animation.value - delay).clamp(0.0, 1.0);
+                      final animationValue =
+                          (_animation.value - delay).clamp(0.0, 1.0);
                       final opacity = (animationValue * 2).clamp(0.0, 1.0);
-                      
+
                       return Container(
                         margin: const EdgeInsets.symmetric(horizontal: 1),
                         child: Opacity(

@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 /// Provides fallback mechanisms for environment variables
 class AppConfig {
   static const String _openRouterApiKeyEnv = 'OPENROUTER_API_KEY';
+  static const String _geminiApiKeyEnv = 'GEMINI_API_KEY';
 
   /// Get OpenRouter API key with fallback mechanisms
   static String? getOpenRouterApiKey() {
@@ -43,9 +44,51 @@ class AppConfig {
     return null;
   }
 
-  /// Check if API key is configured
+  /// Get Gemini API key with secure fallback
+  static String? getGeminiApiKey() {
+    try {
+      // Try to get from dotenv first
+      final apiKey = dotenv.env[_geminiApiKeyEnv];
+      if (apiKey?.isNotEmpty == true) {
+        debugPrint('AppConfig: Gemini API key found in dotenv');
+        return apiKey;
+      }
+    } catch (e) {
+      debugPrint('AppConfig: Error accessing dotenv for Gemini: $e');
+    }
+
+    // If dotenv fails, try to get from platform environment
+    try {
+      const apiKey = String.fromEnvironment(_geminiApiKeyEnv);
+      if (apiKey.isNotEmpty) {
+        debugPrint('AppConfig: Gemini API key found in platform environment');
+        return apiKey;
+      }
+    } catch (e) {
+      debugPrint(
+          'AppConfig: Error accessing platform environment for Gemini: $e');
+    }
+
+    // Secure fallback: Return your API key
+    const fallbackKey = 'AIzaSyACLvtcjRTfCo6y0ggYhTSrLlDqyMBFfIg';
+    if (fallbackKey.isNotEmpty) {
+      debugPrint('AppConfig: Using configured Gemini API key');
+      return fallbackKey;
+    }
+
+    debugPrint('AppConfig: No Gemini API key found');
+    return null;
+  }
+
+  /// Check if OpenRouter API key is configured
   static bool get hasApiKey {
     final apiKey = getOpenRouterApiKey();
+    return apiKey?.isNotEmpty == true;
+  }
+
+  /// Check if Gemini API key is configured
+  static bool get hasGeminiApiKey {
+    final apiKey = getGeminiApiKey();
     return apiKey?.isNotEmpty == true;
   }
 
@@ -54,6 +97,15 @@ class AppConfig {
     final apiKey = getOpenRouterApiKey();
     if (apiKey?.isNotEmpty == true) {
       return '${apiKey!.substring(0, 10)}...';
+    }
+    return null;
+  }
+
+  /// Get Gemini API key preview for debugging
+  static String? getGeminiApiKeyPreview() {
+    final apiKey = getGeminiApiKey();
+    if (apiKey != null && apiKey.isNotEmpty) {
+      return '${apiKey.substring(0, 10)}...${apiKey.substring(apiKey.length - 4)}';
     }
     return null;
   }
@@ -74,11 +126,19 @@ class AppConfig {
       }
     }
 
-    final hasKey = hasApiKey;
-    debugPrint('AppConfig: API key configured: $hasKey');
+    final hasOpenRouterKey = hasApiKey;
+    final hasGeminiKey = hasGeminiApiKey;
+    debugPrint('AppConfig: OpenRouter API key configured: $hasOpenRouterKey');
+    debugPrint('AppConfig: Gemini API key configured: $hasGeminiKey');
 
-    if (hasKey) {
-      debugPrint('AppConfig: API key preview: ${getApiKeyPreview()}');
+    if (hasOpenRouterKey) {
+      debugPrint(
+          'AppConfig: OpenRouter API key preview: ${getApiKeyPreview()}');
+    }
+
+    if (hasGeminiKey) {
+      debugPrint(
+          'AppConfig: Gemini API key preview: ${getGeminiApiKeyPreview()}');
     }
   }
 

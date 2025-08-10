@@ -47,6 +47,40 @@ class ChatMessage {
     );
   }
 
+  factory ChatMessage.fromJson(Map<String, dynamic> json) {
+    return ChatMessage(
+      id: json['id'] ?? '',
+      conversationId: json['conversationId'] ?? '',
+      userId: json['userId'] ?? '',
+      content: json['content'] ?? '',
+      role: MessageRole.values.firstWhere(
+        (e) => e.toString().split('.').last == json['role'],
+        orElse: () => MessageRole.user,
+      ),
+      timestamp: DateTime.fromMillisecondsSinceEpoch(json['timestamp'] ?? 0),
+      status: MessageStatus.values.firstWhere(
+        (e) => e.toString().split('.').last == json['status'],
+        orElse: () => MessageStatus.sent,
+      ),
+      tokens: json['tokens'],
+      metadata: json['metadata'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'conversationId': conversationId,
+      'userId': userId,
+      'content': content,
+      'role': role.toString().split('.').last,
+      'timestamp': timestamp.millisecondsSinceEpoch,
+      'status': status.toString().split('.').last,
+      if (tokens != null) 'tokens': tokens,
+      if (metadata != null) 'metadata': metadata,
+    };
+  }
+
   // Optimized toMap - only essential fields to minimize writes
   Map<String, dynamic> toFirestore() {
     return {
@@ -141,6 +175,37 @@ class ChatConversation {
             : lastMessage,
       if (lastMessageAt != null)
         'lastMessageAt': Timestamp.fromDate(lastMessageAt!),
+    };
+  }
+
+  factory ChatConversation.fromJson(Map<String, dynamic> json) {
+    return ChatConversation(
+      id: json['id'] ?? '',
+      userId: json['userId'] ?? '',
+      title: json['title'] ?? 'New Conversation',
+      createdAt: DateTime.fromMillisecondsSinceEpoch(json['createdAt'] ?? 0),
+      updatedAt: DateTime.fromMillisecondsSinceEpoch(json['updatedAt'] ?? 0),
+      isActive: json['isActive'] ?? true,
+      messageCount: json['messageCount'] ?? 0,
+      lastMessage: json['lastMessage'],
+      lastMessageAt: json['lastMessageAt'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(json['lastMessageAt'])
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'userId': userId,
+      'title': title,
+      'createdAt': createdAt.millisecondsSinceEpoch,
+      'updatedAt': updatedAt.millisecondsSinceEpoch,
+      'isActive': isActive,
+      'messageCount': messageCount,
+      if (lastMessage != null) 'lastMessage': lastMessage,
+      if (lastMessageAt != null)
+        'lastMessageAt': lastMessageAt!.millisecondsSinceEpoch,
     };
   }
 

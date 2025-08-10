@@ -263,7 +263,7 @@ class _EnhancedStudentDashboardState extends State<EnhancedStudentDashboard>
           },
           backgroundColor: Colors.transparent,
           elevation: 0,
-          tooltip: 'AI Assistant',
+          tooltip: 'STAP UTHM Advisor',
           child: const Icon(
             Icons.smart_toy_rounded,
             color: Colors.white,

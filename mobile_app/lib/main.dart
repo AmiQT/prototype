@@ -24,7 +24,8 @@ void main() async {
   debugPrint('Main: Initializing app configuration...');
   await AppConfig.initialize();
   debugPrint('Main: App configuration initialized');
-  debugPrint('Main: API key configured: ${AppConfig.hasApiKey}');
+  debugPrint('Main: OpenRouter API key configured: ${AppConfig.hasApiKey}');
+  debugPrint('Main: Gemini API key configured: ${AppConfig.hasGeminiApiKey}');
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,

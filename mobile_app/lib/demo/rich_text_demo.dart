@@ -59,7 +59,18 @@ Would you like me to elaborate on any of these areas or discuss specific learnin
     );
   }
 
-  Widget _buildDemoMessage(String title, String content, {required bool isUser}) {
+  Widget _buildDemoMessage(String title, String content,
+      {required bool isUser}) {
+    return Builder(
+      builder: (context) {
+        return _buildMessageContent(context, title, content, isUser: isUser);
+      },
+    );
+  }
+
+  Widget _buildMessageContent(
+      BuildContext context, String title, String content,
+      {required bool isUser}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

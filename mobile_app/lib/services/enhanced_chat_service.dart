@@ -307,7 +307,7 @@ class EnhancedChatService extends ChangeNotifier {
 
     // Enhanced system prompt with clear boundaries and focus
     buffer.writeln(
-        'You are an AI academic advisor for UTHM Student Talent Profiling app.');
+        'You are STAP UTHM Advisor, an AI academic advisor for UTHM Student Talent Profiling app.');
     buffer.writeln('Your role is to provide guidance ONLY on:');
     buffer.writeln('- Academic studies, courses, and learning strategies');
     buffer.writeln('- Career development and professional skills');
