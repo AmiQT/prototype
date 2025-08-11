@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../services/enhanced_chat_service.dart';
+// Removed OpenRouter service; Gemini-only
 import '../../services/gemini_chat_service.dart';
 import '../../services/chat_history_service.dart';
 import '../../services/auth_service.dart';
@@ -31,7 +31,6 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
 
-  late EnhancedChatService _chatService;
   late GeminiChatService _geminiService;
   late ChatHistoryService _historyService;
   late FirebaseUsageMonitor _usageMonitor;
@@ -39,7 +38,7 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
   bool _isLoading = false;
   bool _isTyping = false;
   bool _showUsageWarning = false;
-  bool _useGemini = false; // Will be set based on API availability
+  bool _useGemini = true; // Gemini only
   String? _currentConversationId;
   String? _errorMessage;
   List<File> _selectedFiles = [];
@@ -54,7 +53,6 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
     _historyService = ChatHistoryService();
     await _historyService.initialize();
     _geminiService = GeminiChatService(_historyService);
-    _chatService = EnhancedChatService();
     _usageMonitor = FirebaseUsageMonitor();
 
     try {
@@ -76,30 +74,13 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
       // Initialize chat services
       debugPrint('EnhancedChatScreen: Initializing chat services...');
 
-      // Debug API key detection
+      // Gemini only: verify key presence
       final hasGeminiKey = AppConfig.hasGeminiApiKey;
-      final hasOpenRouterKey = AppConfig.hasApiKey;
       debugPrint('EnhancedChatScreen: Gemini API key available: $hasGeminiKey');
-      debugPrint(
-          'EnhancedChatScreen: OpenRouter API key available: $hasOpenRouterKey');
-      debugPrint(
-          'EnhancedChatScreen: GeminiService hasApiKey: ${_geminiService.hasApiKey}');
+      _useGemini = true;
 
-      // Check if Gemini API is available
-      if (_geminiService.hasApiKey) {
-        debugPrint('EnhancedChatScreen: Using Gemini API service');
-        _useGemini = true;
-      } else {
-        debugPrint('EnhancedChatScreen: Falling back to OpenRouter service');
-        _useGemini = false;
-        if (!_chatService.isInitialized) {
-          await _chatService.initialize();
-        }
-      }
-
-      debugPrint('EnhancedChatScreen: Chat service initialized successfully');
-      debugPrint(
-          'EnhancedChatScreen: Using ${_useGemini ? "Gemini" : "OpenRouter"} service');
+      debugPrint('EnhancedChatScreen: Chat service initialized (Gemini only)');
+      debugPrint('EnhancedChatScreen: Using Gemini service');
 
       // Set up usage monitoring callbacks (if available)
       try {
@@ -137,7 +118,7 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
       });
 
       if (e.toString().contains('API key')) {
-        _showApiKeyDialog();
+        _showGeminiKeyDialog();
       }
     }
   }
@@ -180,24 +161,13 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
     _scrollToBottom();
 
     try {
-      late ChatMessage aiMessage;
-
-      if (_useGemini) {
-        // Send message through Gemini service with file attachments
-        aiMessage = await _geminiService.sendMessage(
-          conversationId: _currentConversationId!,
-          content: content,
-          userId: userId,
-          attachments: _selectedFiles.isNotEmpty ? _selectedFiles : null,
-        );
-      } else {
-        // Send message through OpenRouter service (fallback)
-        aiMessage = await _chatService.sendMessage(
-          conversationId: _currentConversationId!,
-          content: content,
-          userId: userId,
-        );
-      }
+      // Gemini-only send
+      final aiMessage = await _geminiService.sendMessage(
+        conversationId: _currentConversationId!,
+        content: content,
+        userId: userId,
+        attachments: _selectedFiles.isNotEmpty ? _selectedFiles : null,
+      );
 
       setState(() {
         _messages.add(aiMessage);
@@ -211,7 +181,7 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
 
       if (e.toString().contains('API authentication failed') ||
           e.toString().contains('API key')) {
-        _showApiKeyDialog();
+        _showGeminiKeyDialog();
       } else if (e.toString().contains('usage limit')) {
         setState(() => _showUsageWarning = true);
         _showError('Daily usage limit reached. Please try again tomorrow.');
@@ -299,17 +269,18 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
     );
   }
 
-  void _showApiKeyDialog() {
+  void _showGeminiKeyDialog() {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('API Key Issue'),
+        title: const Text('Gemini API Key Required'),
         content: const Text(
-          'There\'s an issue with the OpenRouter API key. Please check your configuration:\n\n'
-          '1. Ensure your .env file contains OPENROUTER_API_KEY\n'
-          '2. Verify the API key is valid\n'
-          '3. Check your OpenRouter account status',
+          'There\'s an issue with the Gemini API key. Please check your configuration:\n\n'
+          '1. Ensure your assets/.env file contains GEMINI_API_KEY=your-key\n'
+          '   (or run with --dart-define=GEMINI_API_KEY=your-key)\n'
+          '2. Verify the key is valid in Google AI Studio\n'
+          '3. Restart the app after adding the key',
         ),
         actions: [
           TextButton(
@@ -336,13 +307,7 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
     return 'conv_${DateTime.now().millisecondsSinceEpoch}';
   }
 
-  String _getApiKeyStatus() {
-    return AppConfig.hasApiKey ? "Yes" : "No";
-  }
-
-  String? _getApiKeyPreview() {
-    return AppConfig.getApiKeyPreview();
-  }
+  // OpenRouter API helpers removed (Gemini-only)
 
   @override
   Widget build(BuildContext context) {
@@ -350,8 +315,7 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
       backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
         title: const Text('STAP UTHM Advisor'),
-        backgroundColor: AppTheme.surfaceColor,
-        foregroundColor: AppTheme.textPrimaryColor,
+        centerTitle: true,
         elevation: 0,
         actions: [
           // Debug button to test Gemini API
@@ -512,40 +476,22 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
               if (_useGemini) ...[
                 Text('Gemini Service Available: ${_geminiService.hasApiKey}'),
                 const Text('Current AI Model: gemini-2.5-flash'),
-              ] else ...[
-                Text('Chat Service Initialized: ${_chatService.isInitialized}'),
-                Text(
-                    'Current AI Model: ${_chatService.isInitialized ? _chatService.currentModel : "Not initialized"}'),
               ],
               Text('Error Message: ${_errorMessage ?? "None"}'),
               const SizedBox(height: 16),
               Text('Environment:',
                   style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
-              if (_useGemini) ...[
-                Text('Gemini API Key Present: ${AppConfig.hasGeminiApiKey}'),
-                if (AppConfig.getGeminiApiKeyPreview() != null)
-                  Text(
-                      'API Key Preview: ${AppConfig.getGeminiApiKeyPreview()}'),
-              ] else ...[
-                Text('OpenRouter API Key Present: ${_getApiKeyStatus()}'),
-                if (_getApiKeyPreview() != null)
-                  Text('API Key Preview: ${_getApiKeyPreview()}'),
-              ],
+              Text('Gemini API Key Present: ${AppConfig.hasGeminiApiKey}'),
+              if (AppConfig.getGeminiApiKeyPreview() != null)
+                Text('API Key Preview: ${AppConfig.getGeminiApiKeyPreview()}'),
               const SizedBox(height: 16),
               Text('Available Models:',
                   style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
-              if (_useGemini) ...[
-                const Text('• gemini-2.5-flash (Current)'),
-                const Text('• gemini-1.5-pro'),
-                const Text('• gemini-1.5-flash'),
-              ] else ...[
-                const Text('• qwen/qwen-2.5-coder-32b-instruct:free (Current)'),
-                const Text('• qwen/qwen-2-72b-instruct:free'),
-                const Text('• meta-llama/llama-3.1-8b-instruct:free'),
-                const Text('• microsoft/phi-3-medium-128k-instruct:free'),
-              ],
+              const Text('• gemini-2.5-flash (Current)'),
+              const Text('• gemini-1.5-pro'),
+              const Text('• gemini-1.5-flash'),
             ],
           ),
         ),

@@ -38,12 +38,12 @@ class _ApiDebugScreenState extends State<ApiDebugScreen> {
 
 Gemini API:
 - Key Available: $hasGeminiKey
-- Key Preview: ${geminiKey?.substring(0, 20)}...
+- Key Preview: ${geminiKey != null && geminiKey.isNotEmpty ? '${geminiKey.substring(0, 4)}***' : 'None'}
 - Service hasApiKey: ${_geminiService.hasApiKey}
 
 OpenRouter API:
-- Key Available: $hasOpenRouterKey  
-- Key Preview: ${openRouterKey?.substring(0, 20)}...
+- Key Available: $hasOpenRouterKey
+- Key Preview: ${openRouterKey != null && openRouterKey.isNotEmpty ? '${openRouterKey.substring(0, 4)}***' : 'None'}
 
 Current Selection:
 - Will use: ${hasGeminiKey ? 'Gemini' : 'OpenRouter'}

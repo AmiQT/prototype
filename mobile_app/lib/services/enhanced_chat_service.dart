@@ -38,16 +38,25 @@ class EnhancedChatService extends ChangeNotifier {
   /// Initialize the chat service
   Future<void> initialize() async {
     try {
-      debugPrint('EnhancedChatService: Starting initialization...');
+      if (kDebugMode) {
+        debugPrint('EnhancedChatService: Starting initialization...');
+      }
 
       // Get API key using AppConfig
-      debugPrint('EnhancedChatService: Getting API key...');
+      if (kDebugMode) {
+        debugPrint('EnhancedChatService: Getting API key...');
+      }
       _apiKey = AppConfig.getOpenRouterApiKey();
-      debugPrint(
-          'EnhancedChatService: API key found: ${_apiKey != null ? "Yes (${_apiKey!.substring(0, 10)}...)" : "No"}');
+      if (kDebugMode) {
+        // SECURITY: Don't log actual API key characters
+        debugPrint(
+            'EnhancedChatService: API key found: ${_apiKey != null ? "Yes" : "No"}');
+      }
 
       if (_apiKey == null || _apiKey!.isEmpty) {
-        debugPrint('EnhancedChatService: No API key found in environment');
+        if (kDebugMode) {
+          debugPrint('EnhancedChatService: No API key found in environment');
+        }
         throw Exception(
             'OpenRouter API key not configured. Please check your .env file.');
       }
@@ -97,7 +106,9 @@ class EnhancedChatService extends ChangeNotifier {
       if (e.toString().contains('Invalid API key')) {
         rethrow;
       }
-      debugPrint('EnhancedChatService: API test failed: $e');
+      if (kDebugMode) {
+        debugPrint('EnhancedChatService: API test failed: $e');
+      }
       return false;
     }
   }
@@ -108,7 +119,9 @@ class EnhancedChatService extends ChangeNotifier {
     await _testApiConnection();
 
     // Update .env file would require manual update
-    debugPrint('EnhancedChatService: API key updated successfully');
+    if (kDebugMode) {
+      debugPrint('EnhancedChatService: API key updated successfully');
+    }
   }
 
   /// Get or create user context with caching

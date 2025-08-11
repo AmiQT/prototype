@@ -4,36 +4,35 @@ This guide will help you set up and test the enhanced AI chatbot module that's o
 
 ## 🚀 Quick Start
 
-### 1. API Key Configuration
+### 1. API Key Configuration (Gemini Only)
 
-The chatbot requires an OpenRouter API key to function. Follow these steps:
+The chatbot now uses Google Gemini exclusively. Provide your Gemini API key using one of these methods:
 
-#### Option A: Create .env file (Recommended)
-1. Create a `.env` file in the `mobile_app` directory
-2. Add your OpenRouter API key:
+#### Option A: Assets .env (Recommended for development)
+1. Create a file at `mobile_app/assets/.env`
+2. Add your key:
 ```
-OPENROUTER_API_KEY=sk-or-v1-your-api-key-here
+GEMINI_API_KEY=your-gemini-api-key
+```
+3. Save and restart the app
+
+#### Option B: Dart define (CI/production without bundling secrets)
+```
+flutter run --dart-define=GEMINI_API_KEY=your-gemini-api-key
 ```
 
-#### Option B: Test with Settings Screen
-1. Run the app and navigate to Chat Settings
-2. Enter your API key in the configuration section
-3. Test the connection
+### 2. Get Gemini API Key
 
-### 2. Get OpenRouter API Key
+1. Visit Google AI Studio
+2. Create or use an existing API key
+3. Copy the key and keep it secure
 
-1. Visit [OpenRouter.ai](https://openrouter.ai)
-2. Sign up for a free account
-3. Navigate to API Keys section
-4. Create a new API key
-5. Copy the key (starts with `sk-or-v1-`)
-
-### 3. Test the Implementation
+### 3. Test the Implementation (Gemini)
 
 1. Run the app: `flutter run`
 2. Navigate to the chat screen (floating action button)
 3. Try sending a message
-4. Check the settings screen for usage monitoring
+4. Use the beaker icon on the chat screen to run the built-in Gemini test
 
 ## 📊 Firebase Usage Optimization
 
@@ -87,9 +86,8 @@ Supported OpenRouter models:
 - [ ] Error handling works
 
 ### API Key Testing
-- [ ] Invalid key shows error
+- [ ] Invalid key shows Gemini-specific error
 - [ ] Valid key works
-- [ ] Settings screen validates key
 - [ ] Retry mechanism works
 
 ### Firebase Usage
@@ -108,9 +106,9 @@ Supported OpenRouter models:
 
 ### Common Issues
 
-#### "API key not configured"
-- Ensure `.env` file exists in `mobile_app` directory
-- Check API key format (should start with `sk-or-v1-`)
+#### "Gemini API key not configured"
+- Ensure `assets/.env` exists and contains `GEMINI_API_KEY`
+- Or pass via `--dart-define=GEMINI_API_KEY=...`
 - Restart the app after adding the key
 
 #### "API authentication failed"

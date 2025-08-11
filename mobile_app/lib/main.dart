@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
@@ -8,7 +9,9 @@ import 'services/showcase_service.dart';
 import 'services/search_service.dart';
 import 'services/notification_service.dart';
 import 'services/language_service.dart';
-import 'services/enhanced_chat_service.dart';
+// Removed OpenRouter chat service import to use Gemini only
+import 'services/gemini_chat_service.dart';
+import 'services/chat_history_service.dart';
 import 'services/firebase_usage_monitor.dart';
 import 'config/app_config.dart';
 import 'l10n/generated/app_localizations.dart';
@@ -16,22 +19,27 @@ import 'screens/splash_screen.dart';
 import 'utils/app_theme.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Initialize app configuration
-  debugPrint('Main: Initializing app configuration...');
+  if (kDebugMode) {
+    debugPrint('Main: Initializing app configuration...');
+  }
   await AppConfig.initialize();
-  debugPrint('Main: App configuration initialized');
-  debugPrint('Main: OpenRouter API key configured: ${AppConfig.hasApiKey}');
-  debugPrint('Main: Gemini API key configured: ${AppConfig.hasGeminiApiKey}');
+  if (kDebugMode) {
+    debugPrint('Main: App configuration initialized');
+    debugPrint('Main: OpenRouter API key configured: ${AppConfig.hasApiKey}');
+    debugPrint('Main: Gemini API key configured: ${AppConfig.hasGeminiApiKey}');
+  }
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
   } catch (e) {
-    debugPrint('Failed to initialize Firebase: $e');
+    if (kDebugMode) {
+      debugPrint('Failed to initialize Firebase: $e');
+    }
   }
 
   // Initialize services
@@ -41,17 +49,26 @@ void main() async {
   final languageService = LanguageService();
   await languageService.initialize();
 
-  // Initialize chat services
-  final chatService = EnhancedChatService();
+  // Initialize usage monitor and ensure Gemini-only chat
   final usageMonitor = FirebaseUsageMonitor();
-
   try {
     await usageMonitor.initialize();
-    await chatService.initialize();
-    debugPrint('Chat services initialized successfully');
+
+    if (AppConfig.hasGeminiApiKey) {
+      debugPrint('Main: Using Gemini chat service');
+      final historyService = ChatHistoryService();
+      await historyService.initialize();
+      // Instantiate service to ensure eager init
+      GeminiChatService(historyService);
+      debugPrint('Main: Gemini chat service initialized successfully');
+    } else {
+      debugPrint(
+          'Main: No Gemini API key found. Chat will be unavailable until GEMINI_API_KEY is provided.');
+    }
+
+    debugPrint('Main: Chat services check completed');
   } catch (e) {
     debugPrint('Chat services initialization failed: $e');
-    // Continue without chat services - they can be initialized later
   }
 
   runApp(MyApp(

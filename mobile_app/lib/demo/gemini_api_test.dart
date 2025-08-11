@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../services/gemini_chat_service.dart';
 import '../services/chat_history_service.dart';
@@ -38,12 +39,16 @@ class _GeminiApiTestState extends State<GeminiApiTest> {
       final geminiKey = AppConfig.getGeminiApiKey();
       final hasOpenRouterKey = AppConfig.hasApiKey;
 
-      debugPrint('=== API KEY DEBUG ===');
-      debugPrint('Gemini API Key Available: $hasGeminiKey');
-      debugPrint('Gemini API Key: ${geminiKey?.substring(0, 10)}...');
-      debugPrint('OpenRouter API Key Available: $hasOpenRouterKey');
-      debugPrint('Service hasApiKey: ${_geminiService.hasApiKey}');
-      debugPrint('====================');
+      if (kDebugMode) {
+        debugPrint('=== API KEY DEBUG ===');
+        debugPrint('Gemini API Key Available: $hasGeminiKey');
+        // SECURITY: Only show first 4 characters
+        debugPrint(
+            'Gemini API Key: ${geminiKey != null && geminiKey.isNotEmpty ? '${geminiKey.substring(0, 4)}***' : 'None'}');
+        debugPrint('OpenRouter API Key Available: $hasOpenRouterKey');
+        debugPrint('Service hasApiKey: ${_geminiService.hasApiKey}');
+        debugPrint('====================');
+      }
 
       setState(() {
         _status = _geminiService.hasApiKey

@@ -21,14 +21,18 @@ class GeminiChatService extends ChangeNotifier {
   bool get isTyping => _isTyping;
   bool get hasApiKey {
     final hasKey = AppConfig.hasGeminiApiKey;
-    debugPrint('GeminiChatService: hasApiKey = $hasKey');
+    if (kDebugMode) {
+      debugPrint('GeminiChatService: hasApiKey = $hasKey');
+    }
     return hasKey;
   }
 
   /// Get API key from secure configuration
   String? get _apiKey {
     final key = AppConfig.getGeminiApiKey();
-    debugPrint('GeminiChatService: API key available = ${key != null}');
+    if (kDebugMode) {
+      debugPrint('GeminiChatService: API key available = ${key != null}');
+    }
     return key;
   }
 
