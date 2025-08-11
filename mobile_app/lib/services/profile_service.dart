@@ -11,6 +11,14 @@ class ProfileService {
     try {
       debugPrint(
           'ProfileService: Saving profile for userId: ${profile.userId}');
+      debugPrint(
+          'ProfileService: Profile image URL type: ${profile.profileImageUrl?.runtimeType}');
+      if (profile.profileImageUrl != null) {
+        debugPrint(
+            'ProfileService: Profile image URL length: ${profile.profileImageUrl!.length}');
+        debugPrint(
+            'ProfileService: Profile image URL starts with: ${profile.profileImageUrl!.substring(0, profile.profileImageUrl!.length > 50 ? 50 : profile.profileImageUrl!.length)}');
+      }
 
       // Validate profile data before saving
       if (profile.userId.isEmpty || profile.fullName.isEmpty) {
@@ -23,16 +31,18 @@ class ProfileService {
 
       if (existingProfile != null) {
         debugPrint(
-            'ProfileService: Updating existing profile with ID: ${existingProfile.id}');
-        // Update existing profile using the existing document ID
+            'ProfileService: Updating existing profile with userId: ${profile.userId}');
+        // Update existing profile using the userId as document ID
         await profilesCollection
-            .doc(existingProfile.id)
-            .set(profile.copyWith(id: existingProfile.id).toJson());
+            .doc(profile.userId)
+            .set(profile.copyWith(id: profile.userId).toJson());
       } else {
         debugPrint(
-            'ProfileService: Creating new profile with ID: ${profile.id}');
-        // Create new profile
-        await profilesCollection.doc(profile.id).set(profile.toJson());
+            'ProfileService: Creating new profile with userId: ${profile.userId}');
+        // Create new profile using userId as document ID
+        await profilesCollection
+            .doc(profile.userId)
+            .set(profile.copyWith(id: profile.userId).toJson());
       }
 
       debugPrint('ProfileService: Profile saved successfully to Firestore');
@@ -55,16 +65,13 @@ class ProfileService {
 
       debugPrint('ProfileService: Fetching profile for userId: $userId');
 
-      final query = await profilesCollection
-          .where('userId', isEqualTo: userId)
-          .limit(1)
-          .get();
+      // Get profile directly by document ID (which is now the userId)
+      final doc = await profilesCollection.doc(userId).get();
 
-      debugPrint(
-          'ProfileService: Query returned ${query.docs.length} documents');
+      debugPrint('ProfileService: Document exists: ${doc.exists}');
 
-      if (query.docs.isNotEmpty) {
-        final data = query.docs.first.data() as Map<String, dynamic>;
+      if (doc.exists && doc.data() != null) {
+        final data = doc.data() as Map<String, dynamic>;
         debugPrint('ProfileService: Found profile for userId: $userId');
         return ProfileModel.fromJson(data);
       } else {
@@ -156,7 +163,7 @@ class ProfileService {
 
   Future<void> updateProfile(ProfileModel profile) async {
     try {
-      await profilesCollection.doc(profile.id).update(profile.toJson());
+      await profilesCollection.doc(profile.userId).update(profile.toJson());
     } catch (e) {
       debugPrint('Error updating profile: $e');
       rethrow;
@@ -212,13 +219,9 @@ class ProfileService {
   }
 
   Stream<ProfileModel?> streamProfileByUserId(String userId) {
-    return profilesCollection
-        .where('userId', isEqualTo: userId)
-        .limit(1)
-        .snapshots()
-        .map((snapshot) {
-      if (snapshot.docs.isNotEmpty) {
-        final data = snapshot.docs.first.data() as Map<String, dynamic>;
+    return profilesCollection.doc(userId).snapshots().map((snapshot) {
+      if (snapshot.exists && snapshot.data() != null) {
+        final data = snapshot.data() as Map<String, dynamic>;
         return ProfileModel.fromJson(data);
       }
       return null;

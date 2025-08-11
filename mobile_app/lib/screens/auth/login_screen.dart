@@ -9,7 +9,7 @@ import '../../widgets/custom_text_field.dart';
 import '../student/student_dashboard.dart';
 import '../lecturer/lecturer_dashboard.dart';
 import '../admin/admin_dashboard.dart';
-import 'register_screen.dart';
+// import 'register_screen.dart';  // Registration removed
 import 'comprehensive_profile_setup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -33,11 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _navigateToRegister() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const RegisterScreen()),
-    );
-  }
+  // Registration functionality removed
 
   void _onSignIn() async {
     if (_formKey.currentState!.validate()) {
@@ -165,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          'Showcase your skills and connect with opportunities.\nSign in or register to get started.',
+                          'Showcase your skills and connect with opportunities.\nSign in to get started.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 14,
@@ -254,30 +250,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Register Button
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        "Don't have an account? ",
-                        style: TextStyle(
-                          color: Colors.black54,
-                          fontSize: 14,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: _navigateToRegister,
-                        child: const Text(
-                          'Register',
-                          style: TextStyle(
-                            color: Colors.blue,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  // Registration option removed - users must have existing accounts
                 ],
               ),
             ),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/profile_service.dart';
 import '../../../models/profile_model.dart';
@@ -13,6 +14,8 @@ import 'package:share_plus/share_plus.dart';
 import '../achievements/achievements_screen.dart';
 import '../../settings/settings_screen.dart';
 import '../../debug/sample_data_debug_screen.dart';
+import '../../debug/migrate_profile_documents_screen.dart';
+import '../../auth/comprehensive_profile_setup_screen.dart';
 import '../../profile/comprehensive_edit_profile_screen.dart';
 
 class StudentProfileScreen extends StatefulWidget {
@@ -44,9 +47,12 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     } else if (imageUrl.startsWith('http')) {
       // Handle network images
       return NetworkImage(imageUrl);
-    } else {
-      // Handle file images
+    } else if (imageUrl.startsWith('/') || imageUrl.contains('cache')) {
+      // Handle local file images
       return FileImage(File(imageUrl));
+    } else {
+      // Default fallback for invalid URLs
+      return const AssetImage('assets/images/default_profile.png');
     }
   }
 
@@ -83,6 +89,100 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     }
   }
 
+  Future<void> _migrateProfile() async {
+    try {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      final userId = authService.currentUserId;
+
+      if (userId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No user authenticated')),
+        );
+        return;
+      }
+
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const AlertDialog(
+          content: Row(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 16),
+              Text('Migrating profile...'),
+            ],
+          ),
+        ),
+      );
+
+      // Search for profiles with this userId in the data (old structure)
+      final oldProfilesQuery = await FirebaseFirestore.instance
+          .collection('profiles')
+          .where('userId', isEqualTo: userId)
+          .get();
+
+      if (oldProfilesQuery.docs.isEmpty) {
+        Navigator.of(context).pop(); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No profile found to migrate')),
+        );
+        return;
+      }
+
+      // Migrate the first profile found
+      final doc = oldProfilesQuery.docs.first;
+      final data = doc.data();
+      final oldDocId = doc.id;
+
+      // Check if target document already exists
+      final targetDoc = await FirebaseFirestore.instance
+          .collection('profiles')
+          .doc(userId)
+          .get();
+
+      if (targetDoc.exists) {
+        // Delete old document only
+        await FirebaseFirestore.instance
+            .collection('profiles')
+            .doc(oldDocId)
+            .delete();
+      } else {
+        // Create new document with userId as document ID
+        await FirebaseFirestore.instance
+            .collection('profiles')
+            .doc(userId)
+            .set(data);
+
+        // Delete old document
+        await FirebaseFirestore.instance
+            .collection('profiles')
+            .doc(oldDocId)
+            .delete();
+      }
+
+      Navigator.of(context).pop(); // Close loading dialog
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profile migrated successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Reload profile
+      _loadProfile();
+    } catch (e) {
+      Navigator.of(context).pop(); // Close loading dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Migration failed: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -96,11 +196,56 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         appBar: AppBar(
           title: const Text('Profile'),
         ),
-        body: const Center(
-          child: Text(
-            'No profile found. Please complete your profile setup.',
-            style: TextStyle(fontSize: 16),
-            textAlign: TextAlign.center,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.person_off,
+                  size: 64,
+                  color: Colors.grey,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'No profile found',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Your profile may need to be migrated to the new format.',
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: _migrateProfile,
+                  icon: const Icon(Icons.sync),
+                  label: const Text('Migrate Profile'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 12),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const ComprehensiveProfileSetupScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text('Create New Profile'),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -117,17 +262,48 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         foregroundColor: Colors.black,
         actions: [
           Tooltip(
-            message: 'Sample Data Manager',
-            child: IconButton(
+            message: 'Debug Tools',
+            child: PopupMenuButton<String>(
               icon: const Icon(Icons.bug_report),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SampleDataDebugScreen(),
-                  ),
-                );
+              onSelected: (value) {
+                switch (value) {
+                  case 'sample_data':
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SampleDataDebugScreen(),
+                      ),
+                    );
+                    break;
+                  case 'migrate_profile':
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            const MigrateProfileDocumentsScreen(),
+                      ),
+                    );
+                    break;
+                }
               },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'migrate_profile',
+                  child: ListTile(
+                    leading: Icon(Icons.sync),
+                    title: Text('Migrate Profile'),
+                    subtitle: Text('Fix profile document structure'),
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'sample_data',
+                  child: ListTile(
+                    leading: Icon(Icons.data_object),
+                    title: Text('Sample Data Manager'),
+                    subtitle: Text('Create/manage sample data'),
+                  ),
+                ),
+              ],
             ),
           ),
           Tooltip(
@@ -1083,9 +1259,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
     } else if (imageUrl.startsWith('http')) {
       // Handle network images
       return NetworkImage(imageUrl);
-    } else {
-      // Handle file images
+    } else if (imageUrl.startsWith('/') || imageUrl.contains('cache')) {
+      // Handle local file images
       return FileImage(File(imageUrl));
+    } else {
+      // Default fallback
+      return const AssetImage('assets/images/default_profile.png');
     }
   }
 
@@ -1098,14 +1277,22 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
     if (image != null) {
       try {
+        debugPrint('ProfileScreen: Image picked from path: ${image.path}');
+
         // Convert image to base64 for free storage
         final bytes = await image.readAsBytes();
         final base64String = 'data:image/jpeg;base64,${base64Encode(bytes)}';
 
+        debugPrint(
+            'ProfileScreen: Image converted to base64, length: ${base64String.length}');
+
         setState(() {
           _profileImage = base64String;
         });
+
+        debugPrint('ProfileScreen: Profile image updated successfully');
       } catch (e) {
+        debugPrint('ProfileScreen: Error processing image: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error processing image: $e')),

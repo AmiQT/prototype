@@ -6,6 +6,7 @@ import '../../widgets/settings_widgets.dart';
 import '../../widgets/settings/language_selector.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../debug/api_debug_screen.dart';
+import '../debug/fix_user_document_screen.dart';
 import 'account_settings_screen.dart';
 import 'security_settings_screen.dart';
 import 'notification_settings_screen.dart';
@@ -340,6 +341,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => const ApiDebugScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        SettingsItem(
+                          icon: Icons.healing,
+                          title: 'Fix Permission Errors',
+                          subtitle: 'Fix user document and permission issues',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const FixUserDocumentScreen(),
                               ),
                             );
                           },

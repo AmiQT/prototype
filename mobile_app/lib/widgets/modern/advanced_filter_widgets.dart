@@ -351,7 +351,10 @@ class _ModernMultiSelectChipsState extends State<ModernMultiSelectChips> {
         ),
       ),
       selected: filter.isSelected,
-      onSelected: (_) => widget.onToggle(filter),
+      onSelected: (_) {
+        widget.onToggle(filter);
+        setState(() {}); // Force rebuild to show updated state
+      },
       backgroundColor: widget.chipColor.withValues(alpha: 0.1),
       selectedColor: widget.chipColor,
       checkmarkColor: Colors.white,
@@ -397,7 +400,7 @@ class _ModernMultiSelectChipsState extends State<ModernMultiSelectChips> {
 }
 
 /// Modern toggle switches for role filters
-class ModernToggleSwitches extends StatelessWidget {
+class ModernToggleSwitches extends StatefulWidget {
   final String title;
   final List<SearchFilter> filters;
   final Function(SearchFilter) onToggle;
@@ -411,6 +414,11 @@ class ModernToggleSwitches extends StatelessWidget {
     required this.icon,
   });
 
+  @override
+  State<ModernToggleSwitches> createState() => _ModernToggleSwitchesState();
+}
+
+class _ModernToggleSwitchesState extends State<ModernToggleSwitches> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -436,14 +444,14 @@ class ModernToggleSwitches extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                 ),
                 child: Icon(
-                  icon,
+                  widget.icon,
                   size: 20,
                   color: AppTheme.primaryColor,
                 ),
               ),
               const SizedBox(width: AppTheme.spaceSm),
               Text(
-                title,
+                widget.title,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -456,7 +464,7 @@ class ModernToggleSwitches extends StatelessWidget {
           const SizedBox(height: AppTheme.spaceMd),
 
           // Toggle switches
-          ...filters.map((filter) => _buildToggleItem(filter)),
+          ...widget.filters.map((filter) => _buildToggleItem(filter)),
         ],
       ),
     );
@@ -506,7 +514,10 @@ class ModernToggleSwitches extends StatelessWidget {
           ),
           Switch(
             value: filter.isSelected,
-            onChanged: (_) => onToggle(filter),
+            onChanged: (_) {
+              widget.onToggle(filter);
+              setState(() {}); // Force rebuild to show updated state
+            },
             activeColor: AppTheme.primaryColor,
             activeTrackColor: AppTheme.primaryColor.withValues(alpha: 0.3),
             inactiveThumbColor: AppTheme.textSecondaryColor,

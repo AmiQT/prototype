@@ -11,6 +11,8 @@ class SampleProfileDataService {
       FirebaseFirestore.instance.collection('profiles');
   final CollectionReference usersCollection =
       FirebaseFirestore.instance.collection('users');
+  final CollectionReference sampleUsersCollection =
+      FirebaseFirestore.instance.collection('sample_users');
 
   Future<void> createSampleData() async {
     try {
@@ -345,24 +347,28 @@ class SampleProfileDataService {
       role:
           userData['role'] == 'student' ? UserRole.student : UserRole.lecturer,
       department: userData['department'],
-      studentId: userData['studentId'],
+      studentId: userData['studentId'], // This can be null for lecturers
       profileCompleted: userData['profileCompleted'],
       createdAt: DateTime.now(),
     );
 
-    // Save user to Firestore
-    await usersCollection.doc(user.uid).set(user.toJson());
+    // Save user to sample_users collection instead of users
+    await sampleUsersCollection.doc(user.uid).set(user.toJson());
 
     // Create academic info
     final academicInfoData =
         profileData['academicInfo'] as Map<String, dynamic>;
     final academicInfo = AcademicInfoModel(
-      studentId: academicInfoData['studentId'],
+      studentId: academicInfoData['studentId'] ??
+          userData['studentId'] ??
+          '', // Use studentId from user data or empty string
       program: academicInfoData['program'],
       department: academicInfoData['department'],
       faculty: academicInfoData['faculty'],
-      currentSemester: academicInfoData['currentSemester'],
-      cgpa: academicInfoData['cgpa']?.toDouble(),
+      currentSemester: academicInfoData['currentSemester'] ??
+          0, // Default to 0 for lecturers
+      cgpa: academicInfoData['cgpa']?.toDouble() ??
+          0.0, // Default to 0.0 for lecturers
       specialization: academicInfoData['specialization'],
       enrollmentDate: academicInfoData['enrollmentDate'] != null
           ? DateTime.parse(academicInfoData['enrollmentDate'])
@@ -404,7 +410,7 @@ class SampleProfileDataService {
 
     // Create profile
     final profile = ProfileModel(
-      id: 'profile_${userData['uid']}',
+      id: userData['uid'], // Use userId as document ID
       userId: userData['uid'],
       fullName: profileData['fullName'],
       phoneNumber: profileData['phoneNumber'],
@@ -429,8 +435,8 @@ class SampleProfileDataService {
       updatedAt: DateTime.now(),
     );
 
-    // Save profile to Firestore
-    await profilesCollection.doc(profile.id).set(profile.toJson());
+    // Save profile to Firestore using userId as document ID
+    await profilesCollection.doc(userData['uid']).set(profile.toJson());
 
     debugPrint(
         'SampleProfileDataService: Created user and profile for ${user.name}');
@@ -449,8 +455,10 @@ class SampleProfileDataService {
       ];
 
       for (final userId in sampleUserIds) {
-        await usersCollection.doc(userId).delete();
-        await profilesCollection.doc('profile_$userId').delete();
+        await sampleUsersCollection.doc(userId).delete();
+        await profilesCollection
+            .doc(userId)
+            .delete(); // Use userId as document ID
       }
 
       debugPrint('SampleProfileDataService: Sample data cleared successfully!');

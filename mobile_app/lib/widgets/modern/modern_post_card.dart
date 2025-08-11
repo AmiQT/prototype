@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'dart:io';
 import '../../models/showcase_models.dart';
 import '../../models/user_model.dart';
+import '../../services/showcase_service.dart';
+import '../../screens/student/showcase/post_creation_screen.dart';
 import '../../utils/app_theme.dart';
 
 class ModernPostCard extends StatefulWidget {
@@ -65,6 +70,26 @@ class _ModernPostCardState extends State<ModernPostCard>
     });
   }
 
+  ImageProvider? _getProfileImageProvider(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return null;
+    } else if (imageUrl.startsWith('data:image')) {
+      // Handle base64 images
+      final base64String = imageUrl.split(',')[1];
+      final bytes = base64Decode(base64String);
+      return MemoryImage(bytes);
+    } else if (imageUrl.startsWith('http')) {
+      // Handle network images
+      return CachedNetworkImageProvider(imageUrl);
+    } else if (imageUrl.startsWith('/') || imageUrl.contains('cache')) {
+      // Handle local file images
+      return FileImage(File(imageUrl));
+    } else {
+      // Invalid URL, return null to show fallback
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -125,14 +150,19 @@ class _ModernPostCardState extends State<ModernPostCard>
               child: CircleAvatar(
                 radius: 22,
                 backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-                child: Text(
-                  widget.post.userName.substring(0, 1).toUpperCase(),
-                  style: const TextStyle(
-                    color: AppTheme.primaryColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
+                backgroundImage:
+                    _getProfileImageProvider(widget.post.userProfileImage),
+                child: _getProfileImageProvider(widget.post.userProfileImage) ==
+                        null
+                    ? Text(
+                        widget.post.userName.substring(0, 1).toUpperCase(),
+                        style: const TextStyle(
+                          color: AppTheme.primaryColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      )
+                    : null,
               ),
             ),
           ),
@@ -250,9 +280,7 @@ class _ModernPostCardState extends State<ModernPostCard>
               title: 'Save Post',
               onTap: () {
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Post saved!')),
-                );
+                _savePostToBookmarks();
               },
             ),
             _buildOptionTile(
@@ -260,9 +288,7 @@ class _ModernPostCardState extends State<ModernPostCard>
               title: 'Report Post',
               onTap: () {
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Post reported')),
-                );
+                _showReportDialog();
               },
             ),
             if (widget.currentUser?.id == widget.post.userId) ...[
@@ -271,9 +297,7 @@ class _ModernPostCardState extends State<ModernPostCard>
                 title: 'Edit Post',
                 onTap: () {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Edit feature coming soon!')),
-                  );
+                  _navigateToEditPost();
                 },
               ),
               _buildOptionTile(
@@ -333,11 +357,9 @@ class _ModernPostCardState extends State<ModernPostCard>
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Delete feature coming soon!')),
-              );
+              await _deletePost();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.errorColor,
@@ -347,6 +369,197 @@ class _ModernPostCardState extends State<ModernPostCard>
         ],
       ),
     );
+  }
+
+  Future<void> _deletePost() async {
+    try {
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+              SizedBox(width: 16),
+              Text('Deleting post...'),
+            ],
+          ),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      // Import the showcase service
+      final showcaseService = ShowcaseService();
+      await showcaseService.deletePostWithMedia(widget.post.id);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Post deleted successfully'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete post: $e'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    }
+  }
+
+  void _navigateToEditPost() {
+    // Import the post creation screen for editing
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PostCreationScreen(
+          editingPost: widget.post,
+        ),
+      ),
+    );
+  }
+
+  void _showReportDialog() {
+    final List<String> reportReasons = [
+      'Inappropriate content',
+      'Spam or misleading',
+      'Harassment or bullying',
+      'Hate speech',
+      'Violence or dangerous content',
+      'Copyright infringement',
+      'False information',
+      'Other',
+    ];
+
+    String? selectedReason;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+          ),
+          title: const Text('Report Post'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Why are you reporting this post?',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 16),
+              ...reportReasons.map((reason) => RadioListTile<String>(
+                    title: Text(reason),
+                    value: reason,
+                    groupValue: selectedReason,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedReason = value;
+                      });
+                    },
+                    contentPadding: EdgeInsets.zero,
+                  )),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: selectedReason != null
+                  ? () {
+                      Navigator.pop(context);
+                      _submitReport(selectedReason!);
+                    }
+                  : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.errorColor,
+              ),
+              child:
+                  const Text('Report', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _submitReport(String reason) async {
+    try {
+      // Here you would typically send the report to your backend
+      // For now, we'll just show a success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Post reported for: $reason'),
+          backgroundColor: AppTheme.successColor,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to submit report: $e'),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+    }
+  }
+
+  Future<void> _savePostToBookmarks() async {
+    try {
+      if (widget.currentUser == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please log in to save posts'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+        return;
+      }
+
+      // Here you would typically save to a bookmarks collection in Firestore
+      // For now, we'll use SharedPreferences as a simple implementation
+      final prefs = await SharedPreferences.getInstance();
+      final savedPosts =
+          prefs.getStringList('saved_posts_${widget.currentUser!.uid}') ?? [];
+
+      if (!savedPosts.contains(widget.post.id)) {
+        savedPosts.add(widget.post.id);
+        await prefs.setStringList(
+            'saved_posts_${widget.currentUser!.uid}', savedPosts);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Post saved to bookmarks!'),
+            backgroundColor: AppTheme.successColor,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Post already saved'),
+            backgroundColor: AppTheme.infoColor,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to save post: $e'),
+          backgroundColor: AppTheme.errorColor,
+        ),
+      );
+    }
   }
 
   Widget _buildPostContent() {

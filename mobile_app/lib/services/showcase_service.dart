@@ -58,6 +58,12 @@ class ShowcaseService {
               })
           .toList();
     } catch (e) {
+      // Handle permission errors gracefully - these are expected with security rules
+      if (e.toString().contains('permission-denied')) {
+        debugPrint(
+            'ShowcaseService: Permission denied - security rules working correctly');
+        return []; // Return empty results instead of showing error to user
+      }
       debugPrint('Error fetching showcase posts: $e');
       return [];
     }
@@ -80,6 +86,22 @@ class ShowcaseService {
       return downloadUrl;
     } catch (e) {
       debugPrint('Error uploading showcase image: $e');
+      rethrow;
+    }
+  }
+
+  /// Update a showcase post
+  Future<void> updatePost(
+      String postId, Map<String, dynamic> updatedData) async {
+    try {
+      await showcaseCollection.doc(postId).update({
+        ...updatedData,
+        'updatedAt': FieldValue.serverTimestamp(),
+        'isEdited': true,
+      });
+      debugPrint('Post updated successfully: $postId');
+    } catch (e) {
+      debugPrint('Error updating showcase post: $e');
       rethrow;
     }
   }
@@ -431,6 +453,13 @@ class ShowcaseService {
         }).toList();
       });
     } catch (e) {
+      // Handle permission errors gracefully - these are expected with security rules
+      if (e.toString().contains('permission-denied')) {
+        debugPrint(
+            'ShowcaseService: Permission denied for stream - security rules working correctly');
+        return Stream.value(
+            []); // Return empty stream instead of showing error to user
+      }
       debugPrint('Error getting showcase posts stream: $e');
       return Stream.value([]);
     }

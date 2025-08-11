@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
+import 'dart:io';
 import '../../models/profile_model.dart';
 import '../../models/academic_info_model.dart';
 import '../../models/experience_model.dart';
@@ -59,6 +61,26 @@ class _ComprehensiveEditProfileScreenState
   int _currentSemester = 1;
 
   final ImagePicker _picker = ImagePicker();
+
+  ImageProvider? _getProfileImageProvider(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return null;
+    } else if (imageUrl.startsWith('data:image')) {
+      // Handle base64 images
+      final base64String = imageUrl.split(',')[1];
+      final bytes = base64Decode(base64String);
+      return MemoryImage(bytes);
+    } else if (imageUrl.startsWith('http')) {
+      // Handle network images
+      return NetworkImage(imageUrl);
+    } else if (imageUrl.startsWith('/') || imageUrl.contains('cache')) {
+      // Handle local file images (fallback)
+      return FileImage(File(imageUrl));
+    } else {
+      // Invalid URL, return null to show fallback
+      return null;
+    }
+  }
 
   @override
   void initState() {
@@ -270,11 +292,8 @@ class _ComprehensiveEditProfileScreenState
             CircleAvatar(
               radius: 57,
               backgroundColor: AppTheme.lightGrayColor,
-              backgroundImage:
-                  _profileImageUrl != null && _profileImageUrl!.isNotEmpty
-                      ? NetworkImage(_profileImageUrl!)
-                      : null,
-              child: _profileImageUrl == null || _profileImageUrl!.isEmpty
+              backgroundImage: _getProfileImageProvider(_profileImageUrl),
+              child: _getProfileImageProvider(_profileImageUrl) == null
                   ? Icon(
                       Icons.person,
                       size: 50,
@@ -513,10 +532,12 @@ class _ComprehensiveEditProfileScreenState
       );
 
       if (image != null) {
-        // TODO: Upload image to Firebase Storage and get URL
-        // For now, we'll use a placeholder
+        // Convert image to base64 for storage
+        final bytes = await image.readAsBytes();
+        final base64String = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+
         setState(() {
-          _profileImageUrl = image.path; // This should be the uploaded URL
+          _profileImageUrl = base64String;
         });
 
         ScaffoldMessenger.of(context).showSnackBar(

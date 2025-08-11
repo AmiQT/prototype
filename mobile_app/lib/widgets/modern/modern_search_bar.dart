@@ -467,13 +467,14 @@ class _ModernSearchBarState extends State<ModernSearchBar>
       case SearchSuggestionType.name:
         return AppTheme.primaryColor;
       case SearchSuggestionType.skill:
-        return Colors.orange;
+        return Theme.of(context).colorScheme.secondary;
       case SearchSuggestionType.department:
-        return Colors.blue;
+        return Theme.of(context).colorScheme.primary;
       case SearchSuggestionType.program:
-        return Colors.green;
+        return Theme.of(context).colorScheme.tertiary;
       default:
-        return AppTheme.textSecondaryColor;
+        return Theme.of(context).textTheme.bodyMedium?.color ??
+            AppTheme.textSecondaryColor;
     }
   }
 
@@ -608,14 +609,18 @@ class SearchSuggestionChip extends StatelessWidget {
               Icon(
                 icon,
                 size: 16,
-                color: isSelected ? Colors.white : AppTheme.textSecondaryColor,
+                color: isSelected
+                    ? Colors.white
+                    : Theme.of(context).textTheme.bodyMedium?.color,
               ),
               const SizedBox(width: AppTheme.spaceXs),
             ],
             Text(
               text,
               style: TextStyle(
-                color: isSelected ? Colors.white : AppTheme.textPrimaryColor,
+                color: isSelected
+                    ? Colors.white
+                    : Theme.of(context).textTheme.bodyMedium?.color,
                 fontWeight: FontWeight.w500,
                 fontSize: 14,
               ),
@@ -627,8 +632,9 @@ class SearchSuggestionChip extends StatelessWidget {
                 child: Icon(
                   Icons.close_rounded,
                   size: 16,
-                  color:
-                      isSelected ? Colors.white : AppTheme.textSecondaryColor,
+                  color: isSelected
+                      ? Colors.white
+                      : Theme.of(context).textTheme.bodyMedium?.color,
                 ),
               ),
             ],

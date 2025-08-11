@@ -32,8 +32,14 @@ class AuthService {
         } else {
           debugPrint(
               'AuthService: User data not found in Firestore for UID: ${firebaseUser.uid}');
+          debugPrint('AuthService: Attempting to create user document...');
+
           // Try to create user document from Firebase Auth data
           await _createUserDocumentFromFirebaseAuth(firebaseUser);
+
+          // Wait a moment for Firestore to propagate the change
+          await Future.delayed(const Duration(milliseconds: 500));
+
           // Try to get user data again
           final retryUserData = await getUserData(firebaseUser.uid);
           if (retryUserData != null) {
@@ -183,29 +189,84 @@ class AuthService {
       debugPrint(
           'AuthService: Creating user document for UID: ${firebaseUser.uid}');
 
-      // Create a basic user document with available Firebase Auth data
-      await FirebaseFirestore.instance
+      // First check if document already exists
+      final existingDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(firebaseUser.uid)
-          .set({
+          .get();
+
+      if (existingDoc.exists) {
+        debugPrint('AuthService: User document already exists');
+        return;
+      }
+
+      // Create a basic user document with available Firebase Auth data
+      final userData = {
         'id': firebaseUser.uid,
         'uid': firebaseUser.uid,
         'email': firebaseUser.email ?? '',
         'name': firebaseUser.displayName?.isNotEmpty == true
             ? firebaseUser.displayName!
             : firebaseUser.email?.split('@')[0] ?? 'User',
-        'role': 'student', // Default role
+        'role': 'student', // Default role - CRITICAL for security rules
         'studentId': '',
         'department': '',
         'createdAt': DateTime.now().toIso8601String(),
         'lastLoginAt': DateTime.now().toIso8601String(),
         'isActive': true,
         'profileCompleted': false,
-      });
+        // Additional fields to ensure compatibility
+        'photoURL': firebaseUser.photoURL ?? '',
+        'phoneNumber': firebaseUser.phoneNumber ?? '',
+      };
+
+      debugPrint('AuthService: Creating user document with data: $userData');
+
+      // Use set with merge to ensure document is created/updated
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(firebaseUser.uid)
+          .set(userData, SetOptions(merge: true));
 
       debugPrint('AuthService: User document created successfully');
+
+      // Wait for Firestore to propagate
+      await Future.delayed(const Duration(milliseconds: 1500));
+
+      // Verify the document was created with multiple attempts
+      bool verified = false;
+      for (int attempt = 1; attempt <= 3; attempt++) {
+        debugPrint('AuthService: Verification attempt $attempt/3');
+
+        final verifyDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(firebaseUser.uid)
+            .get();
+
+        if (verifyDoc.exists) {
+          final verifyData = verifyDoc.data() as Map<String, dynamic>;
+          debugPrint('AuthService: User document verified successfully');
+          debugPrint('AuthService: Verified role: ${verifyData['role']}');
+          debugPrint('AuthService: Verified email: ${verifyData['email']}');
+          verified = true;
+          break;
+        } else {
+          debugPrint('AuthService: Verification attempt $attempt failed');
+          if (attempt < 3) {
+            await Future.delayed(const Duration(milliseconds: 500));
+          }
+        }
+      }
+
+      if (!verified) {
+        debugPrint(
+            'AuthService: CRITICAL - User document creation failed all verification attempts');
+        throw Exception(
+            'Failed to create user document after multiple attempts');
+      }
     } catch (e) {
       debugPrint('AuthService: Error creating user document: $e');
+      rethrow; // Re-throw to handle this error upstream
     }
   }
 
@@ -409,5 +470,59 @@ class AuthService {
 
     final facultyCode = studentId.substring(0, 2).toUpperCase();
     return validFacultyCodes.contains(facultyCode);
+  }
+
+  /// Manual function to ensure current user document exists
+  /// Call this if you're getting permission errors
+  Future<bool> ensureUserDocumentExists() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        debugPrint('AuthService: No authenticated user found');
+        return false;
+      }
+
+      debugPrint(
+          'AuthService: Checking if user document exists for ${user.uid}');
+
+      // Check if user document exists
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (userDoc.exists) {
+        debugPrint('AuthService: User document already exists');
+        final userData = userDoc.data() as Map<String, dynamic>;
+        debugPrint('AuthService: User role: ${userData['role']}');
+        debugPrint('AuthService: User email: ${userData['email']}');
+        return true;
+      }
+
+      debugPrint('AuthService: User document missing, creating it now...');
+      await _createUserDocumentFromFirebaseAuth(user);
+
+      // Wait for Firestore propagation
+      await Future.delayed(const Duration(milliseconds: 1000));
+
+      // Verify creation
+      final verifyDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (verifyDoc.exists) {
+        debugPrint('AuthService: User document created successfully!');
+        final userData = verifyDoc.data() as Map<String, dynamic>;
+        debugPrint('AuthService: Created user with role: ${userData['role']}');
+        return true;
+      } else {
+        debugPrint('AuthService: Failed to create user document');
+        return false;
+      }
+    } catch (e) {
+      debugPrint('AuthService: Error ensuring user document exists: $e');
+      return false;
+    }
   }
 }

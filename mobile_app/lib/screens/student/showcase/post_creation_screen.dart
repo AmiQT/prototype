@@ -13,15 +13,18 @@ import '../../../services/media_upload_manager.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/profile_service.dart';
 import '../../../services/content_moderation_service.dart';
+import '../../../services/showcase_service.dart';
 
 class PostCreationScreen extends StatefulWidget {
   final PostDraft? draft;
   final PostTemplate? template;
+  final ShowcasePostModel? editingPost;
 
   const PostCreationScreen({
     super.key,
     this.draft,
     this.template,
+    this.editingPost,
   });
 
   @override
@@ -120,7 +123,15 @@ class _PostCreationScreenState extends State<PostCreationScreen>
   }
 
   void _initializeFromDraftOrTemplate() {
-    if (widget.draft != null) {
+    if (widget.editingPost != null) {
+      // Initialize for editing mode
+      _contentController.text = widget.editingPost!.content;
+      _selectedCategory = widget.editingPost!.category;
+      _selectedPrivacy = widget.editingPost!.privacy;
+      _tags = List.from(widget.editingPost!.tags);
+      _location = widget.editingPost!.location;
+      // Note: Media files will need to be handled separately for editing
+    } else if (widget.draft != null) {
       _contentController.text = widget.draft!.content;
       _selectedCategory = widget.draft!.category;
       _selectedPrivacy = widget.draft!.privacy;
@@ -294,10 +305,18 @@ class _PostCreationScreenState extends State<PostCreationScreen>
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      title: const Text('Create Post'),
+      title: Text(
+        widget.editingPost != null ? 'Edit Post' : 'Create Post',
+        style: const TextStyle(
+          color: Colors.black87,
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
       backgroundColor: Colors.white,
       foregroundColor: Colors.black87,
       elevation: 0,
+      centerTitle: true,
       leading: IconButton(
         icon: const Icon(Icons.close),
         onPressed: () async {
@@ -314,9 +333,9 @@ class _PostCreationScreenState extends State<PostCreationScreen>
             child: const Text('Save Draft'),
           ),
         TextButton(
-          onPressed: _canPost() ? _createPost : null,
+          onPressed: _canPost() ? _savePost : null,
           child: Text(
-            'Post',
+            widget.editingPost != null ? 'Update' : 'Post',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: _canPost() ? Theme.of(context).primaryColor : Colors.grey,
@@ -475,7 +494,11 @@ class _PostCreationScreenState extends State<PostCreationScreen>
                 Text(
                   '${_contentController.text.length}/2000',
                   style: TextStyle(
-                    color: Colors.grey[600],
+                    color: Theme.of(context)
+                        .textTheme
+                        .bodySmall
+                        ?.color
+                        ?.withValues(alpha: 0.6),
                     fontSize: 12,
                   ),
                 ),
@@ -687,9 +710,9 @@ class _PostCreationScreenState extends State<PostCreationScreen>
   Widget _buildCategorySelector() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: DropdownButtonHideUnderline(
@@ -719,9 +742,9 @@ class _PostCreationScreenState extends State<PostCreationScreen>
   Widget _buildPrivacySelector() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: DropdownButtonHideUnderline(
@@ -946,7 +969,7 @@ class _PostCreationScreenState extends State<PostCreationScreen>
             Expanded(
               flex: 2,
               child: ElevatedButton(
-                onPressed: _canPost() ? _createPost : null,
+                onPressed: _canPost() ? _savePost : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).primaryColor,
                   foregroundColor: Colors.white,
@@ -1225,7 +1248,7 @@ class _PostCreationScreenState extends State<PostCreationScreen>
         _selectedMedia.isNotEmpty;
   }
 
-  Future<void> _createPost() async {
+  Future<void> _savePost() async {
     if (!_canPost()) return;
 
     // Validate content before posting
@@ -1265,30 +1288,36 @@ class _PostCreationScreenState extends State<PostCreationScreen>
           '  - User Role: ${_currentUser!.role.toString().split('.').last}');
       debugPrint('  - User Department: ${_currentUser!.department}');
 
-      final result = await _uploadManager.uploadPost(
-        sessionId: _uploadSessionId!,
-        userId: _currentUser!.uid,
-        userName: _currentUser!.name,
-        userProfileImage: _currentProfile?.profileImageUrl,
-        userRole: _currentUser!.role.toString().split('.').last,
-        userDepartment: _currentUser!.department,
-        userHeadline: _currentProfile?.headline,
-        content: _contentController.text.trim(),
-        mediaFiles: _selectedMedia,
-        category: _selectedCategory,
-        privacy: _selectedPrivacy,
-        tags: _tags,
-        mentions: _mentions,
-        location: _location,
-      );
-
-      if (result.success) {
-        // Clear saved draft on successful post creation
-        await _clearSavedDraft();
-        _successAnimationController.forward();
-        _showSuccessDialog(result.postId!);
+      if (widget.editingPost != null) {
+        // Update existing post
+        await _updateExistingPost();
       } else {
-        _showError(result.error ?? 'Failed to create post');
+        // Create new post
+        final result = await _uploadManager.uploadPost(
+          sessionId: _uploadSessionId!,
+          userId: _currentUser!.uid,
+          userName: _currentUser!.name,
+          userProfileImage: _currentProfile?.profileImageUrl,
+          userRole: _currentUser!.role.toString().split('.').last,
+          userDepartment: _currentUser!.department,
+          userHeadline: _currentProfile?.headline,
+          content: _contentController.text.trim(),
+          mediaFiles: _selectedMedia,
+          category: _selectedCategory,
+          privacy: _selectedPrivacy,
+          tags: _tags,
+          mentions: _mentions,
+          location: _location,
+        );
+
+        if (result.success) {
+          // Clear saved draft on successful post creation
+          await _clearSavedDraft();
+          _successAnimationController.forward();
+          _showSuccessDialog(result.postId!);
+        } else {
+          _showError(result.error ?? 'Failed to create post');
+        }
       }
     } catch (e) {
       _showError('Error creating post: $e');
@@ -1297,6 +1326,31 @@ class _PostCreationScreenState extends State<PostCreationScreen>
         _isUploading = false;
       });
       _uploadAnimationController.reverse();
+    }
+  }
+
+  Future<void> _updateExistingPost() async {
+    try {
+      final showcaseService = ShowcaseService();
+
+      // Create updated post data
+      final updatedData = {
+        'content': _contentController.text.trim(),
+        'category': _selectedCategory.toString().split('.').last,
+        'privacy': _selectedPrivacy.toString().split('.').last,
+        'tags': _tags,
+        'location': _location,
+        'updatedAt': DateTime.now().toIso8601String(),
+      };
+
+      // Update the post in Firestore
+      await showcaseService.updatePost(widget.editingPost!.id, updatedData);
+
+      // Show success message
+      _successAnimationController.forward();
+      _showSuccessDialog(widget.editingPost!.id, isUpdate: true);
+    } catch (e) {
+      _showError('Failed to update post: $e');
     }
   }
 
@@ -1318,20 +1372,21 @@ class _PostCreationScreenState extends State<PostCreationScreen>
     );
   }
 
-  void _showSuccessDialog(String postId) {
+  void _showSuccessDialog(String postId, {bool isUpdate = false}) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.check_circle, color: Colors.green),
-            SizedBox(width: 8),
-            Text('Post Created!'),
+            const Icon(Icons.check_circle, color: Colors.green),
+            const SizedBox(width: 8),
+            Text(isUpdate ? 'Post Updated!' : 'Post Created!'),
           ],
         ),
-        content:
-            const Text('Your post has been successfully created and shared.'),
+        content: Text(isUpdate
+            ? 'Your post has been successfully updated.'
+            : 'Your post has been successfully created and shared.'),
         actions: [
           TextButton(
             onPressed: () {

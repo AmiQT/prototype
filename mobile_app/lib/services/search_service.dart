@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -6,12 +7,15 @@ import '../models/user_model.dart';
 import '../models/profile_model.dart';
 import '../models/search_models.dart';
 import '../services/profile_service.dart';
+import '../services/auth_service.dart';
 import 'search_analytics_service.dart';
 import 'search_cache_service.dart';
 
 class SearchService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   final ProfileService _profileService = ProfileService();
+  final AuthService _authService = AuthService();
   final SearchAnalyticsService _analyticsService = SearchAnalyticsService();
   final SearchCacheService _cacheService = SearchCacheService();
 
@@ -75,21 +79,38 @@ class SearchService {
         return popularResults;
       }
 
-      // Get all users (students and lecturers only)
-      final usersQuery = await _firestore
-          .collection('users')
-          .where('role', whereIn: ['student', 'lecturer'])
-          .where('isActive', isEqualTo: true)
-          .limit(limit)
-          .get();
+      // Check authentication state
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        debugPrint(
+            'SearchService: User not authenticated, cannot search users');
+        return [];
+      }
+      debugPrint('SearchService: User authenticated as: ${currentUser.uid}');
+
+      // Wait a moment for auth state to propagate to Firestore
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      // Get all users using AuthService which has working permissions
+      debugPrint(
+          'SearchService: Attempting to get all users via AuthService...');
+      final allUsers = await _authService.getAllUsers();
+      debugPrint(
+          'SearchService: Successfully retrieved ${allUsers.length} users');
 
       List<SearchResult> results = [];
 
-      for (final userDoc in usersQuery.docs) {
-        try {
-          final userData = userDoc.data();
-          final user = UserModel.fromJson(userData);
+      // Filter users to only include students and lecturers who are active
+      final filteredUsers = allUsers
+          .where((user) {
+            final role = user.role.toString().split('.').last;
+            return user.isActive && (role == 'student' || role == 'lecturer');
+          })
+          .take(limit)
+          .toList();
 
+      for (final user in filteredUsers) {
+        try {
           // Get profile for this user
           debugPrint(
               'SearchService: Loading profile for user: ${user.name} (${user.uid})');
@@ -111,7 +132,7 @@ class SearchService {
             ));
           }
         } catch (e) {
-          debugPrint('SearchService: Error processing user ${userDoc.id}: $e');
+          debugPrint('SearchService: Error processing user ${user.uid}: $e');
           continue;
         }
       }
@@ -146,6 +167,12 @@ class SearchService {
           'SearchService: Found ${results.length} results in ${searchDuration.inMilliseconds}ms');
       return results;
     } catch (e) {
+      // Handle permission errors gracefully - these are expected with security rules
+      if (e.toString().contains('permission-denied')) {
+        debugPrint(
+            'SearchService: Permission denied - security rules working correctly');
+        return []; // Return empty results instead of showing error to user
+      }
       debugPrint('SearchService: Error searching: $e');
       return [];
     }
@@ -552,13 +579,19 @@ class SearchService {
   /// Get all users (students and lecturers only)
   Future<List<UserModel>> _getAllUsers() async {
     try {
-      final query = await _firestore
-          .collection('users')
-          .where('role', whereIn: ['student', 'lecturer'])
-          .where('isActive', isEqualTo: true)
-          .get();
+      // Use AuthService which has working permissions
+      debugPrint('SearchService: Getting all users via AuthService...');
+      final allUsers = await _authService.getAllUsers();
 
-      return query.docs.map((doc) => UserModel.fromJson(doc.data())).toList();
+      // Filter users to only include students and lecturers who are active
+      final filteredUsers = allUsers.where((user) {
+        final role = user.role.toString().split('.').last;
+        return user.isActive && (role == 'student' || role == 'lecturer');
+      }).toList();
+
+      debugPrint(
+          'SearchService: Filtered to ${filteredUsers.length} active students/lecturers');
+      return filteredUsers;
     } catch (e) {
       debugPrint('SearchService: Error getting all users: $e');
       return [];

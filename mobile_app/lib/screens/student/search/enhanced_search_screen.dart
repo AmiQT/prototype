@@ -340,7 +340,6 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
             'Discover Talents',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimaryColor,
                 ),
           ),
           const SizedBox(height: AppTheme.spaceSm),
@@ -547,39 +546,50 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
                 color: AppTheme.textPrimaryColor,
               ),
         ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (result.department != null && result.department!.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text(
-                result.department!,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.textSecondaryColor,
-                    ),
-              ),
-            ],
-            if (result.matchedFields.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.spaceSm,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusXs),
-                ),
-                child: Text(
-                  'Matches: ${result.matchedFields.join(', ')}',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: AppTheme.primaryColor,
-                        fontWeight: FontWeight.w500,
+        subtitle: ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 80),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (result.department != null &&
+                  result.department!.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  result.department!,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.textSecondaryColor,
                       ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
+              ],
+              if (result.matchedFields.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Flexible(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spaceSm,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXs),
+                    ),
+                    child: Text(
+                      'Matches: ${result.matchedFields.join(', ')}',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: AppTheme.primaryColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
         trailing: Container(
           padding: const EdgeInsets.all(AppTheme.spaceXs),
