@@ -73,10 +73,7 @@ class ContentModerationService {
       final response =
           await query.order('createdAt', ascending: false).limit(limit);
 
-      return response.map((doc) {
-        final data = doc as Map<String, dynamic>;
-        return ReportModel.fromJson(data);
-      }).toList();
+      return response.map((doc) => ReportModel.fromJson(doc)).toList();
     } catch (e) {
       debugPrint('Error fetching reports: $e');
       return [];
@@ -100,10 +97,7 @@ class ContentModerationService {
       return Stream.periodic(const Duration(seconds: 30), (_) async {
         try {
           final response = await query.order('createdAt', ascending: false).limit(limit);
-          return response.map((doc) {
-            final data = doc as Map<String, dynamic>;
-            return ReportModel.fromJson(data);
-          }).toList();
+          return response.map((doc) => ReportModel.fromJson(doc)).toList();
         } catch (e) {
           debugPrint('Error fetching reports: $e');
           return <ReportModel>[];
@@ -112,6 +106,32 @@ class ContentModerationService {
     } catch (e) {
       debugPrint('Error getting reports stream: $e');
       return Stream.value([]);
+    }
+  }
+
+  // Add missing collections and methods
+  final reportsCollection = SupabaseConfig.from('reports');
+  final moderationActionsCollection = SupabaseConfig.from('moderation_actions');
+  
+  // Add profanity word list
+  static const List<String> _profanityWords = [
+    'spam', 'inappropriate', 'offensive', 'harassment'
+  ];
+
+  /// Validate content for inappropriate material
+  Future<bool> validateContent(String content) async {
+    try {
+      // Simple profanity check
+      final lowerContent = content.toLowerCase();
+      for (final word in _profanityWords) {
+        if (lowerContent.contains(word)) {
+          return false;
+        }
+      }
+      return true;
+    } catch (e) {
+      debugPrint('Error validating content: $e');
+      return true; // Default to allowing content if validation fails
     }
   }
 

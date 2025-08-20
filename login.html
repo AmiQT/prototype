@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UTHM Talent Profiling - Admin Login</title>
+    <link rel="stylesheet" href="css/login.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="floating-shape shape-1"></div>
+        <div class="floating-shape shape-2"></div>
+        <div class="floating-shape shape-3"></div>
+        <div class="floating-shape shape-4"></div>
+        <div class="floating-shape shape-5"></div>
+    </div>
+
+    <div class="login-page-container">
+        <div class="login-main-card">
+            <!-- Enhanced Branding Panel -->
+            <div class="login-branding-panel">
+                <div class="branding-content">
+                    <div class="logo-container">
+                        <div class="logo-backdrop"></div>
+                        <img src="uthm.png" alt="UTHM Logo" class="logo">
+                    </div>
+                    <div class="branding-text">
+                        <h1 class="animated-title">
+                            <span class="title-line">Empowering Admins</span>
+                            <span class="title-line">with Innovative</span>
+                            <span class="title-line highlight">Solutions</span>
+                        </h1>
+                        <p class="branding-subtitle">
+                            Transform student talent management with our comprehensive platform designed for modern educational excellence.
+                        </p>
+                    </div>
+                    <div class="feature-highlights">
+                        <div class="feature-item">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Real-time Analytics</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-users"></i>
+                            <span>Student Management</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Secure Platform</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced Form Panel -->
+            <div class="login-form-panel">
+                <div class="form-container">
+                    <div class="form-header">
+                        <h2 class="form-title">Welcome Back</h2>
+                        <p class="form-subtitle">Please sign in to your admin account</p>
+                    </div>
+
+                    <form id="login-form" class="login-form">
+                        <!-- Enhanced Message Display -->
+                        <div id="message-container" class="message-container">
+                            <div id="error-message" class="message error-message">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <span class="message-text"></span>
+                            </div>
+                            <div id="success-message" class="message success-message">
+                                <i class="fas fa-check-circle"></i>
+                                <span class="message-text"></span>
+                            </div>
+                        </div>
+
+                        <!-- Enhanced Form Groups -->
+                        <div class="form-group">
+                            <div class="input-container">
+                                <i class="fas fa-envelope input-icon"></i>
+                                <input type="email" id="email" name="email" required>
+                                <label for="email" class="floating-label">
+                                    Email Address
+                                </label>
+                                <div class="input-underline"></div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="input-container">
+                                <i class="fas fa-lock input-icon"></i>
+                                <input type="password" id="password" name="password" required>
+                                <label for="password" class="floating-label">
+                                    Password
+                                </label>
+                                <button type="button" class="password-toggle" id="password-toggle">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <div class="input-underline"></div>
+                            </div>
+                        </div>
+
+                        <!-- Enhanced Form Options -->
+                        <div class="form-options">
+                            <label class="remember-me">
+                                <input type="checkbox" id="remember-checkbox">
+                                <span class="checkmark">
+                                    <i class="fas fa-check"></i>
+                                </span>
+                                <span class="checkbox-text">Remember Me</span>
+                            </label>
+                            <a class="forgot-password" href="#" id="forgot-password">
+                                <i class="fas fa-key"></i>
+                                Forgot Password?
+                            </a>
+                        </div>
+
+                        <!-- Enhanced Login Button -->
+                        <button type="submit" class="login-btn" id="login-btn">
+                            <span class="btn-content">
+                                <span id="login-btn-text">Sign In</span>
+                                <i class="fas fa-arrow-right btn-arrow"></i>
+                            </span>
+                            <div class="btn-loading" id="loading">
+                                <div class="loading-spinner"></div>
+                                <span>Signing In...</span>
+                            </div>
+                            <div class="btn-ripple"></div>
+                        </button>
+
+                        <!-- Additional Actions -->
+                        <div class="form-footer">
+                            <p class="help-text">
+                                <i class="fas fa-info-circle"></i>
+                                Need help? Contact IT support at 
+                                <a href="mailto:support@uthm.edu.my">support@uthm.edu.my</a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBEKSg01gWA8Z4Kv0NPCUfH_DCu4D1jO6Q",
+            authDomain: "student-talent-profiling-eaede.firebaseapp.com",
+            projectId: "student-talent-profiling-eaede",
+            storageBucket: "student-talent-profiling-eaede.firebasestorage.app",
+            messagingSenderId: "611009879331",
+            appId: "1:611009879331:web:4c4382fe7d606e29328096"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Enhanced UI interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeEnhancedUI();
+            setupFormAnimations();
+        });
+
+        function initializeEnhancedUI() {
+            // Floating label animations
+            const inputs = document.querySelectorAll('.input-container input');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.classList.add('focused');
+                });
+
+                input.addEventListener('blur', function() {
+                    if (!this.value) {
+                        this.parentElement.classList.remove('focused');
+                    }
+                });
+
+                input.addEventListener('input', function() {
+                    if (this.value) {
+                        this.parentElement.classList.add('focused');
+                    } else {
+                        this.parentElement.classList.remove('focused');
+                    }
+                });
+
+                // Check if input has value on load
+                if (input.value) {
+                    input.parentElement.classList.add('focused');
+                }
+            });
+
+            // Password toggle functionality
+            const passwordToggle = document.getElementById('password-toggle');
+            const passwordInput = document.getElementById('password');
+            
+            passwordToggle.addEventListener('click', function() {
+                const type = passwordInput.type === 'password' ? 'text' : 'password';
+                passwordInput.type = type;
+                
+                const icon = this.querySelector('i');
+                icon.classList.toggle('fa-eye');
+                icon.classList.toggle('fa-eye-slash');
+                
+                this.classList.toggle('active');
+            });
+
+            // Enhanced checkbox animation
+            const checkbox = document.getElementById('remember-checkbox');
+            checkbox.addEventListener('change', function() {
+                const checkmark = this.nextElementSibling;
+                if (this.checked) {
+                    checkmark.classList.add('checked');
+                } else {
+                    checkmark.classList.remove('checked');
+                }
+            });
+
+            // Button ripple effect
+            const loginBtn = document.getElementById('login-btn');
+            loginBtn.addEventListener('click', function(e) {
+                if (!this.disabled) {
+                    createRipple(e, this);
+                }
+            });
+        }
+
+        function setupFormAnimations() {
+            // Stagger animation for form elements
+            const formElements = document.querySelectorAll('.form-group, .form-options, .login-btn, .form-footer');
+            formElements.forEach((element, index) => {
+                element.style.animationDelay = `${index * 0.1}s`;
+                element.classList.add('slide-up');
+            });
+
+            // Title animation
+            const titleLines = document.querySelectorAll('.title-line');
+            titleLines.forEach((line, index) => {
+                line.style.animationDelay = `${index * 0.2}s`;
+            });
+
+            // Feature highlights animation
+            const featureItems = document.querySelectorAll('.feature-item');
+            featureItems.forEach((item, index) => {
+                item.style.animationDelay = `${0.6 + index * 0.1}s`;
+            });
+        }
+
+        function createRipple(event, button) {
+            const ripple = button.querySelector('.btn-ripple');
+            const rect = button.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = event.clientX - rect.left - size / 2;
+            const y = event.clientY - rect.top - size / 2;
+            
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            
+            ripple.classList.add('ripple-active');
+            
+            setTimeout(() => {
+                ripple.classList.remove('ripple-active');
+            }, 600);
+        }
+
+        function showMessage(type, text) {
+            const messageContainer = document.getElementById('message-container');
+            const message = document.getElementById(type + '-message');
+            const messageText = message.querySelector('.message-text');
+            
+            // Hide all messages first
+            document.querySelectorAll('.message').forEach(msg => {
+                msg.classList.remove('show');
+            });
+            
+            // Show the specific message
+            messageText.textContent = text;
+            message.classList.add('show');
+            
+            // Auto-hide success messages
+            if (type === 'success') {
+                setTimeout(() => {
+                    message.classList.remove('show');
+                }, 4000);
+            }
+        }
+
+        // Enhanced login form submission
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('login-btn');
+            const btnContent = loginBtn.querySelector('.btn-content');
+            const loading = document.getElementById('loading');
+
+            // Hide any previous messages
+            document.querySelectorAll('.message').forEach(msg => {
+                msg.classList.remove('show');
+            });
+
+            // Show loading state
+            loginBtn.disabled = true;
+            loginBtn.classList.add('loading');
+            btnContent.style.opacity = '0';
+            loading.style.display = 'flex';
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    return db.collection('users').doc(userCredential.user.uid).get();
+                })
+                .then((doc) => {
+                    if (doc.exists && doc.data().role === 'admin') {
+                        localStorage.setItem('isLoggedIn', 'true');
+                        
+                        // Show success state
+                        loginBtn.classList.remove('loading');
+                        loginBtn.classList.add('success');
+                        loading.style.display = 'none';
+                        btnContent.style.opacity = '1';
+                        document.getElementById('login-btn-text').textContent = 'Success!';
+                        
+                        showMessage('success', 'Login successful! Redirecting to dashboard...');
+                        
+                        setTimeout(() => {
+                            window.location.href = 'index.html';
+                        }, 1500);
+                    } else {
+                        throw new Error('Access denied. Admin privileges required.');
+                    }
+                })
+                .catch((error) => {
+                    let errorText = 'Invalid email or password.';
+                    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                        errorText = 'Invalid email or password. Please check your credentials.';
+                    } else if (error.message.includes('Access denied')) {
+                        errorText = 'Access denied. You do not have admin privileges.';
+                    } else if (error.code === 'auth/too-many-requests') {
+                        errorText = 'Too many failed attempts. Please try again later.';
+                    }
+                    
+                    // Reset button state
+                    loginBtn.disabled = false;
+                    loginBtn.classList.remove('loading');
+                    loading.style.display = 'none';
+                    btnContent.style.opacity = '1';
+                    document.getElementById('login-btn-text').textContent = 'Sign In';
+                    
+                    // Show error with shake animation
+                    loginBtn.classList.add('shake');
+                    setTimeout(() => loginBtn.classList.remove('shake'), 500);
+                    
+                    showMessage('error', errorText);
+                });
+        });
+
+        // Check auth state
+        auth.onAuthStateChanged((user) => {
+            if (user && localStorage.getItem('isLoggedIn') === 'true') {
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>

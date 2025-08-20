@@ -1,0 +1,76 @@
+<!-- Add User Modal -->
+<div id="add-user-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-user-plus"></i> Add New User</h3>
+            <span class="close" onclick="closeModal('add-user-modal')">&times;</span>
+        </div>
+        <form id="add-user-form">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="add-user-name">
+                        <i class="fas fa-user"></i> Full Name *
+                    </label>
+                    <input type="text" id="add-user-name" name="name" required placeholder="e.g., John Doe" title="Full name">
+                </div>
+                <div class="form-group">
+                    <label for="add-user-email">
+                        <i class="fas fa-envelope"></i> Email *
+                    </label>
+                    <input type="email" id="add-user-email" name="email" required placeholder="e.g., john.doe@example.com" title="Email address">
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="add-user-role">
+                        <i class="fas fa-user-tag"></i> Role *
+                    </label>
+                    <select id="add-user-role" name="role" required onchange="toggleDepartmentField()" title="User role">
+                        <option value="">Select Role</option>
+                        <option value="student">Student</option>
+                        <option value="lecturer">Lecturer</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="add-user-status">
+                        <i class="fas fa-toggle-on"></i> Status *
+                    </label>
+                    <select id="add-user-status" name="status" required title="Account status">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Course/Department Field (conditionally shown) -->
+            <div class="form-group" id="add-department-field-group" style="display: none;">
+                <label for="add-user-course" id="add-department-field-label">
+                    <i class="fas fa-graduation-cap"></i> Course Code *
+                </label>
+                <input type="text" id="add-user-course" name="course" placeholder="e.g., BCS, BCE, BME" title="Course code for students, Department for lecturers">
+            </div>
+
+            <!-- Matrix/Staff ID Field (conditionally shown) -->
+            <div class="form-group" id="add-matrix-id-field-group" style="display: none;">
+                <label for="add-user-matrix-id" id="add-matrix-id-field-label">
+                    <i class="fas fa-id-card"></i> Matrix Number *
+                </label>
+                <input type="text" id="add-user-matrix-id" name="matrixId" placeholder="e.g., BB123456 or STAFF001" title="Matrix number for students, Staff ID for lecturers">
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('add-user-modal')">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="submit" class="btn btn-primary" id="add-user-submit">
+                    <i class="fas fa-plus"></i> <span>Add User</span>
+                    <span id="add-user-loading" class="loading-spinner" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

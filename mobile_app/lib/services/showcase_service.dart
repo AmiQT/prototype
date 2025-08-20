@@ -38,8 +38,6 @@ class ShowcaseService {
 
   // Storage paths
   static const String _imagesPath = 'showcase_images';
-  static const String _videosPath = 'showcase_videos';
-  static const String _thumbnailsPath = 'showcase_thumbnails';
 
   // Upload progress controllers
   final Map<String, StreamController<MediaUploadProgress>> _uploadControllers =
@@ -273,7 +271,6 @@ class ShowcaseService {
     required String path,
     required String fileName,
     Function(double progress)? onProgress,
-    String? contentType,
   }) async {
     try {
       // TODO: Implement with Supabase Storage

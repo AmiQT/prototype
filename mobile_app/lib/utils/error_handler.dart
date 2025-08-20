@@ -29,16 +29,16 @@ class ErrorHandler {
     }
     
     switch (error.statusCode) {
-      case 400:
+      case '400':
         debugPrint('Bad request - check your input data');
         break;
-      case 401:
+      case '401':
         debugPrint('Unauthorized - please sign in again');
         break;
-      case 403:
+      case '403':
         debugPrint('Forbidden - insufficient permissions');
         break;
-      case 422:
+      case '422':
         debugPrint('Validation error - check your data format');
         break;
       default:

@@ -1,0 +1,464 @@
+/* QR Code Management Styles */
+
+.qr-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.qr-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.qr-stats-grid .stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.qr-stats-grid .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.qr-stats-grid .stat-icon {
+    font-size: 2.5rem;
+    opacity: 0.9;
+}
+
+.qr-stats-grid .stat-content {
+    flex: 1;
+}
+
+.qr-stats-grid .stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.qr-stats-grid .stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+/* QR Management Tabs */
+.qr-management-tabs {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.tab-buttons {
+    display: flex;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 15px 20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #6c757d;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.tab-btn:hover {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.tab-btn.active {
+    background: white;
+    color: #007bff;
+    border-bottom: 3px solid #007bff;
+}
+
+.tab-content {
+    display: none;
+    padding: 30px;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* QR Analytics Charts */
+.qr-charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 20px;
+}
+
+.qr-charts-grid .chart-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.qr-charts-grid .chart-card h3 {
+    margin-bottom: 15px;
+    color: #333;
+    font-size: 1.1rem;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+
+/* QR Events List */
+.qr-events-list .filters {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.qr-events-list .filters input,
+.qr-events-list .filters select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.qr-events-list .filters input {
+    flex: 1;
+    max-width: 300px;
+}
+
+#qr-events-container {
+    display: grid;
+    gap: 15px;
+}
+
+.qr-event-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #007bff;
+}
+
+.qr-event-card h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 1.1rem;
+}
+
+.qr-event-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+    margin: 15px 0;
+}
+
+.qr-event-stat {
+    text-align: center;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.qr-event-stat .value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #007bff;
+}
+
+.qr-event-stat .label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.qr-event-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+/* Claims Management */
+.claims-management .filters {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.claims-management .filters select,
+.claims-management .filters input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.claims-management .filters input {
+    flex: 1;
+    max-width: 300px;
+}
+
+#badge-claims-container {
+    display: grid;
+    gap: 15px;
+}
+
+.claim-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #007bff;
+    transition: transform 0.2s ease;
+}
+
+.claim-card:hover {
+    transform: translateY(-2px);
+}
+
+.claim-card.success {
+    border-left-color: #28a745;
+}
+
+.claim-card.danger {
+    border-left-color: #dc3545;
+}
+
+.claim-card.warning {
+    border-left-color: #ffc107;
+}
+
+.claim-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.claim-info {
+    flex: 1;
+}
+
+.claim-badge,
+.claim-event,
+.claim-method {
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+}
+
+.claim-badge {
+    font-weight: bold;
+    color: #333;
+    font-size: 1rem;
+}
+
+.claim-event {
+    color: #666;
+}
+
+.claim-method {
+    color: #007bff;
+    font-weight: 500;
+}
+
+.claim-status {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.claim-card.success .claim-status {
+    background: #d4edda;
+    color: #155724;
+}
+
+.claim-card.danger .claim-status {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.claim-card.warning .claim-status {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.claim-details {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.claim-details p {
+    margin: 5px 0;
+}
+
+.claim-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.claim-actions .btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+}
+
+.rejection-reason {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 6px;
+    color: #721c24;
+    font-size: 0.9rem;
+}
+
+/* QR Settings */
+.qr-settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 20px;
+}
+
+.qr-settings-grid .settings-card {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.qr-settings-grid .settings-card h3 {
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.qr-settings-grid .form-group {
+    margin-bottom: 20px;
+}
+
+.qr-settings-grid label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #333;
+}
+
+.qr-settings-grid select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .qr-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .qr-charts-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .tab-buttons {
+        flex-direction: column;
+    }
+    
+    .tab-btn {
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .qr-events-list .filters,
+    .claims-management .filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .qr-events-list .filters input,
+    .claims-management .filters input {
+        max-width: none;
+    }
+    
+    .qr-settings-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Loading States */
+.qr-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    color: #666;
+}
+
+.qr-loading i {
+    margin-right: 10px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Empty States */
+.qr-empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+}
+
+.qr-empty-state i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.qr-empty-state h3 {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.qr-empty-state p {
+    margin-bottom: 20px;
+}
+
+/* Animations */
+.tab-content {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+} 

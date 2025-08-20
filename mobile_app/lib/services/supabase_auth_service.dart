@@ -283,8 +283,7 @@ class SupabaseAuthService {
               .eq('user_id', userId)
               .single();
 
-          if (profileResponse != null &&
-              profileResponse['is_profile_complete'] != null) {
+          if (profileResponse['is_profile_complete'] != null) {
             profileCompleted = profileResponse['is_profile_complete'] as bool;
           }
         } catch (e) {
@@ -300,8 +299,7 @@ class SupabaseAuthService {
               .eq('id', userId)
               .single();
 
-          if (userResponse != null &&
-              userResponse['profile_completed'] != null) {
+          if (userResponse['profile_completed'] != null) {
             profileCompleted = userResponse['profile_completed'] as bool;
           }
         } catch (e) {
@@ -316,9 +314,7 @@ class SupabaseAuthService {
           role: _parseUserRole(supabaseUser.userMetadata?['role']),
           studentId: supabaseUser.userMetadata?['student_id'],
           department: supabaseUser.userMetadata?['department'],
-          createdAt: supabaseUser.createdAt != null
-              ? DateTime.parse(supabaseUser.createdAt.toString())
-              : DateTime.now(),
+          createdAt: DateTime.parse(supabaseUser.createdAt.toString()),
           lastLoginAt: DateTime.now(),
           isActive: true,
           profileCompleted: profileCompleted,
@@ -474,7 +470,7 @@ class SupabaseAuthService {
             .eq('user_id', userId)
             .single();
 
-        if (response != null && response['is_profile_complete'] != null) {
+        if (response['is_profile_complete'] != null) {
           return response['is_profile_complete'] as bool;
         }
       } catch (e) {
@@ -489,7 +485,7 @@ class SupabaseAuthService {
             .eq('id', userId)
             .single();
 
-        if (response != null && response['profile_completed'] != null) {
+        if (response['profile_completed'] != null) {
           return response['profile_completed'] as bool;
         }
       } catch (e) {

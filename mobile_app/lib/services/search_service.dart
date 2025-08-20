@@ -13,19 +13,6 @@ import '../config/supabase_config.dart';
 class SearchService {
   static const String baseUrl = 'https://c3168f89d034.ngrok-free.app'; // ngrok tunnel
   
-  // Get Supabase auth token for authentication
-  static Future<String?> _getAuthToken() async {
-    try {
-      final session = SupabaseConfig.auth.currentSession;
-      if (session?.accessToken != null) {
-        return session!.accessToken;
-      }
-      return null;
-    } catch (e) {
-      debugPrint('SearchService: Error getting auth token: $e');
-      return null;
-    }
-  }
   final ProfileService _profileService = ProfileService();
   final SupabaseAuthService _authService = SupabaseAuthService();
   final SearchAnalyticsService _analyticsService = SearchAnalyticsService();

@@ -2,8 +2,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import '../models/profile_model.dart';
-import '../models/experience_model.dart';
-import '../models/project_model.dart';
 import '../models/academic_info_model.dart';
 import '../config/supabase_config.dart';
 

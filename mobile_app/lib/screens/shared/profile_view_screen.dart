@@ -263,51 +263,21 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                         // Try to get profile by direct document ID
                         final directProfile = await profileService
                             .getProfileById('profile_${widget.userId}');
-                        debugPrint(
-                            'DEBUG: Direct profile lookup: ${directProfile?.fullName ?? 'null'}');
-
                         // Try to get all profiles and find this user
-                        final allProfiles =
-                            await profileService.getAllProfiles();
+                        final allProfiles = await profileService.getAllProfiles();
                         final userProfile = allProfiles
                             .where((p) => p.userId == widget.userId)
                             .toList();
-                        debugPrint(
-                            'DEBUG: Found ${userProfile.length} profiles for this user');
-                        debugPrint(
-                            'DEBUG: Total profiles in database: ${allProfiles.length}');
 
-                        if (userProfile.isNotEmpty) {
-                          debugPrint(
-                              'DEBUG: Profile found in all profiles: ${userProfile.first.fullName}');
-                          debugPrint(
-                              'DEBUG: Profile ID: ${userProfile.first.id}');
-                          debugPrint(
-                              'DEBUG: Profile userId: ${userProfile.first.userId}');
-                        }
-
-                        // Show all user IDs in database for comparison
-                        debugPrint('DEBUG: All user IDs in database:');
-                        for (final profile in allProfiles) {
-                          debugPrint(
-                              '  - ${profile.fullName}: ${profile.userId}');
-                        }
-
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                  'Debug: Direct=${directProfile != null}, All=${userProfile.length}, Total=${allProfiles.length}'),
-                            ),
-                          );
+                        if (userProfile.isNotEmpty && mounted) {
+                          setState(() {
+                            _profile = userProfile.first;
+                            _isLoading = false;
+                          });
+                          return;
                         }
                       } catch (e) {
-                        debugPrint('DEBUG: Error checking profiles: $e');
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Debug error: $e')),
-                          );
-                        }
+                        debugPrint('Error checking profiles: $e');
                       }
                     },
                     child: const Text('Debug: Check Database'),

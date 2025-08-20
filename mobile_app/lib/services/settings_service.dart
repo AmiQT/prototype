@@ -8,17 +8,6 @@ class SettingsService {
       'https://c3168f89d034.ngrok-free.app'; // ngrok tunnel
 
   // Get Supabase auth token for authentication
-  static Future<String?> _getAuthToken() async {
-    try {
-      final session = SupabaseConfig.auth.currentSession;
-      if (session?.accessToken != null) {
-        return session!.accessToken;
-      }
-      return null;
-    } catch (e) {
-      return null;
-    }
-  }
 
   // Get current user
   User? get currentUser => SupabaseConfig.auth.currentUser;
@@ -181,10 +170,7 @@ class SettingsService {
           .select()
           .eq('id', user.id)
           .single();
-      if (response != null) {
-        return UserModel.fromJson(response as Map<String, dynamic>);
-      }
-      return null;
+      return UserModel.fromJson(response);
     } catch (e) {
       debugPrint('SettingsService: Error fetching user data: $e');
       return null;
@@ -211,13 +197,11 @@ class SettingsService {
       final profileResponse =
           await SupabaseConfig.from('profiles').select().eq('userId', user.id);
 
-      if (profileResponse != null) {
-        final profiles = profileResponse as List<dynamic>;
-        for (final profile in profiles) {
+      final profiles = profileResponse;
+      for (final profile in profiles) {
           await SupabaseConfig.from('profiles')
               .delete()
               .eq('id', profile['id']);
-        }
       }
 
       // Note: In Supabase, user account deletion is typically handled through the admin interface
