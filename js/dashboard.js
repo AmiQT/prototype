@@ -1,11 +1,14 @@
 import { auth } from './core/firebase.js';
 import { initializeComponents } from './core/component-loader.js';
-import { testBackendConnection, makeAuthenticatedRequest, API_ENDPOINTS } from './config/backend-config.js';
+import { BACKEND_CONFIG, testBackendConnection, makeAuthenticatedRequest } from './config/backend-config.js';
 import { initializeSystemMonitoring, checkSystemStatus, createTestData, testBackendConnectivity } from './features/system-monitoring.js';
 import { setupNavigation, updateActiveNav, setupUserModals, setupDarkModeToggle, closeModal, closeAndCleanupModal, logout, removeNotification, changeTheme, toggleReducedMotion, toggleHighContrast, saveSettings, resetSettings, changePassword } from './ui/notifications.js';
 import { setupUserFilters, loadUsersTable, showAddUserModal, toggleDepartmentField, toggleEditDepartmentField, showEditUserModal, handleAddUser, handleEditUser, deleteUser, unsubscribeUsers } from './features/users/users.js';
 import { setupEventsSection, loadEventsTable, showAddEventModal, showEditEventModal, handleAddEvent, handleEditEvent, deleteEvent } from './features/events/events.js';
 import { loadOverviewStats, refreshOverviewStats, setupAnalytics, generateReport, generateCustomChart, exportToCSV, refreshChart, cleanupAnalytics } from './features/analytics.js';
+
+// Get API endpoints from the config
+const API_ENDPOINTS = BACKEND_CONFIG.endpoints;
 
 // Import test functions in development
 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {

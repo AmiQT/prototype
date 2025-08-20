@@ -31,7 +31,6 @@ class _ModernUserCardState extends State<ModernUserCard>
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
 
-  bool _isPressed = false;
 
   @override
   void initState() {

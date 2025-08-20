@@ -32,7 +32,6 @@ class ModernEventHeader extends StatefulWidget {
 
 class _ModernEventHeaderState extends State<ModernEventHeader> {
   final TextEditingController _searchController = TextEditingController();
-  bool _isSearchActive = false;
 
   @override
   void initState() {

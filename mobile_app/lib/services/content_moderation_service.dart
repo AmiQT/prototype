@@ -109,21 +109,15 @@ class ContentModerationService {
     }
   }
 
-  // Add missing collections and methods
-  final reportsCollection = SupabaseConfig.from('reports');
-  final moderationActionsCollection = SupabaseConfig.from('moderation_actions');
-  
-  // Add profanity word list
-  static const List<String> _profanityWords = [
-    'spam', 'inappropriate', 'offensive', 'harassment'
-  ];
 
   /// Validate content for inappropriate material
   Future<bool> validateContent(String content) async {
     try {
-      // Simple profanity check
+      // Simple profanity check - can be enhanced with AI/ML
       final lowerContent = content.toLowerCase();
-      for (final word in _profanityWords) {
+      final profanityWords = ['spam', 'inappropriate', 'offensive', 'harassment'];
+      
+      for (final word in profanityWords) {
         if (lowerContent.contains(word)) {
           return false;
         }

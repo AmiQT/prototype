@@ -1,0 +1,13 @@
+# Run these commands in your terminal to fix the import issues:
+
+# 1. Add all changes
+git add .
+
+# 2. Commit the fixes
+git commit -m "Fix import statements - use BACKEND_CONFIG instead of direct API_ENDPOINTS import"
+
+# 3. Push to trigger GitHub Pages redeploy
+git push origin main
+
+# This will fix the "API_ENDPOINTS export not found" error
+# and trigger a new GitHub Pages deployment with the corrected code.

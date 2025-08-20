@@ -1,6 +1,9 @@
 import { db } from '../core/firebase.js';
-import { API_ENDPOINTS, makeAuthenticatedRequest, testBackendConnection } from '../config/backend-config.js';
+import { BACKEND_CONFIG, makeAuthenticatedRequest, testBackendConnection } from '../config/backend-config.js';
 import { addNotification } from '../ui/notifications.js';
+
+// Get API endpoints from the config
+const API_ENDPOINTS = BACKEND_CONFIG.endpoints;
 
 // Enhanced imports with fallbacks
 let dataFetcher, chartManager, analyticsCache, AnalyticsValidator;

@@ -261,7 +261,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
 
                       try {
                         // Try to get profile by direct document ID
-                        final directProfile = await profileService
+                        await profileService
                             .getProfileById('profile_${widget.userId}');
                         // Try to get all profiles and find this user
                         final allProfiles = await profileService.getAllProfiles();

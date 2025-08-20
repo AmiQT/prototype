@@ -57,8 +57,6 @@ class ModernTextField extends StatefulWidget {
 class _ModernTextFieldState extends State<ModernTextField>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
-  late Animation<double> _labelAnimation;
-  late Animation<Color?> _borderColorAnimation;
   late FocusNode _focusNode;
 
   bool _isFocused = false;
