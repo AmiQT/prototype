@@ -18,7 +18,11 @@ const BACKEND_CONFIG = {
     analytics: '/api/analytics',
     profiles: '/api/profiles',
     showcase: '/api/showcase',
-    sync: '/api/sync'
+    sync: '/api/sync',
+    system: {
+      status: '/api/system/status',
+      health: '/api/system/health'
+    }
   },
   
   // API Settings
@@ -58,13 +62,16 @@ const BACKEND_CONFIG = {
   }
 };
 
+// Export API_ENDPOINTS for compatibility
+export const API_ENDPOINTS = BACKEND_CONFIG.endpoints;
+
 // Helper function to get full API URL
-function getApiUrl(endpoint) {
+export function getApiUrl(endpoint) {
   return `${BACKEND_CONFIG.baseUrl}${endpoint}`;
 }
 
 // Helper function to get auth headers
-function getAuthHeaders() {
+export function getAuthHeaders() {
   const token = localStorage.getItem(BACKEND_CONFIG.auth.tokenKey);
   return {
     ...BACKEND_CONFIG.cors.headers,
@@ -72,13 +79,64 @@ function getAuthHeaders() {
   };
 }
 
+// Helper function for authenticated requests
+export async function makeAuthenticatedRequest(endpoint, options = {}) {
+  try {
+    const url = getApiUrl(endpoint);
+    const headers = getAuthHeaders();
+    
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...headers,
+        ...options.headers
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error(`Request failed for ${endpoint}:`, error);
+    throw error;
+  }
+}
+
+// Helper function to test backend connection
+export async function testBackendConnection() {
+  try {
+    const response = await fetch(`${BACKEND_CONFIG.baseUrl}/docs`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'text/html'
+      }
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('Backend connection test failed:', error);
+    return false;
+  }
+}
+
 // Export configuration
 if (typeof module !== 'undefined' && module.exports) {
   // Node.js environment
-  module.exports = { BACKEND_CONFIG, getApiUrl, getAuthHeaders };
+  module.exports = { 
+    BACKEND_CONFIG, 
+    API_ENDPOINTS,
+    getApiUrl, 
+    getAuthHeaders, 
+    makeAuthenticatedRequest,
+    testBackendConnection
+  };
 } else {
   // Browser environment
   window.BACKEND_CONFIG = BACKEND_CONFIG;
+  window.API_ENDPOINTS = API_ENDPOINTS;
   window.getApiUrl = getApiUrl;
   window.getAuthHeaders = getAuthHeaders;
+  window.makeAuthenticatedRequest = makeAuthenticatedRequest;
+  window.testBackendConnection = testBackendConnection;
 }
