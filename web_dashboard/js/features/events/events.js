@@ -1,9 +1,9 @@
 import { db } from '../../core/firebase.js';
 import { addNotification, closeModal } from '../../ui/notifications.js';
-import { achievementsCache, loadAchievementsData } from '../achievements/achievements.js';
+// Achievement imports removed - not needed for talent profiling system
 
 function setupEventsSection() {
-    console.log('Setting up events section...');
+    // Setting up events section
 
     // Test Firebase connection
     if (!db) {
@@ -378,63 +378,26 @@ async function deleteEvent(id) {
 
 async function loadAvailableBadges() {
     try {
-        console.log('Loading available badges for event assignment...');
-
-        // Load achievements data if not already cached
-        if (!achievementsCache || achievementsCache.length === 0) {
-            await loadAchievementsData();
-        }
-
+        console.log('Achievement system removed - no badges to load');
+        
         const badgeSelectionGrid = document.getElementById('add-event-badge-selection');
         if (!badgeSelectionGrid) {
             console.warn('Badge selection grid not found');
             return;
         }
 
-        // Clear existing content
-        badgeSelectionGrid.innerHTML = '';
-
-        if (!achievementsCache || achievementsCache.length === 0) {
-            badgeSelectionGrid.innerHTML = `
-                <div class="no-badges-message">
-                    <i class="fas fa-trophy"></i>
-                    <p>No badges available yet. Create some badges first!</p>
-                </div>
-            `;
-            return;
-        }
-
-        // Render available badges
-        achievementsCache.forEach(badge => {
-            const badgeOption = document.createElement('div');
-            badgeOption.className = 'badge-option';
-            badgeOption.dataset.badgeId = badge.id;
-
-            badgeOption.innerHTML = `
-                <div class="badge-option-icon">${badge.icon || '🏆'}</div>
-                <div class="badge-option-info">
-                    <div class="badge-option-name">${badge.name}</div>
-                    <div class="badge-option-details">
-                        <span class="badge-option-category">${badge.category}</span>
-                        <span class="badge-option-points">${badge.points} pts</span>
-                    </div>
-                </div>
-                <div class="selection-indicator">
-                    <i class="fas fa-check"></i>
-                </div>
-            `;
-
-            // Add click handler for selection
-            badgeOption.addEventListener('click', () => toggleBadgeSelection(badge.id, badgeOption));
-
-            badgeSelectionGrid.appendChild(badgeOption);
-        });
-
-        console.log(`Loaded ${achievementsCache.length} badges for assignment`);
+        // Show removal message
+        badgeSelectionGrid.innerHTML = `
+            <div class="no-badges-message">
+                <i class="fas fa-info-circle"></i>
+                <p>Achievement system has been removed</p>
+                <small>This feature is no longer available for talent profiling</small>
+            </div>
+        `;
 
     } catch (error) {
-        console.error('Error loading available badges:', error);
-        addNotification('Error loading badges: ' + error.message, 'error');
+        console.error('Error in loadAvailableBadges:', error);
+        addNotification('Achievement system removed', 'info');
     }
 }
 
@@ -456,15 +419,8 @@ function getSelectedBadges() {
 
     selectedElements.forEach(element => {
         const badgeId = element.dataset.badgeId;
-        const badge = achievementsCache.find(b => b.id === badgeId);
-        if (badge) {
-            selectedBadges.push({
-                id: badge.id,
-                name: badge.name,
-                points: badge.points,
-                icon: badge.icon
-            });
-        }
+        // Achievement system removed - no badges available
+        console.log('Badge selection not available - achievement system removed');
     });
 
     return selectedBadges;

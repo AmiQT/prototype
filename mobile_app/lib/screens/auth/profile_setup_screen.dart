@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../services/auth_service.dart';
+import '../../services/supabase_auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../models/user_model.dart';
 import '../../models/profile_model.dart';
@@ -111,7 +111,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   }
 
   Future<void> _loadCurrentUser() async {
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService =
+        Provider.of<SupabaseAuthService>(context, listen: false);
     _currentUser = authService.currentUser;
 
     if (_currentUser != null) {
@@ -156,7 +157,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     });
 
     try {
-      final authService = Provider.of<AuthService>(context, listen: false);
+      final authService =
+          Provider.of<SupabaseAuthService>(context, listen: false);
       final profileService =
           Provider.of<ProfileService>(context, listen: false);
 
@@ -204,7 +206,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       await profileService.saveProfile(profile);
 
       // Update user profile completion status
-      await authService.updateUserData(user.uid, {
+      await authService.updateUserProfile({
         'profileCompleted': true,
         'updatedAt': DateTime.now().toIso8601String(),
       });

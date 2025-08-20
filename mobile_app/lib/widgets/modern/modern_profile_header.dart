@@ -118,9 +118,9 @@ class ModernProfileHeader extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppTheme.spaceXs),
-          if (profile.department.isNotEmpty)
+          if (profile.department != null && profile.department!.isNotEmpty)
             Text(
-              profile.department,
+              profile.department!,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: Colors.white.withValues(alpha: 0.9),
                   ),
@@ -350,7 +350,7 @@ class ModernProfileHeader extends StatelessWidget {
     );
   }
 
-  ImageProvider _getProfileImage(String? imageUrl) {
+  ImageProvider? _getProfileImage(String? imageUrl) {
     if (imageUrl == null || imageUrl.isEmpty) {
       return const AssetImage('assets/images/default_profile.png');
     } else if (imageUrl.startsWith('data:image')) {
@@ -358,7 +358,12 @@ class ModernProfileHeader extends StatelessWidget {
       final bytes = base64Decode(base64String);
       return MemoryImage(bytes);
     } else if (imageUrl.startsWith('http')) {
-      return NetworkImage(imageUrl);
+      final uri = Uri.tryParse(imageUrl);
+      if (uri != null && uri.hasAbsolutePath) {
+        return NetworkImage(imageUrl);
+      } else {
+        return const AssetImage('assets/images/default_profile.png');
+      }
     } else {
       return FileImage(File(imageUrl));
     }

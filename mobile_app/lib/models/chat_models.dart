@@ -1,4 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+// Firebase import removed - migrating to Supabase
+// import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Optimized chat message model for Firebase free tier
 class ChatMessage {
@@ -24,11 +25,10 @@ class ChatMessage {
     this.metadata,
   });
 
-  // Optimized factory for Firestore - minimal data transfer
-  factory ChatMessage.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+  // Factory for Supabase - minimal data transfer
+  factory ChatMessage.fromSupabase(Map<String, dynamic> data) {
     return ChatMessage(
-      id: doc.id,
+      id: data['id'] ?? '',
       conversationId: data['conversationId'] ?? '',
       userId: data['userId'] ?? '',
       content: data['content'] ?? '',
@@ -36,7 +36,9 @@ class ChatMessage {
         (role) => role.toString().split('.').last == data['role'],
         orElse: () => MessageRole.user,
       ),
-      timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      timestamp: data['timestamp'] != null
+          ? DateTime.parse(data['timestamp'])
+          : DateTime.now(),
       status: MessageStatus.values.firstWhere(
         (status) =>
             status.toString().split('.').last == (data['status'] ?? 'sent'),
@@ -82,7 +84,7 @@ class ChatMessage {
   }
 
   // Optimized toMap - only essential fields to minimize writes
-  Map<String, dynamic> toFirestore() {
+  Map<String, dynamic> toSupabase() {
     return {
       'conversationId': conversationId,
       'userId': userId,
@@ -90,7 +92,7 @@ class ChatMessage {
           ? content.substring(0, 1000)
           : content, // Limit content size
       'role': role.toString().split('.').last,
-      'timestamp': FieldValue.serverTimestamp(),
+      'timestamp': DateTime.now().toIso8601String(),
       'status': status.toString().split('.').last,
       if (tokens != null) 'tokens': tokens,
       if (metadata != null && metadata!.isNotEmpty) 'metadata': metadata,
@@ -146,27 +148,32 @@ class ChatConversation {
     this.lastMessageAt,
   });
 
-  factory ChatConversation.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+  factory ChatConversation.fromSupabase(Map<String, dynamic> data) {
     return ChatConversation(
-      id: doc.id,
+      id: data['id'] ?? '',
       userId: data['userId'] ?? '',
       title: data['title'] ?? 'New Conversation',
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      createdAt: data['createdAt'] != null
+          ? DateTime.parse(data['createdAt'])
+          : DateTime.now(),
+      updatedAt: data['updatedAt'] != null
+          ? DateTime.parse(data['updatedAt'])
+          : DateTime.now(),
       isActive: data['isActive'] ?? true,
       messageCount: data['messageCount'] ?? 0,
       lastMessage: data['lastMessage'],
-      lastMessageAt: (data['lastMessageAt'] as Timestamp?)?.toDate(),
+      lastMessageAt: data['lastMessageAt'] != null
+          ? DateTime.parse(data['lastMessageAt'])
+          : null,
     );
   }
 
-  Map<String, dynamic> toFirestore() {
+  Map<String, dynamic> toSupabase() {
     return {
       'userId': userId,
       'title': title,
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
+      'createdAt': DateTime.now().toIso8601String(),
+      'updatedAt': DateTime.now().toIso8601String(),
       'isActive': isActive,
       'messageCount': messageCount,
       if (lastMessage != null)
@@ -174,7 +181,7 @@ class ChatConversation {
             ? lastMessage!.substring(0, 100)
             : lastMessage,
       if (lastMessageAt != null)
-        'lastMessageAt': Timestamp.fromDate(lastMessageAt!),
+        'lastMessageAt': lastMessageAt!.toIso8601String(),
     };
   }
 

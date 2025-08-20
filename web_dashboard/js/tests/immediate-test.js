@@ -130,10 +130,10 @@ function runImmediateTests() {
 }
 
 // Auto-run the test
-console.log('🧪 Auto-running immediate tests...');
-setTimeout(() => {
-    runImmediateTests();
-}, 1000); // Wait 1 second for everything to load
+// Auto-running immediate tests - disabled for cleaner console
+// setTimeout(() => {
+//     runImmediateTests();
+// }, 1000);
 
 // Make available globally
 if (typeof window !== 'undefined') {

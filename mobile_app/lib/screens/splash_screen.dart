@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../services/auth_service.dart';
+import '../services/supabase_auth_service.dart';
 import '../models/user_model.dart';
+import 'auth/comprehensive_profile_setup_screen.dart';
 import 'auth/login_screen.dart';
 import 'student/enhanced_student_dashboard.dart';
 import 'lecturer/lecturer_dashboard.dart';
@@ -62,7 +63,8 @@ class _SplashScreenState extends State<SplashScreen>
     if (_disposed || !mounted) return;
 
     try {
-      final authService = Provider.of<AuthService>(context, listen: false);
+      final authService =
+          Provider.of<SupabaseAuthService>(context, listen: false);
 
       // First, try to restore user session from Firebase Auth
       debugPrint('SplashScreen: Attempting to restore user session...');
@@ -91,7 +93,22 @@ class _SplashScreenState extends State<SplashScreen>
     }
   }
 
-  void _navigateBasedOnRole(UserModel user) {
+  void _navigateBasedOnRole(UserModel user) async {
+    // Check if user has completed their profile
+    final authService = Provider.of<SupabaseAuthService>(context, listen: false);
+    final hasCompletedProfile = await authService.hasCompletedProfile(user.uid);
+    
+    if (!hasCompletedProfile) {
+      // Redirect to profile setup if profile is not complete
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => const ComprehensiveProfileSetupScreen(),
+        ),
+      );
+      return;
+    }
+    
+    // Profile is complete, navigate to appropriate dashboard
     Widget targetScreen;
 
     switch (user.role) {

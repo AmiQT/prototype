@@ -3,10 +3,11 @@ import 'package:provider/provider.dart';
 import '../../../models/showcase_models.dart';
 import '../../../models/user_model.dart';
 import '../../../services/showcase_service.dart';
-import '../../../services/auth_service.dart';
+import '../../../services/supabase_auth_service.dart';
 import '../../../widgets/showcase/post_card_widget.dart';
 import '../../../widgets/showcase/comment_widgets.dart';
 import '../../../widgets/showcase/share_widget.dart';
+import 'post_creation_screen.dart';
 
 class PostDetailScreen extends StatefulWidget {
   final String postId;
@@ -50,7 +51,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   void _loadCurrentUser() {
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService =
+        Provider.of<SupabaseAuthService>(context, listen: false);
     _currentUser = authService.currentUser;
   }
 
@@ -295,11 +297,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
     try {
       await _showcaseService.addComment(
-        postId: _post!.id,
-        userId: _currentUser!.uid,
-        userName: _currentUser!.name,
-        content: content,
-        parentCommentId: parentCommentId,
+        _post!.id,
+        _currentUser!.uid,
+        content,
       );
     } catch (e) {
       if (mounted) {
@@ -328,9 +328,17 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
   void _handleEdit(ShowcasePostModel post) {
     // Navigate to edit post screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Edit post feature coming soon!')),
-    );
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PostCreationScreen(
+          editingPost: post,
+        ),
+      ),
+    ).then((_) {
+      // Refresh the post data when returning from edit screen
+      _loadPost();
+    });
   }
 
   void _handleDelete(ShowcasePostModel post) {
@@ -341,9 +349,19 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     switch (action) {
       case 'edit':
         // Navigate to edit post screen
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Edit post feature coming soon!')),
-        );
+        if (_post != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PostCreationScreen(
+                editingPost: _post!,
+              ),
+            ),
+          ).then((_) {
+            // Refresh the post data when returning from edit screen
+            _loadPost();
+          });
+        }
         break;
       case 'delete':
         _showDeleteConfirmation();
@@ -368,7 +386,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
               Navigator.pop(context); // Close dialog
 
               try {
-                await _showcaseService.deletePostWithMedia(_post!.id);
+                await _showcaseService.deleteShowcasePost(_post!.id);
                 if (mounted) {
                   Navigator.pop(context); // Go back to feed
                   ScaffoldMessenger.of(context).showSnackBar(

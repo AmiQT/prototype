@@ -160,12 +160,45 @@ class MediaDisplayWidget extends StatelessWidget {
   }
 
   Widget _buildMediaContent(MediaModel mediaItem) {
+    debugPrint('MediaDisplayWidget: Rendering media - URL: ${mediaItem.url}, Type: ${mediaItem.type}');
+    
+    // Check for invalid URLs first
+    if (mediaItem.url.isEmpty || 
+        mediaItem.url.trim().isEmpty ||
+        mediaItem.url == 'null' ||
+        mediaItem.url == 'file:///' ||
+        Uri.tryParse(mediaItem.url)?.hasAbsolutePath != true) {
+      debugPrint('MediaDisplayWidget: Invalid URL detected: "${mediaItem.url}"');
+      return Container(
+        color: Colors.grey[300],
+        child: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.broken_image,
+                color: Colors.grey,
+                size: 40,
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Invalid media URL',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    
     if (mediaItem.type == 'video') {
       return Stack(
         fit: StackFit.expand,
         children: [
           // Video thumbnail
-          if (mediaItem.thumbnailUrl != null)
+          if (mediaItem.thumbnailUrl != null && 
+              mediaItem.thumbnailUrl!.isNotEmpty && 
+              Uri.tryParse(mediaItem.thumbnailUrl!)?.hasAbsolutePath == true)
             CachedNetworkImage(
               imageUrl: mediaItem.thumbnailUrl!,
               fit: BoxFit.cover,
@@ -233,6 +266,20 @@ class MediaDisplayWidget extends StatelessWidget {
       );
     } else {
       // Image
+      // Check if URL is valid before trying to load
+      if (mediaItem.url.isEmpty || Uri.tryParse(mediaItem.url)?.hasAbsolutePath != true) {
+        return Container(
+          color: Colors.grey[300],
+          child: const Center(
+            child: Icon(
+              Icons.broken_image,
+              color: Colors.grey,
+              size: 40,
+            ),
+          ),
+        );
+      }
+      
       return CachedNetworkImage(
         imageUrl: mediaItem.url,
         fit: BoxFit.cover,

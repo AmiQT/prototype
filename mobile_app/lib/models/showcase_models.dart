@@ -1,4 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+// Firebase import removed - migrating to Supabase
+// import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Enum for different types of showcase posts
 enum PostType {
@@ -58,10 +59,9 @@ class MediaModel {
       duration: json['duration'],
       aspectRatio: json['aspectRatio']?.toDouble(),
       fileSize: json['fileSize'],
-      uploadedAt: json['uploadedAt'] is Timestamp
-          ? (json['uploadedAt'] as Timestamp).toDate()
-          : DateTime.parse(
-              json['uploadedAt'] ?? DateTime.now().toIso8601String()),
+      uploadedAt: json['uploadedAt'] is String
+          ? DateTime.parse(json['uploadedAt'])
+          : DateTime.fromMillisecondsSinceEpoch(json['uploadedAt'] ?? 0),
     );
   }
 
@@ -162,14 +162,12 @@ class CommentModel {
               ?.map((r) => CommentModel.fromJson(r))
               .toList() ??
           [],
-      createdAt: json['createdAt'] is Timestamp
-          ? (json['createdAt'] as Timestamp).toDate()
-          : DateTime.parse(
-              json['createdAt'] ?? DateTime.now().toIso8601String()),
-      updatedAt: json['updatedAt'] is Timestamp
-          ? (json['updatedAt'] as Timestamp).toDate()
-          : DateTime.parse(
-              json['updatedAt'] ?? DateTime.now().toIso8601String()),
+      createdAt: json['createdAt'] is String
+          ? DateTime.parse(json['createdAt'])
+          : DateTime.fromMillisecondsSinceEpoch(json['createdAt'] ?? 0),
+      updatedAt: json['updatedAt'] is String
+          ? DateTime.parse(json['updatedAt'])
+          : DateTime.fromMillisecondsSinceEpoch(json['updatedAt'] ?? 0),
       isEdited: json['isEdited'] ?? false,
     );
   }
@@ -346,14 +344,12 @@ class ShowcasePostModel {
           [],
       shares: List<String>.from(json['shares'] ?? []),
       viewCount: json['viewCount'] ?? 0,
-      createdAt: json['createdAt'] is Timestamp
-          ? (json['createdAt'] as Timestamp).toDate()
-          : DateTime.parse(
-              json['createdAt'] ?? DateTime.now().toIso8601String()),
-      updatedAt: json['updatedAt'] is Timestamp
-          ? (json['updatedAt'] as Timestamp).toDate()
-          : DateTime.parse(
-              json['updatedAt'] ?? DateTime.now().toIso8601String()),
+      createdAt: json['createdAt'] is String
+          ? DateTime.parse(json['createdAt'])
+          : DateTime.fromMillisecondsSinceEpoch(json['createdAt'] ?? 0),
+      updatedAt: json['updatedAt'] is String
+          ? DateTime.parse(json['updatedAt'])
+          : DateTime.fromMillisecondsSinceEpoch(json['updatedAt'] ?? 0),
       isEdited: json['isEdited'] ?? false,
       isPinned: json['isPinned'] ?? false,
       isArchived: json['isArchived'] ?? false,

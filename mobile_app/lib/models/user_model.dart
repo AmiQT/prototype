@@ -8,9 +8,11 @@ class UserModel {
   final String name;
   final UserRole role;
   final String? studentId; // For students
+  final String? staffId; // For lecturers/staff
   final String? department;
   final DateTime createdAt;
   final DateTime? lastLoginAt;
+  final DateTime? updatedAt;
   final bool isActive;
   final bool profileCompleted; // New field for profile completion status
 
@@ -21,11 +23,13 @@ class UserModel {
     required this.name,
     required this.role,
     this.studentId,
+    this.staffId,
     this.department,
     required this.createdAt,
     this.lastLoginAt,
     this.isActive = true,
     this.profileCompleted = false, // Default to false
+    this.updatedAt,
   });
 
   // Factory constructor to create UserModel from JSON

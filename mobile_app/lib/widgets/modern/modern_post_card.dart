@@ -8,6 +8,7 @@ import '../../models/user_model.dart';
 import '../../services/showcase_service.dart';
 import '../../screens/student/showcase/post_creation_screen.dart';
 import '../../utils/app_theme.dart';
+import '../showcase/media_display_widget.dart';
 
 class ModernPostCard extends StatefulWidget {
   final ShowcasePostModel post;
@@ -71,21 +72,34 @@ class _ModernPostCardState extends State<ModernPostCard>
   }
 
   ImageProvider? _getProfileImageProvider(String? imageUrl) {
-    if (imageUrl == null || imageUrl.isEmpty) {
+    // Check for null, empty, or invalid URLs
+    if (imageUrl == null || 
+        imageUrl.isEmpty || 
+        imageUrl.trim().isEmpty ||
+        imageUrl == 'null' ||
+        imageUrl == 'file:///' ||
+        Uri.tryParse(imageUrl)?.hasAbsolutePath != true) {
       return null;
-    } else if (imageUrl.startsWith('data:image')) {
-      // Handle base64 images
-      final base64String = imageUrl.split(',')[1];
-      final bytes = base64Decode(base64String);
-      return MemoryImage(bytes);
-    } else if (imageUrl.startsWith('http')) {
-      // Handle network images
-      return CachedNetworkImageProvider(imageUrl);
-    } else if (imageUrl.startsWith('/') || imageUrl.contains('cache')) {
-      // Handle local file images
-      return FileImage(File(imageUrl));
-    } else {
-      // Invalid URL, return null to show fallback
+    }
+    
+    try {
+      if (imageUrl.startsWith('data:image')) {
+        // Handle base64 images
+        final base64String = imageUrl.split(',')[1];
+        final bytes = base64Decode(base64String);
+        return MemoryImage(bytes);
+      } else if (imageUrl.startsWith('http')) {
+        // Handle network images
+        return CachedNetworkImageProvider(imageUrl);
+      } else if (imageUrl.startsWith('/') || imageUrl.contains('cache')) {
+        // Handle local file images
+        return FileImage(File(imageUrl));
+      } else {
+        // Invalid URL, return null to show fallback
+        return null;
+      }
+    } catch (e) {
+      debugPrint('Error loading profile image: $e');
       return null;
     }
   }
@@ -120,7 +134,21 @@ class _ModernPostCardState extends State<ModernPostCard>
                 children: [
                   _buildPostHeader(),
                   if (widget.post.content.isNotEmpty) _buildPostContent(),
-                  if (widget.post.hasMedia) _buildMediaContent(),
+                  if (widget.post.hasMedia) ...[
+                    // Debug: Show that we're about to build media content
+                    Builder(builder: (context) {
+                      debugPrint(
+                          'ModernPostCard: About to build media content for post ${widget.post.id}');
+                      return _buildMediaContent();
+                    }),
+                  ] else ...[
+                    // Debug: Show why media content is not being built
+                    Builder(builder: (context) {
+                      debugPrint(
+                          'ModernPostCard: NOT building media content for post ${widget.post.id} - hasMedia: ${widget.post.hasMedia}, media.length: ${widget.post.media.length}');
+                      return const SizedBox.shrink();
+                    }),
+                  ],
                   _buildEngagementSection(),
                   _buildActionButtons(),
                 ],
@@ -391,9 +419,9 @@ class _ModernPostCardState extends State<ModernPostCard>
         ),
       );
 
-      // Import the showcase service
+      // Use backend delete API instead of Firestore
       final showcaseService = ShowcaseService();
-      await showcaseService.deletePostWithMedia(widget.post.id);
+      await showcaseService.deleteShowcasePost(widget.post.id);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -576,32 +604,32 @@ class _ModernPostCardState extends State<ModernPostCard>
   }
 
   Widget _buildMediaContent() {
+    // Debug logging
+    debugPrint(
+        'ModernPostCard: Building media content for post ${widget.post.id}');
+    debugPrint('ModernPostCard: hasMedia = ${widget.post.hasMedia}');
+    debugPrint('ModernPostCard: media.length = ${widget.post.media.length}');
+    if (widget.post.media.isNotEmpty) {
+      debugPrint(
+          'ModernPostCard: First media URL = ${widget.post.media.first.url}');
+      debugPrint(
+          'ModernPostCard: First media type = ${widget.post.media.first.type}');
+    }
+
     if (widget.post.media.isEmpty) return const SizedBox.shrink();
 
     return Container(
       margin: const EdgeInsets.only(top: AppTheme.spaceMd),
-      height: 200,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        child: CachedNetworkImage(
-          imageUrl: widget.post.media.first.url,
-          fit: BoxFit.cover,
-          placeholder: (context, url) => Container(
-            color: AppTheme.surfaceVariant,
-            child: const Center(
-              child: CircularProgressIndicator(
-                valueColor:
-                    AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
-              ),
-            ),
-          ),
-          errorWidget: (context, url, error) => Container(
-            color: AppTheme.surfaceVariant,
-            child: const Icon(
-              Icons.image_not_supported_rounded,
-              color: AppTheme.textSecondaryColor,
-            ),
-          ),
+        child: MediaDisplayWidget(
+          media: widget.post.media,
+          height: 250,
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+          onMediaTap: (index) {
+            // Handle media tap - could open full screen view
+            widget.onPostTap(widget.post);
+          },
         ),
       ),
     );

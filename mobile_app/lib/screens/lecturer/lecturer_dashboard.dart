@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../services/auth_service.dart';
+import '../../../services/supabase_auth_service.dart';
 import '../../../services/achievement_service.dart';
 import '../../../services/profile_service.dart';
 import '../../../models/user_model.dart';
@@ -31,7 +31,8 @@ class _LecturerDashboardState extends State<LecturerDashboard> {
 
   Future<void> _loadUserData() async {
     try {
-      final authService = Provider.of<AuthService>(context, listen: false);
+      final authService =
+          Provider.of<SupabaseAuthService>(context, listen: false);
       final achievementService =
           Provider.of<AchievementService>(context, listen: false);
       final profileService =
@@ -178,7 +179,8 @@ class _LecturerDashboardState extends State<LecturerDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService =
+        Provider.of<SupabaseAuthService>(context, listen: false);
     final userRole = authService.currentUser?.role;
     if (_isLoading) {
       return const Scaffold(
@@ -238,7 +240,8 @@ class _LecturerDashboardState extends State<LecturerDashboard> {
             ],
             onSelected: (value) {
               if (value == 'logout') {
-                Provider.of<AuthService>(context, listen: false).signOut();
+                Provider.of<SupabaseAuthService>(context, listen: false)
+                    .signOut();
               } else if (value == 'settings') {
                 Navigator.push(
                   context,

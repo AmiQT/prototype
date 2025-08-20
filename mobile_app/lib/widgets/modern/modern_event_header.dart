@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../services/auth_service.dart';
+import '../../services/supabase_auth_service.dart';
 import '../../utils/app_theme.dart';
 import '../../l10n/generated/app_localizations.dart';
 
@@ -165,7 +165,7 @@ class _ModernEventHeaderState extends State<ModernEventHeader> {
   }
 
   Widget _buildProfileButton(BuildContext context) {
-    return Consumer<AuthService>(
+    return Consumer<SupabaseAuthService>(
       builder: (context, authService, child) {
         final user = authService.currentUser;
         return GestureDetector(
@@ -195,7 +195,7 @@ class _ModernEventHeaderState extends State<ModernEventHeader> {
   }
 
   Widget _buildWelcomeSection(BuildContext context) {
-    return Consumer<AuthService>(
+    return Consumer<SupabaseAuthService>(
       builder: (context, authService, child) {
         final user = authService.currentUser;
         final timeOfDay = _getTimeOfDay();

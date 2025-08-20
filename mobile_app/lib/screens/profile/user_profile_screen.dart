@@ -8,7 +8,7 @@ import '../../models/experience_model.dart';
 import '../../models/project_model.dart';
 import '../../services/profile_service.dart';
 import '../../services/showcase_service.dart';
-import '../../services/auth_service.dart';
+import '../../services/supabase_auth_service.dart';
 import '../../widgets/showcase/post_card_widget.dart';
 import '../student/showcase/post_detail_screen.dart';
 import '../../utils/app_theme.dart';
@@ -32,7 +32,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
     with SingleTickerProviderStateMixin {
   final ProfileService _profileService = ProfileService();
   final ShowcaseService _showcaseService = ShowcaseService();
-  final AuthService _authService = AuthService();
+  final SupabaseAuthService _authService = SupabaseAuthService();
   late TabController _tabController;
 
   UserModel? _user;
@@ -59,7 +59,8 @@ class _UserProfileScreenState extends State<UserProfileScreen>
   }
 
   void _loadCurrentUser() {
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService =
+        Provider.of<SupabaseAuthService>(context, listen: false);
     _currentUser = authService.currentUser;
   }
 
@@ -389,7 +390,11 @@ class _UserProfileScreenState extends State<UserProfileScreen>
               child: CircleAvatar(
                 radius: 52,
                 backgroundImage: _profile?.profileImageUrl != null
-                    ? NetworkImage(_profile!.profileImageUrl!)
+                    ? (Uri.tryParse(_profile!.profileImageUrl!)
+                                ?.hasAbsolutePath ==
+                            true
+                        ? NetworkImage(_profile!.profileImageUrl!)
+                        : null)
                     : null,
                 backgroundColor: const Color(0xFF3B82F6).withValues(alpha: 0.1),
                 child: _profile?.profileImageUrl == null

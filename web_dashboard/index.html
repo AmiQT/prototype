@@ -31,14 +31,7 @@
                     <i class="fas fa-calendar-alt"></i>
                     <span>Event Management</span>
                 </li>
-                <li class="nav-item" data-section="achievements">
-                    <i class="fas fa-trophy"></i>
-                    <span>Achievement Management</span>
-                </li>
-                <li class="nav-item" data-section="student-claiming">
-                    <i class="fas fa-user-graduate"></i>
-                    <span>Student Badge Claiming</span>
-                </li>
+                <!-- Achievement Management removed -->
                 <li class="nav-item" data-section="analytics">
                     <i class="fas fa-chart-bar"></i>
                     <span>Analytics</span>
@@ -88,16 +81,10 @@
                             <div class="stat-action">Manage events →</div>
                         </div>
                         
-                        <div class="stat-card clickable" onclick="navigateToSection('achievements')">
-                            <div class="stat-value" id="total-achievements">0</div>
-                            <div class="stat-label">Achievement Badges</div>
-                            <div class="stat-action">View achievements →</div>
-                        </div>
-                        
                         <div class="stat-card">
-                            <div class="stat-value" id="pending-verification">0</div>
-                            <div class="stat-label">Pending Verification</div>
-                            <div class="stat-action">Awaiting approval</div>
+                            <div class="stat-value" id="total-profiles">0</div>
+                            <div class="stat-label">Student Profiles</div>
+                            <div class="stat-action">System wide</div>
                         </div>
                     </div>
                 </section>
@@ -192,152 +179,8 @@
                     </div>
                 </section>
 
-                <!-- Achievement Management Section -->
-                <section id="achievements" class="content-section">
-                    <div class="section-header">
-                        <h2><i class="fas fa-trophy"></i> Achievement Management</h2>
-                                        <div class="section-actions">
-                    <button class="btn btn-primary" onclick="showAddAchievementModal()">
-                        <i class="fas fa-plus"></i> Create Badge
-                    </button>
-                </div>
-                    </div>
+                <!-- Achievement Management Section removed - not needed for talent profiling -->
 
-                    <div class="achievement-categories">
-                        <div class="category-card" data-category="competition">
-                            <div class="category-icon">🏆</div>
-                            <h3>Competition Badges</h3>
-                            <p>Awards for contest participation and achievements</p>
-                        </div>
-                        <div class="category-card" data-category="learning">
-                            <div class="category-icon">📚</div>
-                            <h3>Learning Badges</h3>
-                            <p>Recognition for educational milestones</p>
-                        </div>
-                        <div class="category-card" data-category="academic">
-                            <div class="category-icon">🎓</div>
-                            <h3>Academic Badges</h3>
-                            <p>Academic excellence and performance</p>
-                        </div>
-                        <div class="category-card" data-category="leadership">
-                            <div class="category-icon">🤝</div>
-                            <h3>Leadership Badges</h3>
-                            <p>Leadership and teamwork achievements</p>
-                        </div>
-                    </div>
-
-                    <!-- Badge Management Table -->
-                    <div class="badge-management-section">
-                        <div class="section-subheader">
-                            <h3><i class="fas fa-list"></i> Manage Badges</h3>
-                            <div class="table-controls">
-                                <div class="search-box">
-                                    <input type="text" id="badge-search" placeholder="Search badges..." title="Search badges">
-                                    <i class="fas fa-search"></i>
-                                </div>
-                                <select id="badge-category-filter" title="Filter by category">
-                                    <option value="">All Categories</option>
-                                    <option value="competition">Competition</option>
-                                    <option value="learning">Learning</option>
-                                    <option value="academic">Academic</option>
-                                    <option value="leadership">Leadership</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="table-container">
-                            <table class="data-table" id="badges-table">
-                                <thead>
-                                    <tr>
-                                        <th>Badge</th>
-                                        <th>Category</th>
-                                        <th>Points</th>
-                                        <th>Difficulty</th>
-                                        <th>Created</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="badges-table-body">
-                                    <tr>
-                                        <td colspan="6" class="loading-message">
-                                            <i class="fas fa-spinner fa-spin"></i> Loading badges...
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="verification-queue">
-                        <h3><i class="fas fa-clock"></i> Pending Verification <span class="badge" id="pending-count">0</span></h3>
-                        <div class="verification-list">
-                            <!-- Verification items will be loaded dynamically -->
-                        </div>
-                    </div>
-
-                    <div class="achievement-stats">
-                        <div class="stats-grid">
-                            <div class="stat-item">
-                                <h4>Total Badges</h4>
-                                <span class="stat-number" id="total-badges">0</span>
-                            </div>
-                            <div class="stat-item">
-                                <h4>Monthly Awards</h4>
-                                <span class="stat-number" id="monthly-awards">0</span>
-                            </div>
-                            <div class="stat-item">
-                                <h4>Top Achiever</h4>
-                                <span class="stat-text" id="top-achiever">No data</span>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Student Badge Claiming Section -->
-                <section id="student-claiming" class="content-section">
-                    <div class="section-header">
-                        <h2><i class="fas fa-user-graduate"></i> Student Badge Assignment</h2>
-                        <div class="section-actions">
-                            <button class="btn btn-primary" onclick="loadAllEventsForAssignment()" title="Load all events">
-                                <i class="fas fa-calendar"></i> Load All Events
-                            </button>
-                            
-                        </div>
-                    </div>
-
-                    <div class="student-interface">
-                        <div class="interface-tabs">
-                            <button class="tab-btn active" onclick="switchStudentTab('available-events')">
-                                <i class="fas fa-calendar"></i> All Events
-                            </button>
-                            <button class="tab-btn" onclick="switchStudentTab('my-claims')">
-                                <i class="fas fa-trophy"></i> Recent Claims
-                            </button>
-                        </div>
-
-                        <div class="tab-content">
-                            <div id="available-events-tab" class="tab-pane active">
-                                <div class="events-grid" id="available-events-container">
-                                    <div class="empty-state">
-                                        <i class="fas fa-calendar-times"></i>
-                                        <h3>No Events Loaded</h3>
-                                        <p>Click "Load All Events" to see all events in the system.</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="my-claims-tab" class="tab-pane">
-                                <div class="claims-grid" id="student-claims-container">
-                                    <div class="empty-state">
-                                        <i class="fas fa-inbox"></i>
-                                        <h3>No Recent Claims</h3>
-                                        <p>No badge claims have been submitted recently.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
 
 
                 <!-- Analytics Section -->
@@ -455,6 +298,55 @@
                                     <i class="fas fa-key"></i> Change Password
                                 </button>
                                 </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <h3><i class="fas fa-server"></i> System Status</h3>
+                            <div class="system-status-grid">
+                                <div class="status-item">
+                                    <label><i class="fas fa-cloud"></i> Backend API</label>
+                                    <span id="backend-status" class="status-indicator status-unknown">Unknown</span>
+                                </div>
+                                <div class="status-item">
+                                    <label><i class="fas fa-database"></i> Database</label>
+                                    <span id="database-status" class="status-indicator status-unknown">Unknown</span>
+                                </div>
+                                <div class="status-item">
+                                    <label><i class="fas fa-clock"></i> Last Check</label>
+                                    <span id="last-status-check">Never</span>
+                                </div>
+                                <div class="status-item">
+                                    <label><i class="fas fa-tachometer-alt"></i> Response Time</label>
+                                    <span id="response-time">-</span>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <button type="button" class="btn btn-primary btn-sm" onclick="testBackendConnectivity()">
+                                    <i class="fas fa-wifi"></i> Test Connection
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="checkSystemStatus()">
+                                    <i class="fas fa-sync"></i> Refresh Status
+                                </button>
+                            </div>
+
+                            <div class="database-counts" id="database-counts">
+                                <!-- Database counts will be populated here -->
+                            </div>
+                        </div>
+
+                        <div class="settings-card">
+                            <h3><i class="fas fa-tools"></i> Development Tools</h3>
+                            <div class="form-group">
+                                <button type="button" class="btn btn-warning btn-sm" onclick="createTestData()">
+                                    <i class="fas fa-database"></i> Create Test Data
+                                </button>
+                                <small class="form-help">Create sample users and data for testing</small>
+                            </div>
+                            
+                            <div class="current-user-info" id="current-user-info">
+                                <!-- Current user info will be populated here -->
+                            </div>
                         </div>
                     </div>
                 </section>

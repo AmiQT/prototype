@@ -3,9 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../services/auth_service.dart';
+import '../../../services/supabase_auth_service.dart';
 import '../../../services/profile_service.dart';
+import '../../../config/supabase_config.dart';
+// import '../../debug/backend_test_screen.dart'; // Debug screen removed
 import '../../../models/profile_model.dart';
 import '../../../models/achievement_model.dart';
 import '../../../models/experience_model.dart';
@@ -13,8 +14,8 @@ import '../../../models/project_model.dart';
 import 'package:share_plus/share_plus.dart';
 import '../achievements/achievements_screen.dart';
 import '../../settings/settings_screen.dart';
-import '../../debug/sample_data_debug_screen.dart';
-import '../../debug/migrate_profile_documents_screen.dart';
+// import '../../debug/sample_data_debug_screen.dart'; // Debug screen removed
+// import '../../debug/migrate_profile_documents_screen.dart'; // Debug screen removed
 import '../../auth/comprehensive_profile_setup_screen.dart';
 import '../../profile/comprehensive_edit_profile_screen.dart';
 
@@ -65,7 +66,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
 
   Future<void> _loadProfile() async {
     try {
-      final authService = Provider.of<AuthService>(context, listen: false);
+      final authService =
+          Provider.of<SupabaseAuthService>(context, listen: false);
       final profileService =
           Provider.of<ProfileService>(context, listen: false);
 
@@ -91,7 +93,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
 
   Future<void> _migrateProfile() async {
     try {
-      final authService = Provider.of<AuthService>(context, listen: false);
+      final authService =
+          Provider.of<SupabaseAuthService>(context, listen: false);
       final userId = authService.currentUserId;
 
       if (userId == null) {
@@ -117,49 +120,28 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       );
 
       // Search for profiles with this userId in the data (old structure)
-      final oldProfilesQuery = await FirebaseFirestore.instance
-          .collection('profiles')
-          .where('userId', isEqualTo: userId)
-          .get();
+      final oldProfilesQuery =
+          await SupabaseConfig.from('profiles').select().eq('userId', userId);
 
-      if (oldProfilesQuery.docs.isEmpty) {
+      if (oldProfilesQuery.isEmpty) {
         Navigator.of(context).pop(); // Close loading dialog
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No profile found to migrate')),
+          const SnackBar(
+            content: Text('No old profile data found to migrate'),
+            backgroundColor: Colors.orange,
+          ),
         );
         return;
       }
 
       // Migrate the first profile found
-      final doc = oldProfilesQuery.docs.first;
-      final data = doc.data();
-      final oldDocId = doc.id;
+      final doc = oldProfilesQuery.first;
+      final data = doc;
+      final oldDocId = doc['id'];
 
-      // Check if target document already exists
-      final targetDoc = await FirebaseFirestore.instance
-          .collection('profiles')
-          .doc(userId)
-          .get();
-
-      if (targetDoc.exists) {
-        // Delete old document only
-        await FirebaseFirestore.instance
-            .collection('profiles')
-            .doc(oldDocId)
-            .delete();
-      } else {
-        // Create new document with userId as document ID
-        await FirebaseFirestore.instance
-            .collection('profiles')
-            .doc(userId)
-            .set(data);
-
-        // Delete old document
-        await FirebaseFirestore.instance
-            .collection('profiles')
-            .doc(oldDocId)
-            .delete();
-      }
+      // Delete old document and create new one with userId as document ID
+      await SupabaseConfig.from('profiles').delete().eq('id', oldDocId);
+      await SupabaseConfig.from('profiles').insert(data);
 
       Navigator.of(context).pop(); // Close loading dialog
 
@@ -195,6 +177,19 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Profile'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.api, color: Colors.orange),
+              tooltip: 'Backend Test',
+              onPressed: () {
+                // Backend test functionality removed - app now uses backend by default
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text('App is now using backend APIs!')),
+                );
+              },
+            ),
+          ],
         ),
         body: Center(
           child: Padding(
@@ -271,7 +266,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const SampleDataDebugScreen(),
+                        builder: (context) => const Scaffold(
+                            body: Center(child: Text('Debug screen removed'))),
                       ),
                     );
                     break;
@@ -279,8 +275,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            const MigrateProfileDocumentsScreen(),
+                        builder: (context) => const Scaffold(
+                            body: Center(child: Text('Debug screen removed'))),
                       ),
                     );
                     break;

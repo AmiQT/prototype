@@ -103,39 +103,6 @@ exports.onEventCreated = functions.firestore
     }
   });
 
-// Trigger when a badge claim is updated (approved/rejected)
-exports.onBadgeClaimUpdated = functions.firestore
-  .document('badgeClaims/{claimId}')
-  .onUpdate(async (change, context) => {
-    const beforeData = change.before.data();
-    const afterData = change.after.data();
-
-    // Check if status changed from pending to approved/rejected
-    if (beforeData.status === 'pending' && afterData.status !== 'pending') {
-      const isApproved = afterData.status === 'approved';
-      const userId = afterData.userId;
-
-      try {
-        await createNotification(
-          userId,
-          isApproved ? 'Badge Claim Approved!' : 'Badge Claim Rejected',
-          isApproved
-            ? `Your badge claim has been approved! The badge has been added to your profile.`
-            : `Your badge claim was not approved. Please contact an administrator for more information.`,
-          'achievement',
-          {
-            claimId: context.params.claimId,
-            badgeId: afterData.badgeId,
-            status: afterData.status,
-          }
-        );
-
-        console.log(`Created notification for badge claim ${context.params.claimId}`);
-      } catch (error) {
-        console.error('Error creating badge claim notification:', error);
-      }
-    }
-  });
 
 // Trigger when an achievement is verified
 exports.onAchievementUpdated = functions.firestore

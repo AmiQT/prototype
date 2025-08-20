@@ -10,14 +10,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:student_talent_profiling_app/widgets/feedback_widget.dart';
 
 import 'package:student_talent_profiling_app/main.dart';
-import 'package:student_talent_profiling_app/services/auth_service.dart';
+import 'package:student_talent_profiling_app/services/supabase_auth_service.dart';
 import 'package:student_talent_profiling_app/services/language_service.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(MyApp(
-      authService: AuthService(),
+      authService: SupabaseAuthService(),
       languageService: LanguageService(),
     ));
 

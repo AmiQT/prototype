@@ -176,10 +176,7 @@ if (typeof window !== 'undefined') {
     window.countDocuments = () => DataCleanup.countDocuments();
     window.listSampleData = () => DataCleanup.listSampleData();
     
-    console.log('🧹 Data cleanup functions available:');
-    console.log('   - clearSampleData() - Remove all sample data');
-    console.log('   - countDocuments() - Count documents in collections');
-    console.log('   - listSampleData() - List sample data documents');
+    // Data cleanup functions available
 }
 
 export default DataCleanup;

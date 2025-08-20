@@ -29,6 +29,20 @@ class ProfileModel {
   // Achievements
   final List<AchievementModel> achievements;
 
+  // Social Media URLs
+  final String? linkedinUrl;
+  final String? githubUrl;
+  final String? portfolioUrl;
+
+  // Additional fields for backend compatibility
+  final String? phone;
+  final String? studentId;
+  final String? department;
+  final String? faculty;
+  final String? yearOfStudy;
+  final String? cgpa;
+  final List<String> languages;
+
   // Profile completion tracking
   final bool isProfileComplete;
   final List<String> completedSections;
@@ -53,6 +67,16 @@ class ProfileModel {
     this.achievements = const [],
     this.isProfileComplete = false,
     this.completedSections = const [],
+    this.linkedinUrl,
+    this.githubUrl,
+    this.portfolioUrl,
+    this.phone,
+    this.studentId,
+    this.department,
+    this.faculty,
+    this.yearOfStudy,
+    this.cgpa,
+    this.languages = const [],
     required this.createdAt,
     required this.updatedAt,
   });
@@ -74,13 +98,13 @@ class ProfileModel {
 
     return ProfileModel(
       id: json['id'] ?? '',
-      userId: json['userId'] ?? '',
-      fullName: json['fullName'] ?? '',
-      phoneNumber: json['phoneNumber'],
+      userId: json['user_id'] ?? json['userId'] ?? json['id'] ?? '',
+      fullName: json['full_name'] ?? json['fullName'] ?? '',
+      phoneNumber: json['phone_number'] ?? json['phoneNumber'],
       address: json['address'],
       bio: json['bio'],
       headline: json['headline'],
-      profileImageUrl: json['profileImageUrl'],
+      profileImageUrl: json['profile_image_url'] ?? json['profileImageUrl'],
       academicInfo: json['academicInfo'] != null
           ? AcademicInfoModel.fromJson(json['academicInfo'])
           : null,
@@ -100,8 +124,8 @@ class ProfileModel {
           [],
       isProfileComplete: json['isProfileComplete'] ?? false,
       completedSections: List<String>.from(json['completedSections'] ?? []),
-      createdAt: parseDateTime(json['createdAt']),
-      updatedAt: parseDateTime(json['updatedAt']),
+      createdAt: parseDateTime(json['created_at'] ?? json['createdAt']),
+      updatedAt: parseDateTime(json['updated_at'] ?? json['updatedAt']),
     );
   }
 
@@ -183,14 +207,14 @@ class ProfileModel {
   }
 
   // Helper getters for backward compatibility
-  String get studentId => academicInfo?.studentId ?? '';
+  String get studentIdFromAcademic => academicInfo?.studentId ?? '';
   String get program => academicInfo?.program ?? '';
-  String get department => academicInfo?.department ?? '';
+  String get departmentFromAcademic => academicInfo?.department ?? '';
   int get semester => academicInfo?.currentSemester ?? 1;
 
   @override
   String toString() {
-    return 'ProfileModel(id: $id, fullName: $fullName, studentId: $studentId)';
+    return 'ProfileModel(id: $id, fullName: $fullName)';
   }
 
   @override

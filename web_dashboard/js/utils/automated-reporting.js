@@ -145,26 +145,23 @@ export class AutomatedReporting {
         const timeRange = options.timeRange || this.getDefaultTimeRange(template.frequency);
         
         // Collect base data
-        const [users, achievements, events, profiles, badgeClaims] = await Promise.all([
+        const [users, achievements, events, profiles] = await Promise.all([
             dataFetcher.fetchData('users'),
             dataFetcher.fetchData('achievements'),
             dataFetcher.fetchData('events'),
             dataFetcher.fetchData('profiles'),
-            dataFetcher.fetchData('badgeClaims')
         ]);
         
         data.users = users.data;
         data.achievements = achievements.data;
         data.events = events.data;
         data.profiles = profiles.data;
-        data.badgeClaims = badgeClaims.data;
         
         // Filter by time range if specified
         if (timeRange) {
             data.users = this.filterByTimeRange(data.users, timeRange);
             data.achievements = this.filterByTimeRange(data.achievements, timeRange);
             data.events = this.filterByTimeRange(data.events, timeRange);
-            data.badgeClaims = this.filterByTimeRange(data.badgeClaims, timeRange);
         }
         
         // Add comparative data if needed
@@ -370,7 +367,7 @@ export class AutomatedReporting {
     calculateUtilizationRate(data) {
         // Simple utilization based on events and participation
         const totalEvents = data.events.length;
-        const totalClaims = data.badgeClaims.length;
+        const totalClaims = 0;
         return totalEvents > 0 ? ((totalClaims / totalEvents) * 100).toFixed(1) + '%' : '0%';
     }
     

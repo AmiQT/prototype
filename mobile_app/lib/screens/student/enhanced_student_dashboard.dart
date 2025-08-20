@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../services/auth_service.dart';
+import '../../services/supabase_auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../models/user_model.dart';
 import '../../utils/app_theme.dart';
@@ -81,7 +81,8 @@ class _EnhancedStudentDashboardState extends State<EnhancedStudentDashboard>
 
   Future<void> _loadUserData() async {
     try {
-      final authService = Provider.of<AuthService>(context, listen: false);
+      final authService =
+          Provider.of<SupabaseAuthService>(context, listen: false);
       final profileService =
           Provider.of<ProfileService>(context, listen: false);
 
@@ -237,7 +238,8 @@ class _EnhancedStudentDashboardState extends State<EnhancedStudentDashboard>
   }
 
   Widget? _buildFloatingActionButton() {
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService =
+        Provider.of<SupabaseAuthService>(context, listen: false);
     final userRole = authService.currentUser?.role;
 
     if ((userRole == UserRole.student || userRole == UserRole.lecturer)) {

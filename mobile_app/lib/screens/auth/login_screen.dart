@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../../services/auth_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../services/supabase_auth_service.dart';
 import '../../models/user_model.dart';
 import '../../utils/error_handler.dart';
 import '../../widgets/custom_button.dart';
@@ -41,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _isLoading = true;
       });
       try {
-        final authService = Provider.of<AuthService>(context, listen: false);
+        final authService = Provider.of<SupabaseAuthService>(context, listen: false);
         final email = _emailController.text.trim();
         final password = _passwordController.text.trim();
 
@@ -50,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
           throw Exception('Please enter both email and password');
         }
 
-        // Sign in with Firebase
+        // Sign in with Supabase
         final user =
             await authService.signInWithEmailAndPassword(email, password);
 
@@ -73,18 +73,22 @@ class _LoginScreenState extends State<LoginScreen> {
           // Navigate to appropriate dashboard based on role
           _navigateToDashboard(user.role);
         }
-      } on FirebaseAuthException catch (e) {
+      } on AuthException catch (e) {
         if (mounted) {
-          ErrorHandler.showErrorSnackBar(
-            context,
-            ErrorHandler.getFirebaseAuthErrorMessage(e),
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(ErrorHandler.getUserFriendlyMessage(e)),
+              backgroundColor: Colors.red,
+            ),
           );
         }
       } catch (e) {
         if (mounted) {
-          ErrorHandler.showErrorSnackBar(
-            context,
-            ErrorHandler.getGenericErrorMessage(e),
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(ErrorHandler.getUserFriendlyMessage(e)),
+              backgroundColor: Colors.red,
+            ),
           );
         }
       } finally {

@@ -10,7 +10,7 @@ import '../../../models/post_creation_models.dart';
 import '../../../models/user_model.dart';
 import '../../../models/profile_model.dart';
 import '../../../services/media_upload_manager.dart';
-import '../../../services/auth_service.dart';
+import '../../../services/supabase_auth_service.dart';
 import '../../../services/profile_service.dart';
 import '../../../services/content_moderation_service.dart';
 import '../../../services/showcase_service.dart';
@@ -95,7 +95,8 @@ class _PostCreationScreenState extends State<PostCreationScreen>
 
   Future<void> _loadUserData() async {
     try {
-      final authService = Provider.of<AuthService>(context, listen: false);
+      final authService =
+          Provider.of<SupabaseAuthService>(context, listen: false);
       _currentUser = authService.currentUser;
 
       // If currentUser is null, try to initialize AuthService again
@@ -405,6 +406,26 @@ class _PostCreationScreenState extends State<PostCreationScreen>
     );
   }
 
+  ImageProvider<Object>? _profileImageProvider(String? url) {
+    if (url == null || url.trim().isEmpty || url == 'file:///') return null;
+    try {
+      if (url.startsWith('data:image')) {
+        final base64String = url.split(',')[1];
+        return MemoryImage(base64Decode(base64String)) as ImageProvider<Object>;
+      }
+      final parsed = Uri.tryParse(url);
+      if (parsed != null && parsed.hasAbsolutePath) {
+        return NetworkImage(url) as ImageProvider<Object>;
+      }
+      if (url.startsWith('/') || url.contains('cache')) {
+        return FileImage(File(url)) as ImageProvider<Object>;
+      }
+    } catch (e) {
+      debugPrint('PostCreation: Invalid profile image URL: $url ($e)');
+    }
+    return null;
+  }
+
   Widget _buildUserHeader() {
     if (_currentUser == null) {
       debugPrint(
@@ -418,12 +439,12 @@ class _PostCreationScreenState extends State<PostCreationScreen>
       children: [
         CircleAvatar(
           radius: 24,
-          backgroundImage: _currentProfile?.profileImageUrl != null
-              ? NetworkImage(_currentProfile!.profileImageUrl!)
-              : null,
+          backgroundImage:
+              _profileImageProvider(_currentProfile?.profileImageUrl),
           backgroundColor:
               Theme.of(context).primaryColor.withValues(alpha: 0.1),
-          child: _currentProfile?.profileImageUrl == null
+          child: (_currentProfile?.profileImageUrl == null ||
+                  _currentProfile!.profileImageUrl!.trim().isEmpty)
               ? Text(
                   _currentUser!.name[0].toUpperCase(),
                   style: TextStyle(

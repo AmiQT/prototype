@@ -31,18 +31,23 @@ dependencies:
   # HTTP and API
   http: ^1.2.1
   
+  # Network and Connectivity
+  connectivity_plus: ^5.0.2
+  
+  # Storage and Path
+  path_provider: ^2.1.1
+  
+  # Security and Crypto
+  crypto: ^3.0.3
+  
   # Utilities
   intl: ^0.20.2
   uuid: ^4.3.3
   shared_preferences: ^2.2.3
   flutter_dotenv: ^5.0.2
 
-  # Firebase
-  firebase_core: ^2.30.0
-  firebase_auth: ^4.19.2
-  cloud_firestore: ^4.15.8
-  firebase_storage: ^11.7.1
-  google_sign_in: ^6.2.1
+  # Supabase (replaces Firebase)
+  supabase_flutter: ^2.3.4
 
   # Sharing
   share_plus: ^7.2.2

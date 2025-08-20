@@ -198,9 +198,7 @@ window.runConsoleCleanupTest = runConsoleCleanupTest;
 
 // Auto-run in development
 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    console.log('🧪 Console cleanup tests available:');
-    console.log('   - runConsoleCleanupTest()');
-    console.log('   - monitorConsoleMessages()');
+    // Console cleanup tests available
 }
 
 export { monitorConsoleMessages, testAnalyticsNavigation, runConsoleCleanupTest };

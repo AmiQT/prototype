@@ -63,15 +63,16 @@ class _ComprehensiveEditProfileScreenState
   final ImagePicker _picker = ImagePicker();
 
   ImageProvider? _getProfileImageProvider(String? imageUrl) {
-    if (imageUrl == null || imageUrl.isEmpty) {
+    if (imageUrl == null || imageUrl.trim().isEmpty || imageUrl == 'file:///') {
       return null;
     } else if (imageUrl.startsWith('data:image')) {
       // Handle base64 images
       final base64String = imageUrl.split(',')[1];
       final bytes = base64Decode(base64String);
       return MemoryImage(bytes);
-    } else if (imageUrl.startsWith('http')) {
-      // Handle network images
+    } else if (imageUrl.startsWith('http') &&
+        Uri.tryParse(imageUrl)?.hasAbsolutePath == true) {
+      // Handle valid network images
       return NetworkImage(imageUrl);
     } else if (imageUrl.startsWith('/') || imageUrl.contains('cache')) {
       // Handle local file images (fallback)

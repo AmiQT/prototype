@@ -3,8 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/chat_models.dart';
 
-/// Local chat history service for cost-effective storage
-/// Stores chat history locally to minimize Firebase usage
+/// Stores chat history locally to minimize database usage
 class ChatHistoryService extends ChangeNotifier {
   static const String _conversationsKey = 'chat_conversations_local';
   static const String _messagesKeyPrefix = 'chat_messages_';
@@ -23,7 +22,8 @@ class ChatHistoryService extends ChangeNotifier {
   Future<void> initialize() async {
     await _loadConversations();
     await _loadLastSync();
-    debugPrint('ChatHistoryService: Initialized with ${_conversations.length} conversations');
+    debugPrint(
+        'ChatHistoryService: Initialized with ${_conversations.length} conversations');
   }
 
   /// Get conversations for a specific user
@@ -35,7 +35,8 @@ class ChatHistoryService extends ChangeNotifier {
   }
 
   /// Get messages for a conversation
-  Future<List<ChatMessage>> getConversationMessages(String conversationId) async {
+  Future<List<ChatMessage>> getConversationMessages(
+      String conversationId) async {
     // Check cache first
     if (_messagesCache.containsKey(conversationId)) {
       return List.unmodifiable(_messagesCache[conversationId]!);
@@ -48,9 +49,11 @@ class ChatHistoryService extends ChangeNotifier {
   }
 
   /// Save a new conversation
-  Future<ChatConversation> saveConversation(ChatConversation conversation) async {
+  Future<ChatConversation> saveConversation(
+      ChatConversation conversation) async {
     // Add or update conversation
-    final existingIndex = _conversations.indexWhere((c) => c.id == conversation.id);
+    final existingIndex =
+        _conversations.indexWhere((c) => c.id == conversation.id);
     if (existingIndex >= 0) {
       _conversations[existingIndex] = conversation;
     } else {
@@ -72,7 +75,8 @@ class ChatHistoryService extends ChangeNotifier {
   Future<void> saveMessage(ChatMessage message) async {
     // Initialize messages cache if needed
     if (!_messagesCache.containsKey(message.conversationId)) {
-      _messagesCache[message.conversationId] = await _loadMessages(message.conversationId);
+      _messagesCache[message.conversationId] =
+          await _loadMessages(message.conversationId);
     }
 
     // Add message
@@ -89,13 +93,14 @@ class ChatHistoryService extends ChangeNotifier {
 
     // Update conversation metadata
     await _updateConversationMetadata(message);
-    
+
     notifyListeners();
   }
 
   /// Update conversation metadata after new message
   Future<void> _updateConversationMetadata(ChatMessage message) async {
-    final conversationIndex = _conversations.indexWhere((c) => c.id == message.conversationId);
+    final conversationIndex =
+        _conversations.indexWhere((c) => c.id == message.conversationId);
     if (conversationIndex >= 0) {
       final conversation = _conversations[conversationIndex];
       final updatedConversation = ChatConversation(
@@ -106,12 +111,12 @@ class ChatHistoryService extends ChangeNotifier {
         updatedAt: DateTime.now(),
         isActive: conversation.isActive,
         messageCount: conversation.messageCount + 1,
-        lastMessage: message.content.length > 100 
+        lastMessage: message.content.length > 100
             ? '${message.content.substring(0, 100)}...'
             : message.content,
         lastMessageAt: message.timestamp,
       );
-      
+
       _conversations[conversationIndex] = updatedConversation;
       await _saveConversations();
     }
@@ -143,15 +148,15 @@ class ChatHistoryService extends ChangeNotifier {
   Future<void> clearAllHistory() async {
     _conversations.clear();
     _messagesCache.clear();
-    
+
     final prefs = await SharedPreferences.getInstance();
-    final keys = prefs.getKeys().where((key) => 
+    final keys = prefs.getKeys().where((key) =>
         key.startsWith(_messagesKeyPrefix) || key == _conversationsKey);
-    
+
     for (final key in keys) {
       await prefs.remove(key);
     }
-    
+
     notifyListeners();
     debugPrint('ChatHistoryService: All history cleared');
   }
@@ -159,12 +164,12 @@ class ChatHistoryService extends ChangeNotifier {
   /// Get storage usage statistics
   Future<Map<String, dynamic>> getStorageStats() async {
     final prefs = await SharedPreferences.getInstance();
-    final keys = prefs.getKeys().where((key) => 
+    final keys = prefs.getKeys().where((key) =>
         key.startsWith(_messagesKeyPrefix) || key == _conversationsKey);
-    
+
     int totalSize = 0;
     int messageCount = 0;
-    
+
     for (final key in keys) {
       final data = prefs.getString(key);
       if (data != null) {
@@ -179,7 +184,7 @@ class ChatHistoryService extends ChangeNotifier {
         }
       }
     }
-    
+
     return {
       'conversations': _conversations.length,
       'totalMessages': messageCount,
@@ -193,12 +198,11 @@ class ChatHistoryService extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       final data = prefs.getString(_conversationsKey);
-      
+
       if (data != null) {
         final List<dynamic> jsonList = jsonDecode(data);
-        _conversations = jsonList
-            .map((json) => ChatConversation.fromJson(json))
-            .toList();
+        _conversations =
+            jsonList.map((json) => ChatConversation.fromJson(json)).toList();
       }
     } catch (e) {
       debugPrint('ChatHistoryService: Error loading conversations: $e');
@@ -222,25 +226,29 @@ class ChatHistoryService extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       final data = prefs.getString('$_messagesKeyPrefix$conversationId');
-      
+
       if (data != null) {
         final List<dynamic> jsonList = jsonDecode(data);
         return jsonList.map((json) => ChatMessage.fromJson(json)).toList();
       }
     } catch (e) {
-      debugPrint('ChatHistoryService: Error loading messages for $conversationId: $e');
+      debugPrint(
+          'ChatHistoryService: Error loading messages for $conversationId: $e');
     }
     return [];
   }
 
   /// Save messages for a conversation
-  Future<void> _saveMessages(String conversationId, List<ChatMessage> messages) async {
+  Future<void> _saveMessages(
+      String conversationId, List<ChatMessage> messages) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final jsonList = messages.map((msg) => msg.toJson()).toList();
-      await prefs.setString('$_messagesKeyPrefix$conversationId', jsonEncode(jsonList));
+      await prefs.setString(
+          '$_messagesKeyPrefix$conversationId', jsonEncode(jsonList));
     } catch (e) {
-      debugPrint('ChatHistoryService: Error saving messages for $conversationId: $e');
+      debugPrint(
+          'ChatHistoryService: Error saving messages for $conversationId: $e');
     }
   }
 
@@ -251,7 +259,8 @@ class ChatHistoryService extends ChangeNotifier {
       await prefs.remove('$_messagesKeyPrefix$conversationId');
       _messagesCache.remove(conversationId);
     } catch (e) {
-      debugPrint('ChatHistoryService: Error deleting messages for $conversationId: $e');
+      debugPrint(
+          'ChatHistoryService: Error deleting messages for $conversationId: $e');
     }
   }
 

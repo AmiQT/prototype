@@ -1,21 +1,33 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 import '../models/user_model.dart';
 import '../models/profile_model.dart';
 import '../models/search_models.dart';
 import '../services/profile_service.dart';
-import '../services/auth_service.dart';
+import '../services/supabase_auth_service.dart';
 import 'search_analytics_service.dart';
 import 'search_cache_service.dart';
+import '../config/supabase_config.dart';
 
 class SearchService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  static const String baseUrl = 'https://c3168f89d034.ngrok-free.app'; // ngrok tunnel
+  
+  // Get Supabase auth token for authentication
+  static Future<String?> _getAuthToken() async {
+    try {
+      final session = SupabaseConfig.auth.currentSession;
+      if (session?.accessToken != null) {
+        return session!.accessToken;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('SearchService: Error getting auth token: $e');
+      return null;
+    }
+  }
   final ProfileService _profileService = ProfileService();
-  final AuthService _authService = AuthService();
+  final SupabaseAuthService _authService = SupabaseAuthService();
   final SearchAnalyticsService _analyticsService = SearchAnalyticsService();
   final SearchCacheService _cacheService = SearchCacheService();
 
@@ -80,13 +92,13 @@ class SearchService {
       }
 
       // Check authentication state
-      final currentUser = _auth.currentUser;
+      final currentUser = SupabaseConfig.auth.currentUser;
       if (currentUser == null) {
         debugPrint(
             'SearchService: User not authenticated, cannot search users');
         return [];
       }
-      debugPrint('SearchService: User authenticated as: ${currentUser.uid}');
+      debugPrint('SearchService: User authenticated as: ${currentUser.id}');
 
       // Wait a moment for auth state to propagate to Firestore
       await Future.delayed(const Duration(milliseconds: 100));
@@ -113,8 +125,8 @@ class SearchService {
         try {
           // Get profile for this user
           debugPrint(
-              'SearchService: Loading profile for user: ${user.name} (${user.uid})');
-          final profile = await _profileService.getProfileByUserId(user.uid);
+              'SearchService: Loading profile for user: ${user.name} (${user.id})');
+          final profile = await _profileService.getProfileByUserId(user.id);
           debugPrint(
               'SearchService: Profile loaded for ${user.name}: ${profile?.fullName ?? 'null'}');
 
@@ -132,7 +144,7 @@ class SearchService {
             ));
           }
         } catch (e) {
-          debugPrint('SearchService: Error processing user ${user.uid}: $e');
+          debugPrint('SearchService: Error processing user ${user.id}: $e');
           continue;
         }
       }
@@ -750,7 +762,7 @@ class SearchService {
       // Remove duplicates and cache
       final uniqueResults = <String, SearchResult>{};
       for (final result in allPopularResults) {
-        uniqueResults[result.user.uid] = result;
+        uniqueResults[result.user.id] = result;
       }
 
       await _cacheService.cachePopularResults(uniqueResults.values.toList());

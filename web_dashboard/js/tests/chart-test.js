@@ -20,7 +20,6 @@ export class ChartTester {
                 users: sampleData.users.length,
                 achievements: sampleData.achievements.length,
                 events: sampleData.events.length,
-                badgeClaims: sampleData.badgeClaims.length
             });
             
             // Navigate to analytics section
@@ -334,7 +333,5 @@ window.checkCharts = () => ChartTester.testChartVisibility();
 
 // Auto-run in development
 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    console.log('🧪 Chart testing available:');
-    console.log('   - testCharts() - Test all charts with sample data');
-    console.log('   - checkCharts() - Check chart canvas visibility');
+    // Chart testing available
 }

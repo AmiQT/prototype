@@ -12,7 +12,6 @@ export class RateLimiter {
                 'achievements': 30,
                 'events': 30,
                 'profiles': 20,
-                'badgeClaims': 25,
                 'analytics': 15,
                 'export': 5
             },

@@ -81,7 +81,9 @@ class PostCardWidget extends StatelessWidget {
             onTap: () => onUserTap(post),
             child: CircleAvatar(
               radius: 24,
-              backgroundImage: post.userProfileImage != null
+              backgroundImage: post.userProfileImage != null && 
+                  post.userProfileImage!.isNotEmpty &&
+                  Uri.tryParse(post.userProfileImage!)?.hasAbsolutePath == true
                   ? CachedNetworkImageProvider(post.userProfileImage!)
                   : null,
               backgroundColor:

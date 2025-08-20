@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../services/auth_service.dart';
+import '../../services/supabase_auth_service.dart';
 import '../../models/user_model.dart';
 import '../../widgets/settings_widgets.dart';
 import '../../widgets/settings/language_selector.dart';
 import '../../l10n/generated/app_localizations.dart';
-import '../../debug/api_debug_screen.dart';
-import '../debug/fix_user_document_screen.dart';
+// import '../../debug/api_debug_screen.dart'; // Debug screen removed
+// import '../debug/fix_user_document_screen.dart'; // Debug screen removed
 import 'account_settings_screen.dart';
 import 'security_settings_screen.dart';
 import 'notification_settings_screen.dart';
@@ -30,7 +30,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadUserData() async {
     try {
-      final authService = Provider.of<AuthService>(context, listen: false);
+      final authService =
+          Provider.of<SupabaseAuthService>(context, listen: false);
       final currentUser = authService.currentUser;
 
       if (currentUser != null && mounted) {
@@ -128,7 +129,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (confirmed == true && mounted) {
       try {
-        await Provider.of<AuthService>(context, listen: false).signOut();
+        await Provider.of<SupabaseAuthService>(context, listen: false)
+            .signOut();
         if (mounted) {
           Navigator.of(context).pushNamedAndRemoveUntil(
             '/login',
@@ -340,7 +342,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const ApiDebugScreen(),
+                                builder: (context) => const Scaffold(
+                                    body: Center(
+                                        child: Text('Debug screen removed'))),
                               ),
                             );
                           },
@@ -353,8 +357,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    const FixUserDocumentScreen(),
+                                builder: (context) => const Scaffold(
+                                    body: Center(
+                                        child: Text('Debug screen removed'))),
                               ),
                             );
                           },

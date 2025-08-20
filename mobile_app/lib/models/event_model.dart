@@ -1,4 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+// Firebase import removed - migrating to Supabase
+// import 'package:cloud_firestore/cloud_firestore.dart';
 
 class EventModel {
   final String id;
@@ -32,12 +33,12 @@ class EventModel {
       category: json['category'] ?? '',
       favoriteUserIds: List<String>.from(json['favoriteUserIds'] ?? []),
       registerUrl: json['registerUrl'] ?? '',
-      createdAt: (json['createdAt'] is Timestamp)
-          ? (json['createdAt'] as Timestamp).toDate()
-          : DateTime.parse(json['createdAt']),
-      updatedAt: (json['updatedAt'] is Timestamp)
-          ? (json['updatedAt'] as Timestamp).toDate()
-          : DateTime.parse(json['updatedAt']),
+      createdAt: json['createdAt'] is String
+          ? DateTime.parse(json['createdAt'])
+          : DateTime.fromMillisecondsSinceEpoch(json['createdAt'] ?? 0),
+      updatedAt: json['updatedAt'] is String
+          ? DateTime.parse(json['updatedAt'])
+          : DateTime.fromMillisecondsSinceEpoch(json['updatedAt'] ?? 0),
     );
   }
 

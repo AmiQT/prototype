@@ -176,8 +176,5 @@ if (typeof window !== 'undefined') {
         window.runConsoleCleanupTest = runConsoleCleanupTest;
     }
     
-    console.log('🧪 Quick chart tests available:');
-    console.log('   - quickChartTest()');
-    console.log('   - testAnalyticsNavigation()');
-    console.log('   - runConsoleCleanupTest()');
+    // Quick chart tests available (disabled for cleaner console)
 }

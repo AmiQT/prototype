@@ -1,4 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+// Firebase import removed - migrating to Supabase
+// import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum ReportType {
   spam,
@@ -87,17 +88,17 @@ class ReportModel {
       ),
       reviewedBy: json['reviewedBy'],
       reviewedAt: json['reviewedAt'] != null
-          ? (json['reviewedAt'] is Timestamp
-              ? (json['reviewedAt'] as Timestamp).toDate()
-              : DateTime.parse(json['reviewedAt']))
+          ? (json['reviewedAt'] is String
+              ? DateTime.parse(json['reviewedAt'])
+              : DateTime.fromMillisecondsSinceEpoch(json['reviewedAt']))
           : null,
       reviewNotes: json['reviewNotes'],
-      createdAt: json['createdAt'] is Timestamp
-          ? (json['createdAt'] as Timestamp).toDate()
-          : DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
-      updatedAt: json['updatedAt'] is Timestamp
-          ? (json['updatedAt'] as Timestamp).toDate()
-          : DateTime.parse(json['updatedAt'] ?? DateTime.now().toIso8601String()),
+      createdAt: json['createdAt'] is String
+          ? DateTime.parse(json['createdAt'])
+          : DateTime.fromMillisecondsSinceEpoch(json['createdAt'] ?? 0),
+      updatedAt: json['updatedAt'] is String
+          ? DateTime.parse(json['updatedAt'])
+          : DateTime.fromMillisecondsSinceEpoch(json['updatedAt'] ?? 0),
     );
   }
 

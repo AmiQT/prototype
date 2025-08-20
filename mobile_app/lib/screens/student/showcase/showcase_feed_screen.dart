@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../models/showcase_models.dart';
 import '../../../models/user_model.dart';
 import '../../../services/showcase_service.dart';
-import '../../../services/auth_service.dart';
+import '../../../services/supabase_auth_service.dart';
 import '../../../widgets/modern/modern_post_card.dart';
 
 import '../../../utils/app_theme.dart';
@@ -39,7 +39,6 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
   bool _isLoading = false;
   bool _hasMore = true;
   String? _error;
-  String? _lastPostId;
   PostCategory? _selectedCategory;
   UserModel? _currentUser;
 
@@ -69,7 +68,8 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
   }
 
   void _loadCurrentUser() {
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService =
+        Provider.of<SupabaseAuthService>(context, listen: false);
     _currentUser = authService.currentUser;
   }
 
@@ -87,44 +87,36 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
   Future<void> _loadInitialPosts() async {
     if (_isLoading) return;
 
+    debugPrint('ShowcaseFeedScreen: Starting to load initial posts...');
+
     setState(() {
       _isLoading = true;
       _error = null;
       _posts.clear();
-      _lastPostId = null;
       _hasMore = true;
     });
 
     try {
       _postsSubscription?.cancel();
-      _postsSubscription = _showcaseService
-          .getShowcasePostsStream(
-        limit: _postsPerPage,
-        category: _selectedCategory,
-        userId: widget.filterUserId,
-      )
-          .listen(
-        (posts) {
-          if (mounted) {
-            setState(() {
-              _posts = posts;
-              _isLoading = false;
-              _hasMore = posts.length >= _postsPerPage;
-              if (posts.isNotEmpty) {
-                _lastPostId = posts.last.id;
-              }
-            });
-          }
-        },
-        onError: (error) {
-          if (mounted) {
-            setState(() {
-              _error = error.toString();
-              _isLoading = false;
-            });
-          }
-        },
-      );
+
+      debugPrint('ShowcaseFeedScreen: Calling getAllPosts()...');
+      // Use backend API instead of Firestore stream
+      final postsData = await _showcaseService.getAllPosts();
+      debugPrint(
+          'ShowcaseFeedScreen: Received ${postsData.length} posts from backend');
+      final posts = postsData
+          .map((postData) => ShowcasePostModel.fromJson(postData))
+          .toList();
+      debugPrint(
+          'ShowcaseFeedScreen: Converted to ${posts.length} ShowcasePostModel objects');
+
+      if (mounted) {
+        setState(() {
+          _posts = posts;
+          _isLoading = false;
+          _hasMore = posts.length >= _postsPerPage;
+        });
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -141,23 +133,21 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
     setState(() => _isLoading = true);
 
     try {
-      final morePosts = await _showcaseService
-          .getShowcasePostsStream(
-            limit: _postsPerPage,
-            lastPostId: _lastPostId,
-            category: _selectedCategory,
-            userId: widget.filterUserId,
-          )
-          .first;
+      // For now, just reload all posts since backend doesn't support pagination yet
+      final postsData = await _showcaseService.getAllPosts();
+      final allPosts = postsData
+          .map((postData) => ShowcasePostModel.fromJson(postData))
+          .toList();
+
+      // Simple pagination simulation - skip already loaded posts
+      final newPosts =
+          allPosts.skip(_posts.length).take(_postsPerPage).toList();
 
       if (mounted) {
         setState(() {
-          _posts.addAll(morePosts);
+          _posts.addAll(newPosts);
           _isLoading = false;
-          _hasMore = morePosts.length >= _postsPerPage;
-          if (morePosts.isNotEmpty) {
-            _lastPostId = morePosts.last.id;
-          }
+          _hasMore = newPosts.length >= _postsPerPage;
         });
       }
     } catch (e) {
@@ -298,41 +288,46 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
 
   Widget _buildErrorState() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.error_outline,
-            size: 64,
-            color: Colors.red,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Failed to load posts',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _error ?? 'Unknown error occurred',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey[600]),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _loadInitialPosts,
-            child: const Text('Retry'),
-          ),
-        ],
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.red,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Failed to load posts',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _error ?? 'Unknown error occurred',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadInitialPosts,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildEmptyState() {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppTheme.spaceLg),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               padding: const EdgeInsets.all(AppTheme.space2xl),

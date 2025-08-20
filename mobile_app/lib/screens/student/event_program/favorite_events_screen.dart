@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../models/event_model.dart';
 import '../../../services/event_service.dart';
-import '../../../services/auth_service.dart';
+import '../../../services/supabase_auth_service.dart';
 import '../../../utils/app_theme.dart';
 import '../../../widgets/modern/modern_event_card.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -28,7 +28,8 @@ class _FavoriteEventsScreenState extends State<FavoriteEventsScreen> {
   }
 
   Future<void> _initializeData() async {
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService =
+        Provider.of<SupabaseAuthService>(context, listen: false);
     _userId = authService.currentUser?.id;
 
     if (_userId != null) {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../services/auth_service.dart';
+import '../../../services/supabase_auth_service.dart';
 import '../../../services/profile_service.dart';
 import '../../../services/achievement_service.dart';
 import '../../../models/user_model.dart';
@@ -41,7 +41,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   Future<void> _loadUserData() async {
     try {
-      final authService = Provider.of<AuthService>(context, listen: false);
+      final authService =
+          Provider.of<SupabaseAuthService>(context, listen: false);
       final profileService =
           Provider.of<ProfileService>(context, listen: false);
       final achievementService =
@@ -70,7 +71,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   Future<void> _loadStatistics(
-      AuthService authService,
+      SupabaseAuthService authService,
       ProfileService profileService,
       AchievementService achievementService) async {
     try {
@@ -90,14 +91,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
       // Calculate department statistics
       final departmentCounts = <String, Map<String, int>>{};
       for (var profile in allProfiles) {
-        if (!departmentCounts.containsKey(profile.department)) {
-          departmentCounts[profile.department] = {
-            'students': 0,
-            'achievements': 0
-          };
+        final dept = profile.department ?? 'Unknown';
+        if (!departmentCounts.containsKey(dept)) {
+          departmentCounts[dept] = {'students': 0, 'achievements': 0};
         }
-        departmentCounts[profile.department]!['students'] =
-            (departmentCounts[profile.department]!['students'] ?? 0) + 1;
+        departmentCounts[dept]!['students'] =
+            (departmentCounts[dept]!['students'] ?? 0) + 1;
       }
 
       setState(() {
@@ -193,7 +192,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
             ],
             onSelected: (value) {
               if (value == 'logout') {
-                Provider.of<AuthService>(context, listen: false).signOut();
+                Provider.of<SupabaseAuthService>(context, listen: false)
+                    .signOut();
               } else if (value == 'profile') {
                 Navigator.push(
                   context,

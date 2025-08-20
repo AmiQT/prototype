@@ -4,14 +4,12 @@ import 'package:provider/provider.dart';
 // Removed OpenRouter service; Gemini-only
 import '../../services/gemini_chat_service.dart';
 import '../../services/chat_history_service.dart';
-import '../../services/auth_service.dart';
-import '../../services/firebase_usage_monitor.dart';
+import '../../services/supabase_auth_service.dart';
 import '../../models/chat_models.dart';
 import '../../utils/app_theme.dart';
 import '../../widgets/chat/chat_message_bubble.dart';
 import '../../widgets/chat/typing_indicator.dart';
 import '../../widgets/chat/chat_input_field.dart';
-import '../../widgets/chat/usage_warning_banner.dart';
 import '../../config/app_config.dart';
 
 class EnhancedChatScreen extends StatefulWidget {
@@ -33,11 +31,9 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
 
   late GeminiChatService _geminiService;
   late ChatHistoryService _historyService;
-  late FirebaseUsageMonitor _usageMonitor;
 
   bool _isLoading = false;
   bool _isTyping = false;
-  bool _showUsageWarning = false;
   bool _useGemini = true; // Gemini only
   String? _currentConversationId;
   String? _errorMessage;
@@ -53,23 +49,11 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
     _historyService = ChatHistoryService();
     await _historyService.initialize();
     _geminiService = GeminiChatService(_historyService);
-    _usageMonitor = FirebaseUsageMonitor();
 
     try {
       setState(() => _isLoading = true);
 
       debugPrint('EnhancedChatScreen: Starting service initialization...');
-
-      // Initialize usage monitor first (non-blocking)
-      debugPrint('EnhancedChatScreen: Initializing usage monitor...');
-      try {
-        await _usageMonitor.initialize();
-        debugPrint(
-            'EnhancedChatScreen: Usage monitor initialized successfully');
-      } catch (e) {
-        debugPrint(
-            'EnhancedChatScreen: Usage monitor failed, continuing without it: $e');
-      }
 
       // Initialize chat services
       debugPrint('EnhancedChatScreen: Initializing chat services...');
@@ -81,22 +65,6 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
 
       debugPrint('EnhancedChatScreen: Chat service initialized (Gemini only)');
       debugPrint('EnhancedChatScreen: Using Gemini service');
-
-      // Set up usage monitoring callbacks (if available)
-      try {
-        _usageMonitor.addWarningCallback(_onUsageWarning);
-        _usageMonitor.addLimitCallback(_onUsageLimit);
-
-        // Check current usage
-        final usage = await _usageMonitor.getTodayUsage();
-        debugPrint(
-            'EnhancedChatScreen: Current usage - Reads: ${usage.dailyReads}, Writes: ${usage.dailyWrites}');
-        if (usage.isNearLimit) {
-          setState(() => _showUsageWarning = true);
-        }
-      } catch (e) {
-        debugPrint('EnhancedChatScreen: Usage monitoring setup failed: $e');
-      }
 
       // Load conversation if provided
       if (widget.conversationId != null) {
@@ -132,7 +100,7 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
     final content = _messageController.text.trim();
     if (content.isEmpty || _isTyping) return;
 
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService = Provider.of<SupabaseAuthService>(context, listen: false);
     final userId = authService.currentUserId;
 
     if (userId == null) {
@@ -182,9 +150,6 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
       if (e.toString().contains('API authentication failed') ||
           e.toString().contains('API key')) {
         _showGeminiKeyDialog();
-      } else if (e.toString().contains('usage limit')) {
-        setState(() => _showUsageWarning = true);
-        _showError('Daily usage limit reached. Please try again tomorrow.');
       } else {
         _showError(e.toString());
       }
@@ -243,19 +208,6 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
     } catch (e) {
       setState(() => _isTyping = false);
       _showError('Gemini API test failed: $e');
-    }
-  }
-
-  void _onUsageWarning() {
-    if (mounted) {
-      setState(() => _showUsageWarning = true);
-    }
-  }
-
-  void _onUsageLimit() {
-    if (mounted) {
-      _showError(
-          'Daily Firebase usage limit reached. Chat functionality is temporarily limited.');
     }
   }
 
@@ -338,10 +290,7 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
       body: Column(
         children: [
           // Usage warning banner
-          if (_showUsageWarning)
-            UsageWarningBanner(
-              onDismiss: () => setState(() => _showUsageWarning = false),
-            ),
+          // Removed UsageWarningBanner
 
           // Messages area
           Expanded(
@@ -506,8 +455,8 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
   }
 
   void _showUsageInfo() async {
-    final usage = await _usageMonitor.getTodayUsage();
-    final report = _usageMonitor.getUsageReport();
+    // Removed Firebase usage monitor calls
+    final report = {}; // Placeholder for future usage reporting
 
     showDialog(
       context: context,
@@ -521,12 +470,9 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
               Text('Today\'s Usage:',
                   style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
-              Text(
-                  'Reads: ${usage.dailyReads} / 50,000 (${usage.readUsagePercentage.toStringAsFixed(1)}%)'),
-              Text(
-                  'Writes: ${usage.dailyWrites} / 20,000 (${usage.writeUsagePercentage.toStringAsFixed(1)}%)'),
-              Text(
-                  'Deletes: ${usage.dailyDeletes} / 20,000 (${usage.deleteUsagePercentage.toStringAsFixed(1)}%)'),
+              Text('Reads: 0 / 50,000 (0%)'),
+              Text('Writes: 0 / 20,000 (0%)'),
+              Text('Deletes: 0 / 20,000 (0%)'),
               if (report['suggestions'].isNotEmpty) ...[
                 const SizedBox(height: 16),
                 Text('Optimization Tips:',
@@ -557,8 +503,6 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
-    _usageMonitor.removeWarningCallback(_onUsageWarning);
-    _usageMonitor.removeLimitCallback(_onUsageLimit);
     super.dispose();
   }
 }

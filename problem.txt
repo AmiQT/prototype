@@ -1,0 +1,18 @@
+INFO:main:✅ Firebase Admin SDK initialized with service account
+INFO:main:Cloudinary initialized successfully
+INFO:     Started server process [2448]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:app.auth.firebase_auth:Firebase token verified for: OVzcnuGCaFZfbNxrxLsvlQsTnvr1
+INFO:     183.78.118.18:0 - "GET /api/profiles/OVzcnuGCaFZfbNxrxLsvlQsTnvr1 HTTP/1.1" 200 OK
+INFO:app.auth.firebase_auth:Firebase token verified for: OVzcnuGCaFZfbNxrxLsvlQsTnvr1
+INFO:app.auth.firebase_auth:Firebase token verified for: OVzcnuGCaFZfbNxrxLsvlQsTnvr1
+INFO:     183.78.118.18:0 - "GET /api/profiles HTTP/1.1" 307 Temporary Redirect
+INFO:     183.78.118.18:0 - "GET /api/profiles/OVzcnuGCaFZfbNxrxLsvlQsTnvr1 HTTP/1.1" 200 OK
+INFO:app.auth.firebase_auth:Firebase token verified for: OVzcnuGCaFZfbNxrxLsvlQsTnvr1
+INFO:     183.78.118.18:0 - "GET /api/profiles/OVzcnuGCaFZfbNxrxLsvlQsTnvr1 HTTP/1.1" 200 OK
+INFO:     183.78.118.18:0 - "GET /api/profiles/ HTTP/1.1" 200 OK
+INFO:     183.78.118.18:0 - "GET /api/profiles HTTP/1.1" 307 Temporary Redirect
+INFO:app.auth.firebase_auth:Firebase token verified for: OVzcnuGCaFZfbNxrxLsvlQsTnvr1
+INFO:     183.78.118.18:0 - "GET /api/profiles/ HTTP/1.1" 200 OK

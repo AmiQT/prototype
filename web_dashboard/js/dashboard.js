@@ -1,66 +1,60 @@
 import { auth } from './core/firebase.js';
 import { initializeComponents } from './core/component-loader.js';
+import { testBackendConnection, makeAuthenticatedRequest, API_ENDPOINTS } from './config/backend-config.js';
+import { initializeSystemMonitoring, checkSystemStatus, createTestData, testBackendConnectivity } from './features/system-monitoring.js';
 import { setupNavigation, updateActiveNav, setupUserModals, setupDarkModeToggle, closeModal, closeAndCleanupModal, logout, removeNotification, changeTheme, toggleReducedMotion, toggleHighContrast, saveSettings, resetSettings, changePassword } from './ui/notifications.js';
 import { setupUserFilters, loadUsersTable, showAddUserModal, toggleDepartmentField, toggleEditDepartmentField, showEditUserModal, handleAddUser, handleEditUser, deleteUser, unsubscribeUsers } from './features/users/users.js';
 import { setupEventsSection, loadEventsTable, showAddEventModal, showEditEventModal, handleAddEvent, handleEditEvent, deleteEvent } from './features/events/events.js';
-import { setupAchievementsSection, showAddAchievementModal, handleAddAchievement, loadAchievementsData, loadVerificationQueue, approveBadgeClaim, rejectBadgeClaim, viewClaimDetails, loadAllEventsForAssignment, showAssignBadgeModal, handleAssignBadge, showClaimBadgeModal, handleBadgeClaim, loadStudentClaims, loadBadgesTable, showEditBadgeModal, handleEditBadge, filterBadges, showDeleteBadgeModal, confirmDeleteBadge, processQRCodeClaim, createAchievementFromClaim, sendClaimNotification, loadAllBadgeClaims, renderBadgeClaimsTable, rejectClaimWithReason } from './features/achievements/achievements.js';
 import { loadOverviewStats, refreshOverviewStats, setupAnalytics, generateReport, generateCustomChart, exportToCSV, refreshChart, cleanupAnalytics } from './features/analytics.js';
 
 // Import test functions in development
 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    // Import immediate test (runs automatically)
-    import('./tests/immediate-test.js').catch(() => {
-        console.log('Immediate test not available');
-    });
-    import('./tests/console-cleanup-test.js').then(module => {
-        window.runConsoleCleanupTest = module.runConsoleCleanupTest;
-        window.monitorConsoleMessages = module.monitorConsoleMessages;
-    }).catch(() => {
-        // Import simple fallback test
-        import('./tests/quick-chart-test.js').then(module => {
-            window.runConsoleCleanupTest = module.runConsoleCleanupTest;
-            window.quickChartTest = module.quickChartTest;
-            window.testAnalyticsNavigation = module.testAnalyticsNavigation;
-        }).catch(() => {
-            // Ultimate fallback
-            window.runConsoleCleanupTest = () => {
-                console.log('🧪 Console cleanup test (basic fallback)');
-                console.log('✅ Analytics module should be working');
-                console.log('ℹ️ Navigate to Analytics section to test charts');
-            };
-        });
-    });
+    // All test imports disabled for cleaner console
+    
+    // Ultimate fallback functions
+    window.runConsoleCleanupTest = () => {
+        // Console cleanup test - disabled for cleaner console
+    };
 
-    import('./tests/chart-test.js').then(module => {
-        window.testCharts = module.ChartTester.testChartsWithSampleData;
-        window.checkCharts = module.ChartTester.testChartVisibility;
-    }).catch(error => {
-        console.log('Chart test functions not available:', error.message);
-    });
+    // Chart test disabled for cleaner console
+    // import('./tests/chart-test.js').then(module => {
+    //     window.testCharts = module.ChartTester.testChartsWithSampleData;
+    //     window.checkCharts = module.ChartTester.testChartVisibility;
+    // }).catch(error => {
+    //     console.log('Chart test functions not available:', error.message);
+    // });
 
-    import('./utils/sample-data-generator.js').then(module => {
-        window.addSampleData = () => module.SampleDataGenerator.addSampleDataToFirebase();
-        window.getSampleData = () => module.SampleDataGenerator.getSampleDataSet();
-    }).catch(() => {
-        // Fallback sample data functions
-        window.addSampleData = () => {
-            console.log('⚠️ Sample data generator not available');
-            console.log('ℹ️ Charts will show with fallback sample data when empty');
-        };
-        window.getSampleData = () => ({ message: 'Sample data generator not available' });
-    });
+    // Sample data generator disabled for cleaner console
+    // import('./utils/sample-data-generator.js').then(module => {
+    //     window.addSampleData = () => module.SampleDataGenerator.addSampleDataToFirebase();
+    //     window.getSampleData = () => module.SampleDataGenerator.getSampleDataSet();
+    // }).catch(() => {
+    //     // Fallback sample data functions
+    //     window.addSampleData = () => {
+    //         console.log('⚠️ Sample data generator not available');
+    //         console.log('ℹ️ Charts will show with fallback sample data when empty');
+    //     };
+    //     window.getSampleData = () => ({ message: 'Sample data generator not available' });
+    // });
+    // Fallback sample data functions (disabled for cleaner console)
+    window.addSampleData = () => {
+        // Sample data generator not available
+    };
+    window.getSampleData = () => ({ message: 'Sample data generator not available' });
 
-    // Import data cleanup utility
-    import('./utils/data-cleanup.js').then(module => {
-        window.clearSampleData = () => module.DataCleanup.clearSampleData();
-        window.countDocuments = () => module.DataCleanup.countDocuments();
-        window.listSampleData = () => module.DataCleanup.listSampleData();
-    }).catch(() => {
-        window.clearSampleData = () => {
-            console.log('⚠️ Data cleanup utility not available');
-        };
-    });
-}
+    // Data cleanup utility disabled for cleaner console
+    // import('./utils/data-cleanup.js').then(module => {
+    //     window.clearSampleData = () => module.DataCleanup.clearSampleData();
+    //     window.countDocuments = () => module.DataCleanup.countDocuments();
+    //     window.listSampleData = () => module.DataCleanup.listSampleData();
+    // }).catch(() => {
+    //     window.clearSampleData = () => {
+    //         console.log('⚠️ Data cleanup utility not available');
+    //     };
+    // });
+    window.clearSampleData = () => {
+        // Data cleanup utility not available
+    };
 
 // Make navigateToSection available immediately to prevent errors
 window.navigateToSection = function(section) {
@@ -82,12 +76,20 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-function initializeApp() {
+async function initializeApp() {
     setupNavigation(navigateToSection);
     setupUserModals(handleAddUser, handleEditUser);
     setupDarkModeToggle();
     setupEventsSection();
     setupAnalytics();
+
+    // Initialize backend integration
+    try {
+        await initializeSystemMonitoring();
+        // Backend integration initialized
+    } catch (error) {
+        // Backend integration failed, using Firebase fallback
+    }
 
     // Initial section load
     navigateToSection('overview');
@@ -101,31 +103,7 @@ function initializeApp() {
     window.showEditEventModal = showEditEventModal;
     window.deleteEvent = deleteEvent;
 
-    window.showAddAchievementModal = showAddAchievementModal;
-    window.handleAddAchievement = handleAddAchievement;
-    window.showEditBadgeModal = showEditBadgeModal;
-    window.handleEditBadge = handleEditBadge;
-    window.showDeleteBadgeModal = showDeleteBadgeModal;
-    window.confirmDeleteBadge = confirmDeleteBadge;
-    window.loadBadgesTable = loadBadgesTable;
-    window.filterBadges = filterBadges;
-    // QR Code Claim Processing
-    window.processQRCodeClaim = processQRCodeClaim;
-    window.createAchievementFromClaim = createAchievementFromClaim;
-    window.sendClaimNotification = sendClaimNotification;
-    window.loadAllBadgeClaims = loadAllBadgeClaims;
-    window.renderBadgeClaimsTable = renderBadgeClaimsTable;
-    window.rejectClaimWithReason = rejectClaimWithReason;
-    window.approveBadgeClaim = approveBadgeClaim;
-    window.rejectBadgeClaim = rejectBadgeClaim;
-    window.viewClaimDetails = viewClaimDetails;
-    // createTestBadgeClaim removed - no more dummy data
-    window.showClaimBadgeModal = showClaimBadgeModal;
-    window.handleBadgeClaim = handleBadgeClaim;
-    window.loadStudentClaims = loadStudentClaims;
-    window.loadAllEventsForAssignment = loadAllEventsForAssignment;
-    window.showAssignBadgeModal = showAssignBadgeModal;
-    window.handleAssignBadge = handleAssignBadge;
+    // Achievement management functions removed
     window.switchStudentTab = switchStudentTab;
     window.generateReport = generateReport;
     window.generateCustomChart = generateCustomChart;
@@ -147,6 +125,15 @@ function initializeApp() {
     window.printQRCode = printQRCode;
     window.testQRCode = testQRCode;
     window.testQRCodeLibrary = testQRCodeLibrary;
+    
+    // Backend integration functions
+    window.checkSystemStatus = checkSystemStatus;
+    window.createTestData = createTestData;
+    window.testBackendConnectivity = testBackendConnectivity;
+    
+    // Analytics functions
+    window.loadOverviewStats = loadOverviewStats;
+    window.refreshOverviewStats = loadOverviewStats; // Alias for backward compatibility
     
 }
 
@@ -176,13 +163,15 @@ function navigateToSection(section) {
     if (section === 'events') {
         loadEventsTable();
     }
-    if (section === 'achievements') {
-        setupAchievementsSection();
-    }
+    // Achievements section removed
     if (section === 'student-claiming') {
         // Initialize student badge assignment interface
         // Load all events by default
         loadAllEventsForAssignment();
+    }
+    if (section === 'settings') {
+        // Initialize system monitoring when settings section is accessed
+        checkSystemStatus();
     }
 }
 
@@ -306,4 +295,7 @@ function testQRCodeLibrary() {
     }
     
     console.log('=== End QR Code Library Test ===');
+}
+
+// Close the development imports if block
 }

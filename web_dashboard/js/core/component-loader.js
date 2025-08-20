@@ -28,7 +28,7 @@ async function loadComponent(componentPath, containerId = 'body') {
         // Inject the HTML
         container.insertAdjacentHTML('beforeend', html);
         
-        console.log(`✅ Component loaded: ${componentPath}`);
+        // Component loaded successfully
         
     } catch (error) {
         console.error(`❌ Error loading component ${componentPath}:`, error);
@@ -47,7 +47,7 @@ async function loadComponents(components) {
     
     try {
         await Promise.all(loadPromises);
-        console.log('✅ All components loaded successfully');
+        // All components loaded successfully
     } catch (error) {
         console.error('❌ Error loading some components:', error);
     }

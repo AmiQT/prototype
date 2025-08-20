@@ -152,7 +152,6 @@ export class SampleDataGenerator {
             const users = this.generateSampleUsers(20);
             const achievements = this.generateSampleAchievements(30);
             const events = this.generateSampleEvents(15);
-            const badgeClaims = this.generateSampleBadgeClaims(25);
             
             // Add users
             const userPromises = users.map(user => 
@@ -170,9 +169,6 @@ export class SampleDataGenerator {
             );
             
             // Add badge claims
-            const claimPromises = badgeClaims.map(claim => 
-                db.collection('badgeClaims').doc(claim.id).set(claim)
-            );
             
             await Promise.all([
                 ...userPromises,
@@ -182,13 +178,12 @@ export class SampleDataGenerator {
             ]);
             
             console.log('✅ Sample data added successfully!');
-            console.log(`Added: ${users.length} users, ${achievements.length} achievements, ${events.length} events, ${badgeClaims.length} claims`);
+            console.log(`Added: ${users.length} users, ${achievements.length} achievements, ${events.length} events`);
             
             return {
                 users: users.length,
                 achievements: achievements.length,
                 events: events.length,
-                badgeClaims: badgeClaims.length
             };
             
         } catch (error) {
@@ -204,7 +199,7 @@ export class SampleDataGenerator {
         try {
             console.log('🧹 Clearing sample data from Firebase...');
             
-            const collections = ['users', 'achievements', 'events', 'badgeClaims'];
+            const collections = ['users', 'achievements', 'events'];
             const deletePromises = [];
             
             for (const collectionName of collections) {
@@ -234,7 +229,6 @@ export class SampleDataGenerator {
             users: this.generateSampleUsers(20),
             achievements: this.generateSampleAchievements(30),
             events: this.generateSampleEvents(15),
-            badgeClaims: this.generateSampleBadgeClaims(25)
         };
     }
 }
@@ -248,8 +242,5 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
     window.clearSampleData = () => SampleDataGenerator.clearSampleData();
     window.getSampleData = () => SampleDataGenerator.getSampleDataSet();
     
-    console.log('🎯 Sample data generator available:');
-    console.log('   - addSampleData() - Add sample data to Firebase');
-    console.log('   - clearSampleData() - Clear sample data from Firebase');
-    console.log('   - getSampleData() - Get sample data object');
+    // Sample data generator available
 }

@@ -1,17 +1,20 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/notification_model.dart';
 import 'notification_preferences_service.dart';
+import '../config/supabase_config.dart';
 
 /// Service for managing in-app notifications
 class NotificationService {
+  static const String baseUrl =
+      'https://c3168f89d034.ngrok-free.app'; // ngrok tunnel
   static const String _notificationsKey = 'app_notifications';
   static const String _unreadCountKey = 'unread_notifications_count';
   static const int _maxStoredNotifications = 100;
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+
   final List<AppNotification> _notifications = [];
   final List<Function(List<AppNotification>)> _listeners = [];
   final NotificationPreferencesService _preferencesService =
@@ -57,53 +60,13 @@ class NotificationService {
 
   /// Start listening to Firestore for real-time notifications
   void _startListeningToFirestore(String userId) {
-    _firestore
-        .collection('notifications')
-        .where('userId', isEqualTo: userId)
-        .where('createdAt',
-            isGreaterThan: DateTime.now().subtract(const Duration(days: 30)))
-        .orderBy('createdAt', descending: true)
-        .limit(50)
-        .snapshots()
-        .listen((snapshot) {
-      _processFirestoreNotifications(snapshot.docs);
-    });
+    // Supabase does not have a direct real-time listener for collections
+    // This method will be removed or refactored if real-time functionality is needed
+    debugPrint(
+        'NotificationService: Supabase does not support real-time listeners for collections.');
   }
 
-  /// Process notifications from Firestore
-  void _processFirestoreNotifications(List<QueryDocumentSnapshot> docs) {
-    final firestoreNotifications = docs.map((doc) {
-      final data = doc.data() as Map<String, dynamic>;
-      return AppNotification.fromJson({...data, 'id': doc.id});
-    }).toList();
 
-    // Merge with local notifications, avoiding duplicates
-    final allNotifications = <String, AppNotification>{};
-
-    // Add existing local notifications
-    for (final notification in _notifications) {
-      allNotifications[notification.id] = notification;
-    }
-
-    // Add/update Firestore notifications
-    for (final notification in firestoreNotifications) {
-      allNotifications[notification.id] = notification;
-    }
-
-    _notifications.clear();
-    _notifications.addAll(allNotifications.values.toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt)));
-
-    // Keep only the most recent notifications
-    if (_notifications.length > _maxStoredNotifications) {
-      _notifications.removeRange(
-          _maxStoredNotifications, _notifications.length);
-    }
-
-    _updateUnreadCount();
-    _saveNotifications();
-    _notifyListeners();
-  }
 
   /// Create a notification (saves both locally and to Firestore)
   Future<void> createNotification({
@@ -150,20 +113,21 @@ class NotificationService {
     // Save to Firestore if userId is provided
     if (userId != null) {
       try {
-        await _firestore.collection('notifications').doc(notificationId).set({
+        await SupabaseConfig.from('notifications').insert({
           'userId': userId,
           'title': title,
-          'message': message,
+          'body':
+              message, // Changed from 'message' to 'body' to match Supabase schema
           'type': type.toString().split('.').last,
           'isRead': false,
-          'createdAt': notification.createdAt.toIso8601String(),
+          'createdAt': DateTime.now().toIso8601String(),
           'data': data,
           'actionUrl': actionUrl,
         });
         debugPrint(
-            'NotificationService: Saved notification to Firestore - $title');
+            'NotificationService: Saved notification to Supabase - $title');
       } catch (e) {
-        debugPrint('NotificationService: Error saving to Firestore: $e');
+        debugPrint('Failed to save notification to Supabase: $e');
       }
     }
 
@@ -182,7 +146,7 @@ class NotificationService {
       title: title,
       message: message,
       type: type,
-      userId: _currentUserId,
+      userId: _currentUserId ?? 'local_user',
       data: data,
       actionUrl: actionUrl,
     );
@@ -197,16 +161,13 @@ class NotificationService {
       await _saveNotifications();
       _notifyListeners();
 
-      // Update in Firestore if it's a Firestore notification
+      // Update in Supabase if it's a Supabase notification
       try {
-        await _firestore
-            .collection('notifications')
-            .doc(notificationId)
-            .update({'isRead': true});
+        await SupabaseConfig.from('notifications')
+            .update({'isRead': true}).eq('id', notificationId);
       } catch (e) {
         // Ignore errors for local notifications
-        debugPrint(
-            'NotificationService: Could not update Firestore notification: $e');
+        debugPrint('Failed to update notification in Supabase: $e');
       }
     }
   }
@@ -226,26 +187,13 @@ class NotificationService {
       await _saveNotifications();
       _notifyListeners();
 
-      // Update Firestore notifications
-      final batch = _firestore.batch();
-      for (final notification in _notifications) {
-        if (!notification.isRead) {
-          try {
-            batch.update(
-              _firestore.collection('notifications').doc(notification.id),
-              {'isRead': true},
-            );
-          } catch (e) {
-            // Skip local notifications
-          }
-        }
-      }
-
+      // Update Supabase notifications
       try {
-        await batch.commit();
+        await SupabaseConfig.client.rpc('mark_all_notifications_read', params: {
+          'p_user_id': _currentUserId,
+        });
       } catch (e) {
-        debugPrint(
-            'NotificationService: Error updating Firestore notifications: $e');
+        debugPrint('Failed to mark all notifications as read in Supabase: $e');
       }
     }
   }
@@ -257,13 +205,14 @@ class NotificationService {
     await _saveNotifications();
     _notifyListeners();
 
-    // Delete from Firestore if it exists
+    // Delete from Supabase if it exists
     try {
-      await _firestore.collection('notifications').doc(notificationId).delete();
+      await SupabaseConfig.from('notifications')
+          .delete()
+          .eq('id', notificationId);
     } catch (e) {
       // Ignore errors for local notifications
-      debugPrint(
-          'NotificationService: Could not delete Firestore notification: $e');
+      debugPrint('Failed to delete notification from Supabase: $e');
     }
   }
 

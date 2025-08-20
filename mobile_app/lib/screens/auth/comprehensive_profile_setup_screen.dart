@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../services/auth_service.dart';
+import '../../services/supabase_auth_service.dart';
 import '../../services/profile_service.dart';
 import '../../models/user_model.dart';
 import '../../models/profile_model.dart';
 import '../../models/academic_info_model.dart';
 import '../../models/experience_model.dart';
 import '../../models/project_model.dart';
-import '../../utils/error_handler.dart';
-import '../student/student_dashboard.dart';
+import '../student/enhanced_student_dashboard.dart';
 import '../lecturer/lecturer_dashboard.dart';
 import '../admin/admin_dashboard.dart';
 
@@ -79,7 +78,8 @@ class _ComprehensiveProfileSetupScreenState
   }
 
   Future<void> _loadCurrentUser() async {
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService =
+        Provider.of<SupabaseAuthService>(context, listen: false);
     setState(() {
       _currentUser = authService.currentUser;
     });
@@ -1254,7 +1254,8 @@ class _ComprehensiveProfileSetupScreenState
       // Get services first
       final profileService =
           Provider.of<ProfileService>(context, listen: false);
-      final authService = Provider.of<AuthService>(context, listen: false);
+      final authService =
+          Provider.of<SupabaseAuthService>(context, listen: false);
 
       // Create or update profile
       final profileId = _existingProfileId ?? 'profile_${_currentUser!.uid}';
@@ -1304,7 +1305,10 @@ class _ComprehensiveProfileSetupScreenState
       await profileService.saveProfile(profile);
 
       // Update user profile completion status
-      await authService.updateProfileCompletionStatus(_currentUser!.uid, true);
+      await authService.updateUserProfile({
+        'profileCompleted': true,
+        'updatedAt': DateTime.now().toIso8601String(),
+      });
 
       if (!mounted) return;
 
@@ -1312,8 +1316,12 @@ class _ComprehensiveProfileSetupScreenState
       _navigateToDashboard(_currentUser!.role);
     } catch (e) {
       if (mounted) {
-        ErrorHandler.showErrorSnackBar(
-            context, 'Failed to save profile: ${e.toString()}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save profile: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } finally {
       if (mounted) {
@@ -1334,7 +1342,7 @@ class _ComprehensiveProfileSetupScreenState
         dashboard = const LecturerDashboard();
         break;
       case UserRole.student:
-        dashboard = const StudentDashboard();
+        dashboard = const EnhancedStudentDashboard();
         break;
     }
 

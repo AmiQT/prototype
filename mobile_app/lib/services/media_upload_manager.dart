@@ -133,34 +133,14 @@ class MediaUploadManager {
 
       // Create post with progress tracking
       final result = await _showcaseService.createShowcasePost(
-        userId: userId,
-        userName: userName,
-        userProfileImage: userProfileImage,
-        userRole: userRole,
-        userDepartment: userDepartment,
-        userHeadline: userHeadline,
         content: content,
-        mediaFiles: mediaFiles,
+        type: PostType.mixed, // Default to mixed type
         category: category,
         privacy: privacy,
+        mediaFiles: mediaFiles,
         tags: tags,
         mentions: mentions,
         location: location,
-        onUploadProgress: (progressMap) {
-          // Calculate overall progress
-          double totalProgress = 0.0;
-          for (final progress in progressMap.values) {
-            totalProgress += progress.progress;
-          }
-          final overallProgress =
-              progressMap.isNotEmpty ? totalProgress / progressMap.length : 1.0;
-
-          _updateUploadState(
-              sessionId,
-              _uploadStates[sessionId]!.copyWith(
-                uploadProgress: overallProgress,
-              ));
-        },
       );
 
       // Update final state

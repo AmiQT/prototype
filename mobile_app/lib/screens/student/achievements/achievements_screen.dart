@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import '../../../services/auth_service.dart';
+import '../../../services/supabase_auth_service.dart';
 import '../../../services/achievement_service.dart';
 import '../../../models/user_model.dart';
 import '../../../models/achievement_model.dart';
@@ -238,10 +238,11 @@ class _AchievementsScreenState extends State<AchievementsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService =
+        Provider.of<SupabaseAuthService>(context, listen: false);
     final achievementService =
         Provider.of<AchievementService>(context, listen: false);
-    final userId = authService.currentUser?.uid;
+    final userId = authService.currentUser?.id;
     return Stack(
       children: [
         Scaffold(

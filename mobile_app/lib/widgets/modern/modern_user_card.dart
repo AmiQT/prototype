@@ -150,9 +150,9 @@ class _ModernUserCardState extends State<ModernUserCard>
                 ],
               ),
               const SizedBox(height: 2),
-              if (widget.profile.department.isNotEmpty)
+              if (widget.profile.department != null && widget.profile.department!.isNotEmpty)
                 Text(
-                  widget.profile.department,
+                  widget.profile.department!,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppTheme.textSecondaryColor,
                       ),
@@ -184,7 +184,7 @@ class _ModernUserCardState extends State<ModernUserCard>
         radius: 28,
         backgroundColor: _getRoleColor().withValues(alpha: 0.1),
         backgroundImage: (widget.profile.profileImageUrl?.isNotEmpty ?? false)
-            ? NetworkImage(widget.profile.profileImageUrl!)
+            ? (Uri.tryParse(widget.profile.profileImageUrl!)?.hasAbsolutePath == true ? NetworkImage(widget.profile.profileImageUrl!) : null)
             : null,
         child: (widget.profile.profileImageUrl?.isEmpty ?? true)
             ? Text(

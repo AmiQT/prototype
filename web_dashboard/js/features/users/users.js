@@ -1,4 +1,5 @@
 import { db, auth } from '../../core/firebase.js';
+import { API_ENDPOINTS, makeAuthenticatedRequest, testBackendConnection } from '../../config/backend-config.js';
 import { addNotification, closeModal } from '../../ui/notifications.js';
 
 let usersListener = null;
@@ -29,30 +30,76 @@ function setupUserFilters() {
     }
 }
 
-function loadUsersTable() {
+async function loadUsersTable() {
     const tableBody = document.querySelector('#users-table-body');
     if (!tableBody) {
         console.error('Users table body not found');
         return;
     }
 
-    if (usersListener) return;
+    tableBody.innerHTML = '<tr><td colspan="6">Loading all users...</td></tr>';
 
-    tableBody.innerHTML = '<tr><td colspan="6">Loading...</td></tr>';
-
-    console.log('Loading users from Firebase...');
+    // Always load from Firebase to show ALL users (students, lecturers, admins)
+    // Firebase is the source of truth for user management
+    
+    if (usersListener) {
+        // If listener already exists, just return - it will auto-update
+        return;
+    }
+    
+    // Loading users from Firebase
+    
     usersListener = db.collection('users').onSnapshot(querySnapshot => {
         allUsersCache = querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
-        console.log('Users loaded:', allUsersCache.length);
-        console.log('User data:', allUsersCache);
+        
+        // User data loaded successfully
+        
+        loadDepartmentFilterFromFirebase(); // Load department options from Firebase data
         applyUserFiltersAndRender();
     }, e => {
-        console.error('Error loading users:', e);
-        tableBody.innerHTML = '<tr><td colspan="6">Error loading users</td></tr>';
+        console.error('Error loading users from Firebase:', e);
+        tableBody.innerHTML = '<tr><td colspan="6">Error loading users from Firebase</td></tr>';
     });
+}
+
+// Load department options from Firebase user data
+function loadDepartmentFilterFromFirebase() {
+    try {
+        const deptFilter = document.getElementById('user-department-filter');
+        if (!deptFilter) return;
+        
+        // Get unique departments from all users
+        const departments = [...new Set(
+            allUsersCache
+                .map(user => user.department)
+                .filter(dept => dept && dept.trim() !== '')
+        )].sort();
+        
+        // Clear existing options except "All Departments"
+        const allOption = deptFilter.querySelector('option[value=""]');
+        deptFilter.innerHTML = '';
+        
+        // Add "All Departments" option
+        const allDeptOption = document.createElement('option');
+        allDeptOption.value = '';
+        allDeptOption.textContent = 'All Departments';
+        deptFilter.appendChild(allDeptOption);
+        
+        // Add department options
+        departments.forEach(dept => {
+            const option = document.createElement('option');
+            option.value = dept;
+            option.textContent = dept;
+            deptFilter.appendChild(option);
+        });
+        
+        // Departments loaded successfully
+    } catch (error) {
+        console.error('Error loading departments from Firebase:', error);
+    }
 }
 
 function applyUserFiltersAndRender() {
@@ -117,9 +164,21 @@ function showAddUserModal() {
     document.getElementById('add-department-field-group').style.display = 'none';
     document.getElementById('add-matrix-id-field-group').style.display = 'none';
 
+    // Show existing emails for reference
+    showExistingEmails();
+
     const modal = document.getElementById('add-user-modal');
     modal.classList.add('show');
     modal.style.display = 'flex';
+}
+
+function showExistingEmails() {
+    const existingEmails = allUsersCache.map(user => user.email).sort();
+    
+    // Only show in console if there are many users (for debugging)
+    if (existingEmails.length > 5) {
+        // Tip: Use unique email address
+    }
 }
 
 function toggleDepartmentField() {
@@ -258,12 +317,13 @@ async function handleAddUser(form) {
             throw new Error('Staff ID is required for lecturers');
         }
 
+        // Check if email already exists in Firebase Auth and Firestore
         const emailCheck = await db.collection('users')
             .where('email', '==', userData.email)
             .get();
         
         if (!emailCheck.empty) {
-            throw new Error('User with this email already exists');
+            throw new Error(`User with email ${userData.email} already exists in the system`);
         }
 
         const userCredential = await auth.createUserWithEmailAndPassword(
@@ -287,12 +347,18 @@ async function handleAddUser(form) {
 
         await db.collection('users').doc(userCredential.user.uid).set(firestoreUserData);
 
+        // Also sync with backend database if available
+        await syncUserWithBackend('create', firestoreUserData);
+
         closeModal('add-user-modal');
         addNotification(`User ${userData.name} created successfully!`, 'success');
         
-        // Refresh overview stats
-        if (typeof window.refreshOverviewStats === 'function') {
-            await window.refreshOverviewStats();
+        // Force reload the users table to show the new user
+        await loadUsersTable();
+        
+        // Refresh overview stats to reflect changes
+        if (typeof window.loadOverviewStats === 'function') {
+            await window.loadOverviewStats();
         }
         
         setTimeout(() => {
@@ -304,11 +370,11 @@ async function handleAddUser(form) {
         
         let errorMessage = 'Error creating user';
         if (e.code === 'auth/email-already-in-use') {
-            errorMessage = 'Email address is already in use';
+            errorMessage = `Email ${userData.email} is already registered. Please use a different email address.`;
         } else if (e.code === 'auth/invalid-email') {
-            errorMessage = 'Invalid email address';
+            errorMessage = 'Invalid email address format';
         } else if (e.code === 'auth/weak-password') {
-            errorMessage = 'Password is too weak';
+            errorMessage = 'Password is too weak (minimum 6 characters)';
         } else if (e.message) {
             errorMessage = e.message;
         }
@@ -339,12 +405,19 @@ async function handleEditUser(form) {
 
     try {
         await db.collection('users').doc(userId).update(userData);
+        
+        // Also sync with backend database if available
+        await syncUserWithBackend('update', { ...userData, id: userId, uid: userId });
+        
         closeModal('edit-user-modal');
         addNotification('User updated successfully', 'success');
         
-        // Refresh overview stats
-        if (typeof window.refreshOverviewStats === 'function') {
-            await window.refreshOverviewStats();
+        // Force reload the users table to show the updated user
+        await loadUsersTable();
+        
+        // Refresh overview stats to reflect changes
+        if (typeof window.loadOverviewStats === 'function') {
+            await window.loadOverviewStats();
         }
     } catch (e) {
         console.error('Error updating user:', e);
@@ -361,11 +434,17 @@ async function deleteUser(id) {
             deletedAt: new Date().toISOString()
         });
         
+        // Also sync with backend database if available
+        await syncUserWithBackend('delete', { id: id, uid: id });
+        
         addNotification('User has been disabled successfully.', 'success');
         
-        // Refresh overview stats
-        if (typeof window.refreshOverviewStats === 'function') {
-            await window.refreshOverviewStats();
+        // Force reload the users table to reflect the change
+        await loadUsersTable();
+        
+        // Refresh overview stats to reflect changes
+        if (typeof window.loadOverviewStats === 'function') {
+            await window.loadOverviewStats();
         }
     } catch (e) {
         console.error('Error disabling user:', e);
@@ -384,6 +463,113 @@ function unsubscribeUsers() {
     }
 }
 
+/**
+ * Sync user operations with backend database
+ * @param {string} operation - 'create', 'update', or 'delete'
+ * @param {object} userData - User data to sync
+ */
+async function syncUserWithBackend(operation, userData) {
+    try {
+        // Check if backend is available
+        const isBackendConnected = await testBackendConnection();
+        if (!isBackendConnected) {
+            // Backend not available - skipping sync
+            return;
+        }
+
+        // Note: Backend sync requires admin authentication
+        // In development, this may fail with 403 Forbidden - that's expected
+
+        // Only log errors, not every sync operation
+        switch (operation) {
+            case 'create':
+                await syncCreateUserWithBackend(userData);
+                break;
+            case 'update':
+                await syncUpdateUserWithBackend(userData);
+                break;
+            case 'delete':
+                await syncDeleteUserWithBackend(userData);
+                break;
+            default:
+                console.warn('Unknown sync operation:', operation);
+        }
+
+        // Sync completed successfully
+
+    } catch (error) {
+        console.error(`❌ Failed to sync user ${operation} with backend:`, error);
+        // Don't throw error - Firebase operation already succeeded
+        
+        if (error.message.includes('403') || error.message.includes('Forbidden')) {
+            console.warn('Backend sync failed: Admin authentication required');
+            // Don't show notification for auth issues - it's expected in development
+        } else {
+            addNotification(`User ${operation}d in Firebase, but backend sync failed. Backend will sync later.`, 'warning');
+        }
+    }
+}
+
+/**
+ * Create user in backend database
+ */
+async function syncCreateUserWithBackend(userData) {
+    const payload = {
+        uid: userData.uid,
+        email: userData.email,
+        name: userData.name,
+        role: userData.role,
+        department: userData.department,
+        student_id: userData.studentId,
+        staff_id: userData.staffId,
+        is_active: userData.isActive,
+        profile_completed: userData.profileCompleted
+    };
+
+    const response = await makeAuthenticatedRequest(
+        API_ENDPOINTS.users.create,
+        {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        }
+    );
+    return response;
+}
+
+/**
+ * Update user in backend database
+ */
+async function syncUpdateUserWithBackend(userData) {
+    const payload = {
+        email: userData.email,
+        name: userData.name,
+        role: userData.role,
+        department: userData.department
+    };
+
+    const response = await makeAuthenticatedRequest(
+        `${API_ENDPOINTS.users.update}/${userData.uid}`,
+        {
+            method: 'PUT',
+            body: JSON.stringify(payload)
+        }
+    );
+    return response;
+}
+
+/**
+ * Delete/disable user in backend database
+ */
+async function syncDeleteUserWithBackend(userData) {
+    const response = await makeAuthenticatedRequest(
+        `${API_ENDPOINTS.users.delete}/${userData.uid}`,
+        {
+            method: 'DELETE'
+        }
+    );
+    return response;
+}
+
 export { 
     setupUserFilters, 
     loadUsersTable, 
@@ -394,5 +580,6 @@ export {
     handleAddUser, 
     handleEditUser, 
     deleteUser, 
-    unsubscribeUsers 
+    unsubscribeUsers,
+    loadDepartmentFilterFromFirebase
 };

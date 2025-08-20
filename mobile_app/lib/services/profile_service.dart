@@ -1,24 +1,34 @@
-import '../models/profile_model.dart';
-import '../utils/error_handler.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+import '../models/profile_model.dart';
+import '../models/experience_model.dart';
+import '../models/project_model.dart';
+import '../models/academic_info_model.dart';
+import '../config/supabase_config.dart';
 
 class ProfileService {
-  final CollectionReference profilesCollection =
-      FirebaseFirestore.instance.collection('profiles');
+  static const String baseUrl =
+      'https://c3168f89d034.ngrok-free.app'; // ngrok tunnel
+
+  // Get Supabase auth token for authentication
+  static Future<String?> _getAuthToken() async {
+    try {
+      final session = SupabaseConfig.auth.currentSession;
+      if (session?.accessToken != null) {
+        return session!.accessToken;
+      }
+      return null;
+    } catch (e) {
+      debugPrint('ProfileService: Error getting auth token: $e');
+      return null;
+    }
+  }
 
   Future<void> saveProfile(ProfileModel profile) async {
     try {
       debugPrint(
           'ProfileService: Saving profile for userId: ${profile.userId}');
-      debugPrint(
-          'ProfileService: Profile image URL type: ${profile.profileImageUrl?.runtimeType}');
-      if (profile.profileImageUrl != null) {
-        debugPrint(
-            'ProfileService: Profile image URL length: ${profile.profileImageUrl!.length}');
-        debugPrint(
-            'ProfileService: Profile image URL starts with: ${profile.profileImageUrl!.substring(0, profile.profileImageUrl!.length > 50 ? 50 : profile.profileImageUrl!.length)}');
-      }
 
       // Validate profile data before saving
       if (profile.userId.isEmpty || profile.fullName.isEmpty) {
@@ -26,144 +36,347 @@ class ProfileService {
             'Profile data is incomplete. User ID and full name are required.');
       }
 
-      // Check if profile already exists
-      final existingProfile = await getProfileByUserId(profile.userId);
-
-      if (existingProfile != null) {
-        debugPrint(
-            'ProfileService: Updating existing profile with userId: ${profile.userId}');
-        // Update existing profile using the userId as document ID
-        await profilesCollection
-            .doc(profile.userId)
-            .set(profile.copyWith(id: profile.userId).toJson());
-      } else {
-        debugPrint(
-            'ProfileService: Creating new profile with userId: ${profile.userId}');
-        // Create new profile using userId as document ID
-        await profilesCollection
-            .doc(profile.userId)
-            .set(profile.copyWith(id: profile.userId).toJson());
+      final token = await _getAuthToken();
+      if (token == null) {
+        throw Exception('User not authenticated');
       }
 
-      debugPrint('ProfileService: Profile saved successfully to Firestore');
-    } on FirebaseException catch (e) {
-      debugPrint(
-          'ProfileService: Firebase error saving profile: ${e.code} - ${e.message}');
-      throw Exception(
-          'Failed to save profile: ${ErrorHandler.getFirestoreErrorMessage(e)}');
+      // Try to save to backend first
+      try {
+        final response = await http.post(
+          Uri.parse('$baseUrl/api/profiles'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode(profile.toJson()),
+        );
+
+        if (response.statusCode == 201 || response.statusCode == 200) {
+          debugPrint('ProfileService: Profile saved successfully to backend');
+        } else {
+          debugPrint(
+              'ProfileService: Failed to save profile to backend: ${response.body}');
+          throw Exception('Backend offline, trying Supabase fallback');
+        }
+      } catch (e) {
+        debugPrint(
+            'ProfileService: Backend save failed, using Supabase fallback: $e');
+
+        // Fallback: Save to Supabase
+        await _saveProfileToSupabase(profile);
+        return;
+      }
+
+      // Also save to Supabase for redundancy
+      await _saveProfileToSupabase(profile);
     } catch (e) {
-      debugPrint('ProfileService: Unexpected error saving profile: $e');
-      throw Exception('Failed to save profile: ${e.toString()}');
+      debugPrint('ProfileService: Error saving profile: $e');
+      rethrow;
+    }
+  }
+
+  // Save profile to Supabase as fallback
+  Future<void> _saveProfileToSupabase(ProfileModel profile) async {
+    try {
+      debugPrint(
+          'ProfileService: Saving profile to Supabase for userId: ${profile.userId}');
+
+      // Save to profiles table
+      await SupabaseConfig.client.from('profiles').upsert({
+        'user_id': profile.userId,
+        'full_name': profile.fullName,
+        'headline': profile.headline ?? '',
+        'bio': profile.bio ?? '',
+        'profile_image_url': profile.profileImageUrl ?? '',
+        'academic_info': profile.academicInfo?.toJson(),
+        'skills': profile.skills,
+        'interests': profile.interests,
+        'is_profile_complete': profile.isProfileComplete,
+        'created_at': profile.createdAt.toIso8601String(),
+        'updated_at': profile.updatedAt.toIso8601String(),
+      });
+
+      // Update users table profile completion status
+      await SupabaseConfig.client.from('users').upsert({
+        'id': profile.userId,
+        'profile_completed': profile.isProfileComplete,
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+
+      debugPrint('ProfileService: Profile saved to Supabase successfully');
+    } catch (e) {
+      debugPrint('ProfileService: Error saving profile to Supabase: $e');
+      rethrow;
     }
   }
 
   Future<ProfileModel?> getProfileByUserId(String userId) async {
     try {
-      if (userId.isEmpty) {
-        throw Exception('User ID cannot be empty');
+      debugPrint('ProfileService: Getting profile for userId: $userId');
+
+      final token = await _getAuthToken();
+      if (token == null) {
+        throw Exception('User not authenticated');
       }
 
-      debugPrint('ProfileService: Fetching profile for userId: $userId');
+      // Try to get from backend first
+      try {
+        final response = await http.get(
+          Uri.parse('$baseUrl/api/profiles/$userId'),
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        );
 
-      // Get profile directly by document ID (which is now the userId)
-      final doc = await profilesCollection.doc(userId).get();
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          debugPrint(
+              'ProfileService: Profile retrieved successfully from backend');
+          return ProfileModel.fromJson(data);
+        } else if (response.statusCode == 404) {
+          debugPrint(
+              'ProfileService: Profile not found in backend for userId: $userId');
+        } else {
+          debugPrint(
+              'ProfileService: Failed to get profile from backend: ${response.body}');
+          throw Exception('Backend offline, trying Supabase fallback');
+        }
+      } catch (e) {
+        debugPrint(
+            'ProfileService: Backend retrieval failed, using Supabase fallback: $e');
 
-      debugPrint('ProfileService: Document exists: ${doc.exists}');
-
-      if (doc.exists && doc.data() != null) {
-        final data = doc.data() as Map<String, dynamic>;
-        debugPrint('ProfileService: Found profile for userId: $userId');
-        return ProfileModel.fromJson(data);
-      } else {
-        debugPrint('ProfileService: No profile found for userId: $userId');
-        return null;
+        // Fallback: Get from Supabase
+        return await _getProfileFromSupabase(userId);
       }
-    } on FirebaseException catch (e) {
-      debugPrint(
-          'ProfileService: Firebase error fetching profile: ${e.code} - ${e.message}');
-      throw Exception(
-          'Failed to fetch profile: ${ErrorHandler.getFirestoreErrorMessage(e)}');
+
+      // Also try Supabase as backup
+      return await _getProfileFromSupabase(userId);
     } catch (e) {
-      debugPrint('ProfileService: Unexpected error fetching profile: $e');
-      throw Exception('Failed to fetch profile: ${e.toString()}');
+      debugPrint('ProfileService: Error getting profile: $e');
+      return null;
     }
   }
 
-  Future<ProfileModel?> getProfileById(String profileId) async {
+  // Get profile from Supabase as fallback
+  Future<ProfileModel?> _getProfileFromSupabase(String userId) async {
     try {
-      final doc = await profilesCollection.doc(profileId).get();
-      if (doc.exists) {
-        final data = doc.data() as Map<String, dynamic>;
-        return ProfileModel.fromJson(data);
+      debugPrint(
+          'ProfileService: Getting profile from Supabase for userId: $userId');
+
+      final response = await SupabaseConfig.client
+          .from('profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
+
+      // Convert Supabase response to ProfileModel
+      return ProfileModel(
+          id: response['id'] ?? '',
+          userId: response['user_id'] ?? userId,
+          fullName: response['full_name'] ?? '',
+          headline: response['headline'],
+          bio: response['bio'],
+          profileImageUrl: response['profile_image_url'],
+          academicInfo: response['academic_info'] != null
+              ? AcademicInfoModel.fromJson(response['academic_info'])
+              : null,
+          skills: List<String>.from(response['skills'] ?? []),
+          interests: List<String>.from(response['interests'] ?? []),
+          experiences: [], // TODO: Add experiences support
+          projects: [], // TODO: Add projects support
+          isProfileComplete: response['is_profile_complete'] ?? false,
+          completedSections: ['basic'], // Default sections
+          createdAt: response['created_at'] != null
+              ? DateTime.parse(response['created_at'])
+              : DateTime.now(),
+          updatedAt: response['updated_at'] != null
+              ? DateTime.parse(response['updated_at'])
+              : DateTime.now(),
+        );
       }
+
       return null;
     } catch (e) {
-      debugPrint('Error fetching profile by ID: $e');
+      debugPrint('ProfileService: Error getting profile from Supabase: $e');
       return null;
     }
   }
 
   Future<List<ProfileModel>> getAllProfiles() async {
     try {
-      debugPrint('ProfileService: Fetching all profiles');
+      debugPrint('ProfileService: Getting all profiles');
 
-      final querySnapshot = await profilesCollection.get();
-      final profiles = querySnapshot.docs
-          .map((doc) =>
-              ProfileModel.fromJson(doc.data() as Map<String, dynamic>))
-          .toList();
+      final token = await _getAuthToken();
+      if (token == null) {
+        throw Exception('User not authenticated');
+      }
 
-      debugPrint('ProfileService: Found ${profiles.length} profiles');
-      return profiles;
-    } on FirebaseException catch (e) {
-      debugPrint(
-          'ProfileService: Firebase error fetching all profiles: ${e.code} - ${e.message}');
-      throw Exception(
-          'Failed to fetch profiles: ${ErrorHandler.getFirestoreErrorMessage(e)}');
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/profiles'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        final profiles = <ProfileModel>[];
+
+        for (var profileData in data) {
+          final profile = ProfileModel(
+            id: profileData['id'] ?? '',
+            userId: profileData['user_id'] ?? '',
+            fullName: profileData['full_name'] ?? '',
+            phoneNumber: profileData['phone_number'],
+            address: profileData['address'],
+            bio: profileData['bio'],
+            headline: profileData['headline'],
+            profileImageUrl: profileData['profile_image_url'],
+            academicInfo: null, // Will be populated from individual fields
+            skills: List<String>.from(profileData['skills'] ?? []),
+            interests: List<String>.from(profileData['interests'] ?? []),
+            experiences: (profileData['experiences'] as List<dynamic>?)
+                    ?.map((e) =>
+                        ExperienceModel.fromJson(e as Map<String, dynamic>))
+                    .toList() ??
+                [],
+            projects: (profileData['projects'] as List<dynamic>?)
+                    ?.map(
+                        (p) => ProjectModel.fromJson(p as Map<String, dynamic>))
+                    .toList() ??
+                [],
+            achievements: [], // Will be populated separately
+            linkedinUrl: profileData['linkedin_url'],
+            githubUrl: profileData['github_url'],
+            portfolioUrl: profileData['portfolio_url'],
+            phone: profileData['phone'],
+            studentId: profileData['student_id'],
+            department: profileData['department'],
+            faculty: profileData['faculty'],
+            yearOfStudy: profileData['year_of_study'],
+            cgpa: profileData['cgpa'],
+            languages: List<String>.from(profileData['languages'] ?? []),
+            createdAt: profileData['created_at'] != null
+                ? DateTime.parse(profileData['created_at'])
+                : DateTime.now(),
+            updatedAt: profileData['updated_at'] != null
+                ? DateTime.parse(profileData['updated_at'])
+                : DateTime.now(),
+          );
+          profiles.add(profile);
+        }
+
+        debugPrint('ProfileService: Retrieved ${profiles.length} profiles');
+        return profiles;
+      } else {
+        debugPrint('ProfileService: Failed to get profiles: ${response.body}');
+        throw Exception('Failed to get profiles: ${response.body}');
+      }
     } catch (e) {
-      debugPrint('ProfileService: Unexpected error fetching all profiles: $e');
-      throw Exception('Failed to fetch profiles: ${e.toString()}');
-    }
-  }
-
-  Future<List<ProfileModel>> getProfilesByDepartment(String department) async {
-    try {
-      final querySnapshot = await profilesCollection
-          .where('department', isEqualTo: department)
-          .get();
-      return querySnapshot.docs
-          .map((doc) =>
-              ProfileModel.fromJson(doc.data() as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      debugPrint('Error fetching profiles by department: $e');
+      debugPrint('ProfileService: Error getting profiles: $e');
       return [];
     }
   }
 
   Future<List<ProfileModel>> searchProfiles(String query) async {
     try {
-      final q = query.toLowerCase();
-      final allProfiles = await getAllProfiles();
-      return allProfiles
-          .where((profile) =>
-              profile.fullName.toLowerCase().contains(q) ||
-              profile.studentId.toLowerCase().contains(q) ||
-              profile.department.toLowerCase().contains(q) ||
-              profile.program.toLowerCase().contains(q) ||
-              profile.skills.any((skill) => skill.toLowerCase().contains(q)) ||
-              profile.interests
-                  .any((interest) => interest.toLowerCase().contains(q)))
-          .toList();
+      debugPrint('ProfileService: Searching profiles with query: $query');
+
+      final token = await _getAuthToken();
+      if (token == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final response = await http.get(
+        Uri.parse(
+            '$baseUrl/api/profiles/search?q=${Uri.encodeComponent(query)}'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        final profiles = <ProfileModel>[];
+
+        for (var profileData in data) {
+          final profile = ProfileModel(
+            id: profileData['id'] ?? '',
+            userId: profileData['user_id'] ?? '',
+            fullName: profileData['full_name'] ?? '',
+            phoneNumber: profileData['phone_number'],
+            address: profileData['address'],
+            bio: profileData['bio'],
+            headline: profileData['headline'],
+            profileImageUrl: profileData['profile_image_url'],
+            academicInfo: null,
+            skills: List<String>.from(profileData['skills'] ?? []),
+            interests: List<String>.from(profileData['interests'] ?? []),
+            experiences: (profileData['experiences'] as List<dynamic>?)
+                    ?.map((e) =>
+                        ExperienceModel.fromJson(e as Map<String, dynamic>))
+                    .toList() ??
+                [],
+            projects: (profileData['projects'] as List<dynamic>?)
+                    ?.map(
+                        (p) => ProjectModel.fromJson(p as Map<String, dynamic>))
+                    .toList() ??
+                [],
+            achievements: [],
+            linkedinUrl: profileData['linkedin_url'],
+            githubUrl: profileData['github_url'],
+            portfolioUrl: profileData['portfolio_url'],
+            phone: profileData['phone'],
+            studentId: profileData['student_id'],
+            department: profileData['department'],
+            faculty: profileData['faculty'],
+            yearOfStudy: profileData['year_of_study'],
+            cgpa: profileData['cgpa'],
+            languages: List<String>.from(profileData['languages'] ?? []),
+            createdAt: profileData['created_at'] != null
+                ? DateTime.parse(profileData['created_at'])
+                : DateTime.now(),
+            updatedAt: profileData['updated_at'] != null
+                ? DateTime.parse(profileData['updated_at'])
+                : DateTime.now(),
+          );
+          profiles.add(profile);
+        }
+
+        debugPrint(
+            'ProfileService: Found ${profiles.length} profiles matching query');
+        return profiles;
+      } else {
+        debugPrint(
+            'ProfileService: Failed to search profiles: ${response.body}');
+        throw Exception('Failed to search profiles: ${response.body}');
+      }
     } catch (e) {
-      debugPrint('Error searching profiles: $e');
+      debugPrint('ProfileService: Error searching profiles: $e');
       return [];
     }
   }
 
   Future<void> updateProfile(ProfileModel profile) async {
     try {
-      await profilesCollection.doc(profile.userId).update(profile.toJson());
+      final token = await _getAuthToken();
+      if (token == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/profiles/${profile.userId}'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(profile.toJson()),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to update profile: ${response.body}');
+      }
     } catch (e) {
       debugPrint('Error updating profile: $e');
       rethrow;
@@ -172,7 +385,21 @@ class ProfileService {
 
   Future<void> deleteProfile(String profileId) async {
     try {
-      await profilesCollection.doc(profileId).delete();
+      final token = await _getAuthToken();
+      if (token == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl/api/profiles/$profileId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to delete profile: ${response.body}');
+      }
     } catch (e) {
       debugPrint('Error deleting profile: $e');
       rethrow;
@@ -186,8 +413,8 @@ class ProfileService {
       // Count by department
       final departmentCounts = <String, int>{};
       for (var profile in allProfiles) {
-        departmentCounts[profile.department] =
-            (departmentCounts[profile.department] ?? 0) + 1;
+        final dept = profile.department ?? 'Unknown';
+        departmentCounts[dept] = (departmentCounts[dept] ?? 0) + 1;
       }
 
       // Count by program
@@ -213,18 +440,49 @@ class ProfileService {
   }
 
   Stream<List<ProfileModel>> streamAllProfiles() {
-    return profilesCollection.snapshots().map((snapshot) => snapshot.docs
-        .map((doc) => ProfileModel.fromJson(doc.data() as Map<String, dynamic>))
-        .toList());
+    // For HTTP backend, we'll need to implement polling or use WebSocket
+    // For now, return an empty stream
+    return Stream.value([]);
   }
 
   Stream<ProfileModel?> streamProfileByUserId(String userId) {
-    return profilesCollection.doc(userId).snapshots().map((snapshot) {
-      if (snapshot.exists && snapshot.data() != null) {
-        final data = snapshot.data() as Map<String, dynamic>;
-        return ProfileModel.fromJson(data);
+    // For HTTP backend, we'll need to implement polling or use WebSocket
+    // For now, return an empty stream
+    return Stream.value(null);
+  }
+
+  // Add missing getProfileById method
+  Future<ProfileModel?> getProfileById(String profileId) async {
+    try {
+      debugPrint('ProfileService: Getting profile by ID: $profileId');
+
+      final token = await _getAuthToken();
+      if (token == null) {
+        throw Exception('User not authenticated');
       }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/profiles/by-id/$profileId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        debugPrint('ProfileService: Profile retrieved successfully by ID');
+        return ProfileModel.fromJson(data);
+      } else if (response.statusCode == 404) {
+        debugPrint('ProfileService: Profile not found for ID: $profileId');
+        return null;
+      } else {
+        debugPrint(
+            'ProfileService: Failed to get profile by ID: ${response.body}');
+        throw Exception('Failed to get profile by ID: ${response.body}');
+      }
+    } catch (e) {
+      debugPrint('ProfileService: Error getting profile by ID: $e');
       return null;
-    });
+    }
   }
 }

@@ -1,224 +1,120 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-/// Application configuration class
-/// Provides fallback mechanisms for environment variables
 class AppConfig {
-  static const String _openRouterApiKeyEnv = 'OPENROUTER_API_KEY';
-  static const String _geminiApiKeyEnv = 'GEMINI_API_KEY';
-
-  /// Get OpenRouter API key with fallback mechanisms
-  static String? getOpenRouterApiKey() {
-    try {
-      // Try to get from dotenv first
-      final apiKey = dotenv.env[_openRouterApiKeyEnv];
-      if (apiKey?.isNotEmpty == true) {
-        if (kDebugMode) {
-          debugPrint('AppConfig: OpenRouter API key found in dotenv');
-        }
-        return apiKey;
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('AppConfig: Error accessing dotenv: $e');
-      }
-    }
-
-    // If dotenv fails, try to get from platform environment
-    try {
-      const apiKey = String.fromEnvironment(_openRouterApiKeyEnv);
-      if (apiKey.isNotEmpty) {
-        if (kDebugMode) {
-          debugPrint(
-              'AppConfig: OpenRouter API key found in platform environment');
-        }
-        return apiKey;
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('AppConfig: Error accessing platform environment: $e');
-      }
-    }
-
-    // No fallback - API key must be provided via environment variables
-    if (kDebugMode) {
-      debugPrint('AppConfig: No OpenRouter API key found in environment');
-    }
-
-    return null;
-  }
-
-  /// Get Gemini API key with secure fallback
-  static String? getGeminiApiKey() {
-    try {
-      // Try to get from dotenv first
-      if (kDebugMode) {
-        debugPrint('AppConfig: Checking dotenv for Gemini API key...');
-        debugPrint(
-            'AppConfig: Available dotenv keys: ${dotenv.env.keys.toList()}');
-      }
-      final apiKey = dotenv.env[_geminiApiKeyEnv];
-      if (kDebugMode) {
-        // SECURITY: Never log the actual API key value
-        debugPrint(
-            'AppConfig: Gemini API key status: ${apiKey?.isNotEmpty == true ? "found" : "not found"}');
-      }
-      if (apiKey?.isNotEmpty == true) {
-        if (kDebugMode) {
-          debugPrint('AppConfig: Gemini API key found in dotenv');
-        }
-        return apiKey;
-      } else {
-        if (kDebugMode) {
-          debugPrint('AppConfig: Gemini API key is null or empty in dotenv');
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('AppConfig: Error accessing dotenv for Gemini: $e');
-      }
-    }
-
-    // If dotenv fails, try to get from platform environment
-    try {
-      const apiKey = String.fromEnvironment(_geminiApiKeyEnv);
-      if (apiKey.isNotEmpty) {
-        if (kDebugMode) {
-          debugPrint('AppConfig: Gemini API key found in platform environment');
-        }
-        return apiKey;
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint(
-            'AppConfig: Error accessing platform environment for Gemini: $e');
-      }
-    }
-
-    if (kDebugMode) {
-      debugPrint('AppConfig: No Gemini API key found in environment');
-    }
-
-    return null;
-  }
-
-  /// Check if OpenRouter API key is configured
-  static bool get hasApiKey {
-    final apiKey = getOpenRouterApiKey();
-    return apiKey?.isNotEmpty == true;
-  }
-
-  /// Check if Gemini API key is configured
-  static bool get hasGeminiApiKey {
-    final apiKey = getGeminiApiKey();
-    return apiKey?.isNotEmpty == true;
-  }
-
-  /// Get API key preview for debugging (secure - only shows first 4 chars)
-  static String? getApiKeyPreview() {
-    final apiKey = getOpenRouterApiKey();
-    if (apiKey?.isNotEmpty == true) {
-      // SECURITY: Only show first 4 characters to prevent key exposure
-      return '${apiKey!.substring(0, 4)}***';
-    }
-    return null;
-  }
-
-  /// Get Gemini API key preview for debugging (secure - only shows first 4 chars)
+  // API Keys (loaded from environment)
+  static String? _openRouterApiKey;
+  static String? _geminiApiKey;
+  
+  // Getters for API keys
+  static bool get hasApiKey => _openRouterApiKey != null && _openRouterApiKey!.isNotEmpty;
+  static bool get hasGeminiApiKey => _geminiApiKey != null && _geminiApiKey!.isNotEmpty;
+  static String? get openRouterApiKey => _openRouterApiKey;
+  static String? get geminiApiKey => _geminiApiKey;
+  
+  // Method-style getters for backward compatibility
+  static String? getGeminiApiKey() => _geminiApiKey;
+  static String? getOpenRouterApiKey() => _openRouterApiKey;
+  
+  // Preview methods for debugging (shows only first few characters)
   static String? getGeminiApiKeyPreview() {
-    final apiKey = getGeminiApiKey();
-    if (apiKey != null && apiKey.isNotEmpty) {
-      // SECURITY: Only show first 4 characters to prevent key exposure
-      return '${apiKey.substring(0, 4)}***';
-    }
-    return null;
+    if (_geminiApiKey == null || _geminiApiKey!.isEmpty) return null;
+    if (_geminiApiKey!.length <= 8) return _geminiApiKey;
+    return '${_geminiApiKey!.substring(0, 8)}...';
   }
-
-  /// Initialize configuration
+  
+  static String? getOpenRouterApiKeyPreview() {
+    if (_openRouterApiKey == null || _openRouterApiKey!.isEmpty) return null;
+    if (_openRouterApiKey!.length <= 8) return _openRouterApiKey;
+    return '${_openRouterApiKey!.substring(0, 8)}...';
+  }
+  
+  // Initialize method to load environment variables
   static Future<void> initialize() async {
-    if (kDebugMode) {
-      debugPrint('AppConfig: Initializing configuration...');
-    }
-
-    // First, check if .env file exists in assets
     try {
-      final envContent = await rootBundle.loadString('assets/.env');
+      // Load environment variables
+      await dotenv.load(fileName: "assets/.env");
+      
+      // Load API keys from environment
+      _openRouterApiKey = dotenv.env['OPENROUTER_API_KEY'];
+      _geminiApiKey = dotenv.env['GEMINI_API_KEY'];
+      
       if (kDebugMode) {
-        debugPrint('AppConfig: .env file found in assets folder');
-        debugPrint('AppConfig: .env content length: ${envContent.length}');
-        // SECURITY: Don't log actual content, just basic info
-        debugPrint('AppConfig: .env file loaded successfully');
+        debugPrint('AppConfig: Environment variables loaded');
+        debugPrint('AppConfig: OpenRouter API key present: ${hasApiKey}');
+        debugPrint('AppConfig: Gemini API key present: ${hasGeminiApiKey}');
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('AppConfig: .env file not accessible via rootBundle: $e');
+        debugPrint('AppConfig: Error loading environment variables: $e');
+        debugPrint('AppConfig: Continuing without API keys...');
       }
-    }
-
-    try {
-      // Try loading from root level first (for development)
-      await dotenv.load(fileName: '.env');
-      if (kDebugMode) {
-        debugPrint('AppConfig: Dotenv loaded successfully from root');
-        debugPrint(
-            'AppConfig: Loaded ${dotenv.env.length} environment variables');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('AppConfig: Failed to load .env from root: $e');
-      }
-
-      // Try assets folder as fallback
-      try {
-        await dotenv.load(fileName: 'assets/.env');
-        if (kDebugMode) {
-          debugPrint(
-              'AppConfig: Dotenv loaded successfully from assets folder');
-          debugPrint(
-              'AppConfig: Loaded ${dotenv.env.length} environment variables');
-        }
-      } catch (e2) {
-        if (kDebugMode) {
-          debugPrint('AppConfig: All dotenv loading methods failed: $e2');
-        }
-      }
-    }
-
-    final hasOpenRouterKey = hasApiKey;
-    final hasGeminiKey = hasGeminiApiKey;
-    if (kDebugMode) {
-      debugPrint('AppConfig: OpenRouter API key configured: $hasOpenRouterKey');
-      debugPrint('AppConfig: Gemini API key configured: $hasGeminiKey');
-
-      if (hasOpenRouterKey) {
-        debugPrint(
-            'AppConfig: OpenRouter API key preview: ${getApiKeyPreview()}');
-      }
-
-      if (hasGeminiKey) {
-        debugPrint(
-            'AppConfig: Gemini API key preview: ${getGeminiApiKeyPreview()}');
-      }
+      // Set default values if loading fails
+      _openRouterApiKey = null;
+      _geminiApiKey = null;
     }
   }
+  // Cloud Development Configuration
+  // Update these URLs after deploying your backend and web dashboard
 
-  /// Get configuration summary for debugging
-  static Map<String, dynamic> getDebugInfo() {
-    return {
-      'hasApiKey': hasApiKey,
-      'apiKeyPreview': getApiKeyPreview(),
-      'dotenvLoaded': _isDotenvLoaded(),
-    };
-  }
+  // Backend API URLs
+  static const String backendUrl = kDebugMode
+      ? 'http://localhost:8000' // Local development
+      : 'https://your-backend.railway.app'; // Cloud backend
 
-  /// Check if dotenv is loaded
-  static bool _isDotenvLoaded() {
-    try {
-      dotenv.env.isEmpty; // This will throw if not loaded
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
+  // Web Dashboard URL
+  static const String webDashboardUrl = 'https://your-web-dashboard.vercel.app';
+
+  // Supabase URLs (already configured in supabase_config.dart)
+  static const String supabaseUrl = 'https://xibffemtpboiecpeynon.supabase.co';
+
+  // API Endpoints
+  static const String apiBase = '$backendUrl/api';
+  static const String authEndpoint = '$apiBase/auth';
+  static const String usersEndpoint = '$apiBase/users';
+  static const String eventsEndpoint = '$apiBase/events';
+  static const String achievementsEndpoint = '$apiBase/achievements';
+  static const String mediaEndpoint = '$apiBase/media';
+  static const String searchEndpoint = '$apiBase/search';
+  static const String analyticsEndpoint = '$apiBase/analytics';
+
+  // Feature Flags
+  static const bool enableCloudSync = true;
+  static const bool enableOfflineMode = true;
+  static const bool enablePushNotifications = true;
+
+  // App Settings
+  static const String appName = 'Student Talent Profiling App';
+  static const String appVersion = '1.0.0';
+  static const int apiTimeoutSeconds = 30;
+  static const int maxRetryAttempts = 3;
+
+  // Development Settings
+  static const bool enableDebugLogging = kDebugMode;
+  static const bool enablePerformanceMonitoring = true;
+  static const bool enableCrashReporting = !kDebugMode;
+
+  // Media Settings
+  static const int maxImageSizeMB = 10;
+  static const int maxVideoSizeMB = 100;
+  static const List<String> allowedImageFormats = [
+    'jpg',
+    'jpeg',
+    'png',
+    'webp'
+  ];
+  static const List<String> allowedVideoFormats = ['mp4', 'mov', 'avi'];
+
+  // Cache Settings
+  static const Duration cacheExpiration = Duration(days: 7);
+  static const int maxCacheSizeMB = 100;
+
+  // Security Settings
+  static const bool enableSSLVerification = true;
+  static const bool enableCertificatePinning = false;
+
+  // Analytics Settings
+  static const bool enableAnalytics = true;
+  static const bool enableUserTracking = false;
+  static const bool enableCrashAnalytics = true;
 }

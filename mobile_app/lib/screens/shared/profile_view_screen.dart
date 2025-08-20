@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/profile_service.dart';
-import '../../services/auth_service.dart';
+import '../../services/supabase_auth_service.dart';
 import '../../models/profile_model.dart';
 import '../../models/user_model.dart';
 import '../../models/search_models.dart';
@@ -41,7 +41,8 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
       debugPrint(
           'ProfileViewScreen: Loading profile data for userId: ${widget.userId}');
 
-      final authService = Provider.of<AuthService>(context, listen: false);
+      final authService =
+          Provider.of<SupabaseAuthService>(context, listen: false);
       final profileService =
           Provider.of<ProfileService>(context, listen: false);
 
@@ -442,7 +443,11 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                           radius: 50,
                           backgroundImage: _profile!.profileImageUrl != null &&
                                   _profile!.profileImageUrl!.isNotEmpty
-                              ? NetworkImage(_profile!.profileImageUrl!)
+                              ? (Uri.tryParse(_profile!.profileImageUrl!)
+                                          ?.hasAbsolutePath ==
+                                      true
+                                  ? NetworkImage(_profile!.profileImageUrl!)
+                                  : null)
                               : null,
                           backgroundColor:
                               AppTheme.primaryColor.withValues(alpha: 0.1),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../services/enhanced_chat_service.dart';
-import '../../services/firebase_usage_monitor.dart';
 import '../../utils/app_theme.dart';
 
 class ChatSettingsScreen extends StatefulWidget {
@@ -13,7 +12,6 @@ class ChatSettingsScreen extends StatefulWidget {
 class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
   final TextEditingController _apiKeyController = TextEditingController();
   final EnhancedChatService _chatService = EnhancedChatService();
-  final FirebaseUsageMonitor _usageMonitor = FirebaseUsageMonitor();
   
   bool _isLoading = false;
   bool _apiKeyValid = false;
@@ -27,8 +25,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
 
   Future<void> _loadUsageReport() async {
     try {
-      await _usageMonitor.initialize();
-      final report = _usageMonitor.getUsageReport();
+      final report = <String, dynamic>{}; // Placeholder for future usage reporting
       setState(() {
         _usageReport = report;
         _apiKeyValid = _chatService.isInitialized;

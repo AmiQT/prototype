@@ -1,0 +1,32 @@
+# Core FastAPI dependencies
+fastapi
+uvicorn[standard]
+python-multipart
+python-dotenv
+pydantic
+aiofiles
+
+# Authentication & Security
+firebase-admin
+python-jose[cryptography]
+
+# Media handling
+cloudinary
+
+# HTTP client
+httpx
+
+# Database - PostgreSQL with Supabase
+sqlalchemy>=1.4.0,<2.1.0
+alembic>=1.8.0
+psycopg2-binary>=2.9.0
+asyncpg>=0.25.0
+databases[postgresql]>=0.7.0
+
+# Cache (will add Redis later)
+# redis==5.0.1
+
+# ML libraries (will add when needed)
+# pandas==2.1.4
+# scikit-learn==1.3.2
+# numpy==1.25.2

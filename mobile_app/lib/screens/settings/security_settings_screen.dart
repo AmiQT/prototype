@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../services/auth_service.dart';
+import '../../services/supabase_auth_service.dart';
 import '../../services/settings_service.dart';
 import '../../widgets/settings_widgets.dart';
 import '../../widgets/custom_text_field.dart';
@@ -155,8 +155,9 @@ class _SecuritySettingsScreenState extends State<SecuritySettingsScreen> {
   }
 
   void _showPasswordResetDialog() {
-    final authService = Provider.of<AuthService>(context, listen: false);
-    _resetEmailController.text = authService.firebaseCurrentUser?.email ?? '';
+    final authService =
+        Provider.of<SupabaseAuthService>(context, listen: false);
+    _resetEmailController.text = authService.supabaseUser?.email ?? '';
 
     showDialog(
       context: context,

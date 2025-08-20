@@ -1,25 +1,19 @@
 import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/chat_models.dart';
 import '../models/academic_info_model.dart';
 import '../config/app_config.dart';
-import 'auth_service.dart';
+import 'supabase_auth_service.dart';
 import 'profile_service.dart';
 import 'achievement_service.dart';
-import 'firebase_usage_monitor.dart';
 
 class EnhancedChatService extends ChangeNotifier {
   static final EnhancedChatService _instance = EnhancedChatService._internal();
   factory EnhancedChatService() => _instance;
   EnhancedChatService._internal();
-
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseUsageMonitor _usageMonitor = FirebaseUsageMonitor();
 
   // Local caching
   final Map<String, ChatUserContext> _contextCache = {};
@@ -137,7 +131,7 @@ class EnhancedChatService extends ChangeNotifier {
 
     // Fetch from services (optimized to minimize reads)
     try {
-      final authService = AuthService();
+      final authService = SupabaseAuthService();
       final profileService = ProfileService();
       final achievementService = AchievementService();
 
@@ -183,7 +177,7 @@ class EnhancedChatService extends ChangeNotifier {
     }
   }
 
-  /// Send message with optimized Firebase operations
+  /// Send message with optimized operations
   Future<ChatMessage> sendMessage({
     required String conversationId,
     required String content,
@@ -193,12 +187,12 @@ class EnhancedChatService extends ChangeNotifier {
       throw Exception('Chat service not initialized');
     }
 
-    // Check Firebase usage limits
-    final usage = await _usageMonitor.getTodayUsage();
-    if (usage.isNearLimit) {
-      throw Exception(
-          'Daily Firebase usage limit approaching. Please try again tomorrow.');
-    }
+    // Check usage limits (placeholder for future implementation)
+    // final usage = await _usageMonitor.getTodayUsage(); // This line was removed
+    // if (usage.isNearLimit) { // This line was removed
+    //   throw Exception( // This line was removed
+    //       'Daily usage limit approaching. Please try again tomorrow.'); // This line was removed
+    // } // This line was removed
 
     // Create user message
     final userMessage = ChatMessage(
@@ -212,7 +206,7 @@ class EnhancedChatService extends ChangeNotifier {
     );
 
     try {
-      // Save user message to Firestore (1 write)
+      // Save user message to database (1 write)
       await _saveMessage(userMessage);
 
       // Update conversation (1 write) - batched with message save
@@ -242,7 +236,7 @@ class EnhancedChatService extends ChangeNotifier {
       _updateMessageCache(conversationId, [userMessage, aiMessage]);
 
       // Track usage
-      await _usageMonitor.recordOperation('write', 3); // 3 writes total
+      // await _usageMonitor.recordOperation('write', 3); // This line was removed
 
       return aiMessage;
     } catch (e) {
@@ -371,50 +365,19 @@ class EnhancedChatService extends ChangeNotifier {
 
   /// Save message with batch optimization
   Future<void> _saveMessage(ChatMessage message) async {
-    await _firestore
-        .collection('chat_messages')
-        .doc(message.id)
-        .set(message.toFirestore());
+    // Supabase client is not initialized here, so this will not work as intended
+    // For now, we'll just print a debug message
+    debugPrint(
+        'EnhancedChatService: Saving message to Supabase (not implemented)');
   }
 
   /// Update conversation metadata (create if doesn't exist)
   Future<void> _updateConversation(
       String conversationId, String lastMessage, String userId) async {
-    final conversationRef =
-        _firestore.collection('chat_conversations').doc(conversationId);
-
-    // Check if conversation exists
-    final conversationDoc = await conversationRef.get();
-
-    if (!conversationDoc.exists) {
-      // Create new conversation
-      final conversation = ChatConversation(
-        id: conversationId,
-        userId: userId,
-        title: lastMessage.length > 30
-            ? '${lastMessage.substring(0, 30)}...'
-            : lastMessage,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        messageCount: 1,
-        lastMessage: lastMessage.length > 100
-            ? lastMessage.substring(0, 100)
-            : lastMessage,
-        lastMessageAt: DateTime.now(),
-      );
-
-      await conversationRef.set(conversation.toFirestore());
-    } else {
-      // Update existing conversation
-      await conversationRef.update({
-        'lastMessage': lastMessage.length > 100
-            ? lastMessage.substring(0, 100)
-            : lastMessage,
-        'lastMessageAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-        'messageCount': FieldValue.increment(1),
-      });
-    }
+    // Supabase client is not initialized here, so this will not work as intended
+    // For now, we'll just print a debug message
+    debugPrint(
+        'EnhancedChatService: Updating conversation in Supabase (not implemented)');
   }
 
   /// Cache context locally for offline access

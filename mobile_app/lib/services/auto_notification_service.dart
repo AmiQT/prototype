@@ -1,12 +1,11 @@
 import 'package:flutter/foundation.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'notification_service.dart';
 import '../models/notification_model.dart';
+import '../config/supabase_config.dart';
 
 /// Service for automatically creating notifications based on user actions
 /// This provides free-tier alternatives to Cloud Functions
 class AutoNotificationService {
-  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static final NotificationService _notificationService = NotificationService();
 
   /// Initialize the auto notification service
@@ -23,7 +22,8 @@ class AutoNotificationService {
     try {
       await _notificationService.createNotification(
         title: 'Event Added to Favorites',
-        message: 'You\'ve added "$eventTitle" to your favorites. We\'ll notify you of any updates!',
+        message:
+            'You\'ve added "$eventTitle" to your favorites. We\'ll notify you of any updates!',
         type: NotificationType.event,
         userId: userId,
         data: {
@@ -33,10 +33,12 @@ class AutoNotificationService {
         },
         actionUrl: '/event/$eventId',
       );
-      
-      debugPrint('AutoNotificationService: Created favorite notification for event $eventTitle');
+
+      debugPrint(
+          'AutoNotificationService: Created favorite notification for event $eventTitle');
     } catch (e) {
-      debugPrint('AutoNotificationService: Error creating favorite notification: $e');
+      debugPrint(
+          'AutoNotificationService: Error creating favorite notification: $e');
     }
   }
 
@@ -58,10 +60,12 @@ class AutoNotificationService {
           'achievedAt': DateTime.now().toIso8601String(),
         },
       );
-      
-      debugPrint('AutoNotificationService: Created milestone notification for $milestoneTitle');
+
+      debugPrint(
+          'AutoNotificationService: Created milestone notification for $milestoneTitle');
     } catch (e) {
-      debugPrint('AutoNotificationService: Error creating milestone notification: $e');
+      debugPrint(
+          'AutoNotificationService: Error creating milestone notification: $e');
     }
   }
 
@@ -73,7 +77,8 @@ class AutoNotificationService {
     try {
       await _notificationService.createNotification(
         title: 'Profile Complete! ✅',
-        message: 'Great job, $userName! Your profile is now complete and visible to others.',
+        message:
+            'Great job, $userName! Your profile is now complete and visible to others.',
         type: NotificationType.system,
         userId: userId,
         data: {
@@ -82,10 +87,12 @@ class AutoNotificationService {
         },
         actionUrl: '/profile',
       );
-      
-      debugPrint('AutoNotificationService: Created profile completion notification');
+
+      debugPrint(
+          'AutoNotificationService: Created profile completion notification');
     } catch (e) {
-      debugPrint('AutoNotificationService: Error creating profile completion notification: $e');
+      debugPrint(
+          'AutoNotificationService: Error creating profile completion notification: $e');
     }
   }
 
@@ -99,7 +106,8 @@ class AutoNotificationService {
     try {
       await _notificationService.createNotification(
         title: 'Content Posted Successfully! 📝',
-        message: 'Your $contentType "$contentTitle" has been posted and is now visible to others.',
+        message:
+            'Your $contentType "$contentTitle" has been posted and is now visible to others.',
         type: NotificationType.social,
         userId: userId,
         data: {
@@ -110,10 +118,12 @@ class AutoNotificationService {
         },
         actionUrl: postId != null ? '/post/$postId' : null,
       );
-      
-      debugPrint('AutoNotificationService: Created content posted notification');
+
+      debugPrint(
+          'AutoNotificationService: Created content posted notification');
     } catch (e) {
-      debugPrint('AutoNotificationService: Error creating content posted notification: $e');
+      debugPrint(
+          'AutoNotificationService: Error creating content posted notification: $e');
     }
   }
 
@@ -125,7 +135,8 @@ class AutoNotificationService {
     try {
       await _notificationService.createNotification(
         title: 'Welcome to UTHM Talent! 👋',
-        message: 'Hi $userName! Welcome to the Student Talent Profiling app. Start by completing your profile and exploring events.',
+        message:
+            'Hi $userName! Welcome to the Student Talent Profiling app. Start by completing your profile and exploring events.',
         type: NotificationType.system,
         userId: userId,
         data: {
@@ -134,10 +145,11 @@ class AutoNotificationService {
         },
         actionUrl: '/profile',
       );
-      
+
       debugPrint('AutoNotificationService: Created welcome notification');
     } catch (e) {
-      debugPrint('AutoNotificationService: Error creating welcome notification: $e');
+      debugPrint(
+          'AutoNotificationService: Error creating welcome notification: $e');
     }
   }
 
@@ -149,7 +161,8 @@ class AutoNotificationService {
     try {
       await _notificationService.createNotification(
         title: 'Complete Your Profile 📋',
-        message: 'Hi $userName! Don\'t forget to complete your profile to get the most out of the app.',
+        message:
+            'Hi $userName! Don\'t forget to complete your profile to get the most out of the app.',
         type: NotificationType.reminder,
         userId: userId,
         data: {
@@ -158,10 +171,12 @@ class AutoNotificationService {
         },
         actionUrl: '/profile',
       );
-      
-      debugPrint('AutoNotificationService: Created profile reminder notification');
+
+      debugPrint(
+          'AutoNotificationService: Created profile reminder notification');
     } catch (e) {
-      debugPrint('AutoNotificationService: Error creating profile reminder notification: $e');
+      debugPrint(
+          'AutoNotificationService: Error creating profile reminder notification: $e');
     }
   }
 
@@ -176,7 +191,7 @@ class AutoNotificationService {
     try {
       String title = '';
       String message = '';
-      
+
       switch (interactionType) {
         case 'like':
           title = 'Someone liked your post! ❤️';
@@ -194,7 +209,7 @@ class AutoNotificationService {
           title = 'New interaction! 👋';
           message = '$fromUserName interacted with your post "$contentTitle"';
       }
-      
+
       await _notificationService.createNotification(
         title: title,
         message: message,
@@ -209,10 +224,12 @@ class AutoNotificationService {
         },
         actionUrl: postId != null ? '/post/$postId' : null,
       );
-      
-      debugPrint('AutoNotificationService: Created social interaction notification');
+
+      debugPrint(
+          'AutoNotificationService: Created social interaction notification');
     } catch (e) {
-      debugPrint('AutoNotificationService: Error creating social interaction notification: $e');
+      debugPrint(
+          'AutoNotificationService: Error creating social interaction notification: $e');
     }
   }
 
@@ -225,23 +242,22 @@ class AutoNotificationService {
   }) async {
     try {
       List<String> userIds = targetUserIds ?? [];
-      
+
       // If no specific users, get all active users
       if (userIds.isEmpty) {
-        final usersSnapshot = await _firestore
-            .collection('users')
-            .where('isActive', isEqualTo: true)
-            .get();
-        
-        userIds = usersSnapshot.docs.map((doc) => doc.data()['uid'] as String).toList();
+        final usersSnapshot = await SupabaseConfig.from('users')
+            .select('id')
+            .eq('isActive', true);
+
+        userIds = (usersSnapshot as List<dynamic>?)
+                ?.map((item) => item['id'] as String)
+                .toList() ??
+            [];
       }
-      
+
       // Create notifications for all target users
-      final batch = _firestore.batch();
-      
       for (final userId in userIds) {
-        final notificationRef = _firestore.collection('notifications').doc();
-        batch.set(notificationRef, {
+        await SupabaseConfig.from('notifications').insert({
           'userId': userId,
           'title': title,
           'message': message,
@@ -255,12 +271,12 @@ class AutoNotificationService {
           'actionUrl': actionUrl,
         });
       }
-      
-      await batch.commit();
-      debugPrint('AutoNotificationService: Created system announcement for ${userIds.length} users');
-      
+
+      debugPrint(
+          'AutoNotificationService: Created system announcement for ${userIds.length} users');
     } catch (e) {
-      debugPrint('AutoNotificationService: Error creating system announcement: $e');
+      debugPrint(
+          'AutoNotificationService: Error creating system announcement: $e');
     }
   }
 }

@@ -1,18 +1,16 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:cloud_firestore/cloud_firestore.dart'; // Migrated to backend
 import 'package:flutter/foundation.dart';
 import '../models/profile_model.dart';
 import '../models/user_model.dart';
 import '../models/academic_info_model.dart';
 import '../models/experience_model.dart';
 import '../models/project_model.dart';
+import '../config/supabase_config.dart';
 
 class SampleProfileDataService {
-  final CollectionReference profilesCollection =
-      FirebaseFirestore.instance.collection('profiles');
-  final CollectionReference usersCollection =
-      FirebaseFirestore.instance.collection('users');
-  final CollectionReference sampleUsersCollection =
-      FirebaseFirestore.instance.collection('sample_users');
+  final dynamic profilesCollection = SupabaseConfig.from('profiles');
+  final dynamic usersCollection = SupabaseConfig.from('users');
+  final dynamic sampleUsersCollection = SupabaseConfig.from('sample_users');
 
   Future<void> createSampleData() async {
     try {
@@ -353,7 +351,7 @@ class SampleProfileDataService {
     );
 
     // Save user to sample_users collection instead of users
-    await sampleUsersCollection.doc(user.uid).set(user.toJson());
+    await sampleUsersCollection.insert(user.toJson());
 
     // Create academic info
     final academicInfoData =
@@ -436,7 +434,7 @@ class SampleProfileDataService {
     );
 
     // Save profile to Firestore using userId as document ID
-    await profilesCollection.doc(userData['uid']).set(profile.toJson());
+    await profilesCollection.insert(profile.toJson());
 
     debugPrint(
         'SampleProfileDataService: Created user and profile for ${user.name}');
@@ -455,10 +453,10 @@ class SampleProfileDataService {
       ];
 
       for (final userId in sampleUserIds) {
-        await sampleUsersCollection.doc(userId).delete();
+        await sampleUsersCollection.delete().eq('uid', userId);
         await profilesCollection
-            .doc(userId)
-            .delete(); // Use userId as document ID
+            .delete()
+            .eq('id', userId); // Use userId as document ID
       }
 
       debugPrint('SampleProfileDataService: Sample data cleared successfully!');

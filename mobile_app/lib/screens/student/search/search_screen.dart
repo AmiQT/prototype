@@ -73,7 +73,7 @@ class _SearchScreenState extends State<SearchScreen> {
       final departments =
           _allProfiles.map((profile) => profile.department).toSet().toList();
       departments.sort();
-      return departments;
+      return departments.where((dept) => dept != null).map((dept) => dept!).toList();
     } else if (_selectedCategory == 'Semester') {
       final semesters = _allProfiles
           .map((profile) => profile.semester.toString())
@@ -85,7 +85,7 @@ class _SearchScreenState extends State<SearchScreen> {
       final programs =
           _allProfiles.map((profile) => profile.program).toSet().toList();
       programs.sort();
-      return programs;
+      return programs.whereType<String>().toList();
     }
     return [];
   }

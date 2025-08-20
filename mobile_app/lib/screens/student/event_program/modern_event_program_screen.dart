@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../models/event_model.dart';
 import '../../../services/event_service.dart';
@@ -10,6 +9,7 @@ import '../../../widgets/modern/event_filter_widget.dart';
 import 'modern_event_detail_screen.dart';
 import 'favorite_events_screen.dart';
 import '../../shared/notifications_screen.dart';
+import '../../../config/supabase_config.dart';
 
 class ModernEventProgramScreen extends StatefulWidget {
   const ModernEventProgramScreen({super.key});
@@ -42,7 +42,7 @@ class _ModernEventProgramScreenState extends State<ModernEventProgramScreen>
   @override
   void initState() {
     super.initState();
-    _userId = FirebaseAuth.instance.currentUser?.uid;
+    _userId = SupabaseConfig.auth.currentUser?.id;
     _initializeAnimations();
     _loadEvents();
   }

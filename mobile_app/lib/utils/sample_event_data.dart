@@ -1,9 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 
 class SampleEventData {
-  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
   static List<Map<String, dynamic>> getSampleEvents() {
     return [
       {
@@ -81,75 +77,77 @@ class SampleEventData {
     ];
   }
 
-  static Future<void> addSampleEventsToFirebase() async {
-    try {
-      final sampleEvents = getSampleEvents();
-      final batch = _firestore.batch();
+  // Firebase method removed - migrating to Supabase
+  // static Future<void> addSampleEventsToFirebase() async {
+  //   try {
+  //     final sampleEvents = getSampleEvents();
+  //     final batch = _firestore.batch();
 
-      for (final eventData in sampleEvents) {
-        final docRef = _firestore.collection('events').doc(eventData['id']);
-        batch.set(docRef, eventData);
-      }
+  //     for (final eventData in sampleEvents) {
+  //       final docRef = _firestore.collection('events').doc(eventData['id']);
+  //       batch.set(docRef, eventData);
+  //     }
 
-      await batch.commit();
-      debugPrint('✅ Sample events added successfully!');
-    } catch (e) {
-      debugPrint('❌ Error adding sample events: $e');
-    }
-  }
+  //     await batch.commit();
+  //     debugPrint('✅ Sample events added successfully!');
+  //   } catch (e) {
+  //     debugPrint('❌ Error adding sample events: $e');
+  //   }
+  // }
 
-  static Future<void> clearAllEvents() async {
-    try {
-      final snapshot = await _firestore.collection('events').get();
-      final batch = _firestore.batch();
+  // Firebase methods removed - migrating to Supabase
+  // static Future<void> clearAllEvents() async {
+  //   try {
+  //     final snapshot = await _firestore.collection('events').get();
+  //     final batch = _firestore.batch();
 
-      for (final doc in snapshot.docs) {
-        batch.delete(doc.reference);
-      }
+  //     for (final doc in snapshot.docs) {
+  //       batch.delete(doc.reference);
+  //     }
 
-      await batch.commit();
-      debugPrint('✅ All events cleared successfully!');
-    } catch (e) {
-      debugPrint('❌ Error clearing events: $e');
-    }
-  }
+  //       await batch.commit();
+  //       debugPrint('✅ All events cleared successfully!');
+  //     } catch (e) {
+  //       debugPrint('❌ Error clearing events: $e');
+  //     }
+  //   }
 
-  static Future<void> testFavoriteFeature(String userId, String eventId) async {
-    try {
-      final eventRef = _firestore.collection('events').doc(eventId);
-      final eventDoc = await eventRef.get();
+  //   static Future<void> testFavoriteFeature(String userId, String eventId) async {
+  //     try {
+  //       final eventRef = _firestore.collection('events').doc(eventId);
+  //       final eventDoc = await eventRef.get();
 
-      if (!eventDoc.exists) {
-        debugPrint('❌ Event not found: $eventId');
-        return;
-      }
+  //       if (!eventDoc.exists) {
+  //         debugPrint('❌ Event not found: $eventId');
+  //         return;
+  //       }
 
-      final data = eventDoc.data() as Map<String, dynamic>;
-      List<String> favoriteUserIds =
-          List<String>.from(data['favoriteUserIds'] ?? []);
+  //       final data = eventDoc.data() as Map<String, dynamic>;
+  //       List<String> favoriteUserIds =
+  //           List<String>.from(data['favoriteUserIds'] ?? []);
 
-      final isFavorite = favoriteUserIds.contains(userId);
+  //       final isFavorite = favoriteUserIds.contains(userId);
 
-      if (isFavorite) {
-        favoriteUserIds.remove(userId);
-        debugPrint(
-            '🔄 Removing user $userId from favorites for event $eventId');
-      } else {
-        favoriteUserIds.add(userId);
-        debugPrint('🔄 Adding user $userId to favorites for event $eventId');
-      }
+  //       if (isFavorite) {
+  //         favoriteUserIds.remove(userId);
+  //         debugPrint(
+  //             '🔄 Removing user $userId from favorites for event $eventId');
+  //       } else {
+  //         favoriteUserIds.add(userId);
+  //         debugPrint('🔄 Adding user $userId to favorites for event $eventId');
+  //       }
 
-      await eventRef.update({'favoriteUserIds': favoriteUserIds});
-      debugPrint('✅ Favorite status updated successfully!');
+  //       await eventRef.update({'favoriteUserIds': favoriteUserIds});
+  //       debugPrint('✅ Favorite status updated successfully!');
 
-      // Verify the update
-      final updatedDoc = await eventRef.get();
-      final updatedData = updatedDoc.data() as Map<String, dynamic>;
-      final updatedFavorites =
-          List<String>.from(updatedData['favoriteUserIds'] ?? []);
-      debugPrint('📊 Current favorites for event $eventId: $updatedFavorites');
-    } catch (e) {
-      debugPrint('❌ Error testing favorite feature: $e');
-    }
-  }
+  //       // Verify the update
+  //       final updatedDoc = await eventRef.get();
+  //       final updatedData = updatedDoc.data() as Map<String, dynamic>;
+  //       final updatedFavorites =
+  //           List<String>.from(updatedData['favoriteUserIds'] ?? []);
+  //       debugPrint('📊 Current favorites for event $eventId: $updatedFavorites');
+  //     } catch (e) {
+  //       debugPrint('❌ Error testing favorite feature: $e');
+  //       }
+  //   }
 }

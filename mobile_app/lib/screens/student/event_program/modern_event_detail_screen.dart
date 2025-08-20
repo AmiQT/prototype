@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../models/event_model.dart';
 import '../../../services/event_service.dart';
 import '../../../utils/app_theme.dart';
+import '../../../config/supabase_config.dart';
 
 class ModernEventDetailScreen extends StatefulWidget {
   final EventModel event;
@@ -33,7 +34,7 @@ class _ModernEventDetailScreenState extends State<ModernEventDetailScreen>
   @override
   void initState() {
     super.initState();
-    _userId = FirebaseAuth.instance.currentUser?.uid;
+    _userId = SupabaseConfig.auth.currentUser?.id;
     _isFavorite =
         _userId != null && widget.event.favoriteUserIds.contains(_userId);
 

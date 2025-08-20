@@ -220,10 +220,10 @@ export class SecurityManager {
         
         localStorage.setItem('securityLogs', JSON.stringify(securityLogs));
         
-        // Log critical events to console
-        if (['unauthorized_access', 'permission_denied', 'suspicious_activity'].includes(event)) {
-            console.warn('Security Event:', logEntry);
-        }
+        // Log critical events to console (disabled for cleaner console)
+        // if (['unauthorized_access', 'permission_denied', 'suspicious_activity'].includes(event)) {
+        //     console.warn('Security Event:', logEntry);
+        // }
     }
     
     /**

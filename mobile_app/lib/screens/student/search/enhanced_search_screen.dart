@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:provider/provider.dart';
 import '../../../services/search_service.dart';
-import '../../../services/auth_service.dart';
+import '../../../services/supabase_auth_service.dart';
 import '../../../models/search_models.dart';
 import '../../../widgets/modern/modern_search_bar.dart';
 import '../../../widgets/modern/modern_filter_bottom_sheet.dart';
@@ -51,7 +51,8 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
 
   /// Get current user ID from AuthService
   String? get _currentUserId {
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService =
+        Provider.of<SupabaseAuthService>(context, listen: false);
     return authService.currentUserId;
   }
 

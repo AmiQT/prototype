@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/notification_service.dart';
-import '../../services/auth_service.dart';
+import '../../services/supabase_auth_service.dart';
 import '../../models/notification_model.dart';
 import '../../utils/app_theme.dart';
 import '../../widgets/modern/modern_notification_card.dart';
@@ -38,7 +38,8 @@ class _NotificationsScreenState extends State<NotificationsScreen>
   }
 
   Future<void> _initializeNotifications() async {
-    final authService = Provider.of<AuthService>(context, listen: false);
+    final authService =
+        Provider.of<SupabaseAuthService>(context, listen: false);
     final userId = authService.currentUserId;
 
     if (userId != null) {

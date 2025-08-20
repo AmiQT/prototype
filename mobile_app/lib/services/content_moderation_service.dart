@@ -1,13 +1,14 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
 import '../models/report_model.dart';
+import '../config/supabase_config.dart';
 
 class ContentModerationService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  CollectionReference get reportsCollection => _firestore.collection('reports');
-  CollectionReference get moderationActionsCollection =>
-      _firestore.collection('moderationActions');
+  // Get reports collection
+  SupabaseQueryBuilder get reportsCollection => SupabaseConfig.from('reports');
+  // Get moderation actions collection
+  SupabaseQueryBuilder get moderationActionsCollection =>
+      SupabaseConfig.from('moderationActions');
 
   // Profanity filter - basic implementation
   static const List<String> _profanityWords = [
@@ -29,7 +30,7 @@ class ContentModerationService {
     String? additionalDetails,
   }) async {
     try {
-      final reportId = _firestore.collection('temp').doc().id;
+      final reportId = DateTime.now().millisecondsSinceEpoch.toString();
 
       final report = ReportModel(
         id: reportId,
@@ -47,7 +48,7 @@ class ContentModerationService {
         updatedAt: DateTime.now(),
       );
 
-      await reportsCollection.doc(reportId).set(report.toJson());
+      await reportsCollection.insert(report.toJson());
 
       debugPrint('Report submitted successfully: $reportId');
       return reportId;
@@ -63,20 +64,17 @@ class ContentModerationService {
     int limit = 50,
   }) async {
     try {
-      Query query = reportsCollection.orderBy('createdAt', descending: true);
+      var query = reportsCollection.select();
 
       if (status != null) {
-        query =
-            query.where('status', isEqualTo: status.toString().split('.').last);
+        query = query.eq('status', status.toString().split('.').last);
       }
 
-      query = query.limit(limit);
+      final response =
+          await query.order('createdAt', ascending: false).limit(limit);
 
-      final querySnapshot = await query.get();
-
-      return querySnapshot.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        data['id'] = doc.id;
+      return response.map((doc) {
+        final data = doc as Map<String, dynamic>;
         return ReportModel.fromJson(data);
       }).toList();
     } catch (e) {
@@ -91,22 +89,26 @@ class ContentModerationService {
     int limit = 50,
   }) {
     try {
-      Query query = reportsCollection.orderBy('createdAt', descending: true);
+      var query = reportsCollection.select();
 
       if (status != null) {
-        query =
-            query.where('status', isEqualTo: status.toString().split('.').last);
+        query = query.eq('status', status.toString().split('.').last);
       }
 
-      query = query.limit(limit);
-
-      return query.snapshots().map((snapshot) {
-        return snapshot.docs.map((doc) {
-          final data = doc.data() as Map<String, dynamic>;
-          data['id'] = doc.id;
-          return ReportModel.fromJson(data);
-        }).toList();
-      });
+      // TODO: Implement with Supabase real-time subscriptions
+      // For now, return a stream that fetches data periodically
+      return Stream.periodic(const Duration(seconds: 30), (_) async {
+        try {
+          final response = await query.order('createdAt', ascending: false).limit(limit);
+          return response.map((doc) {
+            final data = doc as Map<String, dynamic>;
+            return ReportModel.fromJson(data);
+          }).toList();
+        } catch (e) {
+          debugPrint('Error fetching reports: $e');
+          return <ReportModel>[];
+        }
+      }).asyncMap((future) => future);
     } catch (e) {
       debugPrint('Error getting reports stream: $e');
       return Stream.value([]);
@@ -121,13 +123,13 @@ class ContentModerationService {
     String? reviewNotes,
   }) async {
     try {
-      await reportsCollection.doc(reportId).update({
+      await reportsCollection.update({
         'status': status.toString().split('.').last,
         'reviewedBy': reviewedBy,
-        'reviewedAt': FieldValue.serverTimestamp(),
+        'reviewedAt': DateTime.now().toIso8601String(),
         'reviewNotes': reviewNotes,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+        'updatedAt': DateTime.now().toIso8601String(),
+      }).eq('id', reportId);
 
       debugPrint('Report status updated: $reportId -> $status');
     } catch (e) {
@@ -234,22 +236,33 @@ class ContentModerationService {
   /// Get content statistics for admin dashboard
   Future<Map<String, dynamic>> getContentStatistics() async {
     try {
-      final reportsSnapshot = await reportsCollection.get();
-      final reports = reportsSnapshot.docs.map((doc) {
-        final data = doc.data() as Map<String, dynamic>;
-        return ReportModel.fromJson(data);
-      }).toList();
+      final response = await reportsCollection.select();
 
-      final pendingReports =
-          reports.where((r) => r.status == ReportStatus.pending).length;
-      final resolvedReports =
-          reports.where((r) => r.status == ReportStatus.resolved).length;
-      final dismissedReports =
-          reports.where((r) => r.status == ReportStatus.dismissed).length;
+      return {
+        'totalReports': response.length,
+        'pendingReports': response.where((r) => r['status'] == 'pending').length,
+        'resolvedReports': response.where((r) => r['status'] == 'resolved').length,
+          'dismissedReports': 0,
+          'reportsByType': <String, int>{},
+          'lastUpdated': DateTime.now().toIso8601String(),
+        };
+      }
+
+      final reports = response as List<dynamic>;
+
+      final pendingReports = reports
+          .where((r) => r['status'] == ReportStatus.pending.toString())
+          .length;
+      final resolvedReports = reports
+          .where((r) => r['status'] == ReportStatus.resolved.toString())
+          .length;
+      final dismissedReports = reports
+          .where((r) => r['status'] == ReportStatus.dismissed.toString())
+          .length;
 
       final reportsByType = <String, int>{};
       for (final report in reports) {
-        final type = report.type.toString().split('.').last;
+        final type = report['type'].toString().split('.').last;
         reportsByType[type] = (reportsByType[type] ?? 0) + 1;
       }
 
@@ -283,13 +296,13 @@ class ContentModerationService {
   }) async {
     try {
       // Log moderation action
-      await moderationActionsCollection.add({
+      await moderationActionsCollection.insert({
         'action': 'delete_content',
         'contentId': contentId,
         'contentType': contentType.toString().split('.').last,
         'moderatorId': moderatorId,
         'reason': reason,
-        'timestamp': FieldValue.serverTimestamp(),
+        'timestamp': DateTime.now().toIso8601String(),
       });
 
       // Note: Actual content deletion would be handled by the respective services
