@@ -60,7 +60,7 @@ class AppConfig {
   // Backend API URLs
   static const String backendUrl = kDebugMode
       ? 'http://localhost:8000' // Local development
-      : 'https://your-backend.railway.app'; // Cloud backend
+      : 'https://prototype-348e.onrender.com'; // Cloud backend
 
   // Web Dashboard URL
   static const String webDashboardUrl = 'https://your-web-dashboard.vercel.app';

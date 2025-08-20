@@ -5,7 +5,7 @@
 
 const BACKEND_CONFIG = {
   // Backend API URLs
-  baseUrl: process.env.BACKEND_URL || 'https://your-backend.railway.app',
+  baseUrl: process.env.BACKEND_URL || 'https://prototype-348e.onrender.com',
   
   // API Endpoints
   endpoints: {

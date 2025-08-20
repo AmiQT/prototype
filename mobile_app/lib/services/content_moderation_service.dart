@@ -238,39 +238,17 @@ class ContentModerationService {
     try {
       final response = await reportsCollection.select();
 
-      return {
-        'totalReports': response.length,
-        'pendingReports': response.where((r) => r['status'] == 'pending').length,
-        'resolvedReports': response.where((r) => r['status'] == 'resolved').length,
-          'dismissedReports': 0,
-          'reportsByType': <String, int>{},
-          'lastUpdated': DateTime.now().toIso8601String(),
-        };
-      }
-
-      final reports = response as List<dynamic>;
-
-      final pendingReports = reports
-          .where((r) => r['status'] == ReportStatus.pending.toString())
-          .length;
-      final resolvedReports = reports
-          .where((r) => r['status'] == ReportStatus.resolved.toString())
-          .length;
-      final dismissedReports = reports
-          .where((r) => r['status'] == ReportStatus.dismissed.toString())
-          .length;
-
       final reportsByType = <String, int>{};
-      for (final report in reports) {
-        final type = report['type'].toString().split('.').last;
+      for (final report in response) {
+        final type = report['type']?.toString().split('.').last ?? 'unknown';
         reportsByType[type] = (reportsByType[type] ?? 0) + 1;
       }
 
       return {
-        'totalReports': reports.length,
-        'pendingReports': pendingReports,
-        'resolvedReports': resolvedReports,
-        'dismissedReports': dismissedReports,
+        'totalReports': response.length,
+        'pendingReports': response.where((r) => r['status'] == 'pending').length,
+        'resolvedReports': response.where((r) => r['status'] == 'resolved').length,
+        'dismissedReports': response.where((r) => r['status'] == 'dismissed').length,
         'reportsByType': reportsByType,
         'lastUpdated': DateTime.now().toIso8601String(),
       };

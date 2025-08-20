@@ -194,295 +194,85 @@ class ProfileService {
               ? DateTime.parse(response['updated_at'])
               : DateTime.now(),
         );
-      }
-
-      return null;
     } catch (e) {
       debugPrint('ProfileService: Error getting profile from Supabase: $e');
       return null;
     }
   }
 
+  // Get all profiles
   Future<List<ProfileModel>> getAllProfiles() async {
     try {
-      debugPrint('ProfileService: Getting all profiles');
+      final response = await SupabaseConfig.client
+          .from('profiles')
+          .select('*')
+          .order('created_at', ascending: false);
 
-      final token = await _getAuthToken();
-      if (token == null) {
-        throw Exception('User not authenticated');
-      }
-
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/profiles'),
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        final profiles = <ProfileModel>[];
-
-        for (var profileData in data) {
-          final profile = ProfileModel(
-            id: profileData['id'] ?? '',
-            userId: profileData['user_id'] ?? '',
-            fullName: profileData['full_name'] ?? '',
-            phoneNumber: profileData['phone_number'],
-            address: profileData['address'],
-            bio: profileData['bio'],
-            headline: profileData['headline'],
-            profileImageUrl: profileData['profile_image_url'],
-            academicInfo: null, // Will be populated from individual fields
-            skills: List<String>.from(profileData['skills'] ?? []),
-            interests: List<String>.from(profileData['interests'] ?? []),
-            experiences: (profileData['experiences'] as List<dynamic>?)
-                    ?.map((e) =>
-                        ExperienceModel.fromJson(e as Map<String, dynamic>))
-                    .toList() ??
-                [],
-            projects: (profileData['projects'] as List<dynamic>?)
-                    ?.map(
-                        (p) => ProjectModel.fromJson(p as Map<String, dynamic>))
-                    .toList() ??
-                [],
-            achievements: [], // Will be populated separately
-            linkedinUrl: profileData['linkedin_url'],
-            githubUrl: profileData['github_url'],
-            portfolioUrl: profileData['portfolio_url'],
-            phone: profileData['phone'],
-            studentId: profileData['student_id'],
-            department: profileData['department'],
-            faculty: profileData['faculty'],
-            yearOfStudy: profileData['year_of_study'],
-            cgpa: profileData['cgpa'],
-            languages: List<String>.from(profileData['languages'] ?? []),
-            createdAt: profileData['created_at'] != null
-                ? DateTime.parse(profileData['created_at'])
-                : DateTime.now(),
-            updatedAt: profileData['updated_at'] != null
-                ? DateTime.parse(profileData['updated_at'])
-                : DateTime.now(),
-          );
-          profiles.add(profile);
-        }
-
-        debugPrint('ProfileService: Retrieved ${profiles.length} profiles');
-        return profiles;
-      } else {
-        debugPrint('ProfileService: Failed to get profiles: ${response.body}');
-        throw Exception('Failed to get profiles: ${response.body}');
-      }
+      return response.map((data) => ProfileModel(
+        id: data['id'] ?? '',
+        userId: data['user_id'] ?? '',
+        fullName: data['full_name'] ?? '',
+        headline: data['headline'],
+        bio: data['bio'],
+        profileImageUrl: data['profile_image_url'],
+        academicInfo: data['academic_info'] != null
+            ? AcademicInfoModel.fromJson(data['academic_info'])
+            : null,
+        skills: List<String>.from(data['skills'] ?? []),
+        interests: List<String>.from(data['interests'] ?? []),
+        experiences: [], // TODO: Add experiences support
+        projects: [], // TODO: Add projects support
+        isProfileComplete: data['is_profile_complete'] ?? false,
+        completedSections: ['basic'], // Default sections
+        createdAt: data['created_at'] != null
+            ? DateTime.parse(data['created_at'])
+            : DateTime.now(),
+        updatedAt: data['updated_at'] != null
+            ? DateTime.parse(data['updated_at'])
+            : DateTime.now(),
+      )).toList();
     } catch (e) {
-      debugPrint('ProfileService: Error getting profiles: $e');
+      debugPrint('ProfileService: Error getting all profiles: $e');
       return [];
     }
   }
 
-  Future<List<ProfileModel>> searchProfiles(String query) async {
-    try {
-      debugPrint('ProfileService: Searching profiles with query: $query');
-
-      final token = await _getAuthToken();
-      if (token == null) {
-        throw Exception('User not authenticated');
-      }
-
-      final response = await http.get(
-        Uri.parse(
-            '$baseUrl/api/profiles/search?q=${Uri.encodeComponent(query)}'),
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        final profiles = <ProfileModel>[];
-
-        for (var profileData in data) {
-          final profile = ProfileModel(
-            id: profileData['id'] ?? '',
-            userId: profileData['user_id'] ?? '',
-            fullName: profileData['full_name'] ?? '',
-            phoneNumber: profileData['phone_number'],
-            address: profileData['address'],
-            bio: profileData['bio'],
-            headline: profileData['headline'],
-            profileImageUrl: profileData['profile_image_url'],
-            academicInfo: null,
-            skills: List<String>.from(profileData['skills'] ?? []),
-            interests: List<String>.from(profileData['interests'] ?? []),
-            experiences: (profileData['experiences'] as List<dynamic>?)
-                    ?.map((e) =>
-                        ExperienceModel.fromJson(e as Map<String, dynamic>))
-                    .toList() ??
-                [],
-            projects: (profileData['projects'] as List<dynamic>?)
-                    ?.map(
-                        (p) => ProjectModel.fromJson(p as Map<String, dynamic>))
-                    .toList() ??
-                [],
-            achievements: [],
-            linkedinUrl: profileData['linkedin_url'],
-            githubUrl: profileData['github_url'],
-            portfolioUrl: profileData['portfolio_url'],
-            phone: profileData['phone'],
-            studentId: profileData['student_id'],
-            department: profileData['department'],
-            faculty: profileData['faculty'],
-            yearOfStudy: profileData['year_of_study'],
-            cgpa: profileData['cgpa'],
-            languages: List<String>.from(profileData['languages'] ?? []),
-            createdAt: profileData['created_at'] != null
-                ? DateTime.parse(profileData['created_at'])
-                : DateTime.now(),
-            updatedAt: profileData['updated_at'] != null
-                ? DateTime.parse(profileData['updated_at'])
-                : DateTime.now(),
-          );
-          profiles.add(profile);
-        }
-
-        debugPrint(
-            'ProfileService: Found ${profiles.length} profiles matching query');
-        return profiles;
-      } else {
-        debugPrint(
-            'ProfileService: Failed to search profiles: ${response.body}');
-        throw Exception('Failed to search profiles: ${response.body}');
-      }
-    } catch (e) {
-      debugPrint('ProfileService: Error searching profiles: $e');
-      return [];
-    }
-  }
-
-  Future<void> updateProfile(ProfileModel profile) async {
-    try {
-      final token = await _getAuthToken();
-      if (token == null) {
-        throw Exception('User not authenticated');
-      }
-
-      final response = await http.put(
-        Uri.parse('$baseUrl/api/profiles/${profile.userId}'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode(profile.toJson()),
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception('Failed to update profile: ${response.body}');
-      }
-    } catch (e) {
-      debugPrint('Error updating profile: $e');
-      rethrow;
-    }
-  }
-
-  Future<void> deleteProfile(String profileId) async {
-    try {
-      final token = await _getAuthToken();
-      if (token == null) {
-        throw Exception('User not authenticated');
-      }
-
-      final response = await http.delete(
-        Uri.parse('$baseUrl/api/profiles/$profileId'),
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception('Failed to delete profile: ${response.body}');
-      }
-    } catch (e) {
-      debugPrint('Error deleting profile: $e');
-      rethrow;
-    }
-  }
-
-  Future<Map<String, dynamic>> getProfileStats() async {
-    try {
-      final allProfiles = await getAllProfiles();
-
-      // Count by department
-      final departmentCounts = <String, int>{};
-      for (var profile in allProfiles) {
-        final dept = profile.department ?? 'Unknown';
-        departmentCounts[dept] = (departmentCounts[dept] ?? 0) + 1;
-      }
-
-      // Count by program
-      final programCounts = <String, int>{};
-      for (var profile in allProfiles) {
-        programCounts[profile.program] =
-            (programCounts[profile.program] ?? 0) + 1;
-      }
-
-      return {
-        'totalProfiles': allProfiles.length,
-        'departmentCounts': departmentCounts,
-        'programCounts': programCounts,
-      };
-    } catch (e) {
-      debugPrint('Error getting profile stats: $e');
-      return {
-        'totalProfiles': 0,
-        'departmentCounts': {},
-        'programCounts': {},
-      };
-    }
-  }
-
-  Stream<List<ProfileModel>> streamAllProfiles() {
-    // For HTTP backend, we'll need to implement polling or use WebSocket
-    // For now, return an empty stream
-    return Stream.value([]);
-  }
-
-  Stream<ProfileModel?> streamProfileByUserId(String userId) {
-    // For HTTP backend, we'll need to implement polling or use WebSocket
-    // For now, return an empty stream
-    return Stream.value(null);
-  }
-
-  // Add missing getProfileById method
+  // Get profile by ID
   Future<ProfileModel?> getProfileById(String profileId) async {
     try {
-      debugPrint('ProfileService: Getting profile by ID: $profileId');
+      final response = await SupabaseConfig.client
+          .from('profiles')
+          .select('*')
+          .eq('id', profileId)
+          .single();
 
-      final token = await _getAuthToken();
-      if (token == null) {
-        throw Exception('User not authenticated');
-      }
-
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/profiles/by-id/$profileId'),
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
+      return ProfileModel(
+        id: response['id'] ?? '',
+        userId: response['user_id'] ?? '',
+        fullName: response['full_name'] ?? '',
+        headline: response['headline'],
+        bio: response['bio'],
+        profileImageUrl: response['profile_image_url'],
+        academicInfo: response['academic_info'] != null
+            ? AcademicInfoModel.fromJson(response['academic_info'])
+            : null,
+        skills: List<String>.from(response['skills'] ?? []),
+        interests: List<String>.from(response['interests'] ?? []),
+        experiences: [], // TODO: Add experiences support
+        projects: [], // TODO: Add projects support
+        isProfileComplete: response['is_profile_complete'] ?? false,
+        completedSections: ['basic'], // Default sections
+        createdAt: response['created_at'] != null
+            ? DateTime.parse(response['created_at'])
+            : DateTime.now(),
+        updatedAt: response['updated_at'] != null
+            ? DateTime.parse(response['updated_at'])
+            : DateTime.now(),
       );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        debugPrint('ProfileService: Profile retrieved successfully by ID');
-        return ProfileModel.fromJson(data);
-      } else if (response.statusCode == 404) {
-        debugPrint('ProfileService: Profile not found for ID: $profileId');
-        return null;
-      } else {
-        debugPrint(
-            'ProfileService: Failed to get profile by ID: ${response.body}');
-        throw Exception('Failed to get profile by ID: ${response.body}');
-      }
     } catch (e) {
-      debugPrint('ProfileService: Error getting profile by ID: $e');
+      debugPrint('ProfileService: Error getting profile from Supabase: $e');
       return null;
     }
   }
+
 }
