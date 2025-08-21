@@ -36,6 +36,18 @@
       "dest": "/web_dashboard/modals/$1"
     },
     {
+      "src": "/assets/(.*)",
+      "dest": "/web_dashboard/assets/$1"
+    },
+    {
+      "src": "/images/(.*)",
+      "dest": "/web_dashboard/images/$1"
+    },
+    {
+      "src": "/(.*\\.(ico|png|jpg|jpeg|gif|svg|css|js|html))",
+      "dest": "/web_dashboard/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/web_dashboard/$1"
     }

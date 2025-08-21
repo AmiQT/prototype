@@ -728,8 +728,16 @@ class ShowcaseService {
     List<MentionModel> mentions = const [],
   }) async {
     try {
-      // TODO: Implement with Supabase
-      debugPrint('Update comment not yet implemented with Supabase');
+      await _supabase
+          .from('post_comments')
+          .update({
+            'content': newContent,
+            'updated_at': DateTime.now().toIso8601String(),
+            'is_edited': true,
+          })
+          .eq('id', commentId);
+      
+      debugPrint('ShowcaseService: Comment updated successfully: $commentId');
     } catch (e) {
       debugPrint('Error updating comment: $e');
       rethrow;
@@ -739,8 +747,12 @@ class ShowcaseService {
   /// Delete comment (for compatibility)
   Future<void> deleteComment(String postId, String commentId) async {
     try {
-      // TODO: Implement with Supabase
-      debugPrint('Delete comment not yet implemented with Supabase');
+      await _supabase
+          .from('post_comments')
+          .delete()
+          .eq('id', commentId);
+      
+      debugPrint('ShowcaseService: Comment deleted successfully: $commentId');
     } catch (e) {
       debugPrint('Error deleting comment: $e');
       rethrow;
