@@ -57,16 +57,16 @@ class ShowcaseService {
   /// Create a new showcase post
   Future<void> createPost(Map<String, dynamic> postData) async {
     try {
-      debugPrint(
-          'ShowcaseService: Attempting to create post at $baseUrl/api/showcase/');
+      debugPrint('ShowcaseService: Creating post with Supabase...');
       debugPrint('ShowcaseService: Post data: ${json.encode(postData)}');
 
-      final token = await _getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token available');
+      final currentUserId = _authService.currentUserId;
+      if (currentUserId == null) {
+        throw Exception('User not authenticated');
       }
 
       final requestBody = {
+        'user_id': currentUserId,
         'title': postData['title'] ?? '',
         'description': postData['description'] ?? '',
         'content': postData['content'] ?? '',
@@ -77,29 +77,14 @@ class ShowcaseService {
         'media_types': postData['mediaTypes'] ?? [],
         'is_public': postData['isPublic'] ?? true,
         'allow_comments': postData['allowComments'] ?? true,
+        'created_at': DateTime.now().toIso8601String(),
       };
 
       debugPrint('ShowcaseService: Request body: ${json.encode(requestBody)}');
 
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/showcase/'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-          'ngrok-skip-browser-warning': 'true',
-        },
-        body: json.encode(requestBody),
-      );
+      await _supabase.from('showcase_posts').insert(requestBody);
 
-      debugPrint('ShowcaseService: Response status: ${response.statusCode}');
-      debugPrint('ShowcaseService: Response body: ${response.body}');
-
-      if (response.statusCode != 200 && response.statusCode != 201) {
-        throw Exception(
-            'Failed to create post: ${response.statusCode} - ${response.body}');
-      } else {
-        debugPrint('ShowcaseService: Post created successfully!');
-      }
+      debugPrint('ShowcaseService: Post created successfully with Supabase!');
     } catch (e) {
       debugPrint('Error creating showcase post: $e');
       rethrow;
@@ -109,28 +94,22 @@ class ShowcaseService {
   /// Get all showcase posts
   Future<List<Map<String, dynamic>>> getAllPosts() async {
     try {
-      debugPrint(
-          'ShowcaseService: Attempting to fetch posts from $baseUrl/api/showcase/');
+      debugPrint('ShowcaseService: Fetching posts from Supabase...');
 
-      final token = await _getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token available');
-      }
+      final response = await _supabase
+          .from('showcase_posts')
+          .select('''
+            *,
+            profiles:user_id (
+              name,
+              profile_picture_url
+            )
+          ''')
+          .eq('is_public', true)
+          .order('created_at', ascending: false);
 
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/showcase/'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'ngrok-skip-browser-warning': 'true',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> posts = json.decode(response.body);
-        return posts.map((post) => post as Map<String, dynamic>).toList();
-      } else {
-        throw Exception('Failed to fetch posts: ${response.statusCode}');
-      }
+      debugPrint('ShowcaseService: Retrieved ${response.length} posts from Supabase');
+      return response.map<Map<String, dynamic>>((post) => post).toList();
     } catch (e) {
       debugPrint('Error fetching showcase posts: $e');
       return [];
@@ -309,20 +288,16 @@ class ShowcaseService {
     Function(double progress)? onProgress,
   }) async {
     try {
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${path.split('/').last}';
+      final uniqueFileName = '${DateTime.now().millisecondsSinceEpoch}_${fileName}';
       
       // Upload file to Supabase Storage
-      await _supabase.storage.from('showcase-media').upload(fileName, file);
+      await _supabase.storage.from('showcase-media').upload(uniqueFileName, file);
       
       // Get public URL
-      final publicUrl = _supabase.storage.from('showcase-media').getPublicUrl(fileName);
+      final publicUrl = _supabase.storage.from('showcase-media').getPublicUrl(uniqueFileName);
       
       debugPrint('ShowcaseService: File uploaded successfully to: $publicUrl');
-      // final response = await SupabaseConfig.storage
-      //     .from(path)
-      //     .upload(fileName, file);
-      // return SupabaseConfig.storage.from(path).getPublicUrl(fileName);
-      return 'placeholder_url'; // Temporary placeholder
+      return publicUrl;
     } catch (e) {
       debugPrint('Error uploading file to storage: $e');
       rethrow;
@@ -550,31 +525,42 @@ class ShowcaseService {
     }
   }
 
-  /// Delete showcase post via backend API
+  /// Delete showcase post via Supabase
   Future<void> deleteShowcasePost(String postId) async {
     try {
-      final token = await _getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token available');
+      final currentUserId = _authService.currentUserId;
+      if (currentUserId == null) {
+        throw Exception('User not authenticated');
       }
 
-      final response = await http.delete(
-        Uri.parse('$baseUrl/api/showcase/$postId'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-          'ngrok-skip-browser-warning': 'true',
-        },
-      );
+      // First get the post to check ownership and get media URLs
+      final postData = await _supabase
+          .from('showcase_posts')
+          .select('user_id, media_urls')
+          .eq('id', postId)
+          .maybeSingle();
 
-      if (response.statusCode == 200) {
-        debugPrint('ShowcaseService: Post deleted successfully: $postId');
-      } else if (response.statusCode == 404) {
-        throw Exception('Post not found or not authorized');
-      } else {
-        throw Exception(
-            'Failed to delete post: ${response.statusCode} - ${response.body}');
+      if (postData == null) {
+        throw Exception('Post not found');
       }
+
+      // Check if user owns the post
+      if (postData['user_id'] != currentUserId) {
+        throw Exception('Not authorized to delete this post');
+      }
+
+      // Delete associated media files from storage
+      if (postData['media_urls'] != null) {
+        final mediaUrls = List<String>.from(postData['media_urls']);
+        for (String url in mediaUrls) {
+          await deleteMediaFile(url);
+        }
+      }
+
+      // Delete the post
+      await _supabase.from('showcase_posts').delete().eq('id', postId);
+
+      debugPrint('ShowcaseService: Post deleted successfully: $postId');
     } catch (e) {
       debugPrint('Error deleting showcase post: $e');
       rethrow;

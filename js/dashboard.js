@@ -1,6 +1,11 @@
-import { auth } from './core/firebase.js';
+/**
+ * Main Dashboard Application
+ * Handles navigation, data loading, and UI interactions
+ */
+
 import { initializeComponents } from './core/component-loader.js';
 import { testBackendConnection, makeAuthenticatedRequest, API_ENDPOINTS } from './config/backend-config.js';
+import { auth } from './config/supabase-config.js';
 import { initializeSystemMonitoring, checkSystemStatus, createTestData, testBackendConnectivity } from './features/system-monitoring.js';
 import { setupNavigation, updateActiveNav, setupUserModals, setupDarkModeToggle, closeModal, closeAndCleanupModal, logout, removeNotification, changeTheme, toggleReducedMotion, toggleHighContrast, saveSettings, resetSettings, changePassword } from './ui/notifications.js';
 import { setupUserFilters, loadUsersTable, showAddUserModal, toggleDepartmentField, toggleEditDepartmentField, showEditUserModal, handleAddUser, handleEditUser, deleteUser, unsubscribeUsers } from './features/users/users.js';
@@ -67,8 +72,8 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeComponents();
     
     // Then initialize auth
-    auth.onAuthStateChanged((user) => {
-        if (user) {
+    auth.onAuthStateChange((event, session) => {
+        if (session && session.user) {
             initializeApp();
         } else {
             window.location.href = 'login.html';
