@@ -143,14 +143,14 @@
         </div>
     </div>
 
-    <!-- Supabase SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Supabase SDK temporarily disabled -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> -->
 
     <script>
-        // Supabase configuration
-        const supabaseUrl = 'https://your-project.supabase.co';
-        const supabaseKey = 'your-anon-key';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        // Supabase configuration temporarily disabled
+        // const supabaseUrl = 'https://your-project.supabase.co';
+        // const supabaseKey = 'your-anon-key';
+        // const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
         // Enhanced UI interactions
         document.addEventListener('DOMContentLoaded', function() {
@@ -303,61 +303,84 @@
             btnContent.style.opacity = '0';
             loading.style.display = 'flex';
 
-            supabase.auth.signInWithPassword({
-                email: email,
-                password: password
-            })
-            .then((response) => {
-                if (response.data.user) {
-                    localStorage.setItem('isLoggedIn', 'true');
+            // Supabase authentication temporarily disabled
+            // supabase.auth.signInWithPassword({
+            //     email: email,
+            //     password: password
+            // })
+            // .then((response) => {
+            //     if (response.data.user) {
+            //         localStorage.setItem('isLoggedIn', 'true');
                     
-                    // Show success state
-                    loginBtn.classList.remove('loading');
-                    loginBtn.classList.add('success');
-                    loading.style.display = 'none';
-                    btnContent.style.opacity = '1';
-                    document.getElementById('login-btn-text').textContent = 'Success!';
+            //         // Show success state
+            //         loginBtn.classList.remove('loading');
+            //         loginBtn.classList.add('success');
+            //         loading.style.display = 'none';
+            //         btnContent.style.opacity = '1';
+            //         document.getElementById('login-btn-text').textContent = 'Success!';
                     
-                    showMessage('success', 'Login successful! Redirecting to dashboard...');
+            //         showMessage('success', 'Login successful! Redirecting to dashboard...');
                     
-                    setTimeout(() => {
-                        window.location.href = 'index.html';
-                    }, 1500);
-                } else {
-                    throw new Error('Invalid email or password.');
-                }
-            })
-            .catch((error) => {
-                let errorText = 'Invalid email or password.';
-                if (error.code === 'PGRST116') { // Supabase error code for invalid credentials
-                    errorText = 'Invalid email or password. Please check your credentials.';
-                } else if (error.message.includes('Access denied')) {
-                    errorText = 'Access denied. You do not have admin privileges.';
-                } else if (error.code === 'PGRST116') { // Supabase error code for invalid credentials
-                    errorText = 'Invalid email or password. Please check your credentials.';
-                }
+            //         setTimeout(() => {
+            //             window.location.href = 'index.html';
+            //         }, 1500);
+            //     } else {
+            //         throw new Error('Invalid email or password.');
+            //     }
+            // })
+            // .catch((error) => {
+            //     let errorText = 'Invalid email or password.';
+            //     if (error.code === 'PGRST116') { // Supabase error code for invalid credentials
+            //         errorText = 'Invalid email or password. Please check your credentials.';
+            //     } else if (error.message.includes('Access denied')) {
+            //         errorText = 'Access denied. You do not have admin privileges.';
+            //     } else if (error.code === 'PGRST116') { // Supabase error code for invalid credentials
+            //         errorText = 'Invalid email or password. Please check your credentials.';
+            //     }
                 
-                // Reset button state
+            //     // Reset button state
+            //     loginBtn.disabled = false;
+            //     loginBtn.classList.remove('loading');
+            //     loading.style.display = 'none';
+            //     btnContent.style.opacity = '1';
+            //     document.getElementById('login-btn-text').textContent = 'Sign In';
+                
+            //     // Show error with shake animation
+            //     loginBtn.classList.add('shake');
+            //     setTimeout(() => loginBtn.classList.remove('shake'), 500);
+                
+            //     showMessage('error', errorText);
+            // });
+
+            // Placeholder for static login logic
+            if (email === 'admin@uthm.edu.my' && password === 'admin123') {
+                localStorage.setItem('isLoggedIn', 'true');
+                loginBtn.classList.remove('loading');
+                loginBtn.classList.add('success');
+                loading.style.display = 'none';
+                btnContent.style.opacity = '1';
+                document.getElementById('login-btn-text').textContent = 'Success!';
+                showMessage('success', 'Login successful! Redirecting to dashboard...');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+            } else {
                 loginBtn.disabled = false;
                 loginBtn.classList.remove('loading');
                 loading.style.display = 'none';
                 btnContent.style.opacity = '1';
                 document.getElementById('login-btn-text').textContent = 'Sign In';
-                
-                // Show error with shake animation
-                loginBtn.classList.add('shake');
-                setTimeout(() => loginBtn.classList.remove('shake'), 500);
-                
-                showMessage('error', errorText);
-            });
+                showMessage('error', 'Invalid email or password. Please check your credentials.');
+            }
         });
 
         // Check auth state
-        supabase.auth.onAuthStateChange((event, session) => {
-            if (session && localStorage.getItem('isLoggedIn') === 'true') {
-                window.location.href = 'index.html';
-            }
-        });
+        // Supabase auth state change listener temporarily disabled
+        // supabase.auth.onAuthStateChange((event, session) => {
+        //     if (session && localStorage.getItem('isLoggedIn') === 'true') {
+        //         window.location.href = 'index.html';
+        //     }
+        // });
     </script>
 </body>
 </html>
