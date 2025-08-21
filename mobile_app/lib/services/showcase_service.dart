@@ -208,8 +208,7 @@ class ShowcaseService {
           .eq('user_id', userId)
           .order('created_at', ascending: false);
       
-      return response.map<ShowcasePostModel>((post) => 
-          ShowcasePostModel.fromJson(post)).toList();
+      return response.map<Map<String, dynamic>>((post) => post).toList();
       // final response = await SupabaseConfig.from('showcase_posts')
       //     .select()
       //     .eq('userId', userId)
@@ -501,15 +500,32 @@ class ShowcaseService {
     String? userId,
   }) {
     try {
-      // TODO: Implement with Supabase
-      debugPrint('Showcase posts stream not yet implemented with Supabase');
-      return Stream.value([]);
-      // final response = await SupabaseConfig.from('showcase_posts')
-      //     .select()
-      //     .order('createdAt', ascending: false)
-      //     .limit(limit);
-      // return Stream.value(response.map((post) =>
-      //     ShowcasePostModel.fromJson(post as Map<String, dynamic>)).toList());
+      var query = _supabase
+          .from('showcase_posts')
+          .select('''
+            *,
+            profiles:user_id (
+              name,
+              profile_picture_url
+            )
+          ''')
+          .order('created_at', ascending: false)
+          .limit(limit);
+
+      // Apply filters if provided
+      if (privacy != null) {
+        query = query.eq('is_public', privacy == PostPrivacy.public);
+      }
+      if (category != null) {
+        query = query.eq('category', category.toString().split('.').last);
+      }
+      if (userId != null) {
+        query = query.eq('user_id', userId);
+      }
+
+      return query.asStream().map((data) => 
+        data.map<ShowcasePostModel>((post) => 
+          ShowcasePostModel.fromJson(post)).toList());
     } catch (e) {
       debugPrint('Error getting showcase posts stream: $e');
       return Stream.value([]);
@@ -519,10 +535,14 @@ class ShowcaseService {
   /// Delete media file from storage
   Future<void> deleteMediaFile(String mediaUrl) async {
     try {
-      // TODO: Implement with Supabase Storage
-      debugPrint(
-          'Media file deletion not yet implemented with Supabase Storage');
-      // await SupabaseConfig.storage.from('showcase_media').remove([mediaUrl]);
+      // Extract filename from URL
+      final uri = Uri.parse(mediaUrl);
+      final fileName = uri.pathSegments.last;
+      
+      // Delete from Supabase Storage
+      await _supabase.storage.from('showcase-media').remove([fileName]);
+      
+      debugPrint('ShowcaseService: Media file deleted successfully: $fileName');
     } catch (e) {
       debugPrint('Error deleting media file: $e');
       // Don't rethrow - file might already be deleted
@@ -639,14 +659,14 @@ class ShowcaseService {
   /// Add comment to a post
   Future<void> addComment(String postId, String userId, String content) async {
     try {
-      // TODO: Implement with Supabase
-      debugPrint('Add comment not yet implemented with Supabase');
-      // await SupabaseConfig.from('comments').insert({
-      //   'postId': postId,
-      //   'userId': userId,
-      //   'content': content,
-      //   'createdAt': DateTime.now().toIso8601String(),
-      // });
+      await _supabase.from('post_comments').insert({
+        'post_id': postId,
+        'user_id': userId,
+        'content': content,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+      
+      debugPrint('ShowcaseService: Comment added successfully to post: $postId');
     } catch (e) {
       debugPrint('Error adding comment: $e');
       rethrow;
@@ -676,14 +696,13 @@ class ShowcaseService {
   /// Increment view count
   Future<void> incrementViewCount(String postId) async {
     try {
-      // TODO: Implement with Supabase
-      debugPrint('Increment view count not yet implemented with Supabase');
-      // await SupabaseConfig.from('showcase_posts')
-      //     .update({'viewCount': SupabaseConfig.sql('viewCount + 1')})
-      //     .eq('id', postId);
+      // Use RPC function to increment view count atomically
+      await _supabase.rpc('increment_view_count', params: {'post_id': postId});
+      
+      debugPrint('ShowcaseService: View count incremented for post: $postId');
     } catch (e) {
       debugPrint('Error incrementing view count: $e');
-      rethrow;
+      // Don't rethrow - view count is not critical
     }
   }
 
@@ -693,8 +712,24 @@ class ShowcaseService {
   /// Toggle like on a post (alias for likePost/unlikePost)
   Future<void> toggleLike(String postId, String userId) async {
     try {
-      // TODO: Check if user already liked the post
-      await likePost(postId, userId);
+      final currentUserId = _authService.currentUserId;
+      if (currentUserId == null) throw Exception('User not authenticated');
+      
+      // Check if user already liked the post
+      final existingLike = await _supabase
+          .from('post_likes')
+          .select()
+          .eq('post_id', postId)
+          .eq('user_id', currentUserId)
+          .maybeSingle();
+      
+      if (existingLike == null) {
+        // Like the post
+        await likePost(postId, userId);
+      } else {
+        // Unlike the post
+        await unlikePost(postId, userId);
+      }
     } catch (e) {
       debugPrint('Error toggling like: $e');
       rethrow;
@@ -731,7 +766,7 @@ class ShowcaseService {
       await _supabase
           .from('post_comments')
           .update({
-            'content': newContent,
+            'content': content,
             'updated_at': DateTime.now().toIso8601String(),
             'is_edited': true,
           })

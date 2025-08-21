@@ -60,6 +60,7 @@ functions/
 # Other
 ngrok.exe
 acli.exe
-*.png
-*.jpg
-*.ico
+
+# Keep these files for static serving
+# !favicon.ico
+# !uthm.png
