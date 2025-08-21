@@ -19,8 +19,5 @@
       "src": "/(.*)",
       "dest": "/web_dashboard/$1"
     }
-  ],
-  "env": {
-    "BACKEND_URL": "@backend_url"
-  }
+  ]
 }
