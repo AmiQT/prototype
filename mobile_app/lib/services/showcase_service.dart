@@ -500,7 +500,7 @@ class ShowcaseService {
     String? userId,
   }) {
     try {
-      var query = _supabase
+      dynamic query = _supabase
           .from('showcase_posts')
           .select('''
             *,
@@ -508,11 +508,9 @@ class ShowcaseService {
               name,
               profile_picture_url
             )
-          ''')
-          .order('created_at', ascending: false)
-          .limit(limit);
+          ''');
 
-      // Apply filters if provided
+      // Apply filters before ordering and limiting
       if (privacy != null) {
         query = query.eq('is_public', privacy == PostPrivacy.public);
       }
@@ -523,7 +521,10 @@ class ShowcaseService {
         query = query.eq('user_id', userId);
       }
 
-      return query.asStream().map((data) => 
+      // Apply ordering and limiting after filters
+      final finalQuery = query.order('created_at', ascending: false).limit(limit);
+
+      return finalQuery.asStream().map((data) => 
         data.map<ShowcasePostModel>((post) => 
           ShowcasePostModel.fromJson(post)).toList());
     } catch (e) {
@@ -747,8 +748,18 @@ class ShowcaseService {
     List<MentionModel> mentions = const [],
   }) async {
     try {
-      await addComment(postId, userId, content);
-      return 'comment_id'; // TODO: Return actual comment ID
+      final response = await _supabase.from('post_comments').insert({
+        'post_id': postId,
+        'user_id': userId,
+        'content': content,
+        'parent_comment_id': parentCommentId,
+        'mentions': mentions.map((m) => m.toJson()).toList(),
+        'created_at': DateTime.now().toIso8601String(),
+      }).select().single();
+      
+      final commentId = response['id'].toString();
+      debugPrint('ShowcaseService: Extended comment added successfully: $commentId');
+      return commentId;
     } catch (e) {
       debugPrint('Error adding comment: $e');
       rethrow;
@@ -798,8 +809,34 @@ class ShowcaseService {
   Future<void> toggleCommentLike(
       String postId, String commentId, String userId) async {
     try {
-      // TODO: Implement with Supabase
-      debugPrint('Toggle comment like not yet implemented with Supabase');
+      final currentUserId = _authService.currentUserId;
+      if (currentUserId == null) throw Exception('User not authenticated');
+      
+      // Check if user already liked the comment
+      final existingLike = await _supabase
+          .from('comment_likes')
+          .select()
+          .eq('comment_id', commentId)
+          .eq('user_id', currentUserId)
+          .maybeSingle();
+      
+      if (existingLike == null) {
+        // Add like
+        await _supabase.from('comment_likes').insert({
+          'comment_id': commentId,
+          'user_id': currentUserId,
+          'created_at': DateTime.now().toIso8601String(),
+        });
+        debugPrint('ShowcaseService: Comment liked successfully: $commentId');
+      } else {
+        // Remove like
+        await _supabase
+            .from('comment_likes')
+            .delete()
+            .eq('comment_id', commentId)
+            .eq('user_id', currentUserId);
+        debugPrint('ShowcaseService: Comment unliked successfully: $commentId');
+      }
     } catch (e) {
       debugPrint('Error toggling comment like: $e');
       rethrow;

@@ -16,6 +16,10 @@
       "dest": "/web_dashboard/login.html"
     },
     {
+      "src": "/web_dashboard/(.*)",
+      "dest": "/web_dashboard/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/$1"
     }
