@@ -1,7 +1,6 @@
-// Firebase import removed - migrating to Supabase
-// import 'package:cloud_firestore/cloud_firestore.dart';
+// Supabase chat models
 
-/// Optimized chat message model for Firebase free tier
+/// Optimized chat message model for Supabase
 class ChatMessage {
   final String id;
   final String conversationId;
@@ -314,28 +313,7 @@ class ChatUserContext {
   }
 }
 
-/// Firebase usage tracking model
-class FirebaseUsageStats {
-  final int dailyReads;
-  final int dailyWrites;
-  final int dailyDeletes;
-  final DateTime date;
-
-  FirebaseUsageStats({
-    required this.dailyReads,
-    required this.dailyWrites,
-    required this.dailyDeletes,
-    required this.date,
-  });
-
-  bool get isNearLimit {
-    return dailyReads > 40000 || dailyWrites > 16000 || dailyDeletes > 16000;
-  }
-
-  double get readUsagePercentage => (dailyReads / 50000) * 100;
-  double get writeUsagePercentage => (dailyWrites / 20000) * 100;
-  double get deleteUsagePercentage => (dailyDeletes / 20000) * 100;
-}
+// Firebase usage tracking removed - not needed with Supabase
 
 /// Enums
 enum MessageRole { user, assistant, system }

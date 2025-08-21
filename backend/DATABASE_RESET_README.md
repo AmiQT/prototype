@@ -62,33 +62,33 @@ After running the scripts, you'll have these test accounts:
 - **Email:** admin@test.com
 - **Role:** Admin
 - **UID:** test_admin_001
-- **Password:** Use Firebase Auth (create user manually)
+- **Password:** Use Supabase Auth (create user manually)
 
 ### Lecturer Account
 - **Email:** lecturer@test.com
 - **Role:** Lecturer
 - **UID:** test_lecturer_001
-- **Password:** Use Firebase Auth (create user manually)
+- **Password:** Use Supabase Auth (create user manually)
 
 ### Student Accounts
 - **Email:** student1@test.com, student2@test.com, student3@test.com
 - **Role:** Student
 - **UID:** test_student_001, test_student_002, test_student_003
-- **Password:** Use Firebase Auth (create user manually)
+- **Password:** Use Supabase Auth (create user manually)
 
-## 🔥 Firebase Auth Setup
+## 🔥 Supabase Auth Setup
 
-Since the database reset only creates database records, you need to create corresponding Firebase Auth users:
+Since the database reset only creates database records, you need to create corresponding Supabase Auth users:
 
-### Method 1: Firebase Console
-1. Go to [Firebase Console](https://console.firebase.google.com)
+### Method 1: Supabase Console
+1. Go to [Supabase Console](https://supabase.com/dashboard)
 2. Select your project
 3. Go to Authentication > Users
 4. Click "Add User"
 5. Enter email and temporary password
 6. Use the same UID as in the database
 
-### Method 2: Firebase Admin SDK
+### Method 2: Supabase API
 ```python
 import firebase_admin
 from firebase_admin import auth

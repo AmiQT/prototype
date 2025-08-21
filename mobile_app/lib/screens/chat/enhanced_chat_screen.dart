@@ -100,7 +100,8 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
     final content = _messageController.text.trim();
     if (content.isEmpty || _isTyping) return;
 
-    final authService = Provider.of<SupabaseAuthService>(context, listen: false);
+    final authService =
+        Provider.of<SupabaseAuthService>(context, listen: false);
     final userId = authService.currentUserId;
 
     if (userId == null) {
@@ -455,13 +456,13 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
   }
 
   void _showUsageInfo() async {
-    // Removed Firebase usage monitor calls
+    // Usage monitoring removed with Firebase removal
     final report = {}; // Placeholder for future usage reporting
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Firebase Usage'),
+        title: const Text('System Usage'),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

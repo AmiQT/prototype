@@ -84,8 +84,7 @@ class _ChatInputFieldState extends State<ChatInputField> {
                       enabled: widget.enabled,
                       maxLines: null,
                       minLines: 1,
-                      maxLength:
-                          1000, // Limit message length for Firebase optimization
+                      maxLength: 1000, // Limit message length for optimization
                       textCapitalization: TextCapitalization.sentences,
                       decoration: InputDecoration(
                         hintText: widget.enabled

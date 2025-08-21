@@ -2,7 +2,7 @@
 Authentication API endpoints
 """
 from fastapi import APIRouter, Depends, HTTPException
-from app.auth.firebase_auth import verify_firebase_token, verify_admin_user
+# Firebase auth removed - using Supabase auth
 from app.models.user import User
 from app.database import get_db
 from sqlalchemy.orm import Session

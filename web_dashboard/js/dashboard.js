@@ -1,4 +1,4 @@
-import { auth } from './core/firebase.js';
+// Firebase removed - using backend API instead
 import { initializeComponents } from './core/component-loader.js';
 import { testBackendConnection, makeAuthenticatedRequest, API_ENDPOINTS } from './config/backend-config.js';
 import { initializeSystemMonitoring, checkSystemStatus, createTestData, testBackendConnectivity } from './features/system-monitoring.js';

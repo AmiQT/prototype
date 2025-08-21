@@ -12,7 +12,7 @@ class ChatSettingsScreen extends StatefulWidget {
 class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
   final TextEditingController _apiKeyController = TextEditingController();
   final EnhancedChatService _chatService = EnhancedChatService();
-  
+
   bool _isLoading = false;
   bool _apiKeyValid = false;
   Map<String, dynamic>? _usageReport;
@@ -25,7 +25,8 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
 
   Future<void> _loadUsageReport() async {
     try {
-      final report = <String, dynamic>{}; // Placeholder for future usage reporting
+      final report =
+          <String, dynamic>{}; // Placeholder for future usage reporting
       setState(() {
         _usageReport = report;
         _apiKeyValid = _chatService.isInitialized;
@@ -92,15 +93,15 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
             // API Configuration Section
             _buildSectionHeader('API Configuration'),
             _buildApiConfigCard(),
-            
+
             const SizedBox(height: 24),
-            
+
             // Usage Monitoring Section
-            _buildSectionHeader('Firebase Usage'),
+            _buildSectionHeader('System Usage'),
             _buildUsageCard(),
-            
+
             const SizedBox(height: 24),
-            
+
             // Optimization Tips Section
             if (_usageReport?['suggestions']?.isNotEmpty ?? false) ...[
               _buildSectionHeader('Optimization Tips'),
@@ -138,21 +139,23 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
               children: [
                 Icon(
                   _apiKeyValid ? Icons.check_circle : Icons.error_outline,
-                  color: _apiKeyValid ? AppTheme.successColor : AppTheme.errorColor,
+                  color: _apiKeyValid
+                      ? AppTheme.successColor
+                      : AppTheme.errorColor,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   _apiKeyValid ? 'API Key Valid' : 'API Key Required',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: _apiKeyValid ? AppTheme.successColor : AppTheme.errorColor,
+                    color: _apiKeyValid
+                        ? AppTheme.successColor
+                        : AppTheme.errorColor,
                   ),
                 ),
               ],
             ),
-            
             const SizedBox(height: 16),
-            
             TextField(
               controller: _apiKeyController,
               obscureText: true,
@@ -168,9 +171,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                 ),
               ),
             ),
-            
             const SizedBox(height: 16),
-            
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -184,9 +185,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                     : const Text('Test API Key'),
               ),
             ),
-            
             const SizedBox(height: 12),
-            
             const Text(
               'Get your API key from OpenRouter.ai. This key is used to access AI models for chat responses.',
               style: TextStyle(
@@ -229,24 +228,24 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                 color: AppTheme.textPrimaryColor,
               ),
             ),
-            
             const SizedBox(height: 16),
-            
-            _buildUsageItem('Reads', usage['reads'], limits['reads'], percentages['reads']),
+            _buildUsageItem(
+                'Reads', usage['reads'], limits['reads'], percentages['reads']),
             const SizedBox(height: 8),
-            _buildUsageItem('Writes', usage['writes'], limits['writes'], percentages['writes']),
+            _buildUsageItem('Writes', usage['writes'], limits['writes'],
+                percentages['writes']),
             const SizedBox(height: 8),
-            _buildUsageItem('Deletes', usage['deletes'], limits['deletes'], percentages['deletes']),
-            
+            _buildUsageItem('Deletes', usage['deletes'], limits['deletes'],
+                percentages['deletes']),
             const SizedBox(height: 16),
-            
             if (status['approaching_limits'] == true)
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.orange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                  border:
+                      Border.all(color: Colors.orange.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
@@ -261,14 +260,14 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                   ],
                 ),
               ),
-            
             if (status['hit_limits'] == true)
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: AppTheme.errorColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppTheme.errorColor.withValues(alpha: 0.3)),
+                  border: Border.all(
+                      color: AppTheme.errorColor.withValues(alpha: 0.3)),
                 ),
                 child: const Row(
                   children: [
@@ -322,7 +321,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
 
   Widget _buildOptimizationCard() {
     final suggestions = _usageReport!['suggestions'] as List<dynamic>;
-    
+
     return Card(
       elevation: 2,
       child: Padding(
@@ -339,28 +338,28 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
             ),
             const SizedBox(height: 12),
             ...suggestions.map<Widget>((suggestion) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(
-                    Icons.lightbulb_outline,
-                    size: 16,
-                    color: AppTheme.primaryColor,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      suggestion.toString(),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppTheme.textSecondaryColor,
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.lightbulb_outline,
+                        size: 16,
+                        color: AppTheme.primaryColor,
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          suggestion.toString(),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppTheme.textSecondaryColor,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            )),
+                )),
           ],
         ),
       ),

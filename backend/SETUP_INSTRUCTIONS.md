@@ -96,7 +96,7 @@ You should see:
 ## 🔄 **Next Phase Preview:**
 
 Once this is working, we'll move to **Phase 1, Step 1.2: Backend Authentication Setup** where we'll:
-- Set up Firebase Admin SDK
+- Set up Supabase integration
 - Create authentication middleware
 - Protect API endpoints
 - Test the auth flow

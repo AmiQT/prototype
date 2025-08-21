@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from pydantic import BaseModel
-from app.auth.firebase_auth import verify_firebase_token
+# Firebase auth removed - using Supabase auth
 from app.models.profile import Profile
 from app.models.user import User
 from app.database import get_db

@@ -45,18 +45,17 @@ export const auth = {
       email,
       password
     });
-    if (error) throw error;
-    return data;
+    return { data, error };
   },
   
   signOut: async () => {
     const { error } = await supabaseClient.auth.signOut();
-    if (error) throw error;
+    return { error };
   },
   
-  getCurrentUser: async () => {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    return user;
+  getUser: async () => {
+    const { data, error } = await supabaseClient.auth.getUser();
+    return { data, error };
   },
   
   onAuthStateChange: (callback) => {
@@ -64,15 +63,10 @@ export const auth = {
   }
 };
 
-// Helper functions for database
+// Helper functions for database operations
 export const db = {
-  from: (table) => supabaseClient.from(table),
-  
-  select: (table, columns = '*') => supabaseClient.from(table).select(columns),
-  
-  insert: (table, data) => supabaseClient.from(table).insert(data),
-  
-  update: (table, data, match) => supabaseClient.from(table).update(data).match(match),
-  
-  delete: (table, match) => supabaseClient.from(table).delete().match(match)
+  from: (table) => supabaseClient.from(table)
 };
+
+// Export configuration
+export { SUPABASE_CONFIG };

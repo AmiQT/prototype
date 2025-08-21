@@ -7,7 +7,7 @@ from sqlalchemy import func, and_, or_
 from typing import List, Optional, Dict, Any
 import logging
 
-from app.auth.firebase_auth import verify_firebase_token
+# Firebase auth removed - using Supabase auth
 from app.database import get_db
 from app.models.user import User, UserRole
 from app.models.profile import Profile

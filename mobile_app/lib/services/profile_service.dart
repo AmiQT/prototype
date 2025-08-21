@@ -82,8 +82,22 @@ class ProfileService {
       debugPrint(
           'ProfileService: Saving profile to Supabase for userId: ${profile.userId}');
 
-      // Save to profiles table
-      await SupabaseConfig.client.from('profiles').upsert({
+      // Get authenticated client with user context
+      final client = SupabaseConfig.client;
+      final user = SupabaseConfig.auth.currentUser;
+
+      if (user == null) {
+        throw Exception('User not authenticated in Supabase');
+      }
+
+      debugPrint('ProfileService: Using authenticated user: ${user.id}');
+      debugPrint(
+          'ProfileService: Client auth state: ${client.auth.currentSession != null ? 'authenticated' : 'not authenticated'}');
+      debugPrint(
+          'ProfileService: Current session user: ${client.auth.currentSession?.user.id}');
+
+      // Prepare profile data
+      final profileData = {
         'user_id': profile.userId,
         'full_name': profile.fullName,
         'headline': profile.headline ?? '',
@@ -95,18 +109,38 @@ class ProfileService {
         'is_profile_complete': profile.isProfileComplete,
         'created_at': profile.createdAt.toIso8601String(),
         'updated_at': profile.updatedAt.toIso8601String(),
-      });
+      };
 
-      // Update users table profile completion status
-      await SupabaseConfig.client.from('users').upsert({
+      debugPrint(
+          'ProfileService: Attempting to upsert profile data: ${profileData.keys}');
+
+      // Save to profiles table using authenticated context
+      await client.from('profiles').upsert(profileData);
+      debugPrint('ProfileService: Profile upsert successful');
+
+      // Prepare user update data
+      final userData = {
         'id': profile.userId,
         'profile_completed': profile.isProfileComplete,
         'updated_at': DateTime.now().toIso8601String(),
-      });
+      };
+
+      debugPrint(
+          'ProfileService: Attempting to upsert user data: ${userData.keys}');
+
+      // Update users table profile completion status
+      await client.from('users').upsert(userData);
+      debugPrint('ProfileService: User upsert successful');
 
       debugPrint('ProfileService: Profile saved to Supabase successfully');
     } catch (e) {
       debugPrint('ProfileService: Error saving profile to Supabase: $e');
+      debugPrint('ProfileService: Error type: ${e.runtimeType}');
+      if (e.toString().contains('permission denied')) {
+        debugPrint('ProfileService: Permission denied error detected');
+        debugPrint(
+            'ProfileService: Current auth context: ${SupabaseConfig.auth.currentUser?.id ?? 'null'}');
+      }
       rethrow;
     }
   }
@@ -164,7 +198,18 @@ class ProfileService {
       debugPrint(
           'ProfileService: Getting profile from Supabase for userId: $userId');
 
-      final response = await SupabaseConfig.client
+      // Get authenticated client with user context
+      final client = SupabaseConfig.client;
+      final user = SupabaseConfig.auth.currentUser;
+
+      if (user == null) {
+        throw Exception('User not authenticated in Supabase');
+      }
+
+      debugPrint(
+          'ProfileService: Getting profile using authenticated user: ${user.id}');
+
+      final response = await client
           .from('profiles')
           .select('*')
           .eq('user_id', userId)
@@ -172,32 +217,34 @@ class ProfileService {
 
       // Convert Supabase response to ProfileModel
       return ProfileModel(
-          id: response['id'] ?? '',
-          userId: response['user_id'] ?? userId,
-          fullName: response['full_name'] ?? '',
-          headline: response['headline'],
-          bio: response['bio'],
-          profileImageUrl: response['profile_image_url'],
-          academicInfo: response['academic_info'] != null
-              ? AcademicInfoModel.fromJson(response['academic_info'])
-              : null,
-          skills: List<String>.from(response['skills'] ?? []),
-          interests: List<String>.from(response['interests'] ?? []),
-          experiences: (response['experiences'] as List<dynamic>?)
-              ?.map((e) => ExperienceModel.fromJson(e))
-              .toList() ?? [],
-          projects: (response['projects'] as List<dynamic>?)
-              ?.map((p) => ProjectModel.fromJson(p))
-              .toList() ?? [],
-          isProfileComplete: response['is_profile_complete'] ?? false,
-          completedSections: ['basic'], // Default sections
-          createdAt: response['created_at'] != null
-              ? DateTime.parse(response['created_at'])
-              : DateTime.now(),
-          updatedAt: response['updated_at'] != null
-              ? DateTime.parse(response['updated_at'])
-              : DateTime.now(),
-        );
+        id: response['id'] ?? '',
+        userId: response['user_id'] ?? userId,
+        fullName: response['full_name'] ?? '',
+        headline: response['headline'],
+        bio: response['bio'],
+        profileImageUrl: response['profile_image_url'],
+        academicInfo: response['academic_info'] != null
+            ? AcademicInfoModel.fromJson(response['academic_info'])
+            : null,
+        skills: List<String>.from(response['skills'] ?? []),
+        interests: List<String>.from(response['interests'] ?? []),
+        experiences: (response['experiences'] as List<dynamic>?)
+                ?.map((e) => ExperienceModel.fromJson(e))
+                .toList() ??
+            [],
+        projects: (response['projects'] as List<dynamic>?)
+                ?.map((p) => ProjectModel.fromJson(p))
+                .toList() ??
+            [],
+        isProfileComplete: response['is_profile_complete'] ?? false,
+        completedSections: ['basic'], // Default sections
+        createdAt: response['created_at'] != null
+            ? DateTime.parse(response['created_at'])
+            : DateTime.now(),
+        updatedAt: response['updated_at'] != null
+            ? DateTime.parse(response['updated_at'])
+            : DateTime.now(),
+      );
     } catch (e) {
       debugPrint('ProfileService: Error getting profile from Supabase: $e');
       return null;
@@ -212,33 +259,37 @@ class ProfileService {
           .select('*')
           .order('created_at', ascending: false);
 
-      return response.map((data) => ProfileModel(
-        id: data['id'] ?? '',
-        userId: data['user_id'] ?? '',
-        fullName: data['full_name'] ?? '',
-        headline: data['headline'],
-        bio: data['bio'],
-        profileImageUrl: data['profile_image_url'],
-        academicInfo: data['academic_info'] != null
-            ? AcademicInfoModel.fromJson(data['academic_info'])
-            : null,
-        skills: List<String>.from(data['skills'] ?? []),
-        interests: List<String>.from(data['interests'] ?? []),
-        experiences: (data['experiences'] as List<dynamic>?)
-            ?.map((e) => ExperienceModel.fromJson(e))
-            .toList() ?? [],
-        projects: (data['projects'] as List<dynamic>?)
-            ?.map((p) => ProjectModel.fromJson(p))
-            .toList() ?? [],
-        isProfileComplete: data['is_profile_complete'] ?? false,
-        completedSections: ['basic'], // Default sections
-        createdAt: data['created_at'] != null
-            ? DateTime.parse(data['created_at'])
-            : DateTime.now(),
-        updatedAt: data['updated_at'] != null
-            ? DateTime.parse(data['updated_at'])
-            : DateTime.now(),
-      )).toList();
+      return response
+          .map((data) => ProfileModel(
+                id: data['id'] ?? '',
+                userId: data['user_id'] ?? '',
+                fullName: data['full_name'] ?? '',
+                headline: data['headline'],
+                bio: data['bio'],
+                profileImageUrl: data['profile_image_url'],
+                academicInfo: data['academic_info'] != null
+                    ? AcademicInfoModel.fromJson(data['academic_info'])
+                    : null,
+                skills: List<String>.from(data['skills'] ?? []),
+                interests: List<String>.from(data['interests'] ?? []),
+                experiences: (data['experiences'] as List<dynamic>?)
+                        ?.map((e) => ExperienceModel.fromJson(e))
+                        .toList() ??
+                    [],
+                projects: (data['projects'] as List<dynamic>?)
+                        ?.map((p) => ProjectModel.fromJson(p))
+                        .toList() ??
+                    [],
+                isProfileComplete: data['is_profile_complete'] ?? false,
+                completedSections: ['basic'], // Default sections
+                createdAt: data['created_at'] != null
+                    ? DateTime.parse(data['created_at'])
+                    : DateTime.now(),
+                updatedAt: data['updated_at'] != null
+                    ? DateTime.parse(data['updated_at'])
+                    : DateTime.now(),
+              ))
+          .toList();
     } catch (e) {
       debugPrint('ProfileService: Error getting all profiles: $e');
       return [];
@@ -267,11 +318,13 @@ class ProfileService {
         skills: List<String>.from(response['skills'] ?? []),
         interests: List<String>.from(response['interests'] ?? []),
         experiences: (response['experiences'] as List<dynamic>?)
-            ?.map((e) => ExperienceModel.fromJson(e))
-            .toList() ?? [],
+                ?.map((e) => ExperienceModel.fromJson(e))
+                .toList() ??
+            [],
         projects: (response['projects'] as List<dynamic>?)
-            ?.map((p) => ProjectModel.fromJson(p))
-            .toList() ?? [],
+                ?.map((p) => ProjectModel.fromJson(p))
+                .toList() ??
+            [],
         isProfileComplete: response['is_profile_complete'] ?? false,
         completedSections: ['basic'], // Default sections
         createdAt: response['created_at'] != null
@@ -286,5 +339,4 @@ class ProfileService {
       return null;
     }
   }
-
 }

@@ -7,7 +7,7 @@ from typing import List, Dict, Any
 import logging
 from datetime import datetime
 
-from app.auth.firebase_auth import verify_admin_user
+# Firebase auth removed - using Supabase auth
 from app.database import get_db
 from app.models.user import User, UserRole
 from app.models.profile import Profile

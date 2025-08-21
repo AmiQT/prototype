@@ -4,8 +4,7 @@ import os
 from dotenv import load_dotenv
 import cloudinary
 import logging
-import firebase_admin
-from firebase_admin import credentials
+# Firebase removed - using Supabase only
 
 # Load environment variables
 load_dotenv()
@@ -14,23 +13,7 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize Firebase Admin SDK
-try:
-    if not firebase_admin._apps:
-        cred_path = os.getenv("FIREBASE_CREDENTIALS_PATH", "./firebase-credentials.json")
-        if os.path.exists(cred_path):
-            cred = credentials.Certificate(cred_path)
-            firebase_admin.initialize_app(cred)
-            logger.info("✅ Firebase Admin SDK initialized with service account")
-        else:
-            logger.warning(f"⚠️ Firebase credentials file not found at: {cred_path}")
-            logger.info("🔧 Trying default Firebase initialization...")
-            # Try default initialization (works in some environments)
-            firebase_admin.initialize_app()
-            logger.info("✅ Firebase Admin SDK initialized with default credentials")
-except Exception as e:
-    logger.error(f"❌ Failed to initialize Firebase: {e}")
-    logger.info("💡 To fix: Download firebase-credentials.json from Firebase Console")
+# Firebase initialization removed - using Supabase only
 
 # Initialize FastAPI app
 app = FastAPI(

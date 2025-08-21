@@ -276,6 +276,8 @@ class SupabaseAuthService {
       if (supabaseUser != null) {
         // Check if user has a profile in Supabase
         bool profileCompleted = false;
+
+        // Try to check profile completion from profiles table
         try {
           final profileResponse = await SupabaseConfig.client
               .from('profiles')
@@ -285,25 +287,46 @@ class SupabaseAuthService {
 
           if (profileResponse['is_profile_complete'] != null) {
             profileCompleted = profileResponse['is_profile_complete'] as bool;
+            debugPrint(
+                'SupabaseAuthService: Profile completion from profiles table: $profileCompleted');
           }
         } catch (e) {
-          debugPrint(
-              'SupabaseAuthService: No profile found, assuming incomplete: $e');
+          debugPrint('SupabaseAuthService: Cannot access profiles table: $e');
+
+          // If permission denied or table access issue, assume profile incomplete
+          if (e.toString().contains('permission denied') ||
+              e.toString().contains('42501')) {
+            debugPrint(
+                'SupabaseAuthService: Permission issue with profiles table, assuming profile incomplete');
+            profileCompleted = false;
+          }
         }
 
-        // Also check users table
-        try {
-          final userResponse = await SupabaseConfig.client
-              .from('users')
-              .select('profile_completed')
-              .eq('id', userId)
-              .single();
+        // Also try to check users table if profile not found
+        if (!profileCompleted) {
+          try {
+            final userResponse = await SupabaseConfig.client
+                .from('users')
+                .select('profile_completed')
+                .eq('id', userId)
+                .single();
 
-          if (userResponse['profile_completed'] != null) {
-            profileCompleted = userResponse['profile_completed'] as bool;
+            if (userResponse['profile_completed'] != null) {
+              profileCompleted = userResponse['profile_completed'] as bool;
+              debugPrint(
+                  'SupabaseAuthService: Profile completion from users table: $profileCompleted');
+            }
+          } catch (e) {
+            debugPrint('SupabaseAuthService: Cannot access users table: $e');
+
+            // If permission denied, assume profile incomplete and continue
+            if (e.toString().contains('permission denied') ||
+                e.toString().contains('42501')) {
+              debugPrint(
+                  'SupabaseAuthService: Permission issue with users table, assuming profile incomplete');
+              profileCompleted = false;
+            }
           }
-        } catch (e) {
-          debugPrint('SupabaseAuthService: No user record found: $e');
         }
 
         _currentUser = UserModel(
@@ -379,24 +402,50 @@ class SupabaseAuthService {
             .eq('id', userId)
             .single();
         // User exists, no need to create
+        debugPrint(
+            'SupabaseAuthService: User already exists in Supabase: $userId');
         return;
       } catch (e) {
+        debugPrint('SupabaseAuthService: User check error: $e');
+
+        // If permission denied, skip user creation for now
+        if (e.toString().contains('permission denied') ||
+            e.toString().contains('42501')) {
+          debugPrint(
+              'SupabaseAuthService: Permission denied for user check, skipping user creation');
+          return;
+        }
+
         // User doesn't exist, create them
         debugPrint(
             'SupabaseAuthService: Creating new user in Supabase: $userId');
       }
 
       // Create user in users table
-      await SupabaseConfig.client.from('users').insert({
-        'id': userId,
-        'email': email,
-        'name': name,
-        'role': role.toString().split('.').last,
-        'is_active': true,
-        'profile_completed': false,
-        'created_at': DateTime.now().toIso8601String(),
-        'updated_at': DateTime.now().toIso8601String(),
-      });
+      try {
+        await SupabaseConfig.client.from('users').insert({
+          'id': userId,
+          'email': email,
+          'name': name,
+          'role': role.toString().split('.').last,
+          'is_active': true,
+          'profile_completed': false,
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+
+        debugPrint(
+            'SupabaseAuthService: User created successfully in Supabase');
+      } catch (e) {
+        debugPrint('SupabaseAuthService: Error creating user in Supabase: $e');
+
+        // If permission denied, just log and continue
+        if (e.toString().contains('permission denied') ||
+            e.toString().contains('42501')) {
+          debugPrint(
+              'SupabaseAuthService: Permission denied for user creation, continuing without Supabase user record');
+        }
+      }
 
       debugPrint('SupabaseAuthService: User created in Supabase successfully');
     } catch (e) {

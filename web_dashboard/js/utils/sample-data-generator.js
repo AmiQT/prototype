@@ -3,7 +3,7 @@
  * Creates realistic sample data when no real data exists
  */
 
-import { db } from '../core/firebase.js';
+// Firebase removed - using backend API instead
 
 export class SampleDataGenerator {
     

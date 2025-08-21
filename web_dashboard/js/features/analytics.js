@@ -1,4 +1,4 @@
-import { db } from '../core/firebase.js';
+// Firebase removed - using backend API instead
 import { API_ENDPOINTS, makeAuthenticatedRequest, testBackendConnection } from '../config/backend-config.js';
 import { addNotification } from '../ui/notifications.js';
 

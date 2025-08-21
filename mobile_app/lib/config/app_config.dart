@@ -5,40 +5,42 @@ class AppConfig {
   // API Keys (loaded from environment)
   static String? _openRouterApiKey;
   static String? _geminiApiKey;
-  
+
   // Getters for API keys
-  static bool get hasApiKey => _openRouterApiKey != null && _openRouterApiKey!.isNotEmpty;
-  static bool get hasGeminiApiKey => _geminiApiKey != null && _geminiApiKey!.isNotEmpty;
+  static bool get hasApiKey =>
+      _openRouterApiKey != null && _openRouterApiKey!.isNotEmpty;
+  static bool get hasGeminiApiKey =>
+      _geminiApiKey != null && _geminiApiKey!.isNotEmpty;
   static String? get openRouterApiKey => _openRouterApiKey;
   static String? get geminiApiKey => _geminiApiKey;
-  
+
   // Method-style getters for backward compatibility
   static String? getGeminiApiKey() => _geminiApiKey;
   static String? getOpenRouterApiKey() => _openRouterApiKey;
-  
+
   // Preview methods for debugging (shows only first few characters)
   static String? getGeminiApiKeyPreview() {
     if (_geminiApiKey == null || _geminiApiKey!.isEmpty) return null;
     if (_geminiApiKey!.length <= 8) return _geminiApiKey;
     return '${_geminiApiKey!.substring(0, 8)}...';
   }
-  
+
   static String? getOpenRouterApiKeyPreview() {
     if (_openRouterApiKey == null || _openRouterApiKey!.isEmpty) return null;
     if (_openRouterApiKey!.length <= 8) return _openRouterApiKey;
     return '${_openRouterApiKey!.substring(0, 8)}...';
   }
-  
+
   // Initialize method to load environment variables
   static Future<void> initialize() async {
     try {
       // Load environment variables
       await dotenv.load(fileName: "assets/.env");
-      
+
       // Load API keys from environment
       _openRouterApiKey = dotenv.env['OPENROUTER_API_KEY'];
       _geminiApiKey = dotenv.env['GEMINI_API_KEY'];
-      
+
       if (kDebugMode) {
         debugPrint('AppConfig: Environment variables loaded');
         debugPrint('AppConfig: OpenRouter API key present: $hasApiKey');
@@ -63,7 +65,8 @@ class AppConfig {
       : 'https://prototype-348e.onrender.com'; // Cloud backend
 
   // Web Dashboard URL
-  static const String webDashboardUrl = 'https://your-web-dashboard.vercel.app';
+  static const String webDashboardUrl =
+      'https://prototype-talent-app.vercel.app';
 
   // Supabase URLs (already configured in supabase_config.dart)
   static const String supabaseUrl = 'https://xibffemtpboiecpeynon.supabase.co';

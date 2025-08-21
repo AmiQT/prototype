@@ -7,7 +7,7 @@
 - **Global CDN**: Fast delivery worldwide
 - **Transformations**: Resize, crop, compress on-the-fly
 - **Multiple Formats**: Supports all image/video formats
-- **No Firebase Storage Costs**: Completely free alternative
+- **No Storage Costs**: Completely free alternative
 
 ## 🚀 **Setup Steps:**
 

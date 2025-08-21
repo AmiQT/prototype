@@ -1,4 +1,4 @@
-import { db } from '../core/firebase.js';
+// Firebase removed - using backend API instead
 import { analyticsCache } from './analytics-cache.js';
 import { AnalyticsValidator } from './analytics-validator.js';
 import { rateLimiter } from './rate-limiter.js';

@@ -96,19 +96,16 @@ class ShowcaseService {
     try {
       debugPrint('ShowcaseService: Fetching posts from Supabase...');
 
-      final response = await _supabase
-          .from('showcase_posts')
-          .select('''
+      final response = await _supabase.from('showcase_posts').select('''
             *,
             profiles:user_id (
               name,
               profile_picture_url
             )
-          ''')
-          .eq('is_public', true)
-          .order('created_at', ascending: false);
+          ''').eq('is_public', true).order('created_at', ascending: false);
 
-      debugPrint('ShowcaseService: Retrieved ${response.length} posts from Supabase');
+      debugPrint(
+          'ShowcaseService: Retrieved ${response.length} posts from Supabase');
       return response.map<Map<String, dynamic>>((post) => post).toList();
     } catch (e) {
       debugPrint('Error fetching showcase posts: $e');
@@ -125,7 +122,7 @@ class ShowcaseService {
         'updated_at': DateTime.now().toIso8601String(),
         'is_edited': true,
       }).eq('id', postId);
-      
+
       debugPrint('ShowcaseService: Post updated successfully: $postId');
       // await SupabaseConfig.from('showcase_posts')
       //     .update({
@@ -149,7 +146,7 @@ class ShowcaseService {
           .select('media_urls')
           .eq('id', postId)
           .single();
-      
+
       if (postData['media_urls'] != null) {
         final mediaUrls = List<String>.from(postData['media_urls']);
         for (String url in mediaUrls) {
@@ -158,10 +155,10 @@ class ShowcaseService {
           await _supabase.storage.from('showcase-media').remove([fileName]);
         }
       }
-      
+
       // Delete the post record
       await _supabase.from('showcase_posts').delete().eq('id', postId);
-      
+
       debugPrint('ShowcaseService: Post deleted successfully: $postId');
       // await SupabaseConfig.from('showcase_posts')
       //     .delete()
@@ -175,18 +172,14 @@ class ShowcaseService {
   /// Get posts by user ID
   Future<List<Map<String, dynamic>>> getPostsByUserId(String userId) async {
     try {
-      final response = await _supabase
-          .from('showcase_posts')
-          .select('''
+      final response = await _supabase.from('showcase_posts').select('''
             *,
             profiles:user_id (
               name,
               profile_picture_url
             )
-          ''')
-          .eq('user_id', userId)
-          .order('created_at', ascending: false);
-      
+          ''').eq('user_id', userId).order('created_at', ascending: false);
+
       return response.map<Map<String, dynamic>>((post) => post).toList();
       // final response = await SupabaseConfig.from('showcase_posts')
       //     .select()
@@ -288,14 +281,18 @@ class ShowcaseService {
     Function(double progress)? onProgress,
   }) async {
     try {
-      final uniqueFileName = '${DateTime.now().millisecondsSinceEpoch}_${fileName}';
-      
+      final uniqueFileName =
+          '${DateTime.now().millisecondsSinceEpoch}_${fileName}';
+
       // Upload file to Supabase Storage
-      await _supabase.storage.from('showcase-media').upload(uniqueFileName, file);
-      
+      await _supabase.storage
+          .from('showcase-media')
+          .upload(uniqueFileName, file);
+
       // Get public URL
-      final publicUrl = _supabase.storage.from('showcase-media').getPublicUrl(uniqueFileName);
-      
+      final publicUrl =
+          _supabase.storage.from('showcase-media').getPublicUrl(uniqueFileName);
+
       debugPrint('ShowcaseService: File uploaded successfully to: $publicUrl');
       return publicUrl;
     } catch (e) {
@@ -452,9 +449,10 @@ class ShowcaseService {
           .eq('is_public', true)
           .order('created_at', ascending: false)
           .limit(limit);
-      
-      return response.map<ShowcasePostModel>((post) => 
-          ShowcasePostModel.fromJson(post)).toList();
+
+      return response
+          .map<ShowcasePostModel>((post) => ShowcasePostModel.fromJson(post))
+          .toList();
       // final response = await SupabaseConfig.from('showcase_posts')
       //     .select()
       //     .order('createdAt', ascending: false)
@@ -475,9 +473,7 @@ class ShowcaseService {
     String? userId,
   }) {
     try {
-      dynamic query = _supabase
-          .from('showcase_posts')
-          .select('''
+      dynamic query = _supabase.from('showcase_posts').select('''
             *,
             profiles:user_id (
               name,
@@ -497,11 +493,12 @@ class ShowcaseService {
       }
 
       // Apply ordering and limiting after filters
-      final finalQuery = query.order('created_at', ascending: false).limit(limit);
+      final finalQuery =
+          query.order('created_at', ascending: false).limit(limit);
 
-      return finalQuery.asStream().map((data) => 
-        data.map<ShowcasePostModel>((post) => 
-          ShowcasePostModel.fromJson(post)).toList());
+      return finalQuery.asStream().map((data) => data
+          .map<ShowcasePostModel>((post) => ShowcasePostModel.fromJson(post))
+          .toList());
     } catch (e) {
       debugPrint('Error getting showcase posts stream: $e');
       return Stream.value([]);
@@ -514,10 +511,10 @@ class ShowcaseService {
       // Extract filename from URL
       final uri = Uri.parse(mediaUrl);
       final fileName = uri.pathSegments.last;
-      
+
       // Delete from Supabase Storage
       await _supabase.storage.from('showcase-media').remove([fileName]);
-      
+
       debugPrint('ShowcaseService: Media file deleted successfully: $fileName');
     } catch (e) {
       debugPrint('Error deleting media file: $e');
@@ -583,14 +580,14 @@ class ShowcaseService {
   // ==================== SOCIAL INTERACTION METHODS ====================
 
   // Social interaction methods with Supabase integration
-  // These methods were previously using Firebase transactions and need to be migrated
+  // Using Supabase backend for transactions
 
   /// Like a post
   Future<void> likePost(String postId, String userId) async {
     try {
       final userId = _authService.currentUserId;
       if (userId == null) throw Exception('User not authenticated');
-      
+
       // Check if user already liked the post
       final existingLike = await _supabase
           .from('post_likes')
@@ -598,7 +595,7 @@ class ShowcaseService {
           .eq('post_id', postId)
           .eq('user_id', userId)
           .maybeSingle();
-      
+
       if (existingLike == null) {
         // Add like
         await _supabase.from('post_likes').insert({
@@ -606,7 +603,7 @@ class ShowcaseService {
           'user_id': userId,
           'created_at': DateTime.now().toIso8601String(),
         });
-        
+
         debugPrint('ShowcaseService: Post liked successfully: $postId');
       } else {
         debugPrint('ShowcaseService: Post already liked by user: $postId');
@@ -625,14 +622,14 @@ class ShowcaseService {
     try {
       final userId = _authService.currentUserId;
       if (userId == null) throw Exception('User not authenticated');
-      
+
       // Remove like
       await _supabase
           .from('post_likes')
           .delete()
           .eq('post_id', postId)
           .eq('user_id', userId);
-      
+
       debugPrint('ShowcaseService: Post unliked successfully: $postId');
       // await SupabaseConfig.from('showcase_posts')
       //     .update({'likes': SupabaseConfig.sql('array_remove(likes, $userId)')})
@@ -652,8 +649,9 @@ class ShowcaseService {
         'content': content,
         'created_at': DateTime.now().toIso8601String(),
       });
-      
-      debugPrint('ShowcaseService: Comment added successfully to post: $postId');
+
+      debugPrint(
+          'ShowcaseService: Comment added successfully to post: $postId');
     } catch (e) {
       debugPrint('Error adding comment: $e');
       rethrow;
@@ -669,7 +667,7 @@ class ShowcaseService {
         'user_id': _authService.currentUserId,
         'shared_at': DateTime.now().toIso8601String(),
       });
-      
+
       debugPrint('ShowcaseService: Post shared successfully: $postId');
       // await SupabaseConfig.from('showcase_posts')
       //     .update({'shares': SupabaseConfig.sql('array_append(shares, $userId)')})
@@ -685,7 +683,7 @@ class ShowcaseService {
     try {
       // Use RPC function to increment view count atomically
       await _supabase.rpc('increment_view_count', params: {'post_id': postId});
-      
+
       debugPrint('ShowcaseService: View count incremented for post: $postId');
     } catch (e) {
       debugPrint('Error incrementing view count: $e');
@@ -701,7 +699,7 @@ class ShowcaseService {
     try {
       final currentUserId = _authService.currentUserId;
       if (currentUserId == null) throw Exception('User not authenticated');
-      
+
       // Check if user already liked the post
       final existingLike = await _supabase
           .from('post_likes')
@@ -709,7 +707,7 @@ class ShowcaseService {
           .eq('post_id', postId)
           .eq('user_id', currentUserId)
           .maybeSingle();
-      
+
       if (existingLike == null) {
         // Like the post
         await likePost(postId, userId);
@@ -734,17 +732,22 @@ class ShowcaseService {
     List<MentionModel> mentions = const [],
   }) async {
     try {
-      final response = await _supabase.from('post_comments').insert({
-        'post_id': postId,
-        'user_id': userId,
-        'content': content,
-        'parent_comment_id': parentCommentId,
-        'mentions': mentions.map((m) => m.toJson()).toList(),
-        'created_at': DateTime.now().toIso8601String(),
-      }).select().single();
-      
+      final response = await _supabase
+          .from('post_comments')
+          .insert({
+            'post_id': postId,
+            'user_id': userId,
+            'content': content,
+            'parent_comment_id': parentCommentId,
+            'mentions': mentions.map((m) => m.toJson()).toList(),
+            'created_at': DateTime.now().toIso8601String(),
+          })
+          .select()
+          .single();
+
       final commentId = response['id'].toString();
-      debugPrint('ShowcaseService: Extended comment added successfully: $commentId');
+      debugPrint(
+          'ShowcaseService: Extended comment added successfully: $commentId');
       return commentId;
     } catch (e) {
       debugPrint('Error adding comment: $e');
@@ -760,15 +763,12 @@ class ShowcaseService {
     List<MentionModel> mentions = const [],
   }) async {
     try {
-      await _supabase
-          .from('post_comments')
-          .update({
-            'content': content,
-            'updated_at': DateTime.now().toIso8601String(),
-            'is_edited': true,
-          })
-          .eq('id', commentId);
-      
+      await _supabase.from('post_comments').update({
+        'content': content,
+        'updated_at': DateTime.now().toIso8601String(),
+        'is_edited': true,
+      }).eq('id', commentId);
+
       debugPrint('ShowcaseService: Comment updated successfully: $commentId');
     } catch (e) {
       debugPrint('Error updating comment: $e');
@@ -779,11 +779,8 @@ class ShowcaseService {
   /// Delete comment (for compatibility)
   Future<void> deleteComment(String postId, String commentId) async {
     try {
-      await _supabase
-          .from('post_comments')
-          .delete()
-          .eq('id', commentId);
-      
+      await _supabase.from('post_comments').delete().eq('id', commentId);
+
       debugPrint('ShowcaseService: Comment deleted successfully: $commentId');
     } catch (e) {
       debugPrint('Error deleting comment: $e');
@@ -797,7 +794,7 @@ class ShowcaseService {
     try {
       final currentUserId = _authService.currentUserId;
       if (currentUserId == null) throw Exception('User not authenticated');
-      
+
       // Check if user already liked the comment
       final existingLike = await _supabase
           .from('comment_likes')
@@ -805,7 +802,7 @@ class ShowcaseService {
           .eq('comment_id', commentId)
           .eq('user_id', currentUserId)
           .maybeSingle();
-      
+
       if (existingLike == null) {
         // Add like
         await _supabase.from('comment_likes').insert({

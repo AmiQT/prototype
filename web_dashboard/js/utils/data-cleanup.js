@@ -3,7 +3,7 @@
  * Simple functions to clean up sample/test data
  */
 
-import { db } from '../core/firebase.js';
+// Firebase removed - using backend API instead
 
 export class DataCleanup {
     

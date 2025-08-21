@@ -66,23 +66,46 @@ class _SplashScreenState extends State<SplashScreen>
       final authService =
           Provider.of<SupabaseAuthService>(context, listen: false);
 
-      // First, try to restore user session from Firebase Auth
-      debugPrint('SplashScreen: Attempting to restore user session...');
+      // Initialize auth service
       await authService.initialize();
 
       if (_disposed || !mounted) return;
 
-      final user = authService.currentUser;
-      debugPrint('SplashScreen: currentUser after restore = \\${user?.uid}');
+      // DEBUG: Force logout to clear any existing sessions
+      debugPrint(
+          'SplashScreen: Force logging out to clear any existing sessions...');
+      await authService.signOut();
 
-      if (_disposed || !mounted) return;
+      // Check if user is authenticated with Supabase
+      final supabaseUser = authService.supabaseUser;
+      debugPrint('SplashScreen: Supabase user check: ${supabaseUser?.id}');
 
-      if (user != null) {
+      if (supabaseUser != null) {
+        // User is authenticated, check profile completion
         debugPrint(
-            'SplashScreen: User found, navigating based on role: ${user.role}');
-        _navigateBasedOnRole(user);
+            'SplashScreen: User authenticated, checking profile completion...');
+        final hasCompletedProfile =
+            await authService.hasCompletedProfile(supabaseUser.id);
+
+        if (hasCompletedProfile) {
+          // Profile complete, navigate to dashboard
+          debugPrint('SplashScreen: Profile complete, navigating to dashboard');
+          final user = authService.currentUser;
+          if (user != null) {
+            _navigateBasedOnRole(user);
+          } else {
+            debugPrint('SplashScreen: Current user is null, going to login');
+            _navigateToLogin();
+          }
+        } else {
+          // Profile incomplete, go to profile setup
+          debugPrint(
+              'SplashScreen: Profile incomplete, going to profile setup');
+          _navigateToProfileSetup();
+        }
       } else {
-        debugPrint('SplashScreen: No user found, navigating to login');
+        // No authenticated user, go to login
+        debugPrint('SplashScreen: No authenticated user, going to login');
         _navigateToLogin();
       }
     } catch (e) {
@@ -95,9 +118,10 @@ class _SplashScreenState extends State<SplashScreen>
 
   void _navigateBasedOnRole(UserModel user) async {
     // Check if user has completed their profile
-    final authService = Provider.of<SupabaseAuthService>(context, listen: false);
+    final authService =
+        Provider.of<SupabaseAuthService>(context, listen: false);
     final hasCompletedProfile = await authService.hasCompletedProfile(user.uid);
-    
+
     if (!hasCompletedProfile) {
       // Redirect to profile setup if profile is not complete
       if (mounted) {
@@ -109,7 +133,7 @@ class _SplashScreenState extends State<SplashScreen>
       }
       return;
     }
-    
+
     // Profile is complete, navigate to appropriate dashboard
     Widget targetScreen;
 
@@ -135,6 +159,13 @@ class _SplashScreenState extends State<SplashScreen>
   void _navigateToLogin() {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
+  }
+
+  void _navigateToProfileSetup() {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+          builder: (context) => const ComprehensiveProfileSetupScreen()),
     );
   }
 

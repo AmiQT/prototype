@@ -1,4 +1,4 @@
-import { db } from '../../core/firebase.js';
+// Firebase removed - using backend API instead
 import { addNotification, closeModal } from '../../ui/notifications.js';
 
 let notificationBroadcastInitialized = false;

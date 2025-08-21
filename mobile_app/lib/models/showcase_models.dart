@@ -1,4 +1,4 @@
-// Firebase import removed - migrating to Supabase
+// Supabase showcase models
 // import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Enum for different types of showcase posts

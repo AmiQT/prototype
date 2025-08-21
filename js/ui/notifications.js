@@ -1,4 +1,4 @@
-import { auth } from '../core/firebase.js';
+// Firebase removed - using backend API instead
 
 let notifications = [];
 

@@ -1,4 +1,4 @@
-import { auth, db } from '../core/firebase.js';
+// Firebase removed - using backend API instead
 
 /**
  * Security manager for analytics access control and data protection
