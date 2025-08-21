@@ -312,10 +312,12 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                 color: AppTheme.primaryColor,
               ),
               onPressed: () {
-                // TODO: Implement messaging (for future)
+                // Messaging feature placeholder - to be implemented in future version
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                      content: Text('Messaging feature coming soon!')),
+                    content: Text('Messaging feature coming soon!'),
+                    backgroundColor: AppTheme.infoColor,
+                  ),
                 );
               },
             ),

@@ -92,9 +92,10 @@ class _NotificationsScreenState extends State<NotificationsScreen>
               icon: const Icon(Icons.mark_email_read_rounded),
               tooltip: 'Mark all as read',
               onPressed: () async {
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
                 await _notificationService.markAllAsRead();
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  scaffoldMessenger.showSnackBar(
                     const SnackBar(
                       content: Text('All notifications marked as read'),
                       backgroundColor: AppTheme.successColor,

@@ -40,7 +40,7 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
         border: Border.all(color: AppTheme.lightGrayColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -55,7 +55,7 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
             children: [
               Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.work,
                     color: AppTheme.primaryColor,
                     size: 24,
@@ -72,7 +72,7 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
               ),
               IconButton(
                 onPressed: _addExperience,
-                icon: Icon(
+                icon: const Icon(
                   Icons.add_circle,
                   color: AppTheme.primaryColor,
                   size: 28,
@@ -101,7 +101,7 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
               final index = entry.key;
               final experience = entry.value;
               return _buildExperienceCard(experience, index);
-            }).toList(),
+            }),
         ],
       ),
     );
@@ -111,7 +111,7 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       decoration: BoxDecoration(
-        color: AppTheme.lightGrayColor.withOpacity(0.3),
+        color: AppTheme.lightGrayColor.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
         border: Border.all(
           color: AppTheme.lightGrayColor,
@@ -120,7 +120,7 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
       ),
       child: Column(
         children: [
-          Icon(
+          const Icon(
             Icons.work_outline,
             size: 48,
             color: AppTheme.grayColor,
@@ -150,7 +150,7 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
       margin: const EdgeInsets.only(bottom: AppTheme.spaceMd),
       padding: const EdgeInsets.all(AppTheme.spaceMd),
       decoration: BoxDecoration(
-        color: AppTheme.lightGrayColor.withOpacity(0.1),
+        color: AppTheme.lightGrayColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
         border: Border.all(color: AppTheme.lightGrayColor),
       ),
@@ -174,7 +174,7 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
                 children: [
                   IconButton(
                     onPressed: () => _editExperience(experience, index),
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.edit,
                       color: AppTheme.primaryColor,
                       size: 20,
@@ -183,7 +183,7 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
                   ),
                   IconButton(
                     onPressed: () => _deleteExperience(index),
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.delete,
                       color: AppTheme.errorColor,
                       size: 20,
@@ -198,7 +198,7 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
             const SizedBox(height: AppTheme.spaceXs),
             Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.business,
                   size: 16,
                   color: AppTheme.grayColor,
@@ -233,7 +233,7 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
           const SizedBox(height: AppTheme.spaceXs),
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.calendar_today,
                 size: 16,
                 color: AppTheme.grayColor,
@@ -296,7 +296,7 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
             },
             child: Text(
               AppLocalizations.of(context).delete,
-              style: TextStyle(color: AppTheme.errorColor),
+              style: const TextStyle(color: AppTheme.errorColor),
             ),
           ),
         ],

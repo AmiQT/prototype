@@ -1,18 +1,32 @@
 {
   "version": 2,
+  "name": "prototype-talent-app",
   "builds": [
     {
-      "src": "**/*",
+      "src": "web_dashboard/**/*",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
+      "src": "/",
+      "dest": "/web_dashboard/index.html"
+    },
+    {
+      "src": "/login",
+      "dest": "/web_dashboard/login.html"
+    },
+    {
       "src": "/(.*)",
-      "dest": "/$1"
+      "dest": "/web_dashboard/$1"
     }
   ],
   "env": {
     "BACKEND_URL": "@backend_url"
+  },
+  "functions": {
+    "functions/**/*.js": {
+      "runtime": "nodejs22.x"
+    }
   }
 }

@@ -95,7 +95,7 @@ class ChatMessageBubble extends StatelessWidget {
                   _formatTime(message.timestamp),
                   style: TextStyle(
                     color: isUser
-                        ? Colors.white.withOpacity(0.7)
+                        ? Colors.white.withValues(alpha: 0.7)
                         : AppTheme.textSecondaryColor,
                     fontSize: 12,
                   ),
@@ -106,7 +106,7 @@ class ChatMessageBubble extends StatelessWidget {
                     Icons.token,
                     size: 12,
                     color: isUser
-                        ? Colors.white.withOpacity(0.7)
+                        ? Colors.white.withValues(alpha: 0.7)
                         : AppTheme.textSecondaryColor,
                   ),
                   const SizedBox(width: 2),
@@ -139,15 +139,15 @@ class ChatMessageBubble extends StatelessWidget {
     switch (message.status) {
       case MessageStatus.sending:
         icon = Icons.access_time;
-        color = Colors.white.withOpacity(0.7);
+        color = Colors.white.withValues(alpha: 0.7);
         break;
       case MessageStatus.sent:
         icon = Icons.check;
-        color = Colors.white.withOpacity(0.7);
+        color = Colors.white.withValues(alpha: 0.7);
         break;
       case MessageStatus.delivered:
         icon = Icons.done_all;
-        color = Colors.white.withOpacity(0.7);
+        color = Colors.white.withValues(alpha: 0.7);
         break;
       case MessageStatus.failed:
         icon = Icons.error_outline;
@@ -202,10 +202,12 @@ class ChatMessageBubble extends StatelessWidget {
                 title: const Text('Good Response'),
                 onTap: () {
                   Navigator.pop(context);
-                  // TODO: Implement feedback system
+                  // Feedback system placeholder - to be implemented
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                        content: Text('Thank you for your feedback!')),
+                      content: Text('Thank you for your positive feedback!'),
+                      backgroundColor: AppTheme.successColor,
+                    ),
                   );
                 },
               ),
@@ -215,10 +217,12 @@ class ChatMessageBubble extends StatelessWidget {
                 title: const Text('Poor Response'),
                 onTap: () {
                   Navigator.pop(context);
-                  // TODO: Implement feedback system
+                  // Feedback system placeholder - to be implemented
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                        content: Text('Thank you for your feedback!')),
+                      content: Text('Thank you for your feedback! We will improve.'),
+                      backgroundColor: AppTheme.warningColor,
+                    ),
                   );
                 },
               ),

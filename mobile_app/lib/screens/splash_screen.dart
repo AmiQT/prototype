@@ -100,11 +100,13 @@ class _SplashScreenState extends State<SplashScreen>
     
     if (!hasCompletedProfile) {
       // Redirect to profile setup if profile is not complete
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => const ComprehensiveProfileSetupScreen(),
-        ),
-      );
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const ComprehensiveProfileSetupScreen(),
+          ),
+        );
+      }
       return;
     }
     
@@ -123,9 +125,11 @@ class _SplashScreenState extends State<SplashScreen>
         break;
     }
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => targetScreen),
-    );
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => targetScreen),
+      );
+    }
   }
 
   void _navigateToLogin() {

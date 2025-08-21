@@ -12,7 +12,7 @@ class NetworkAwareImage extends StatefulWidget {
   final bool enableProgressiveLoading;
 
   const NetworkAwareImage({
-    Key? key,
+    super.key,
     required this.imageUrl,
     this.width,
     this.height,
@@ -20,7 +20,7 @@ class NetworkAwareImage extends StatefulWidget {
     this.placeholder,
     this.errorWidget,
     this.enableProgressiveLoading = true,
-  }) : super(key: key);
+  });
 
   @override
   State<NetworkAwareImage> createState() => _NetworkAwareImageState();
@@ -163,11 +163,11 @@ class DataUsageWarning extends StatelessWidget {
   final String message;
 
   const DataUsageWarning({
-    Key? key,
+    super.key,
     required this.onProceed,
     required this.onCancel,
     this.message = 'This action may use significant mobile data. Continue?',
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -196,7 +196,7 @@ class DataUsageWarning extends StatelessWidget {
 
 // Network status indicator
 class NetworkStatusIndicator extends StatefulWidget {
-  const NetworkStatusIndicator({Key? key}) : super(key: key);
+  const NetworkStatusIndicator({super.key});
 
   @override
   State<NetworkStatusIndicator> createState() => _NetworkStatusIndicatorState();

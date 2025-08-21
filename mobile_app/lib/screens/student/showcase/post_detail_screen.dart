@@ -383,19 +383,21 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context); // Close dialog
+              final navigator = Navigator.of(context);
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
+              navigator.pop(); // Close dialog
 
               try {
                 await _showcaseService.deleteShowcasePost(_post!.id);
                 if (mounted) {
-                  Navigator.pop(context); // Go back to feed
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  navigator.pop(); // Go back to feed
+                  scaffoldMessenger.showSnackBar(
                     const SnackBar(content: Text('Post deleted successfully')),
                   );
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  scaffoldMessenger.showSnackBar(
                     SnackBar(content: Text('Failed to delete post: $e')),
                   );
                 }

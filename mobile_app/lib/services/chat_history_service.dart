@@ -12,7 +12,7 @@ class ChatHistoryService extends ChangeNotifier {
   static const int _maxMessagesPerConversation = 200;
 
   List<ChatConversation> _conversations = [];
-  Map<String, List<ChatMessage>> _messagesCache = {};
+  final Map<String, List<ChatMessage>> _messagesCache = {};
   DateTime? _lastSync;
 
   List<ChatConversation> get conversations => List.unmodifiable(_conversations);

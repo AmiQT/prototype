@@ -566,27 +566,33 @@ class _ModernPostCardState extends State<ModernPostCard>
         await prefs.setStringList(
             'saved_posts_${widget.currentUser!.uid}', savedPosts);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Post saved to bookmarks!'),
-            backgroundColor: AppTheme.successColor,
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Post saved to bookmarks!'),
+              backgroundColor: AppTheme.successColor,
+            ),
+          );
+        }
       } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Post already saved'),
+              backgroundColor: AppTheme.infoColor,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Post already saved'),
-            backgroundColor: AppTheme.infoColor,
+          SnackBar(
+            content: Text('Failed to save post: $e'),
+            backgroundColor: AppTheme.errorColor,
           ),
         );
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to save post: $e'),
-          backgroundColor: AppTheme.errorColor,
-        ),
-      );
     }
   }
 

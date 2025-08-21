@@ -117,7 +117,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         title,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.bold,
           color: AppTheme.textPrimaryColor,
@@ -187,7 +187,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
             
             const SizedBox(height: 12),
             
-            Text(
+            const Text(
               'Get your API key from OpenRouter.ai. This key is used to access AI models for chat responses.',
               style: TextStyle(
                 fontSize: 12,
@@ -222,7 +222,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Today\'s Usage',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
@@ -244,9 +244,9 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
+                  color: Colors.orange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                  border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
@@ -266,14 +266,14 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppTheme.errorColor.withOpacity(0.1),
+                  color: AppTheme.errorColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppTheme.errorColor.withOpacity(0.3)),
+                  border: Border.all(color: AppTheme.errorColor.withValues(alpha: 0.3)),
                 ),
-                child: Row(
+                child: const Row(
                   children: [
                     Icon(Icons.error, color: AppTheme.errorColor),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Daily limits reached. Functionality may be limited.',
@@ -303,7 +303,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
         const SizedBox(height: 4),
         LinearProgressIndicator(
           value: percentage / 100,
-          backgroundColor: AppTheme.grayColor.withOpacity(0.3),
+          backgroundColor: AppTheme.grayColor.withValues(alpha: 0.3),
           valueColor: AlwaysStoppedAnimation<Color>(
             percentage > 80 ? AppTheme.errorColor : AppTheme.primaryColor,
           ),
@@ -311,7 +311,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
         const SizedBox(height: 2),
         Text(
           '${percentage.toStringAsFixed(1)}%',
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 12,
             color: AppTheme.textSecondaryColor,
           ),
@@ -330,7 +330,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Recommendations',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
@@ -343,7 +343,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.lightbulb_outline,
                     size: 16,
                     color: AppTheme.primaryColor,
@@ -352,7 +352,7 @@ class _ChatSettingsScreenState extends State<ChatSettingsScreen> {
                   Expanded(
                     child: Text(
                       suggestion.toString(),
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 14,
                         color: AppTheme.textSecondaryColor,
                       ),

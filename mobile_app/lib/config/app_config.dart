@@ -41,8 +41,8 @@ class AppConfig {
       
       if (kDebugMode) {
         debugPrint('AppConfig: Environment variables loaded');
-        debugPrint('AppConfig: OpenRouter API key present: ${hasApiKey}');
-        debugPrint('AppConfig: Gemini API key present: ${hasGeminiApiKey}');
+        debugPrint('AppConfig: OpenRouter API key present: $hasApiKey');
+        debugPrint('AppConfig: Gemini API key present: $hasGeminiApiKey');
       }
     } catch (e) {
       if (kDebugMode) {

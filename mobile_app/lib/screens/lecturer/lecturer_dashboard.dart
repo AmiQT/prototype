@@ -126,6 +126,10 @@ class _LecturerDashboardState extends State<LecturerDashboard> {
             ElevatedButton(
               onPressed: () async {
                 // Implement achievement verification logic
+                // Store context references before async operations
+                final navigator = Navigator.of(context);
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
+                
                 try {
                   // Show confirmation dialog
                   final confirmed = await showDialog<bool>(
@@ -147,21 +151,23 @@ class _LecturerDashboardState extends State<LecturerDashboard> {
                     ),
                   );
 
-                  if (confirmed == true && mounted) {
+                  if (confirmed == true) {
                     // Here you would call an achievement service to verify
                     // await achievementService.verifyAchievement(achievement.id);
-
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Achievement verified successfully'),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
+                    
+                    if (mounted) {
+                      navigator.pop();
+                      scaffoldMessenger.showSnackBar(
+                        const SnackBar(
+                          content: Text('Achievement verified successfully'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
                   }
                 } catch (e) {
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    scaffoldMessenger.showSnackBar(
                       SnackBar(
                         content: Text('Error verifying achievement: $e'),
                         backgroundColor: Colors.red,

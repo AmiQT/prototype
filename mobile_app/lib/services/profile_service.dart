@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import '../models/profile_model.dart';
 import '../models/academic_info_model.dart';
+import '../models/experience_model.dart';
+import '../models/project_model.dart';
 import '../config/supabase_config.dart';
 
 class ProfileService {
@@ -181,8 +183,12 @@ class ProfileService {
               : null,
           skills: List<String>.from(response['skills'] ?? []),
           interests: List<String>.from(response['interests'] ?? []),
-          experiences: [], // TODO: Add experiences support
-          projects: [], // TODO: Add projects support
+          experiences: (response['experiences'] as List<dynamic>?)
+              ?.map((e) => ExperienceModel.fromJson(e))
+              .toList() ?? [],
+          projects: (response['projects'] as List<dynamic>?)
+              ?.map((p) => ProjectModel.fromJson(p))
+              .toList() ?? [],
           isProfileComplete: response['is_profile_complete'] ?? false,
           completedSections: ['basic'], // Default sections
           createdAt: response['created_at'] != null
@@ -218,8 +224,12 @@ class ProfileService {
             : null,
         skills: List<String>.from(data['skills'] ?? []),
         interests: List<String>.from(data['interests'] ?? []),
-        experiences: [], // TODO: Add experiences support
-        projects: [], // TODO: Add projects support
+        experiences: (data['experiences'] as List<dynamic>?)
+            ?.map((e) => ExperienceModel.fromJson(e))
+            .toList() ?? [],
+        projects: (data['projects'] as List<dynamic>?)
+            ?.map((p) => ProjectModel.fromJson(p))
+            .toList() ?? [],
         isProfileComplete: data['is_profile_complete'] ?? false,
         completedSections: ['basic'], // Default sections
         createdAt: data['created_at'] != null
@@ -256,8 +266,12 @@ class ProfileService {
             : null,
         skills: List<String>.from(response['skills'] ?? []),
         interests: List<String>.from(response['interests'] ?? []),
-        experiences: [], // TODO: Add experiences support
-        projects: [], // TODO: Add projects support
+        experiences: (response['experiences'] as List<dynamic>?)
+            ?.map((e) => ExperienceModel.fromJson(e))
+            .toList() ?? [],
+        projects: (response['projects'] as List<dynamic>?)
+            ?.map((p) => ProjectModel.fromJson(p))
+            .toList() ?? [],
         isProfileComplete: response['is_profile_complete'] ?? false,
         completedSections: ['basic'], // Default sections
         createdAt: response['created_at'] != null

@@ -124,13 +124,15 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           await SupabaseConfig.from('profiles').select().eq('userId', userId);
 
       if (oldProfilesQuery.isEmpty) {
-        Navigator.of(context).pop(); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No old profile data found to migrate'),
-            backgroundColor: Colors.orange,
-          ),
-        );
+        if (mounted) {
+          Navigator.of(context).pop(); // Close loading dialog
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No old profile data found to migrate'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
         return;
       }
 
@@ -143,25 +145,29 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       await SupabaseConfig.from('profiles').delete().eq('id', oldDocId);
       await SupabaseConfig.from('profiles').insert(data);
 
-      Navigator.of(context).pop(); // Close loading dialog
+      if (mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile migrated successfully!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile migrated successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
 
       // Reload profile
       _loadProfile();
     } catch (e) {
-      Navigator.of(context).pop(); // Close loading dialog
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Migration failed: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        Navigator.of(context).pop(); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Migration failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -321,6 +327,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             child: IconButton(
               icon: const Icon(Icons.edit),
               onPressed: () async {
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -334,7 +341,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                     _profile = result;
                   });
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    scaffoldMessenger.showSnackBar(
                       const SnackBar(
                           content: Text('Profile updated successfully!')),
                     );

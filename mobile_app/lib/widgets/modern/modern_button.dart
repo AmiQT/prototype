@@ -217,7 +217,7 @@ class _ModernButtonState extends State<ModernButton>
               width: widget.isFullWidth ? double.infinity : null,
               decoration: BoxDecoration(
                 color: isDisabled 
-                    ? backgroundColor.withOpacity(0.5)
+                    ? backgroundColor.withValues(alpha: 0.5)
                     : backgroundColor,
                 borderRadius: BorderRadius.circular(
                   widget.customBorderRadius ?? AppTheme.radiusMd,
@@ -226,7 +226,7 @@ class _ModernButtonState extends State<ModernButton>
                 boxShadow: [
                   if (!isDisabled && widget.type != ModernButtonType.text)
                     BoxShadow(
-                      color: backgroundColor.withOpacity(0.3),
+                      color: backgroundColor.withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -254,7 +254,7 @@ class _ModernButtonState extends State<ModernButton>
                             child: CircularProgressIndicator(
                               strokeWidth: 2.0,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                textColor.withOpacity(0.8),
+                                textColor.withValues(alpha: 0.8),
                               ),
                             ),
                           ),
@@ -264,7 +264,7 @@ class _ModernButtonState extends State<ModernButton>
                             widget.icon,
                             size: _getIconSize(),
                             color: isDisabled 
-                                ? textColor.withOpacity(0.5)
+                                ? textColor.withValues(alpha: 0.5)
                                 : textColor,
                           ),
                           const SizedBox(width: AppTheme.spaceSm),
@@ -276,7 +276,7 @@ class _ModernButtonState extends State<ModernButton>
                             fontSize: _getFontSize(),
                             fontWeight: FontWeight.w600,
                             color: isDisabled 
-                                ? textColor.withOpacity(0.5)
+                                ? textColor.withValues(alpha: 0.5)
                                 : textColor,
                             letterSpacing: 0.5,
                           ),

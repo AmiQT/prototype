@@ -22,7 +22,7 @@ class EnhancedChatService extends ChangeNotifier {
 
   // API configuration
   String? _apiKey;
-  String _currentModel = ChatConfig.defaultModel;
+  final String _currentModel = ChatConfig.defaultModel;
   bool _isInitialized = false;
 
   // Getters

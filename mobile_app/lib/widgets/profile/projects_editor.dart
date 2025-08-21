@@ -40,7 +40,7 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
         border: Border.all(color: AppTheme.lightGrayColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -55,7 +55,7 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
             children: [
               Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.folder,
                     color: AppTheme.secondaryColor,
                     size: 24,
@@ -72,7 +72,7 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
               ),
               IconButton(
                 onPressed: _addProject,
-                icon: Icon(
+                icon: const Icon(
                   Icons.add_circle,
                   color: AppTheme.secondaryColor,
                   size: 28,
@@ -101,7 +101,7 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
               final index = entry.key;
               final project = entry.value;
               return _buildProjectCard(project, index);
-            }).toList(),
+            }),
         ],
       ),
     );
@@ -111,7 +111,7 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       decoration: BoxDecoration(
-        color: AppTheme.lightGrayColor.withOpacity(0.3),
+        color: AppTheme.lightGrayColor.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
         border: Border.all(
           color: AppTheme.lightGrayColor,
@@ -120,7 +120,7 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
       ),
       child: Column(
         children: [
-          Icon(
+          const Icon(
             Icons.folder_open,
             size: 48,
             color: AppTheme.grayColor,
@@ -150,7 +150,7 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
       margin: const EdgeInsets.only(bottom: AppTheme.spaceMd),
       padding: const EdgeInsets.all(AppTheme.spaceMd),
       decoration: BoxDecoration(
-        color: AppTheme.lightGrayColor.withOpacity(0.1),
+        color: AppTheme.lightGrayColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
         border: Border.all(color: AppTheme.lightGrayColor),
       ),
@@ -174,7 +174,7 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
                 children: [
                   IconButton(
                     onPressed: () => _editProject(project, index),
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.edit,
                       color: AppTheme.secondaryColor,
                       size: 20,
@@ -183,7 +183,7 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
                   ),
                   IconButton(
                     onPressed: () => _deleteProject(index),
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.delete,
                       color: AppTheme.errorColor,
                       size: 20,
@@ -197,7 +197,7 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
           const SizedBox(height: AppTheme.spaceXs),
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.calendar_today,
                 size: 16,
                 color: AppTheme.grayColor,
@@ -227,15 +227,15 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
                   .map((tech) => Chip(
                         label: Text(
                           tech,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 12,
                             color: AppTheme.secondaryColor,
                           ),
                         ),
                         backgroundColor:
-                            AppTheme.secondaryColor.withOpacity(0.1),
+                            AppTheme.secondaryColor.withValues(alpha: 0.1),
                         side: BorderSide(
-                            color: AppTheme.secondaryColor.withOpacity(0.3)),
+                            color: AppTheme.secondaryColor.withValues(alpha: 0.3)),
                       ))
                   .toList(),
             ),
@@ -244,7 +244,7 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
             const SizedBox(height: AppTheme.spaceSm),
             Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.link,
                   size: 16,
                   color: AppTheme.primaryColor,
@@ -304,7 +304,7 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
             },
             child: Text(
               AppLocalizations.of(context).delete,
-              style: TextStyle(color: AppTheme.errorColor),
+              style: const TextStyle(color: AppTheme.errorColor),
             ),
           ),
         ],

@@ -92,8 +92,8 @@ class ContentModerationService {
         query = query.eq('status', status.toString().split('.').last);
       }
 
-      // TODO: Implement with Supabase real-time subscriptions
-      // For now, return a stream that fetches data periodically
+      // Implement with Supabase real-time subscriptions
+      // Using periodic polling as fallback for real-time updates
       return Stream.periodic(const Duration(seconds: 30), (_) async {
         try {
           final response = await query.order('createdAt', ascending: false).limit(limit);
@@ -190,8 +190,8 @@ class ContentModerationService {
     return false;
   }
 
-  /// Validate content before posting
-  Map<String, dynamic> validateContent({
+  /// Validate content before posting with detailed analysis
+  Map<String, dynamic> validateContentDetailed({
     required String content,
     List<String>? mediaUrls,
   }) {

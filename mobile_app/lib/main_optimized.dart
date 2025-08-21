@@ -70,14 +70,14 @@ class AppWrapper extends StatefulWidget {
 class _AppWrapperState extends State<AppWrapper> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       body: Column(
         children: [
           // Network status indicator
-          const NetworkStatusIndicator(),
+          NetworkStatusIndicator(),
 
           // Main app content
-          const Expanded(
+          Expanded(
             child: SplashScreen(),
           ),
         ],

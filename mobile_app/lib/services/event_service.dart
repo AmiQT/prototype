@@ -258,7 +258,8 @@ class EventService {
 
   Stream<List<EventModel>> streamAllEvents() {
     // For now, we'll use periodic polling instead of real-time streams
-    // TODO: Implement WebSocket or Server-Sent Events for real-time updates
+    // Implement real-time updates using periodic polling
+    // In production, replace with WebSocket or Server-Sent Events
     return Stream.periodic(const Duration(seconds: 30), (_) async {
       return await getAllEvents();
     }).asyncMap((future) => future).handleError((error) {

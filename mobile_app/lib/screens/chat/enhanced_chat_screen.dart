@@ -328,13 +328,13 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.error_outline,
               size: 64,
               color: AppTheme.errorColor,
             ),
             const SizedBox(height: 16),
-            Text(
+            const Text(
               'Chat Unavailable',
               style: TextStyle(
                 fontSize: 20,
@@ -348,7 +348,7 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
               child: Text(
                 _errorMessage!,
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppTheme.textSecondaryColor,
                 ),
               ),
@@ -364,7 +364,7 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
     }
 
     if (_messages.isEmpty) {
-      return Center(
+      return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -373,7 +373,7 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
               size: 64,
               color: AppTheme.primaryColor,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
               'Start a Conversation',
               style: TextStyle(
@@ -382,7 +382,7 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
                 color: AppTheme.textPrimaryColor,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               'Ask me anything about your studies, career, or skills!',
               style: TextStyle(
@@ -470,9 +470,9 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
               Text('Today\'s Usage:',
                   style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
-              Text('Reads: 0 / 50,000 (0%)'),
-              Text('Writes: 0 / 20,000 (0%)'),
-              Text('Deletes: 0 / 20,000 (0%)'),
+              const Text('Reads: 0 / 50,000 (0%)'),
+              const Text('Writes: 0 / 20,000 (0%)'),
+              const Text('Deletes: 0 / 20,000 (0%)'),
               if (report['suggestions'].isNotEmpty) ...[
                 const SizedBox(height: 16),
                 Text('Optimization Tips:',

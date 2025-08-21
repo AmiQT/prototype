@@ -167,10 +167,10 @@ class _ComprehensiveEditProfileScreenState
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
           tabs: [
-            Tab(icon: Icon(Icons.person), text: l10n.basic),
-            Tab(icon: Icon(Icons.school), text: l10n.academic),
-            Tab(icon: Icon(Icons.star), text: l10n.skillsAndInterests),
-            Tab(icon: Icon(Icons.work), text: l10n.experience),
+            Tab(icon: const Icon(Icons.person), text: l10n.basic),
+            Tab(icon: const Icon(Icons.school), text: l10n.academic),
+            Tab(icon: const Icon(Icons.star), text: l10n.skillsAndInterests),
+            Tab(icon: const Icon(Icons.work), text: l10n.experience),
           ],
         ),
       ),
@@ -282,7 +282,7 @@ class _ComprehensiveEditProfileScreenState
           ),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryColor.withOpacity(0.2),
+              color: AppTheme.primaryColor.withValues(alpha: 0.2),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -295,7 +295,7 @@ class _ComprehensiveEditProfileScreenState
               backgroundColor: AppTheme.lightGrayColor,
               backgroundImage: _getProfileImageProvider(_profileImageUrl),
               child: _getProfileImageProvider(_profileImageUrl) == null
-                  ? Icon(
+                  ? const Icon(
                       Icons.person,
                       size: 50,
                       color: AppTheme.grayColor,
@@ -426,7 +426,7 @@ class _ComprehensiveEditProfileScreenState
             controller: _cgpaController,
             label: AppLocalizations.of(context).cgpa,
             icon: Icons.grade,
-            keyboardType: TextInputType.numberWithOptions(decimal: true),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
             ],
@@ -506,7 +506,7 @@ class _ComprehensiveEditProfileScreenState
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),
@@ -541,21 +541,25 @@ class _ComprehensiveEditProfileScreenState
           _profileImageUrl = base64String;
         });
 
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content:
+                  Text(AppLocalizations.of(context).imageSelectedSuccessfully),
+              backgroundColor: AppTheme.successColor,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content:
-                Text(AppLocalizations.of(context).imageSelectedSuccessfully),
-            backgroundColor: AppTheme.successColor,
+            content: Text(AppLocalizations.of(context).errorSelectingImage),
+            backgroundColor: AppTheme.errorColor,
           ),
         );
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).errorSelectingImage),
-          backgroundColor: AppTheme.errorColor,
-        ),
-      );
     }
   }
 

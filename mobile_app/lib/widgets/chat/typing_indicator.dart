@@ -62,7 +62,7 @@ class _TypingIndicatorState extends State<TypingIndicator>
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 4,
                 offset: const Offset(0, 2),
               ),
@@ -71,7 +71,7 @@ class _TypingIndicatorState extends State<TypingIndicator>
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
+              const Text(
                 'STAP UTHM Advisor is typing',
                 style: TextStyle(
                   color: AppTheme.textSecondaryColor,

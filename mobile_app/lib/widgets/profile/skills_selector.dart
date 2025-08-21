@@ -80,7 +80,7 @@ class _SkillsSelectorState extends State<SkillsSelector> {
         border: Border.all(color: AppTheme.lightGrayColor),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -92,7 +92,7 @@ class _SkillsSelectorState extends State<SkillsSelector> {
           // Header
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.star,
                 color: AppTheme.primaryColor,
                 size: 24,
@@ -186,7 +186,7 @@ class _SkillsSelectorState extends State<SkillsSelector> {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceSm),
       decoration: BoxDecoration(
-        color: AppTheme.lightGrayColor.withOpacity(0.3),
+        color: AppTheme.lightGrayColor.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(AppTheme.radiusSm),
         border: Border.all(color: AppTheme.lightGrayColor),
       ),
@@ -205,7 +205,7 @@ class _SkillsSelectorState extends State<SkillsSelector> {
           ),
           IconButton(
             onPressed: () => _addCustomSkill(_customSkillController.text),
-            icon: Icon(
+            icon: const Icon(
               Icons.add_circle,
               color: AppTheme.primaryColor,
             ),

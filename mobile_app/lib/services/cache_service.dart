@@ -142,7 +142,7 @@ class CacheKeys {
   static const String notifications = 'notifications_';
   
   // Generate user-specific keys
-  static String userAchievements(String userId) => '${achievements}$userId';
-  static String userNotifications(String userId) => '${notifications}$userId';
-  static String searchQuery(String query) => '${searchResults}${query.hashCode}';
+  static String userAchievements(String userId) => '$achievements$userId';
+  static String userNotifications(String userId) => '$notifications$userId';
+  static String searchQuery(String query) => '$searchResults${query.hashCode}';
 }

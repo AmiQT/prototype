@@ -5,12 +5,15 @@ import 'package:flutter/foundation.dart';
 import '../models/achievement_model.dart';
 import '../utils/error_handler.dart';
 import 'auto_notification_service.dart';
+import 'auth_service_supabase_ready.dart';
 import 'dart:io';
 import '../config/supabase_config.dart';
 
 class AchievementService {
   static const String baseUrl =
       'https://c3168f89d034.ngrok-free.app'; // ngrok tunnel
+
+  final AuthService _authService = AuthService();
 
   // Get Supabase auth token for authentication
   static Future<String?> _getAuthToken() async {
@@ -357,9 +360,24 @@ class AchievementService {
   Future<void> rejectAchievement(
       String achievementId, String rejectedBy, String reason) async {
     try {
-      // TODO: Implement backend API call for rejecting achievement
-      debugPrint('Achievement rejection would be handled by backend API');
-      throw UnimplementedError('Achievement rejection API not yet implemented');
+      final response = await http.put(
+        Uri.parse('$baseUrl/api/achievements/$achievementId/reject'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${await _authService.getAuthToken()}',
+        },
+        body: jsonEncode({
+          'rejected_by': rejectedBy,
+          'reason': reason,
+          'rejected_at': DateTime.now().toIso8601String(),
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        debugPrint('Achievement rejected successfully: $achievementId');
+      } else {
+        throw Exception('Failed to reject achievement: ${response.statusCode}');
+      }
     } catch (e) {
       debugPrint('Error rejecting achievement: $e');
       rethrow;
@@ -499,7 +517,7 @@ class AchievementService {
   /// Check for milestone achievements and create notifications
   Future<void> _checkForMilestones(String userId) async {
     try {
-      final userAchievements = await this.getAchievementsByUserId(userId);
+      final userAchievements = await getAchievementsByUserId(userId);
       final verifiedAchievements =
           userAchievements.where((a) => a.isVerified).toList();
 

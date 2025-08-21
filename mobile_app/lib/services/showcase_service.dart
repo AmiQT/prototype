@@ -7,10 +7,13 @@ import 'dart:async';
 import '../models/showcase_models.dart';
 import '../models/post_creation_models.dart';
 import '../utils/media_utils.dart';
+import 'auth_service_supabase_ready.dart';
 
 class ShowcaseService {
   static const String baseUrl =
       'https://c3168f89d034.ngrok-free.app'; // ngrok tunnel - ACTIVE ✅
+
+  final AuthService _authService = AuthService();
 
   // Supabase configuration - Firebase removed
   // TODO: Implement with Supabase tables and storage
@@ -373,7 +376,7 @@ class ShowcaseService {
       if (mediaFiles.isNotEmpty) {
         uploadedMedia = await uploadMediaFiles(
           files: mediaFiles,
-          userId: 'current_user_id', // TODO: Get from auth
+          userId: _authService.currentUserId ?? 'anonymous',
           onProgress: (mediaId, progress) {
             debugPrint(
                 'Upload progress for $mediaId: ${(progress * 100).toStringAsFixed(1)}%');
@@ -401,8 +404,8 @@ class ShowcaseService {
 
       return PostCreationResult(
         success: true,
-        postId: 'generated_post_id', // TODO: Get from response
-        post: null, // TODO: Create post model from response
+        postId: 'temp_post_id_${DateTime.now().millisecondsSinceEpoch}',
+        post: null, // Will be implemented with Supabase
       );
     } catch (e) {
       debugPrint('Error creating showcase post: $e');

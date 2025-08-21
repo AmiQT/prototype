@@ -74,21 +74,6 @@ class _ModernTextFieldState extends State<ModernTextField>
       vsync: this,
     );
 
-    _labelAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
-
-    _borderColorAnimation = ColorTween(
-      begin: AppTheme.lightGrayColor,
-      end: AppTheme.primaryColor,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
   }
 
   @override
@@ -128,8 +113,6 @@ class _ModernTextFieldState extends State<ModernTextField>
 
   @override
   Widget build(BuildContext context) {
-    final hasText = widget.controller.text.isNotEmpty;
-    final shouldFloatLabel = _isFocused || hasText;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,7 +123,7 @@ class _ModernTextFieldState extends State<ModernTextField>
             boxShadow: [
               if (_isFocused)
                 BoxShadow(
-                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  color: AppTheme.primaryColor.withValues(alpha: 0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -185,7 +168,7 @@ class _ModernTextFieldState extends State<ModernTextField>
                   filled: true,
                   fillColor: widget.fillColor ??
                       (_isFocused
-                          ? AppTheme.primaryColor.withOpacity(0.05)
+                          ? AppTheme.primaryColor.withValues(alpha: 0.05)
                           : Colors.white),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -216,14 +199,14 @@ class _ModernTextFieldState extends State<ModernTextField>
                   ),
                   errorBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    borderSide: BorderSide(
+                    borderSide: const BorderSide(
                       color: AppTheme.errorColor,
                       width: 2.0,
                     ),
                   ),
                   focusedErrorBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    borderSide: BorderSide(
+                    borderSide: const BorderSide(
                       color: AppTheme.errorColor,
                       width: 2.0,
                     ),
@@ -237,7 +220,7 @@ class _ModernTextFieldState extends State<ModernTextField>
                     fontWeight: FontWeight.w500,
                   ),
                   hintStyle: TextStyle(
-                    color: AppTheme.grayColor.withOpacity(0.7),
+                    color: AppTheme.grayColor.withValues(alpha: 0.7),
                     fontWeight: FontWeight.normal,
                   ),
                   contentPadding: EdgeInsets.symmetric(
@@ -246,7 +229,7 @@ class _ModernTextFieldState extends State<ModernTextField>
                         ? AppTheme.spaceMd
                         : AppTheme.spaceSm,
                   ),
-                  counterStyle: TextStyle(
+                  counterStyle: const TextStyle(
                     color: AppTheme.grayColor,
                     fontSize: 12,
                   ),

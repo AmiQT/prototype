@@ -306,15 +306,51 @@ class ShowcasePostModel {
     this.location,
   });
 
+  // Helper method to parse media from different database formats
+  static List<MediaModel> _parseMediaFromJson(Map<String, dynamic> json) {
+    // First try the new 'media' format (array of MediaModel objects)
+    if (json['media'] is List && (json['media'] as List).isNotEmpty) {
+      return (json['media'] as List)
+          .map((m) => MediaModel.fromJson(m))
+          .toList();
+    }
+
+    // Fallback to legacy format with separate arrays
+    final mediaUrls = json['media_urls'] as List? ?? [];
+    final mediaTypes = json['media_types'] as List? ?? [];
+
+    if (mediaUrls.isEmpty) return [];
+
+    // Create MediaModel objects from URL and type arrays
+    final List<MediaModel> mediaList = [];
+    for (int i = 0; i < mediaUrls.length; i++) {
+      final url = mediaUrls[i]?.toString() ?? '';
+      final type = i < mediaTypes.length
+          ? (mediaTypes[i]?.toString() ?? 'image')
+          : 'image';
+
+      if (url.isNotEmpty) {
+        mediaList.add(MediaModel(
+          id: 'media_$i',
+          url: url,
+          type: type,
+          uploadedAt: DateTime.now(),
+        ));
+      }
+    }
+
+    return mediaList;
+  }
+
   factory ShowcasePostModel.fromJson(Map<String, dynamic> json) {
     return ShowcasePostModel(
       id: json['id'] ?? '',
-      userId: json['userId'] ?? '',
-      userName: json['userName'] ?? '',
-      userProfileImage: json['userProfileImage'],
-      userRole: json['userRole'],
-      userDepartment: json['userDepartment'],
-      userHeadline: json['userHeadline'],
+      userId: json['user_id'] ?? json['userId'] ?? '',
+      userName: json['user_name'] ?? json['userName'] ?? '',
+      userProfileImage: json['user_profile_image'] ?? json['userProfileImage'],
+      userRole: json['user_role'] ?? json['userRole'],
+      userDepartment: json['user_department'] ?? json['userDepartment'],
+      userHeadline: json['user_headline'] ?? json['userHeadline'],
       content: json['content'] ?? '',
       type: PostType.values.firstWhere(
         (e) => e.toString().split('.').last == json['type'],
@@ -328,10 +364,7 @@ class ShowcasePostModel {
         (e) => e.toString().split('.').last == json['privacy'],
         orElse: () => PostPrivacy.public,
       ),
-      media: (json['media'] as List?)
-              ?.map((m) => MediaModel.fromJson(m))
-              .toList() ??
-          [],
+      media: _parseMediaFromJson(json),
       tags: List<String>.from(json['tags'] ?? []),
       mentions: (json['mentions'] as List?)
               ?.map((m) => MentionModel.fromJson(m))
@@ -343,16 +376,20 @@ class ShowcasePostModel {
               .toList() ??
           [],
       shares: List<String>.from(json['shares'] ?? []),
-      viewCount: json['viewCount'] ?? 0,
-      createdAt: json['createdAt'] is String
-          ? DateTime.parse(json['createdAt'])
-          : DateTime.fromMillisecondsSinceEpoch(json['createdAt'] ?? 0),
-      updatedAt: json['updatedAt'] is String
-          ? DateTime.parse(json['updatedAt'])
-          : DateTime.fromMillisecondsSinceEpoch(json['updatedAt'] ?? 0),
-      isEdited: json['isEdited'] ?? false,
-      isPinned: json['isPinned'] ?? false,
-      isArchived: json['isArchived'] ?? false,
+      viewCount: json['views_count'] ?? json['viewCount'] ?? 0,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : (json['createdAt'] is String
+              ? DateTime.parse(json['createdAt'])
+              : DateTime.fromMillisecondsSinceEpoch(json['createdAt'] ?? 0)),
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'])
+          : (json['updatedAt'] is String
+              ? DateTime.parse(json['updatedAt'])
+              : DateTime.fromMillisecondsSinceEpoch(json['updatedAt'] ?? 0)),
+      isEdited: json['is_edited'] ?? json['isEdited'] ?? false,
+      isPinned: json['is_pinned'] ?? json['isPinned'] ?? false,
+      isArchived: json['is_archived'] ?? json['isArchived'] ?? false,
       location: json['location'],
     );
   }

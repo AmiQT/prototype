@@ -1,0 +1,48 @@
+{
+    "mcpServers": {
+      "Playwright": {
+        "command": "npx",
+        "args": [
+          "@playwright/mcp@latest"
+        ],
+        "env": {}
+      },
+      "Context7": {
+        "url": "https://mcp.context7.com/mcp",
+        "headers": {}
+      },
+      "supabase": {
+        "command": "cmd",
+        "args": [
+          "/c",
+          "npx",
+          "-y",
+          "@modelcontextprotocol/server-postgres",
+          "postgresql://postgres.xibffemtpboiecpeynon:123456@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres"
+        ]
+      },
+      "filesystem": {
+        "command": "mcp-server-filesystem",
+        "args": [
+          "C:\\Users\\noora\\OneDrive\\Documents\\fun project\\Prototype"
+        ],
+        "env": {}
+      },
+      "once-ui": {
+        "command": "npx",
+        "args": [
+          "@upstash/context7-mcp@latest"
+        ],
+        "env": {}
+      },
+      "Railway": {
+        "command": "npx -y @railway/mcp-server",
+        "env": {},
+        "args": []
+      },
+      "Vercel": {
+        "url": "https://mcp.vercel.com",
+        "headers": {}
+      }
+    }
+  }

@@ -112,7 +112,7 @@ class _NotificationSettingsScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Global Settings Section
-                  SettingsSectionHeader(
+                  const SettingsSectionHeader(
                     title: 'General Settings',
                     subtitle: 'Control overall notification behavior',
                   ),
@@ -154,7 +154,7 @@ class _NotificationSettingsScreenState
 
                   // Quiet Hours Section
                   if (service.globallyEnabled) ...[
-                    SettingsSectionHeader(
+                    const SettingsSectionHeader(
                       title: 'Quiet Hours',
                       subtitle: 'Silence notifications during specific times',
                     ),
@@ -193,7 +193,7 @@ class _NotificationSettingsScreenState
 
                   // Notification Types Section
                   if (service.globallyEnabled) ...[
-                    SettingsSectionHeader(
+                    const SettingsSectionHeader(
                       title: 'Notification Types',
                       subtitle:
                           'Choose which types of notifications to receive',
@@ -300,14 +300,14 @@ class _NotificationSettingsScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
               Icon(
                 Icons.info_outline_rounded,
                 color: AppTheme.primaryColor,
                 size: 20,
               ),
-              const SizedBox(width: AppTheme.spaceSm),
+              SizedBox(width: AppTheme.spaceSm),
               Text(
                 'Notification Status',
                 style: TextStyle(
@@ -320,7 +320,7 @@ class _NotificationSettingsScreenState
           const SizedBox(height: AppTheme.spaceSm),
           Text(
             '${service.enabledTypesCount} of ${NotificationType.values.length} notification types enabled',
-            style: TextStyle(
+            style: const TextStyle(
               color: AppTheme.textSecondaryColor,
               fontSize: 14,
             ),
@@ -328,7 +328,7 @@ class _NotificationSettingsScreenState
           if (service.quietHoursEnabled)
             Text(
               'Quiet hours: ${service.quietHoursStart} - ${service.quietHoursEnd}',
-              style: TextStyle(
+              style: const TextStyle(
                 color: AppTheme.textSecondaryColor,
                 fontSize: 14,
               ),

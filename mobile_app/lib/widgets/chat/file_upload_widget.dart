@@ -21,7 +21,7 @@ class FileUploadWidget extends StatefulWidget {
 
 class _FileUploadWidgetState extends State<FileUploadWidget> {
   final ImagePicker _picker = ImagePicker();
-  List<File> _selectedFiles = [];
+  final List<File> _selectedFiles = [];
 
   @override
   Widget build(BuildContext context) {
@@ -124,7 +124,7 @@ class _FileUploadWidgetState extends State<FileUploadWidget> {
       color = Colors.grey;
     }
 
-    return Container(
+    return SizedBox(
       width: 80,
       height: 80,
       child: Column(

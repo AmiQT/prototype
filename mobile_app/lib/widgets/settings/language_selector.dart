@@ -118,7 +118,8 @@ class LanguageSelector extends StatelessWidget {
       String languageCode) {
     languageService.changeLanguage(languageCode).then((_) {
       // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             'Language changed to ${LanguageService.getLanguageDisplayName(languageCode)}',
@@ -127,15 +128,18 @@ class LanguageSelector extends StatelessWidget {
           duration: const Duration(seconds: 2),
         ),
       );
+      }
     }).catchError((error) {
       // Show error message
-      ScaffoldMessenger.of(context).showSnackBar(
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error changing language: $error'),
           backgroundColor: AppTheme.errorColor,
           duration: const Duration(seconds: 3),
         ),
       );
+      }
     });
   }
 }

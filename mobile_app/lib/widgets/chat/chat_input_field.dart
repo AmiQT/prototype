@@ -91,7 +91,7 @@ class _ChatInputFieldState extends State<ChatInputField> {
                         hintText: widget.enabled
                             ? 'Ask me anything about your studies...'
                             : 'Chat is temporarily unavailable',
-                        hintStyle: TextStyle(
+                        hintStyle: const TextStyle(
                           color: AppTheme.textSecondaryColor,
                           fontSize: 16,
                         ),
@@ -102,7 +102,7 @@ class _ChatInputFieldState extends State<ChatInputField> {
                         ),
                         counterText: '', // Hide character counter
                       ),
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: AppTheme.textPrimaryColor,
                         fontSize: 16,
                       ),

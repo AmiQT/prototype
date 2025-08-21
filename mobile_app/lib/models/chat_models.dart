@@ -272,11 +272,15 @@ class ChatUserContext {
     if (program != null) buffer.writeln('Program: $program');
     if (department != null) buffer.writeln('Department: $department');
     if (academicLevel != null) buffer.writeln('Level: $academicLevel');
-    if (skills.isNotEmpty)
+    if (skills.isNotEmpty) {
       buffer.writeln('Skills: ${skills.take(5).join(', ')}');
-    if (interests.isNotEmpty)
+    }
+    if (interests.isNotEmpty) {
       buffer.writeln('Interests: ${interests.take(5).join(', ')}');
-    if (achievementCount > 0) buffer.writeln('Achievements: $achievementCount');
+    }
+    if (achievementCount > 0) {
+      buffer.writeln('Achievements: $achievementCount');
+    }
     return buffer.toString();
   }
 

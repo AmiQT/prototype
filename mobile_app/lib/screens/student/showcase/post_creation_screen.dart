@@ -289,9 +289,12 @@ class _PostCreationScreenState extends State<PostCreationScreen>
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (!didPop) {
+          final navigator = Navigator.of(context);
           final shouldPop = await _onWillPop();
-          if (shouldPop && mounted) {
-            Navigator.of(context).pop();
+          if (shouldPop) {
+            if (mounted) {
+              navigator.pop();
+            }
           }
         }
       },
@@ -1274,7 +1277,7 @@ class _PostCreationScreenState extends State<PostCreationScreen>
 
     // Validate content before posting
     final moderationService = ContentModerationService();
-    final validation = moderationService.validateContent(
+    final validation = moderationService.validateContentDetailed(
       content: _contentController.text.trim(),
       mediaUrls: _selectedMedia.map((f) => f.path).toList(),
     );
@@ -1445,8 +1448,11 @@ class _PostCreationScreenState extends State<PostCreationScreen>
           ),
           TextButton(
             onPressed: () async {
+              final navigator = Navigator.of(context);
               await _saveDraft();
-              if (mounted) Navigator.pop(context, true);
+              if (mounted) {
+                navigator.pop(true);
+              }
             },
             child: const Text('Save Draft'),
           ),
