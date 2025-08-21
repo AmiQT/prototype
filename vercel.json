@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "name": "prototype-talent-app",
   "builds": [
     {
       "src": "web_dashboard/**/*",
@@ -23,10 +22,5 @@
   ],
   "env": {
     "BACKEND_URL": "@backend_url"
-  },
-  "functions": {
-    "functions/**/*.js": {
-      "runtime": "nodejs22.x"
-    }
   }
 }
