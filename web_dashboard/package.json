@@ -1,0 +1,25 @@
+{
+  "name": "prototype-web-dashboard",
+  "version": "1.0.0",
+  "description": "Student Talent Profiling App - Web Dashboard",
+  "main": "index.html",
+  "scripts": {
+    "dev": "live-server --port=3000 --open=/index.html",
+    "build": "echo 'Static build completed'",
+    "start": "live-server --port=3000 --open=/index.html"
+  },
+  "keywords": [
+    "talent-management",
+    "student-portal",
+    "dashboard",
+    "uthm"
+  ],
+  "author": "Noor Azami",
+  "license": "MIT",
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "name": "prototype-web-dashboard",
   "builds": [
     {
       "src": "**/*",
@@ -8,11 +9,38 @@
   ],
   "routes": [
     {
+      "src": "/",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/login",
+      "dest": "/login.html"
+    },
+    {
       "src": "/(.*)",
       "dest": "/$1"
     }
   ],
   "env": {
     "BACKEND_URL": "@backend_url"
-  }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ]
 }
