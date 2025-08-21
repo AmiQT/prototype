@@ -15,8 +15,8 @@ class ShowcaseService {
 
   final AuthService _authService = AuthService();
 
-  // Supabase configuration - Firebase removed
-  // TODO: Implement with Supabase tables and storage
+  // Supabase configuration - Complete integration
+  SupabaseClient get _supabase => Supabase.instance.client;
 
   // Get Supabase auth token for authentication
   static Future<String?> _getAuthToken() async {
@@ -141,8 +141,13 @@ class ShowcaseService {
   Future<void> updatePost(
       String postId, Map<String, dynamic> updatedData) async {
     try {
-      // TODO: Implement with Supabase
-      debugPrint('Post update not yet implemented with Supabase: $postId');
+      await _supabase.from('showcase_posts').update({
+        ...updatedData,
+        'updated_at': DateTime.now().toIso8601String(),
+        'is_edited': true,
+      }).eq('id', postId);
+      
+      debugPrint('ShowcaseService: Post updated successfully: $postId');
       // await SupabaseConfig.from('showcase_posts')
       //     .update({
       //       ...updatedData,
@@ -159,8 +164,26 @@ class ShowcaseService {
   /// Delete a showcase post
   Future<void> deletePost(String postId) async {
     try {
-      // TODO: Implement with Supabase
-      debugPrint('Post deletion not yet implemented with Supabase: $postId');
+      // First delete associated media files
+      final postData = await _supabase
+          .from('showcase_posts')
+          .select('media_urls')
+          .eq('id', postId)
+          .single();
+      
+      if (postData['media_urls'] != null) {
+        final mediaUrls = List<String>.from(postData['media_urls']);
+        for (String url in mediaUrls) {
+          // Extract file path from URL and delete from storage
+          final fileName = url.split('/').last;
+          await _supabase.storage.from('showcase-media').remove([fileName]);
+        }
+      }
+      
+      // Delete the post record
+      await _supabase.from('showcase_posts').delete().eq('id', postId);
+      
+      debugPrint('ShowcaseService: Post deleted successfully: $postId');
       // await SupabaseConfig.from('showcase_posts')
       //     .delete()
       //     .eq('id', postId);
@@ -173,9 +196,20 @@ class ShowcaseService {
   /// Get posts by user ID
   Future<List<Map<String, dynamic>>> getPostsByUserId(String userId) async {
     try {
-      // TODO: Implement with Supabase
-      debugPrint('Get user posts not yet implemented with Supabase: $userId');
-      return [];
+      final response = await _supabase
+          .from('showcase_posts')
+          .select('''
+            *,
+            profiles:user_id (
+              name,
+              profile_picture_url
+            )
+          ''')
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+      
+      return response.map<ShowcasePostModel>((post) => 
+          ShowcasePostModel.fromJson(post)).toList();
       // final response = await SupabaseConfig.from('showcase_posts')
       //     .select()
       //     .eq('userId', userId)
@@ -276,8 +310,15 @@ class ShowcaseService {
     Function(double progress)? onProgress,
   }) async {
     try {
-      // TODO: Implement with Supabase Storage
-      debugPrint('File upload not yet implemented with Supabase Storage');
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${path.split('/').last}';
+      
+      // Upload file to Supabase Storage
+      await _supabase.storage.from('showcase-media').upload(fileName, file);
+      
+      // Get public URL
+      final publicUrl = _supabase.storage.from('showcase-media').getPublicUrl(fileName);
+      
+      debugPrint('ShowcaseService: File uploaded successfully to: $publicUrl');
       // final response = await SupabaseConfig.storage
       //     .from(path)
       //     .upload(fileName, file);
@@ -425,9 +466,21 @@ class ShowcaseService {
     String? userId,
   }) async {
     try {
-      // TODO: Implement with Supabase
-      debugPrint('Get showcase posts not yet implemented with Supabase');
-      return [];
+      final response = await _supabase
+          .from('showcase_posts')
+          .select('''
+            *,
+            profiles:user_id (
+              name,
+              profile_picture_url
+            )
+          ''')
+          .eq('is_public', true)
+          .order('created_at', ascending: false)
+          .limit(limit);
+      
+      return response.map<ShowcasePostModel>((post) => 
+          ShowcasePostModel.fromJson(post)).toList();
       // final response = await SupabaseConfig.from('showcase_posts')
       //     .select()
       //     .order('createdAt', ascending: false)
@@ -522,14 +575,35 @@ class ShowcaseService {
 
   // ==================== SOCIAL INTERACTION METHODS ====================
 
-  // TODO: Implement all social interaction methods with Supabase
+  // Social interaction methods with Supabase integration
   // These methods were previously using Firebase transactions and need to be migrated
 
   /// Like a post
   Future<void> likePost(String postId, String userId) async {
     try {
-      // TODO: Implement with Supabase
-      debugPrint('Like post not yet implemented with Supabase');
+      final userId = _authService.currentUserId;
+      if (userId == null) throw Exception('User not authenticated');
+      
+      // Check if user already liked the post
+      final existingLike = await _supabase
+          .from('post_likes')
+          .select()
+          .eq('post_id', postId)
+          .eq('user_id', userId)
+          .maybeSingle();
+      
+      if (existingLike == null) {
+        // Add like
+        await _supabase.from('post_likes').insert({
+          'post_id': postId,
+          'user_id': userId,
+          'created_at': DateTime.now().toIso8601String(),
+        });
+        
+        debugPrint('ShowcaseService: Post liked successfully: $postId');
+      } else {
+        debugPrint('ShowcaseService: Post already liked by user: $postId');
+      }
       // await SupabaseConfig.from('showcase_posts')
       //     .update({'likes': SupabaseConfig.sql('array_append(likes, $userId)')})
       //     .eq('id', postId);
@@ -542,8 +616,17 @@ class ShowcaseService {
   /// Unlike a post
   Future<void> unlikePost(String postId, String userId) async {
     try {
-      // TODO: Implement with Supabase
-      debugPrint('Unlike post not yet implemented with Supabase');
+      final userId = _authService.currentUserId;
+      if (userId == null) throw Exception('User not authenticated');
+      
+      // Remove like
+      await _supabase
+          .from('post_likes')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', userId);
+      
+      debugPrint('ShowcaseService: Post unliked successfully: $postId');
       // await SupabaseConfig.from('showcase_posts')
       //     .update({'likes': SupabaseConfig.sql('array_remove(likes, $userId)')})
       //     .eq('id', postId);
@@ -573,8 +656,14 @@ class ShowcaseService {
   /// Share a post
   Future<void> sharePost(String postId, String userId) async {
     try {
-      // TODO: Implement with Supabase
-      debugPrint('Share post not yet implemented with Supabase');
+      // Log share activity
+      await _supabase.from('post_shares').insert({
+        'post_id': postId,
+        'user_id': _authService.currentUserId,
+        'shared_at': DateTime.now().toIso8601String(),
+      });
+      
+      debugPrint('ShowcaseService: Post shared successfully: $postId');
       // await SupabaseConfig.from('showcase_posts')
       //     .update({'shares': SupabaseConfig.sql('array_append(shares, $userId)')})
       //     .eq('id', postId);

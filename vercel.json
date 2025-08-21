@@ -16,6 +16,26 @@
       "dest": "/web_dashboard/login.html"
     },
     {
+      "src": "/favicon.ico",
+      "dest": "/web_dashboard/favicon.ico"
+    },
+    {
+      "src": "/uthm.png",
+      "dest": "/web_dashboard/uthm.png"
+    },
+    {
+      "src": "/css/(.*)",
+      "dest": "/web_dashboard/css/$1"
+    },
+    {
+      "src": "/js/(.*)",
+      "dest": "/web_dashboard/js/$1"
+    },
+    {
+      "src": "/modals/(.*)",
+      "dest": "/web_dashboard/modals/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/web_dashboard/$1"
     }
