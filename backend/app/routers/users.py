@@ -7,7 +7,8 @@ from sqlalchemy import func
 from typing import List, Optional
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
-# Firebase auth removed - using Supabase auth
+# Supabase auth integration
+from app.auth import verify_firebase_token, verify_admin_user
 from app.models.user import User, UserRole
 from app.models.profile import Profile
 from app.database import get_db

@@ -1,15 +1,10 @@
-// Firebase removed - using backend API instead
+// Supabase integration - using backend API instead
+import { API_ENDPOINTS, makeAuthenticatedRequest, testBackendConnection } from '../../config/backend-config.js';
 import { addNotification, closeModal } from '../../ui/notifications.js';
-// Achievement imports removed - not needed for talent profiling system
 
 function setupEventsSection() {
     // Setting up events section
-
-    // Test Firebase connection
-    if (!db) {
-        console.error('Firebase database not initialized');
-        return;
-    }
+    console.log('Setting up events section with Supabase integration');
 
     const addEventForm = document.getElementById('add-event-form');
     if (addEventForm) {
@@ -53,6 +48,22 @@ function debounce(func, wait) {
     };
 }
 
+// Search function for events
+function searchInEvents(searchTerm) {
+    if (!searchTerm || searchTerm.trim() === '') {
+        renderEventsTable(allEventsCache);
+        return;
+    }
+    
+    const filteredEvents = allEventsCache.filter(event =>
+        (event.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (event.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (event.category || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    renderEventsTable(filteredEvents);
+}
+
 let allEventsCache = [];
 
 function filterEvents() {
@@ -85,24 +96,43 @@ async function loadEventsTable() {
     }
 
     // Show loading state
-    tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">Loading events...</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">Loading events from Supabase...</td></tr>';
 
     try {
-        console.log('Loading events from Firebase...');
-        const querySnapshot = await db.collection('events').get();
-        const events = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
+        console.log('Loading events from Supabase...');
+        
+        // Check if backend is available
+        const isBackendConnected = await testBackendConnection();
+        if (!isBackendConnected) {
+            throw new Error('Backend connection failed');
+        }
+
+        // Fetch real events from Supabase via backend API
+        const response = await makeAuthenticatedRequest(
+            API_ENDPOINTS.events.list,
+            { method: 'GET' }
+        );
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch events: ${response.status} ${response.statusText}`);
+        }
+
+        const eventsData = await response.json();
+        const events = eventsData.events || eventsData || [];
 
         console.log('Events loaded:', events.length);
         allEventsCache = events; // Cache events for filtering
         renderEventsTable(events);
         populateEventCategoryFilter();
+        
     } catch (e) {
         console.error('Error loading events:', e);
         tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #dc2626;">
             <i class="fas fa-exclamation-triangle"></i> Error loading events: ${e.message}
+            <br><br>
+            <button class="btn btn-sm btn-primary" onclick="loadEventsTable()">
+                <i class="fas fa-redo"></i> Retry
+            </button>
         </td></tr>`;
     }
 }
@@ -159,15 +189,14 @@ function renderEventsTable(events) {
                 <td>${registerUrlDisplay}</td>
                 <td style="max-width: 150px;">${badgesDisplay}</td>
                 <td>
-                                    <div class="action-buttons">
-                    <button class="btn btn-sm btn-primary" onclick="window.showEditEventModal('${event.id}')" title="Edit event">
-                        <i class="fas fa-edit"></i>
-                    </button>
-
-                    <button class="btn btn-sm btn-danger" onclick="window.deleteEvent('${event.id}')" title="Delete event">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-sm btn-primary" onclick="window.showEditEventModal('${event.id}')" title="Edit event">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="window.deleteEvent('${event.id}')" title="Delete event">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </td>
             </tr>
         `;
@@ -205,42 +234,50 @@ async function showAddEventModal() {
     }
 }
 
-function showEditEventModal(id) {
+async function showEditEventModal(id) {
     console.log('Opening edit modal for event:', id);
-    db.collection('events').doc(id).get().then(doc => {
-        if (doc.exists) {
-            const event = doc.data();
-            console.log('Event data for editing:', event);
+    
+    try {
+        // Fetch event data from Supabase via backend API
+        const response = await makeAuthenticatedRequest(
+            `${API_ENDPOINTS.events.get}/${id}`,
+            { method: 'GET' }
+        );
 
-            document.getElementById('edit-event-id').value = id;
-            document.getElementById('edit-event-title').value = event.title || '';
-            document.getElementById('edit-event-description').value = event.description || '';
-            document.getElementById('edit-event-category').value = event.category || '';
-            document.getElementById('edit-event-register-url').value = event.registerUrl || '';
-            document.getElementById('edit-event-image').value = event.imageUrl || '';
-
-            // Show image preview if exists, hide if not
-            const preview = document.getElementById('edit-event-image-preview');
-            if (preview) {
-                if (event.imageUrl && event.imageUrl.trim() !== '') {
-                    preview.src = event.imageUrl;
-                    preview.style.display = 'block';
-                } else {
-                    preview.style.display = 'none';
-                    preview.src = '';
-                }
-            }
-
-            const modal = document.getElementById('edit-event-modal');
-            modal.classList.add('show');
-            modal.style.display = 'flex';
-        } else {
-            addNotification('Event not found', 'error');
+        if (!response.ok) {
+            throw new Error(`Failed to fetch event: ${response.status}`);
         }
-    }).catch(e => {
+
+        const event = await response.json();
+        console.log('Event data for editing:', event);
+
+        document.getElementById('edit-event-id').value = id;
+        document.getElementById('edit-event-title').value = event.title || '';
+        document.getElementById('edit-event-description').value = event.description || '';
+        document.getElementById('edit-event-category').value = event.category || '';
+        document.getElementById('edit-event-register-url').value = event.registerUrl || '';
+        document.getElementById('edit-event-image').value = event.imageUrl || '';
+
+        // Show image preview if exists, hide if not
+        const preview = document.getElementById('edit-event-image-preview');
+        if (preview) {
+            if (event.imageUrl && event.imageUrl.trim() !== '') {
+                preview.src = event.imageUrl;
+                preview.style.display = 'block';
+            } else {
+                preview.style.display = 'none';
+                preview.src = '';
+            }
+        }
+
+        const modal = document.getElementById('edit-event-modal');
+        modal.classList.add('show');
+        modal.style.display = 'flex';
+        
+    } catch (e) {
         console.error('Error loading event for editing:', e);
         addNotification('Error loading event: ' + e.message, 'error');
-    });
+    }
 }
 
 async function handleAddEvent(form) {
@@ -279,11 +316,24 @@ async function handleAddEvent(form) {
     };
 
     try {
-        console.log('Adding event:', eventData);
-        const eventRef = await db.collection('events').add(eventData);
-        const eventId = eventRef.id;
+        console.log('Adding event to Supabase:', eventData);
+        
+        // Create event in Supabase via backend API
+        const response = await makeAuthenticatedRequest(
+            API_ENDPOINTS.events.create,
+            {
+                method: 'POST',
+                body: JSON.stringify(eventData)
+            }
+        );
 
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `Failed to create event: ${response.status}`);
+        }
 
+        const newEvent = await response.json();
+        const eventId = newEvent.id;
 
         closeModal('add-event-modal');
         form.reset(); // Clear the form
@@ -299,9 +349,9 @@ async function handleAddEvent(form) {
 
         // Show success message with badge info
         if (selectedBadges.length > 0) {
-            addNotification(`Event added successfully with ${selectedBadges.length} badge(s) assigned!`, 'success');
+            addNotification(`Event added successfully to Supabase with ${selectedBadges.length} badge(s) assigned!`, 'success');
         } else {
-            addNotification('Event added successfully', 'success');
+            addNotification('Event added successfully to Supabase', 'success');
         }
     } catch (e) {
         console.error('Error adding event:', e);
@@ -340,11 +390,25 @@ async function handleEditEvent(form) {
     };
 
     try {
-        console.log('Updating event:', eventId, eventData);
-        await db.collection('events').doc(eventId).update(eventData);
+        console.log('Updating event in Supabase:', eventId, eventData);
+        
+        // Update event in Supabase via backend API
+        const response = await makeAuthenticatedRequest(
+            `${API_ENDPOINTS.events.update}/${eventId}`,
+            {
+                method: 'PUT',
+                body: JSON.stringify(eventData)
+            }
+        );
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `Failed to update event: ${response.status}`);
+        }
+
         closeModal('edit-event-modal');
         loadEventsTable();
-        addNotification('Event updated successfully', 'success');
+        addNotification('Event updated successfully in Supabase', 'success');
 
         // Refresh overview stats
         if (typeof window.refreshOverviewStats === 'function') {
@@ -360,9 +424,21 @@ async function deleteEvent(id) {
     if (!confirm('Are you sure you want to delete this event?')) return;
 
     try {
-        await db.collection('events').doc(id).delete();
+        console.log('Deleting event from Supabase:', id);
+        
+        // Delete event from Supabase via backend API
+        const response = await makeAuthenticatedRequest(
+            `${API_ENDPOINTS.events.delete}/${id}`,
+            { method: 'DELETE' }
+        );
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `Failed to delete event: ${response.status}`);
+        }
+
         loadEventsTable();
-        addNotification('Event deleted successfully', 'success');
+        addNotification('Event deleted successfully from Supabase', 'success');
 
         // Refresh overview stats
         if (typeof window.refreshOverviewStats === 'function') {
@@ -437,51 +513,71 @@ function clearBadgeSelections() {
     });
 }
 
-
-
-
-
 // Send notifications to all users about new events
 async function sendNewEventNotifications(eventTitle, eventId) {
     try {
-        console.log('Sending new event notifications...');
+        console.log('Sending new event notifications via Supabase...');
 
-        // Get all users (students and lecturers)
-        const usersSnapshot = await db.collection('users')
-            .where('role', 'in', ['student', 'lecturer'])
-            .get();
+        // Get all users (students and lecturers) from Supabase
+        const usersResponse = await makeAuthenticatedRequest(
+            API_ENDPOINTS.users.list,
+            { method: 'GET' }
+        );
 
-        const batch = db.batch();
+        if (!usersResponse.ok) {
+            console.warn('Failed to fetch users for notifications');
+            return;
+        }
+
+        const usersData = await usersResponse.json();
+        const users = usersData.users || usersData || [];
+        
+        // Filter users by role
+        const eligibleUsers = users.filter(user => 
+            user.role === 'student' || user.role === 'lecturer'
+        );
+
         let notificationCount = 0;
 
-        usersSnapshot.forEach((userDoc) => {
-            const userData = userDoc.data();
-            const notificationRef = db.collection('notifications').doc();
+        // Create notifications in Supabase via backend API
+        for (const user of eligibleUsers) {
+            try {
+                const notificationData = {
+                    userId: user.id,
+                    title: 'New Event Available!',
+                    message: `Check out the new event: ${eventTitle}`,
+                    type: 'event',
+                    isRead: false,
+                    createdAt: new Date().toISOString(),
+                    data: {
+                        eventId: eventId,
+                        eventTitle: eventTitle,
+                    },
+                    actionUrl: `/event/${eventId}`,
+                };
 
-            batch.set(notificationRef, {
-                userId: userData.uid,
-                title: 'New Event Available!',
-                message: `Check out the new event: ${eventTitle}`,
-                type: 'event',
-                isRead: false,
-                createdAt: new Date().toISOString(),
-                data: {
-                    eventId: eventId,
-                    eventTitle: eventTitle,
-                },
-                actionUrl: `/event/${eventId}`,
-            });
+                // Send notification via backend API
+                await makeAuthenticatedRequest(
+                    API_ENDPOINTS.notifications?.create || '/api/notifications',
+                    {
+                        method: 'POST',
+                        body: JSON.stringify(notificationData)
+                    }
+                );
 
-            notificationCount++;
-        });
+                notificationCount++;
+            } catch (error) {
+                console.warn(`Failed to send notification to user ${user.id}:`, error);
+            }
+        }
 
-        await batch.commit();
-        console.log(`Successfully sent ${notificationCount} event notifications`);
+        console.log(`Successfully sent ${notificationCount} event notifications via Supabase`);
 
     } catch (error) {
         console.error('Error sending new event notifications:', error);
     }
 }
+
 export {
     setupEventsSection,
     loadEventsTable,

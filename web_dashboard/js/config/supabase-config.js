@@ -12,12 +12,19 @@ const SUPABASE_CONFIG = {
 // Initialize Supabase client - use global supabase object from CDN
 let supabaseClient;
 
-// Check if supabase is available globally
+// Check if supabase is available globally (v2 API)
 if (typeof window !== 'undefined' && window.supabase) {
-  supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+  try {
+    // For Supabase v2, the createClient is directly on window.supabase
+    supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+    console.log('Supabase client initialized successfully');
+  } catch (error) {
+    console.error('Error initializing Supabase client:', error);
+    supabaseClient = null;
+  }
 } else {
   // Fallback - create a mock client
-  console.warn('Supabase not loaded, using mock client');
+  console.warn('Supabase not loaded or createClient not available, using mock client');
   supabaseClient = {
     auth: {
       signInWithPassword: async () => ({ data: null, error: new Error('Supabase not loaded') }),

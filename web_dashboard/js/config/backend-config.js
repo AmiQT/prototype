@@ -5,13 +5,26 @@
 
 const BACKEND_CONFIG = {
   // Backend API URLs - Use environment variable or fallback
-  baseUrl: (typeof window !== 'undefined' && window.BACKEND_URL) || 'https://prototype-348e.onrender.com',
+  baseUrl: 'https://prototype-348e.onrender.com',
   
   // API Endpoints
   endpoints: {
     auth: '/api/auth',
-    users: '/api/users',
-    events: '/api/events',
+    users: {
+      list: '/api/users',
+      create: '/api/users',
+      get: '/api/users',
+      update: '/api/users',
+      delete: '/api/users',
+      getStats: '/api/users/stats'
+    },
+    events: {
+      list: '/api/events',
+      create: '/api/events',
+      get: '/api/events',
+      update: '/api/events',
+      delete: '/api/events'
+    },
     achievements: '/api/achievements',
     media: '/api/media',
     search: '/api/search',
@@ -20,8 +33,8 @@ const BACKEND_CONFIG = {
     showcase: '/api/showcase',
     sync: '/api/sync',
     system: {
-      status: '/api/system/status',
-      health: '/api/system/health'
+      status: '/health',
+      health: '/health'
     }
   },
   
@@ -68,8 +81,27 @@ function getApiUrl(endpoint) {
 }
 
 // Helper function to get auth headers
-function getAuthHeaders() {
-  const token = localStorage.getItem(BACKEND_CONFIG.auth.tokenKey);
+async function getAuthHeaders() {
+  // Try to get Supabase session token
+  let token = null;
+  
+  try {
+    // Import supabase client
+    const { supabase } = await import('./supabase-config.js');
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (session?.access_token) {
+      token = session.access_token;
+    }
+  } catch (error) {
+    console.warn('Could not get Supabase session:', error);
+  }
+  
+  // Fallback to localStorage token
+  if (!token) {
+    token = localStorage.getItem(BACKEND_CONFIG.auth.tokenKey);
+  }
+  
   return {
     ...BACKEND_CONFIG.cors.headers,
     ...(token && { 'Authorization': `Bearer ${token}` })
@@ -79,14 +111,15 @@ function getAuthHeaders() {
 // Helper function to test backend connection
 async function testBackendConnection() {
   try {
-    const response = await fetch(`${BACKEND_CONFIG.baseUrl}/api/health`, {
+    // Try the correct health endpoint
+    const response = await fetch(`${BACKEND_CONFIG.baseUrl}/health`, {
       method: 'GET',
       headers: BACKEND_CONFIG.cors.headers,
       timeout: BACKEND_CONFIG.timeout
     });
     return response.ok;
   } catch (error) {
-    console.error('Backend connection test failed:', error);
+    console.warn('Backend connection test failed, using fallback:', error.message);
     return false;
   }
 }
@@ -95,7 +128,7 @@ async function testBackendConnection() {
 async function makeAuthenticatedRequest(endpoint, options = {}) {
   try {
     const url = getApiUrl(endpoint);
-    const headers = getAuthHeaders();
+    const headers = await getAuthHeaders(); // Now async
     
     const response = await fetch(url, {
       ...options,

@@ -251,7 +251,7 @@ export async function getCurrentUserInfo() {
         
         if (response) {
             return {
-                firebase: response.firebase_user,
+                supabase: response.supabase_user,
                 database: response.database_user
             };
         }

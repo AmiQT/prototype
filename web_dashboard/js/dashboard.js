@@ -1,10 +1,10 @@
-// Firebase removed - using backend API instead
+// Fallback to working version while fixing OOP imports
 import { initializeComponents } from './core/component-loader.js';
 import { testBackendConnection, makeAuthenticatedRequest, API_ENDPOINTS } from './config/backend-config.js';
 import { initializeSystemMonitoring, checkSystemStatus, createTestData, testBackendConnectivity } from './features/system-monitoring.js';
 import { setupNavigation, updateActiveNav, setupUserModals, setupDarkModeToggle, closeModal, closeAndCleanupModal, logout, removeNotification, changeTheme, toggleReducedMotion, toggleHighContrast, saveSettings, resetSettings, changePassword } from './ui/notifications.js';
-import { setupUserFilters, loadUsersTable, showAddUserModal, toggleDepartmentField, toggleEditDepartmentField, showEditUserModal, handleAddUser, handleEditUser, deleteUser, unsubscribeUsers } from './features/users/users.js';
-import { setupEventsSection, loadEventsTable, showAddEventModal, showEditEventModal, handleAddEvent, handleEditEvent, deleteEvent } from './features/events/events.js';
+import { setupUserFilters, loadUsersTable, showAddUserModal, toggleDepartmentField, toggleEditDepartmentField, showEditUserModal, handleAddUser, handleEditUser, deleteUser, cleanup as cleanupUsers } from './features/users/users.js';
+import { setupEventsSection, loadEventsTable, showAddEventModal, showEditEventModal, handleAddEvent, handleEditEvent, deleteEvent, cleanup as cleanupEvents } from './features/events/events.js';
 import { loadOverviewStats, refreshOverviewStats, setupAnalytics, generateReport, generateCustomChart, exportToCSV, refreshChart, cleanupAnalytics } from './features/analytics.js';
 
 // Import test functions in development
@@ -26,7 +26,7 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
 
     // Sample data generator disabled for cleaner console
     // import('./utils/sample-data-generator.js').then(module => {
-    //     window.addSampleData = () => module.SampleDataGenerator.addSampleDataToFirebase();
+    //     window.addSampleData = () => module.SampleDataGenerator.addSampleDataToBackend();
     //     window.getSampleData = () => module.SampleDataGenerator.getSampleDataSet();
     // }).catch(() => {
     //     // Fallback sample data functions
@@ -88,7 +88,7 @@ async function initializeApp() {
         await initializeSystemMonitoring();
         // Backend integration initialized
     } catch (error) {
-        // Backend integration failed, using Firebase fallback
+        // Backend integration failed, using fallback
     }
 
     // Initial section load
@@ -298,4 +298,135 @@ function testQRCodeLibrary() {
 }
 
 // Close the development imports if block
+}
+
+// Initialize dashboard when DOM is loaded
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('🚀 Initializing UTHM Talent Profiling Dashboard...');
+    
+    // Check authentication first
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    if (!isLoggedIn || isLoggedIn !== 'true') {
+        console.log('🔒 User not authenticated, redirecting to login...');
+        window.location.href = 'login.html';
+        return;
+    }
+    
+    try {
+        // Initialize components first
+        await initializeComponents();
+        
+        // Setup navigation and UI
+        setupNavigation(navigateToSection);
+        setupDarkModeToggle();
+        
+        // Setup user management
+        setupUserFilters();
+        
+        // Setup events section
+        setupEventsSection();
+        
+        // Setup analytics
+        setupAnalytics();
+        
+        // Initialize system monitoring
+        await initializeSystemMonitoring();
+        console.log('✅ Backend integration initialized');
+    } catch (error) {
+        console.warn('⚠️ Backend integration failed, using fallback:', error);
+    }
+
+    // Initial section load
+    navigateToSection('overview');
+    
+    // Make functions globally available for HTML onclick handlers
+    window.navigateToSection = navigateToSection;
+    window.showAddUserModal = showAddUserModal;
+    window.showEditUserModal = showEditUserModal;
+    window.handleAddUser = handleAddUser;
+    window.handleEditUser = handleEditUser;
+    window.deleteUser = deleteUser;
+    window.toggleDepartmentField = toggleDepartmentField;
+    window.toggleEditDepartmentField = toggleEditDepartmentField;
+    
+    window.showAddEventModal = showAddEventModal;
+    window.showEditEventModal = showEditEventModal;
+    window.handleAddEvent = handleAddEvent;
+    window.handleEditEvent = handleEditEvent;
+    window.deleteEvent = deleteEvent;
+    
+    window.closeModal = closeModal;
+    window.closeAndCleanupModal = closeAndCleanupModal;
+    window.logout = logout;
+    window.removeNotification = removeNotification;
+    window.changeTheme = changeTheme;
+    window.toggleReducedMotion = toggleReducedMotion;
+    window.toggleHighContrast = toggleHighContrast;
+    window.saveSettings = saveSettings;
+    window.resetSettings = resetSettings;
+    window.changePassword = changePassword;
+    
+    window.checkSystemStatus = checkSystemStatus;
+    window.createTestData = createTestData;
+    window.testBackendConnectivity = testBackendConnectivity;
+    window.generateReport = generateReport;
+    window.generateCustomChart = generateCustomChart;
+    window.exportToCSV = exportToCSV;
+    window.refreshChart = refreshChart;
+    
+    console.log('✅ Dashboard initialization completed');
+});
+
+// Navigation function that was missing
+function navigateToSection(sectionName) {
+    console.log(`Navigating to section: ${sectionName}`);
+    
+    // Hide all sections
+    const sections = document.querySelectorAll('.content-section');
+    sections.forEach(section => section.classList.remove('active'));
+    
+    // Show target section
+    const targetSection = document.getElementById(sectionName);
+    if (targetSection) {
+        targetSection.classList.add('active');
+    }
+    
+    // Update navigation
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => item.classList.remove('active'));
+    
+    const activeNavItem = document.querySelector(`[data-section="${sectionName}"]`);
+    if (activeNavItem) {
+        activeNavItem.classList.add('active');
+    }
+    
+    // Update page title
+    const titles = {
+        overview: 'Dashboard Overview',
+        users: 'User Management', 
+        events: 'Event Management',
+        analytics: 'Analytics & Reports',
+        settings: 'Settings'
+    };
+    
+    const pageTitle = document.getElementById('page-title');
+    if (pageTitle && titles[sectionName]) {
+        pageTitle.textContent = titles[sectionName];
+    }
+    
+    // Load section-specific data
+    switch (sectionName) {
+        case 'overview':
+            loadOverviewStats();
+            break;
+        case 'users':
+            loadUsersTable();
+            break;
+        case 'events':
+            loadEventsTable();
+            break;
+        case 'analytics':
+            // Analytics already setup
+            break;
+    }
 }

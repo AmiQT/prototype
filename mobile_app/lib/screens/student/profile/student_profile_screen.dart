@@ -262,102 +262,48 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         elevation: 0.5,
         foregroundColor: Colors.black,
         actions: [
-          Tooltip(
-            message: 'Debug Tools',
-            child: PopupMenuButton<String>(
-              icon: const Icon(Icons.bug_report),
-              onSelected: (value) {
-                switch (value) {
-                  case 'sample_data':
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const Scaffold(
-                            body: Center(child: Text('Debug screen removed'))),
-                      ),
-                    );
-                    break;
-                  case 'migrate_profile':
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const Scaffold(
-                            body: Center(child: Text('Debug screen removed'))),
-                      ),
-                    );
-                    break;
-                }
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'migrate_profile',
-                  child: ListTile(
-                    leading: Icon(Icons.sync),
-                    title: Text('Migrate Profile'),
-                    subtitle: Text('Fix profile document structure'),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              );
+            },
+            tooltip: 'Settings',
+          ),
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () async {
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ComprehensiveEditProfileScreen(
+                    profile: profile,
                   ),
                 ),
-                const PopupMenuItem(
-                  value: 'sample_data',
-                  child: ListTile(
-                    leading: Icon(Icons.data_object),
-                    title: Text('Sample Data Manager'),
-                    subtitle: Text('Create/manage sample data'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Tooltip(
-            message: 'Settings',
-            child: IconButton(
-              icon: const Icon(Icons.settings),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SettingsScreen(),
-                  ),
-                );
-              },
-            ),
-          ),
-          Tooltip(
-            message: 'Edit profile',
-            child: IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () async {
-                final scaffoldMessenger = ScaffoldMessenger.of(context);
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ComprehensiveEditProfileScreen(
-                      profile: profile,
-                    ),
-                  ),
-                );
-                if (result != null && result is ProfileModel) {
-                  setState(() {
-                    _profile = result;
-                  });
-                  if (mounted) {
-                    scaffoldMessenger.showSnackBar(
-                      const SnackBar(
-                          content: Text('Profile updated successfully!')),
-                    );
-                  }
+              );
+              if (result != null && result is ProfileModel) {
+                setState(() {
+                  _profile = result;
+                });
+                if (mounted) {
+                  scaffoldMessenger.showSnackBar(
+                    const SnackBar(
+                        content: Text('Profile updated successfully!')),
+                  );
                 }
-              },
-            ),
+              }
+            },
+            tooltip: 'Edit Profile',
           ),
-          Tooltip(
-            message: 'Share profile',
-            child: IconButton(
-              icon: const Icon(Icons.share),
-              onPressed: () {
-                _shareProfile(context);
-              },
-            ),
+          IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: () {
+              _shareProfile(context);
+            },
+            tooltip: 'Share Profile',
           ),
         ],
       ),

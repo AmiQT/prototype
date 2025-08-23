@@ -31,7 +31,7 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
 
     // Sample data generator disabled for cleaner console
     // import('./utils/sample-data-generator.js').then(module => {
-    //     window.addSampleData = () => module.SampleDataGenerator.addSampleDataToFirebase();
+    //     window.addSampleData = () => module.SampleDataGenerator.addSampleDataToSupabase();
     //     window.getSampleData = () => module.SampleDataGenerator.getSampleDataSet();
     // }).catch(() => {
     //     // Fallback sample data functions
@@ -94,7 +94,7 @@ async function initializeApp() {
         await initializeSystemMonitoring();
         // Backend integration initialized
     } catch (error) {
-        // Backend integration failed, using Firebase fallback
+        // Backend integration failed, using Supabase fallback
     }
 
     // Initial section load

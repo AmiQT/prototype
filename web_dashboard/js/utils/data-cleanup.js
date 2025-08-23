@@ -3,16 +3,16 @@
  * Simple functions to clean up sample/test data
  */
 
-// Firebase removed - using backend API instead
+// Supabase integration - using backend API instead
 
 export class DataCleanup {
     
     /**
-     * Clear sample data from Firebase
+     * Clear sample data from Supabase
      */
     static async clearSampleData() {
         try {
-            console.log('🧹 Clearing sample data from Firebase...');
+            console.log('🧹 Clearing sample data from Supabase...');
             
             const collections = ['users', 'achievements', 'events', 'badgeClaims', 'profiles'];
             let totalDeleted = 0;

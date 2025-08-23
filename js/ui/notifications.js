@@ -1,4 +1,4 @@
-// Firebase removed - using backend API instead
+// Supabase integration - using backend API instead
 
 let notifications = [];
 

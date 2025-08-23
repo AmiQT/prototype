@@ -9,7 +9,7 @@ function testAuthenticationTiming() {
     let authStateChanges = 0;
     let lastAuthState = null;
     
-    // Firebase auth removed - this test is deprecated
+    // Supabase auth integration - this test is deprecated
     // const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
         authStateChanges++;
         lastAuthState = user ? 'authenticated' : 'unauthenticated';

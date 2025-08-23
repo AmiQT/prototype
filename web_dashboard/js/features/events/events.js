@@ -1,16 +1,12 @@
-// Firebase removed - using backend API instead
+// Clean Supabase/FastAPI integration - Firebase completely removed
+import { API_ENDPOINTS, makeAuthenticatedRequest, testBackendConnection } from '../../config/backend-config.js';
 import { addNotification, closeModal } from '../../ui/notifications.js';
-// Achievement imports removed - not needed for talent profiling system
+
+let allEventsCache = [];
+let refreshInterval = null;
 
 function setupEventsSection() {
-    // Setting up events section
-
-    // Test Firebase connection
-    if (!db) {
-        console.error('Firebase database not initialized');
-        return;
-    }
-
+    // Setup form submission handlers
     const addEventForm = document.getElementById('add-event-form');
     if (addEventForm) {
         addEventForm.addEventListener('submit', (event) => {
@@ -53,435 +49,263 @@ function debounce(func, wait) {
     };
 }
 
-let allEventsCache = [];
-
-function filterEvents() {
-    const searchTerm = document.getElementById('event-search')?.value.toLowerCase() || '';
-    const categoryFilter = document.getElementById('event-category-filter')?.value || '';
-
-    let filteredEvents = allEventsCache;
-
-    if (searchTerm) {
-        filteredEvents = filteredEvents.filter(event =>
-            (event.title || '').toLowerCase().includes(searchTerm) ||
-            (event.description || '').toLowerCase().includes(searchTerm)
-        );
-    }
-
-    if (categoryFilter) {
-        filteredEvents = filteredEvents.filter(event =>
-            event.category === categoryFilter
-        );
-    }
-
-    renderEventsTable(filteredEvents);
-}
-
 async function loadEventsTable() {
     const tableBody = document.querySelector('#events-table-body');
     if (!tableBody) {
-        console.error('Events table body not found in DOM');
+        console.error('Events table body not found');
         return;
     }
 
-    // Show loading state
-    tableBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">Loading events...</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="7">Loading events from backend...</td></tr>';
 
     try {
-        console.log('Loading events from Firebase...');
-        const querySnapshot = await db.collection('events').get();
-        const events = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
-
-        console.log('Events loaded:', events.length);
-        allEventsCache = events; // Cache events for filtering
-        renderEventsTable(events);
-        populateEventCategoryFilter();
-    } catch (e) {
-        console.error('Error loading events:', e);
-        tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2rem; color: #dc2626;">
-            <i class="fas fa-exclamation-triangle"></i> Error loading events: ${e.message}
-        </td></tr>`;
+        // Load real events from backend
+        console.log('📊 Loading events from backend API...');
+        
+        const response = await makeAuthenticatedRequest(API_ENDPOINTS.events.list);
+        
+        if (response && Array.isArray(response)) {
+            allEventsCache = response;
+            console.log(`Loaded ${allEventsCache.length} events from backend`);
+        } else if (response && response.events && Array.isArray(response.events)) {
+            allEventsCache = response.events;
+            console.log(`Loaded ${allEventsCache.length} events from backend`);
+        } else {
+            console.warn('No events data received from backend');
+            allEventsCache = [];
+        }
+            
+        renderEventsTable(allEventsCache);
+        
+        // Setup auto-refresh every 30 seconds
+        if (refreshInterval) clearInterval(refreshInterval);
+        refreshInterval = setInterval(() => {
+            loadEventsTable();
+        }, 30000);
+    } catch (error) {
+        console.error('Error loading events from backend:', error);
+        tableBody.innerHTML = '<tr><td colspan="7">Error loading events. Please check your connection.</td></tr>';
     }
 }
 
 function renderEventsTable(events) {
     const tableBody = document.querySelector('#events-table-body');
-    if (!tableBody) {
-        console.error('Events table body not found in renderEventsTable');
-        return;
-    }
-
+    if (!tableBody) return;
+    
     if (events.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 2rem; color: #6b7280;">No events found</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="7">No events found</td></tr>';
         return;
     }
-
-    tableBody.innerHTML = events.map(event => {
-        // Format image display
-        const imageDisplay = event.imageUrl ?
-            `<img src="${event.imageUrl}" alt="Event image" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">` :
-            '<span style="color: #6b7280;">No image</span>';
-
-        // Format register URL
-        const registerUrlDisplay = event.registerUrl ?
-            `<a href="${event.registerUrl}" target="_blank" style="color: #2563eb; text-decoration: none;">
-                <i class="fas fa-external-link-alt"></i> Register
-            </a>` :
-            '<span style="color: #6b7280;">No URL</span>';
-
-        // Truncate description if too long
-        const description = event.description ?
-            (event.description.length > 50 ? event.description.substring(0, 50) + '...' : event.description) :
-            '<span style="color: #6b7280;">No description</span>';
-
-        // Format assigned badges display
-        const badgesDisplay = event.assignedBadges && event.assignedBadges.length > 0 ?
-            event.assignedBadges.map(badge =>
-                `<span class="badge-mini" style="display: inline-block; margin: 0.1rem; padding: 0.2rem 0.4rem; background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; border-radius: 12px; font-size: 0.7rem; font-weight: 500;">
-                    ${badge.icon} ${badge.name}
-                </span>`
-            ).join('') :
-            '<span style="color: #6b7280; font-size: 0.8rem;">No badges</span>';
-
-        return `
-            <tr>
-                <td style="font-weight: 500;">${event.title || 'Untitled'}</td>
-                <td style="max-width: 200px;">${description}</td>
-                <td>
-                    <span class="status-badge" style="background-color: #dbeafe; color: #1e40af; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">
-                        ${event.category || 'Uncategorized'}
-                    </span>
-                </td>
-                <td>${imageDisplay}</td>
-                <td>${registerUrlDisplay}</td>
-                <td style="max-width: 150px;">${badgesDisplay}</td>
-                <td>
-                                    <div class="action-buttons">
-                    <button class="btn btn-sm btn-primary" onclick="window.showEditEventModal('${event.id}')" title="Edit event">
-                        <i class="fas fa-edit"></i>
-                    </button>
-
-                    <button class="btn btn-sm btn-danger" onclick="window.deleteEvent('${event.id}')" title="Delete event">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-                </td>
-            </tr>
-        `;
-    }).join('');
+    
+    tableBody.innerHTML = events.map(event => `
+        <tr>
+            <td>${event.title || 'N/A'}</td>
+            <td>${truncateText(event.description || 'N/A', 50)}</td>
+            <td><span class="badge badge-primary">${event.category || 'General'}</span></td>
+            <td>
+                ${event.image_url ? 
+                    `<img src="${event.image_url}" alt="Event" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">` : 
+                    '<span class="text-muted">No image</span>'
+                }
+            </td>
+            <td>
+                ${event.registration_url ? 
+                    `<a href="${event.registration_url}" target="_blank" class="btn btn-sm btn-primary">Register</a>` : 
+                    '<span class="text-muted">No registration</span>'
+                }
+            </td>
+            <td>
+                ${event.badges && event.badges.length > 0 ? 
+                    event.badges.map(badge => `<span class="badge badge-success">${badge}</span>`).join(' ') : 
+                    '<span class="text-muted">No badges</span>'
+                }
+            </td>
+            <td>
+                <button class="btn btn-sm btn-secondary" onclick="showEditEventModal('${event.id}')">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteEvent('${event.id}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
 }
 
-function populateEventCategoryFilter() {
-    const categories = ['Academic', 'Competition', 'Workshop', 'Seminar', 'Conference', 'Training', 'Other'];
-    const filter = document.getElementById('event-category-filter');
-    if (filter) {
-        filter.innerHTML = '<option value="">All Categories</option>' +
-            categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+function truncateText(text, maxLength) {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+}
+
+function filterEvents() {
+    const searchInput = document.getElementById('event-search');
+    const categoryFilter = document.getElementById('event-category-filter');
+    
+    let filteredEvents = [...allEventsCache];
+    
+    // Apply search filter
+    if (searchInput && searchInput.value.trim()) {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        filteredEvents = filteredEvents.filter(event => 
+            event.title?.toLowerCase().includes(searchTerm) ||
+            event.description?.toLowerCase().includes(searchTerm) ||
+            event.category?.toLowerCase().includes(searchTerm)
+        );
     }
+    
+    // Apply category filter
+    if (categoryFilter && categoryFilter.value) {
+        filteredEvents = filteredEvents.filter(event => event.category === categoryFilter.value);
+    }
+    
+    renderEventsTable(filteredEvents);
 }
 
-async function showAddEventModal() {
+function showAddEventModal() {
     const modal = document.getElementById('add-event-modal');
     if (modal) {
-        modal.classList.add('show');
-        modal.style.display = 'flex';
-
-        // Clear form
+        modal.style.display = 'block';
+        
+        // Reset form
         const form = document.getElementById('add-event-form');
         if (form) form.reset();
-
-        // Hide image preview
-        const preview = document.getElementById('add-event-image-preview');
-        if (preview) preview.style.display = 'none';
-
-        // Load available badges for assignment
-        await loadAvailableBadges();
-
-        // Clear any previous badge selections
-        clearBadgeSelections();
     }
 }
 
-function showEditEventModal(id) {
-    console.log('Opening edit modal for event:', id);
-    db.collection('events').doc(id).get().then(doc => {
-        if (doc.exists) {
-            const event = doc.data();
-            console.log('Event data for editing:', event);
-
-            document.getElementById('edit-event-id').value = id;
-            document.getElementById('edit-event-title').value = event.title || '';
-            document.getElementById('edit-event-description').value = event.description || '';
-            document.getElementById('edit-event-category').value = event.category || '';
-            document.getElementById('edit-event-register-url').value = event.registerUrl || '';
-            document.getElementById('edit-event-image').value = event.imageUrl || '';
-
-            // Show image preview if exists, hide if not
-            const preview = document.getElementById('edit-event-image-preview');
-            if (preview) {
-                if (event.imageUrl && event.imageUrl.trim() !== '') {
-                    preview.src = event.imageUrl;
-                    preview.style.display = 'block';
-                } else {
-                    preview.style.display = 'none';
-                    preview.src = '';
-                }
-            }
-
-            const modal = document.getElementById('edit-event-modal');
-            modal.classList.add('show');
-            modal.style.display = 'flex';
-        } else {
-            addNotification('Event not found', 'error');
+async function showEditEventModal(eventId) {
+    const modal = document.getElementById('edit-event-modal');
+    if (!modal) return;
+    
+    try {
+        // Get event data from cache first
+        const event = allEventsCache.find(e => e.id === eventId);
+        if (!event) {
+            throw new Error('Event not found');
         }
-    }).catch(e => {
-        console.error('Error loading event for editing:', e);
-        addNotification('Error loading event: ' + e.message, 'error');
-    });
+        
+        // Populate form fields
+        document.getElementById('edit-event-id').value = event.id;
+        document.getElementById('edit-event-title').value = event.title || '';
+        document.getElementById('edit-event-description').value = event.description || '';
+        document.getElementById('edit-event-category').value = event.category || '';
+        document.getElementById('edit-event-image').value = event.image_url || '';
+        document.getElementById('edit-event-register-url').value = event.registration_url || '';
+        
+        // Handle badges if they exist
+        if (event.badges && Array.isArray(event.badges)) {
+            const badgesContainer = document.getElementById('edit-event-badges');
+            if (badgesContainer) {
+                badgesContainer.value = event.badges.join(', ');
+            }
+        }
+        
+        modal.style.display = 'block';
+    } catch (error) {
+        console.error('Error loading event for edit:', error);
+        addNotification('Error loading event data', 'error');
+    }
 }
 
 async function handleAddEvent(form) {
-    if (!form || form.tagName !== 'FORM') {
-        console.error('Invalid form element passed to handleAddEvent');
-        addNotification('Form error: Invalid form element', 'error');
-        return;
-    }
-
-    // Get form values directly from form elements
-    const title = document.getElementById('add-event-title')?.value;
-    const description = document.getElementById('add-event-description')?.value;
-    const category = document.getElementById('add-event-category')?.value;
-    const registerUrl = document.getElementById('add-event-register-url')?.value;
-    const imageUrl = document.getElementById('add-event-image')?.value;
-
-    // Validate required fields
-    if (!title || !description || !category || !registerUrl) {
-        addNotification('Please fill in all required fields', 'error');
-        return;
-    }
-
-    // Get selected badges for this event
-    const selectedBadges = getSelectedBadges();
-
-    const eventData = {
-        title: title.trim(),
-        description: description.trim(),
-        category: category.trim(),
-        registerUrl: registerUrl.trim(),
-        imageUrl: imageUrl ? imageUrl.trim() : '',
-        assignedBadges: selectedBadges, // Add assigned badges
-        favoriteUserIds: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-    };
-
     try {
-        console.log('Adding event:', eventData);
-        const eventRef = await db.collection('events').add(eventData);
-        const eventId = eventRef.id;
-
-
-
-        closeModal('add-event-modal');
-        form.reset(); // Clear the form
-        loadEventsTable();
-
-        // Refresh overview stats
-        if (typeof window.refreshOverviewStats === 'function') {
-            await window.refreshOverviewStats();
+        const formData = new FormData(form);
+        const eventData = {
+            title: formData.get('title'),
+            description: formData.get('description'),
+            category: formData.get('category'),
+            image_url: formData.get('image_url'),
+            registration_url: formData.get('registration_url'),
+            badges: formData.get('badges') ? formData.get('badges').split(',').map(b => b.trim()).filter(b => b) : []
+        };
+        
+        // Validate required fields
+        if (!eventData.title || !eventData.description || !eventData.category) {
+            throw new Error('Please fill in all required fields');
         }
-
-        // Send notifications to all users about the new event
-        await sendNewEventNotifications(eventData.title, eventId);
-
-        // Show success message with badge info
-        if (selectedBadges.length > 0) {
-            addNotification(`Event added successfully with ${selectedBadges.length} badge(s) assigned!`, 'success');
-        } else {
-            addNotification('Event added successfully', 'success');
+        
+        // Create event via backend API
+        const response = await makeAuthenticatedRequest(API_ENDPOINTS.events, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(eventData)
+        });
+        
+        if (response) {
+            addNotification('Event created successfully', 'success');
+            closeModal('add-event-modal');
+            form.reset();
+            await loadEventsTable(); // Refresh the table
         }
-    } catch (e) {
-        console.error('Error adding event:', e);
-        addNotification('Error adding event: ' + e.message, 'error');
+    } catch (error) {
+        console.error('Error creating event:', error);
+        addNotification(error.message || 'Error creating event', 'error');
     }
 }
 
 async function handleEditEvent(form) {
-    if (!form || form.tagName !== 'FORM') {
-        console.error('Invalid form element passed to handleEditEvent');
-        addNotification('Form error: Invalid form element', 'error');
-        return;
-    }
-
-    // Get form values directly from form elements
-    const eventId = document.getElementById('edit-event-id')?.value;
-    const title = document.getElementById('edit-event-title')?.value;
-    const description = document.getElementById('edit-event-description')?.value;
-    const category = document.getElementById('edit-event-category')?.value;
-    const registerUrl = document.getElementById('edit-event-register-url')?.value;
-    const imageUrl = document.getElementById('edit-event-image')?.value;
-
-    // Validate required fields
-    if (!eventId || !title || !description || !category || !registerUrl) {
-        addNotification('Please fill in all required fields', 'error');
-        return;
-    }
-
-    const eventData = {
-        title: title.trim(),
-        description: description.trim(),
-        category: category.trim(),
-        registerUrl: registerUrl.trim(),
-        imageUrl: imageUrl ? imageUrl.trim() : '',
-        updatedAt: new Date().toISOString()
-    };
-
     try {
-        console.log('Updating event:', eventId, eventData);
-        await db.collection('events').doc(eventId).update(eventData);
-        closeModal('edit-event-modal');
-        loadEventsTable();
-        addNotification('Event updated successfully', 'success');
-
-        // Refresh overview stats
-        if (typeof window.refreshOverviewStats === 'function') {
-            await window.refreshOverviewStats();
-        }
-    } catch (e) {
-        console.error('Error updating event:', e);
-        addNotification('Error updating event: ' + e.message, 'error');
-    }
-}
-
-async function deleteEvent(id) {
-    if (!confirm('Are you sure you want to delete this event?')) return;
-
-    try {
-        await db.collection('events').doc(id).delete();
-        loadEventsTable();
-        addNotification('Event deleted successfully', 'success');
-
-        // Refresh overview stats
-        if (typeof window.refreshOverviewStats === 'function') {
-            await window.refreshOverviewStats();
-        }
-    } catch (e) {
-        console.error('Error deleting event:', e);
-        addNotification('Error deleting event: ' + e.message, 'error');
-    }
-}
-
-// ===== BADGE ASSIGNMENT FUNCTIONS =====
-
-async function loadAvailableBadges() {
-    try {
-        console.log('Achievement system removed - no badges to load');
+        const formData = new FormData(form);
+        const eventId = formData.get('id');
+        const eventData = {
+            title: formData.get('title'),
+            description: formData.get('description'),
+            category: formData.get('category'),
+            image_url: formData.get('image_url'),
+            registration_url: formData.get('registration_url'),
+            badges: formData.get('badges') ? formData.get('badges').split(',').map(b => b.trim()).filter(b => b) : []
+        };
         
-        const badgeSelectionGrid = document.getElementById('add-event-badge-selection');
-        if (!badgeSelectionGrid) {
-            console.warn('Badge selection grid not found');
-            return;
-        }
-
-        // Show removal message
-        badgeSelectionGrid.innerHTML = `
-            <div class="no-badges-message">
-                <i class="fas fa-info-circle"></i>
-                <p>Achievement system has been removed</p>
-                <small>This feature is no longer available for talent profiling</small>
-            </div>
-        `;
-
-    } catch (error) {
-        console.error('Error in loadAvailableBadges:', error);
-        addNotification('Achievement system removed', 'info');
-    }
-}
-
-function toggleBadgeSelection(badgeId, badgeElement) {
-    badgeElement.classList.toggle('selected');
-
-    // Update the selection indicator
-    const indicator = badgeElement.querySelector('.selection-indicator');
-    if (badgeElement.classList.contains('selected')) {
-        indicator.innerHTML = '<i class="fas fa-check"></i>';
-    } else {
-        indicator.innerHTML = '';
-    }
-}
-
-function getSelectedBadges() {
-    const selectedBadges = [];
-    const selectedElements = document.querySelectorAll('#add-event-badge-selection .badge-option.selected');
-
-    selectedElements.forEach(element => {
-        const badgeId = element.dataset.badgeId;
-        // Achievement system removed - no badges available
-        console.log('Badge selection not available - achievement system removed');
-    });
-
-    return selectedBadges;
-}
-
-function clearBadgeSelections() {
-    const selectedElements = document.querySelectorAll('#add-event-badge-selection .badge-option.selected');
-    selectedElements.forEach(element => {
-        element.classList.remove('selected');
-        const indicator = element.querySelector('.selection-indicator');
-        if (indicator) {
-            indicator.innerHTML = '';
-        }
-    });
-}
-
-
-
-
-
-// Send notifications to all users about new events
-async function sendNewEventNotifications(eventTitle, eventId) {
-    try {
-        console.log('Sending new event notifications...');
-
-        // Get all users (students and lecturers)
-        const usersSnapshot = await db.collection('users')
-            .where('role', 'in', ['student', 'lecturer'])
-            .get();
-
-        const batch = db.batch();
-        let notificationCount = 0;
-
-        usersSnapshot.forEach((userDoc) => {
-            const userData = userDoc.data();
-            const notificationRef = db.collection('notifications').doc();
-
-            batch.set(notificationRef, {
-                userId: userData.uid,
-                title: 'New Event Available!',
-                message: `Check out the new event: ${eventTitle}`,
-                type: 'event',
-                isRead: false,
-                createdAt: new Date().toISOString(),
-                data: {
-                    eventId: eventId,
-                    eventTitle: eventTitle,
-                },
-                actionUrl: `/event/${eventId}`,
-            });
-
-            notificationCount++;
+        // Update event via backend API
+        const response = await makeAuthenticatedRequest(`${API_ENDPOINTS.events}/${eventId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(eventData)
         });
-
-        await batch.commit();
-        console.log(`Successfully sent ${notificationCount} event notifications`);
-
+        
+        if (response) {
+            addNotification('Event updated successfully', 'success');
+            closeModal('edit-event-modal');
+            await loadEventsTable(); // Refresh the table
+        }
     } catch (error) {
-        console.error('Error sending new event notifications:', error);
+        console.error('Error updating event:', error);
+        addNotification(error.message || 'Error updating event', 'error');
     }
 }
+
+async function deleteEvent(eventId) {
+    if (!confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await makeAuthenticatedRequest(`${API_ENDPOINTS.events}/${eventId}`, {
+            method: 'DELETE'
+        });
+        
+        if (response) {
+            addNotification('Event deleted successfully', 'success');
+            await loadEventsTable(); // Refresh the table
+        }
+    } catch (error) {
+        console.error('Error deleting event:', error);
+        addNotification(error.message || 'Error deleting event', 'error');
+    }
+}
+
+function cleanup() {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+    }
+    allEventsCache = [];
+}
+
+// Export functions
 export {
     setupEventsSection,
     loadEventsTable,
@@ -490,5 +314,5 @@ export {
     handleAddEvent,
     handleEditEvent,
     deleteEvent,
-    sendNewEventNotifications
+    cleanup
 };

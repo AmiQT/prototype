@@ -1,4 +1,4 @@
-// Firebase removed - using backend API instead
+// Supabase integration - using backend API instead
 import { API_ENDPOINTS, makeAuthenticatedRequest, testBackendConnection } from '../config/backend-config.js';
 import { addNotification } from '../ui/notifications.js';
 
@@ -218,8 +218,8 @@ async function loadOverviewStats() {
         if (isBackendConnected) {
             await loadOverviewStatsFromBackend();
         } else {
-            // Only use Firebase as fallback
-            await loadOverviewStatsFromFirebase();
+            // Only use Supabase as fallback
+            await loadOverviewStatsFromSupabase();
         }
 
         const totalTime = performance.now() - startTime;
@@ -251,12 +251,12 @@ async function loadOverviewStatsFromBackend() {
         }
     } catch (error) {
         console.error('Backend analytics failed:', error);
-        throw error; // Fall back to Firebase
+        throw error; // Fall back to Supabase
     }
 }
 
-// Fallback function for Firebase-based stats loading
-async function loadOverviewStatsFromFirebase() {
+// Fallback function for Supabase-based stats loading
+async function loadOverviewStatsFromSupabase() {
     try {
         // Initialize enhanced modules if not already done
         if (!dataFetcher) {
@@ -266,7 +266,7 @@ async function loadOverviewStatsFromFirebase() {
         // Wait for authentication to complete
         await waitForAuth();
 
-        AnalyticsLogger.info('Loading overview stats from Firebase...');
+        AnalyticsLogger.info('Loading overview stats from Supabase...');
         const startTime = performance.now();
 
         // Use fallback if enhanced modules not available
@@ -294,7 +294,7 @@ async function loadOverviewStatsFromFirebase() {
         if (usersResult.fromCache) performanceMetrics.cacheHits++;
         if (eventsResult.fromCache) performanceMetrics.cacheHits++;
 
-        // Calculate real statistics from Firebase data
+        // Calculate real statistics from Supabase data
         const totalUsers = users.length;
         const totalEvents = events.length;
         const completedProfiles = users.filter(u => u.profileCompleted === true).length;
@@ -318,7 +318,7 @@ async function loadOverviewStatsFromFirebase() {
         });
 
         const totalTime = performance.now() - startTime;
-        AnalyticsLogger.info('Overview stats updated from Firebase', {
+        AnalyticsLogger.info('Overview stats updated from Supabase', {
             users: users.length,
             events: events.length,
             loadTime: `${totalTime.toFixed(2)}ms`
@@ -338,7 +338,7 @@ async function loadOverviewStatsFromFirebase() {
         }
 
     } catch (e) {
-        AnalyticsLogger.error('Error loading overview stats from Firebase', e);
+        AnalyticsLogger.error('Error loading overview stats from Supabase', e);
         addNotification('Error loading overview stats', 'error');
     }
 }

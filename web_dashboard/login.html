@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>UTHM Talent Profiling - Admin Login</title>
     <link rel="stylesheet" href="/css/login.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -144,13 +147,24 @@
     </div>
 
     <!-- Supabase SDK temporarily disabled -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> -->
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+
 
     <script>
-        // Supabase configuration temporarily disabled
-        // const supabaseUrl = 'https://your-project.supabase.co';
-        // const supabaseKey = 'your-anon-key';
-        // const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        // Supabase configuration
+        const supabaseUrl = 'https://xibffemtpboiecpeynon.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpYmZmZW10cGJvaWVjcGV5bm9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1ODkzOTYsImV4cCI6MjA3MTE2NTM5Nn0.mwQndhu5_uX26T-qTEOCiLya74DUD6Iw8vV3ffuA5mM';
+        
+        // Initialize Supabase client
+        let supabaseClient;
+        if (window.supabase && window.supabase.createClient) {
+            supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+            console.log('Supabase client initialized for login');
+        } else {
+            console.error('Supabase not available');
+        }
 
         // Enhanced UI interactions
         document.addEventListener('DOMContentLoaded', function() {
@@ -352,25 +366,62 @@
             //     showMessage('error', errorText);
             // });
 
-            // Placeholder for static login logic
-            if (email === 'admin@uthm.edu.my' && password === 'admin123') {
-                localStorage.setItem('isLoggedIn', 'true');
-                loginBtn.classList.remove('loading');
-                loginBtn.classList.add('success');
-                loading.style.display = 'none';
-                btnContent.style.opacity = '1';
-                document.getElementById('login-btn-text').textContent = 'Success!';
-                showMessage('success', 'Login successful! Redirecting to dashboard...');
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1500);
+            // Supabase authentication
+            if (supabaseClient) {
+                supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                }).then(({ data, error }) => {
+                    if (error) {
+                        throw error;
+                    }
+                    
+                    // Success
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('userEmail', email);
+                    loginBtn.classList.remove('loading');
+                    loginBtn.classList.add('success');
+                    loading.style.display = 'none';
+                    btnContent.style.opacity = '1';
+                    document.getElementById('login-btn-text').textContent = 'Success!';
+                    showMessage('success', 'Login successful! Redirecting to dashboard...');
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                }).catch((error) => {
+                    console.error('Login error:', error);
+                    
+                    let errorText = 'Login failed. Please try again.';
+                    if (error.message.includes('Invalid login credentials')) {
+                        errorText = 'Invalid email or password. Please check your credentials.';
+                    } else if (error.message.includes('Email not confirmed')) {
+                        errorText = 'Please verify your email address before logging in.';
+                    } else if (error.message.includes('Too many requests')) {
+                        errorText = 'Too many login attempts. Please wait a moment and try again.';
+                    }
+                    
+                    // Reset button state
+                    loginBtn.disabled = false;
+                    loginBtn.classList.remove('loading');
+                    loading.style.display = 'none';
+                    btnContent.style.opacity = '1';
+                    document.getElementById('login-btn-text').textContent = 'Sign In';
+                    
+                    // Show error with shake animation
+                    loginBtn.classList.add('shake');
+                    setTimeout(() => loginBtn.classList.remove('shake'), 500);
+                    
+                    showMessage('error', errorText);
+                });
             } else {
+                // Fallback for when Supabase is not available
+                console.warn('Supabase not available, using fallback login');
                 loginBtn.disabled = false;
                 loginBtn.classList.remove('loading');
                 loading.style.display = 'none';
                 btnContent.style.opacity = '1';
                 document.getElementById('login-btn-text').textContent = 'Sign In';
-                showMessage('error', 'Invalid email or password. Please check your credentials.');
+                showMessage('error', 'Authentication service not available. Please try again later.');
             }
         });
 

@@ -10,8 +10,20 @@ const BACKEND_CONFIG = {
   // API Endpoints
   endpoints: {
     auth: '/api/auth',
-    users: '/api/users',
-    events: '/api/events',
+    users: {
+      list: '/api/users',
+      create: '/api/users',
+      get: '/api/users',
+      update: '/api/users',
+      delete: '/api/users'
+    },
+    events: {
+      list: '/api/events',
+      create: '/api/events',
+      get: '/api/events',
+      update: '/api/events',
+      delete: '/api/events'
+    },
     achievements: '/api/achievements',
     media: '/api/media',
     search: '/api/search',

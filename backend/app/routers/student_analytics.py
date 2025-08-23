@@ -8,7 +8,8 @@ from typing import List, Dict, Any
 import logging
 from datetime import datetime, timedelta
 
-# Firebase auth removed - using Supabase auth
+# Supabase auth integration
+from app.auth import verify_firebase_token, verify_admin_user
 from app.database import get_db
 from app.models.user import User, UserRole
 from app.models.profile import Profile

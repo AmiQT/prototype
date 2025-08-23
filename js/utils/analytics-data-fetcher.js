@@ -1,4 +1,4 @@
-// Firebase removed - using backend API instead
+// Supabase integration - using backend API instead
 import { analyticsCache } from './analytics-cache.js';
 import { AnalyticsValidator } from './analytics-validator.js';
 import { rateLimiter } from './rate-limiter.js';
@@ -221,7 +221,7 @@ export class AnalyticsDataFetcher {
         
         try {
             // For now, we'll simulate aggregation on client side
-            // In production, consider using Firebase Functions for server-side aggregation
+            // In production, consider using Supabase Edge Functions for server-side aggregation
             const { data } = await this.fetchData(collection, { useCache: true });
             
             const aggregatedData = this._performAggregations(data, aggregations);

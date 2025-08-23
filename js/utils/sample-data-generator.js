@@ -3,7 +3,7 @@
  * Creates realistic sample data when no real data exists
  */
 
-// Firebase removed - using backend API instead
+// Supabase integration - using backend API instead
 
 export class SampleDataGenerator {
     
@@ -143,11 +143,11 @@ export class SampleDataGenerator {
     }
     
     /**
-     * Add sample data to Firebase (for testing)
+     * Add sample data to Supabase (for testing)
      */
-    static async addSampleDataToFirebase() {
+    static async addSampleDataToSupabase() {
         try {
-            console.log('🎯 Adding sample data to Firebase...');
+            console.log('🎯 Adding sample data to Supabase...');
             
             const users = this.generateSampleUsers(20);
             const achievements = this.generateSampleAchievements(30);
@@ -193,11 +193,11 @@ export class SampleDataGenerator {
     }
     
     /**
-     * Clear all sample data from Firebase
+     * Clear all sample data from Supabase
      */
     static async clearSampleData() {
         try {
-            console.log('🧹 Clearing sample data from Firebase...');
+            console.log('🧹 Clearing sample data from Supabase...');
             
             const collections = ['users', 'achievements', 'events'];
             const deletePromises = [];
@@ -222,7 +222,7 @@ export class SampleDataGenerator {
     }
     
     /**
-     * Get sample data for immediate use (without Firebase)
+     * Get sample data for immediate use (without Supabase)
      */
     static getSampleDataSet() {
         return {
@@ -238,7 +238,7 @@ window.SampleDataGenerator = SampleDataGenerator;
 
 // Auto-run in development
 if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    window.addSampleData = () => SampleDataGenerator.addSampleDataToFirebase();
+    window.addSampleData = () => SampleDataGenerator.addSampleDataToSupabase();
     window.clearSampleData = () => SampleDataGenerator.clearSampleData();
     window.getSampleData = () => SampleDataGenerator.getSampleDataSet();
     

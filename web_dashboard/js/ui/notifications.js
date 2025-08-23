@@ -1,4 +1,5 @@
-// Firebase removed - using backend API instead
+// Supabase integration - using backend API instead
+import { auth } from '../config/supabase-config.js';
 
 let notifications = [];
 

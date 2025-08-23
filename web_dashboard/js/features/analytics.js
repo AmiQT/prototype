@@ -1,4 +1,4 @@
-// Firebase removed - using backend API instead
+// Supabase integration - using backend API instead
 import { API_ENDPOINTS, makeAuthenticatedRequest, testBackendConnection } from '../config/backend-config.js';
 import { addNotification } from '../ui/notifications.js';
 
@@ -48,9 +48,9 @@ async function initializeEnhancedModules() {
 // Fallback implementations
 const fallbackDataFetcher = {
     async fetchData(collection, options = {}) {
-        const snapshot = await db.collection(collection).get();
+        console.warn(`Fallback data fetcher called for ${collection} - returning empty data`);
         return {
-            data: snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+            data: [],
             fromCache: false,
             hasMore: false
         };
@@ -185,7 +185,8 @@ async function fetchDataWithCache(collectionName, query = null) {
 
     const startTime = performance.now();
     try {
-        let queryRef = db.collection(collectionName);
+        console.warn(`Legacy query attempted for ${collectionName} - using backend API instead`);
+        return [];
         if (query) {
             queryRef = queryRef.where(query.field, query.operator, query.value);
         }
@@ -218,8 +219,8 @@ async function loadOverviewStats() {
         if (isBackendConnected) {
             await loadOverviewStatsFromBackend();
         } else {
-            // Only use Firebase as fallback
-            await loadOverviewStatsFromFirebase();
+            // Only use Supabase as fallback
+            await loadOverviewStatsFromSupabase();
         }
 
         const totalTime = performance.now() - startTime;
@@ -236,6 +237,19 @@ async function loadOverviewStats() {
 // NEW: Load stats from backend (bypasses Firestore rules completely!)
 async function loadOverviewStatsFromBackend() {
     try {
+        // Check if endpoint exists
+        if (!API_ENDPOINTS.users.getStats) {
+            console.warn('Stats endpoint not available');
+            return null;
+        }
+        
+        // Check if user is properly authenticated
+        const isLoggedIn = localStorage.getItem('isLoggedIn');
+        if (!isLoggedIn || isLoggedIn !== 'true') {
+            console.warn('User not authenticated, skipping backend stats');
+            return null;
+        }
+        
         const response = await makeAuthenticatedRequest(API_ENDPOINTS.users.getStats);
         
         if (response && response.overview) {
@@ -251,53 +265,55 @@ async function loadOverviewStatsFromBackend() {
         }
     } catch (error) {
         console.error('Backend analytics failed:', error);
-        throw error; // Fall back to Firebase
+        throw error; // Fall back to Supabase
     }
 }
 
-// Fallback function for Firebase-based stats loading
-async function loadOverviewStatsFromFirebase() {
+// Clean Supabase-based stats loading
+async function loadOverviewStatsFromSupabase() {
     try {
-        // Initialize enhanced modules if not already done
-        if (!dataFetcher) {
-            await initializeEnhancedModules();
-        }
-
-        // Wait for authentication to complete
-        await waitForAuth();
-
-        AnalyticsLogger.info('Loading overview stats from Firebase...');
+        console.log('📊 Loading overview stats from Supabase/Backend...');
         const startTime = performance.now();
 
-        // Use fallback if enhanced modules not available
-        const fetcher = dataFetcher || fallbackDataFetcher;
-
-        // Fetch data with proper error handling for security rules
-        const [usersResult, eventsResult] = await Promise.all([
-            fetcher.fetchData('users').catch(e => ({ data: [], error: e })),
-            fetcher.fetchData('events').catch(e => ({ data: [], error: e }))
-        ]);
-
-        const users = usersResult.data || [];
-        const events = eventsResult.data || [];
+        // Try to get data from backend API
+        let users = [];
+        let events = [];
         
-        // Handle errors gracefully
-        if (usersResult.error) {
-            console.warn('Users data access restricted:', usersResult.error.message);
-        }
-        if (eventsResult.error) {
-            console.warn('Events data access restricted:', eventsResult.error.message);
+        try {
+            // Fetch real data from Supabase via backend API
+            console.log('📊 Fetching real data from Supabase...');
+            
+            const [usersResponse, eventsResponse] = await Promise.all([
+                makeAuthenticatedRequest(API_ENDPOINTS.users.list, { method: 'GET' }),
+                makeAuthenticatedRequest(API_ENDPOINTS.events.list, { method: 'GET' })
+            ]);
+
+            if (usersResponse.ok) {
+                const usersData = await usersResponse.json();
+                users = usersData.users || usersData || [];
+            }
+
+            if (eventsResponse.ok) {
+                const eventsData = await eventsResponse.json();
+                events = eventsData.events || eventsData || [];
+            }
+            
+            console.log(`✅ Loaded ${users.length} users and ${events.length} events from Supabase`);
+            
+        } catch (apiError) {
+            console.warn('⚠️ API error, using empty data:', apiError.message);
+            
+            // Use empty data from backend
+            users = [];
+            events = [];
+            
+            console.log(`✅ No data available from Supabase - using empty state`);
         }
 
-        // Update performance metrics
-        performanceMetrics.apiCalls += 2;
-        if (usersResult.fromCache) performanceMetrics.cacheHits++;
-        if (eventsResult.fromCache) performanceMetrics.cacheHits++;
-
-        // Calculate real statistics from Firebase data
+        // Calculate statistics
         const totalUsers = users.length;
         const totalEvents = events.length;
-        const completedProfiles = users.filter(u => u.profileCompleted === true).length;
+        const completedProfiles = users.filter(u => u.profile_completed === true).length;
         
         // Update individual stat elements with animation
         updateStatElement('total-users', totalUsers);
@@ -318,19 +334,12 @@ async function loadOverviewStatsFromFirebase() {
         });
 
         const totalTime = performance.now() - startTime;
-        AnalyticsLogger.info('Overview stats updated from Firebase', {
-            users: users.length,
-            events: events.length,
-            loadTime: `${totalTime.toFixed(2)}ms`
-        });
+        console.log(`✅ Overview stats updated from Supabase in ${totalTime.toFixed(2)}ms`);
 
         // Store data for charts
         currentData.users = users;
         currentData.events = events;
         currentData.lastUpdated = new Date().toISOString();
-
-        // Update memory usage tracking
-        performanceMetrics.totalMemoryUsage = performance.memory ? performance.memory.usedJSHeapSize : 0;
 
         // Render overview charts if on overview section
         if (document.getElementById('overview').classList.contains('active')) {
@@ -338,8 +347,20 @@ async function loadOverviewStatsFromFirebase() {
         }
 
     } catch (e) {
-        AnalyticsLogger.error('Error loading overview stats from Firebase', e);
-        addNotification('Error loading overview stats', 'error');
+        console.warn('📊 Error loading overview stats, using fallback:', e.message);
+        
+        // Use fallback data
+        updateStatElement('total-users', 0);
+        updateStatElement('total-events', 0);
+        updateStatElement('total-profiles', 0);
+        
+        console.log('📊 Overview Stats Breakdown:', {
+            totalUsers: 0,
+            usersByRole: { students: 0, lecturers: 0, admins: 0 },
+            totalEvents: 0,
+            profilesCompleted: 0,
+            profileCompletionRate: 0
+        });
     }
 }
 
@@ -511,6 +532,19 @@ async function setupAnalytics() {
 // Backend-only analytics setup (NO FIRESTORE!)
 async function setupAnalyticsFromBackend() {
     try {
+        // Check if endpoint exists
+        if (!API_ENDPOINTS.users.getStats) {
+            console.warn('Analytics endpoint not available');
+            return null;
+        }
+        
+        // Check if user is properly authenticated
+        const isLoggedIn = localStorage.getItem('isLoggedIn');
+        if (!isLoggedIn || isLoggedIn !== 'true') {
+            console.warn('User not authenticated, skipping backend analytics');
+            return null;
+        }
+        
         const response = await makeAuthenticatedRequest(API_ENDPOINTS.users.getStats);
         
         if (response && response.overview) {

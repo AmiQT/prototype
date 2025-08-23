@@ -1,9 +1,9 @@
-// Firebase removed - using backend API instead
-import { API_ENDPOINTS, makeAuthenticatedRequest, testBackendConnection } from '../../config/backend-config.js';
-import { addNotification, closeModal } from '../../ui/notifications.js';
+// Clean Supabase/FastAPI integration
+import { API_ENDPOINTS, makeAuthenticatedRequest, testBackendConnection } from '../config/backend-config.js';
+import { addNotification, closeModal } from '../ui/notifications.js';
 
-let usersListener = null;
 let allUsersCache = [];
+let refreshInterval = null;
 
 function setupUserFilters() {
     const roleFilter = document.getElementById('user-role-filter');
@@ -37,36 +37,65 @@ async function loadUsersTable() {
         return;
     }
 
-    tableBody.innerHTML = '<tr><td colspan="6">Loading all users...</td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="6">Loading users from Supabase...</td></tr>';
 
-    // Always load from Firebase to show ALL users (students, lecturers, admins)
-    // Firebase is the source of truth for user management
-    
-    if (usersListener) {
-        // If listener already exists, just return - it will auto-update
-        return;
-    }
-    
-    // Loading users from Firebase
-    
-    usersListener = db.collection('users').onSnapshot(querySnapshot => {
-        allUsersCache = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
+    try {
+        // Check if backend is available
+        const isBackendConnected = await testBackendConnection();
+        if (!isBackendConnected) {
+            throw new Error('Backend connection failed');
+        }
+
+        // Fetch real users from Supabase via backend API
+        console.log('📊 Loading real user data from Supabase...');
         
-        // User data loaded successfully
+        const response = await makeAuthenticatedRequest(
+            API_ENDPOINTS.users.list,
+            { method: 'GET' }
+        );
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch users: ${response.status} ${response.statusText}`);
+        }
+
+        const usersData = await response.json();
+        allUsersCache = usersData.users || usersData || [];
         
-        loadDepartmentFilterFromFirebase(); // Load department options from Firebase data
+        console.log(`Loaded ${allUsersCache.length} users from Supabase`);
+        
+        // Load department filter options
+        loadDepartmentFilterOptions();
         applyUserFiltersAndRender();
-    }, e => {
-        console.error('Error loading users from Firebase:', e);
-        tableBody.innerHTML = '<tr><td colspan="6">Error loading users from Firebase</td></tr>';
-    });
+        
+        // Setup auto-refresh every 30 seconds
+        if (refreshInterval) clearInterval(refreshInterval);
+        refreshInterval = setInterval(() => {
+            loadUsersTable();
+        }, 30000);
+    } catch (error) {
+        console.error('Error loading users from Supabase:', error);
+        
+        // Fallback to empty state with retry option
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="6">
+                    <div class="text-center">
+                        <p class="text-muted mb-2">Error loading users from Supabase</p>
+                        <button class="btn btn-sm btn-primary" onclick="loadUsersTable()">
+                            <i class="fas fa-redo"></i> Retry
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+        
+        // Clear cache on error
+        allUsersCache = [];
+    }
 }
 
-// Load department options from Firebase user data
-function loadDepartmentFilterFromFirebase() {
+// Load department options from user data
+function loadDepartmentFilterOptions() {
     try {
         const deptFilter = document.getElementById('user-department-filter');
         if (!deptFilter) return;
@@ -98,7 +127,7 @@ function loadDepartmentFilterFromFirebase() {
         
         // Departments loaded successfully
     } catch (error) {
-        console.error('Error loading departments from Firebase:', error);
+        console.error('Error loading departments:', error);
     }
 }
 
@@ -241,26 +270,41 @@ function toggleEditDepartmentField() {
     }
 }
 
-function showEditUserModal(id) {
-    db.collection('users').doc(id).get().then(doc => {
-        if (doc.exists) {
-            const user = doc.data();
+async function showEditUserModal(id) {
+    try {
+        // Fetch user data from Supabase via backend API
+        console.log('Fetching user data from Supabase for editing, ID:', id);
+        
+        const response = await makeAuthenticatedRequest(
+            `${API_ENDPOINTS.users.get}/${id}`,
+            { method: 'GET' }
+        );
 
-            document.getElementById('edit-user-id').value = id;
-            document.getElementById('edit-user-name').value = user.name;
-            document.getElementById('edit-user-email').value = user.email;
-            document.getElementById('edit-user-role').value = user.role;
-            document.getElementById('edit-user-course').value = user.department || '';
-            document.getElementById('edit-user-matrix-id').value = user.matrixId || '';
-
-            // Set the field visibility and labels based on role
-            toggleEditDepartmentField();
-
-            const modal = document.getElementById('edit-user-modal');
-            modal.classList.add('show');
-            modal.style.display = 'flex';
+        if (!response.ok) {
+            throw new Error(`Failed to fetch user: ${response.status}`);
         }
-    });
+
+        const userData = await response.json();
+        
+        // Populate the edit form with user data
+        document.getElementById('edit-user-id').value = userData.id;
+        document.getElementById('edit-user-name').value = userData.name || '';
+        document.getElementById('edit-user-email').value = userData.email || '';
+        document.getElementById('edit-user-role').value = userData.role || '';
+        document.getElementById('edit-user-course').value = userData.department || '';
+        
+        // Show/hide fields based on role
+        toggleEditDepartmentField();
+        
+        // Show the modal
+        const modal = document.getElementById('edit-user-modal');
+        modal.classList.add('show');
+        modal.style.display = 'flex';
+        
+    } catch (error) {
+        console.error('Error fetching user data for editing:', error);
+        addNotification(`Error loading user data: ${error.message}`, 'error');
+    }
 }
 
 async function handleAddUser(form) {
@@ -317,41 +361,50 @@ async function handleAddUser(form) {
             throw new Error('Staff ID is required for lecturers');
         }
 
-        // Check if email already exists in Firebase Auth and Firestore
-        const emailCheck = await db.collection('users')
-            .where('email', '==', userData.email)
-            .get();
+        // Check if email already exists in Supabase Auth and database
+        // This logic needs to be adapted for backend
+        const emailCheck = allUsersCache.find(user => user.email === userData.email);
         
-        if (!emailCheck.empty) {
+        if (emailCheck) {
             throw new Error(`User with email ${userData.email} already exists in the system`);
         }
 
-        const userCredential = await auth.createUserWithEmailAndPassword(
-            userData.email, 
-            userData.password
-        );
-
-        const firestoreUserData = {
-            id: userCredential.user.uid,
-            uid: userCredential.user.uid,
+        // Create user in Supabase via backend API
+        console.log('Creating user in Supabase via backend API:', userData);
+        
+        const createUserPayload = {
             email: userData.email,
             name: userData.name,
+            password: userData.password,
             role: userData.role,
             department: userData.department,
-            studentId: userData.studentId,
-            staffId: userData.staffId,
-            createdAt: userData.createdAt,
-            profileCompleted: false,
-            isActive: true
+            student_id: userData.studentId,
+            staff_id: userData.staffId,
+            status: userData.status,
+            profile_completed: false,
+            is_active: true
         };
 
-        await db.collection('users').doc(userCredential.user.uid).set(firestoreUserData);
+        const createResponse = await makeAuthenticatedRequest(
+            API_ENDPOINTS.users.create,
+            {
+                method: 'POST',
+                body: JSON.stringify(createUserPayload)
+            }
+        );
 
-        // Also sync with backend database if available
-        await syncUserWithBackend('create', firestoreUserData);
+        if (!createResponse.ok) {
+            const errorData = await createResponse.json().catch(() => ({}));
+            throw new Error(errorData.message || `Failed to create user: ${createResponse.status}`);
+        }
+
+        const newUser = await createResponse.json();
+        
+        // Add to local cache for immediate display
+        allUsersCache.push(newUser);
 
         closeModal('add-user-modal');
-        addNotification(`User ${userData.name} created successfully!`, 'success');
+        addNotification(`User ${userData.name} created successfully in Supabase!`, 'success');
         
         // Force reload the users table to show the new user
         await loadUsersTable();
@@ -362,18 +415,16 @@ async function handleAddUser(form) {
         }
         
         setTimeout(() => {
-            alert(`User created successfully!\n\nEmail: ${userData.email}\nPassword: ${userData.password}\n\nPlease share these credentials with the user.`);
+            alert(`User created successfully in Supabase!\n\nEmail: ${userData.email}\nPassword: ${userData.password}\n\nPlease share these credentials with the user.`);
         }, 500);
 
     } catch (e) {
         console.error('Error creating user:', e);
         
         let errorMessage = 'Error creating user';
-        if (e.code === 'auth/email-already-in-use') {
+        if (e.message.includes('already exists')) {
             errorMessage = `Email ${userData.email} is already registered. Please use a different email address.`;
-        } else if (e.code === 'auth/invalid-email') {
-            errorMessage = 'Invalid email address format';
-        } else if (e.code === 'auth/weak-password') {
+        } else if (e.message.includes('Password must be at least 6 characters long')) {
             errorMessage = 'Password is too weak (minimum 6 characters)';
         } else if (e.message) {
             errorMessage = e.message;
@@ -404,13 +455,40 @@ async function handleEditUser(form) {
     };
 
     try {
-        await db.collection('users').doc(userId).update(userData);
+        // Update user in Supabase via backend API
+        console.log('Updating user in Supabase via backend API:', userData);
         
-        // Also sync with backend database if available
-        await syncUserWithBackend('update', { ...userData, id: userId, uid: userId });
+        const updatePayload = {
+            name: userData.name,
+            email: userData.email,
+            role: userData.role,
+            department: userData.department,
+            updated_at: userData.updatedAt
+        };
+
+        const updateResponse = await makeAuthenticatedRequest(
+            `${API_ENDPOINTS.users.update}/${userId}`,
+            {
+                method: 'PUT',
+                body: JSON.stringify(updatePayload)
+            }
+        );
+
+        if (!updateResponse.ok) {
+            const errorData = await updateResponse.json().catch(() => ({}));
+            throw new Error(errorData.message || `Failed to update user: ${updateResponse.status}`);
+        }
+
+        const updatedUser = await updateResponse.json();
+        
+        // Update local cache
+        const index = allUsersCache.findIndex(user => user.id === userId);
+        if (index !== -1) {
+            allUsersCache[index] = { ...allUsersCache[index], ...updatedUser };
+        }
         
         closeModal('edit-user-modal');
-        addNotification('User updated successfully', 'success');
+        addNotification('User updated successfully in Supabase', 'success');
         
         // Force reload the users table to show the updated user
         await loadUsersTable();
@@ -429,15 +507,23 @@ async function deleteUser(id) {
     if (!confirm('Are you sure you want to disable this user? Their access will be revoked.')) return;
 
     try {
-        await db.collection('users').doc(id).update({
-            isActive: false,
-            deletedAt: new Date().toISOString()
-        });
+        // Delete/disable user in Supabase via backend API
+        console.log('Deleting user from Supabase via backend API for ID:', id);
         
-        // Also sync with backend database if available
-        await syncUserWithBackend('delete', { id: id, uid: id });
+        const deleteResponse = await makeAuthenticatedRequest(
+            `${API_ENDPOINTS.users.delete}/${id}`,
+            { method: 'DELETE' }
+        );
+
+        if (!deleteResponse.ok) {
+            const errorData = await deleteResponse.json().catch(() => ({}));
+            throw new Error(errorData.message || `Failed to delete user: ${deleteResponse.status}`);
+        }
+
+        // Remove from local cache
+        allUsersCache = allUsersCache.filter(user => user.id !== id);
         
-        addNotification('User has been disabled successfully.', 'success');
+        addNotification('User has been disabled successfully in Supabase.', 'success');
         
         // Force reload the users table to reflect the change
         await loadUsersTable();
@@ -448,7 +534,7 @@ async function deleteUser(id) {
         }
     } catch (e) {
         console.error('Error disabling user:', e);
-        if (e.code === 'not-found') {
+        if (e.message.includes('not-found')) {
              addNotification('Error: User not found. The user list may be out of date.', 'error');
         } else {
              addNotification('Error disabling user: ' + e.message, 'error');
@@ -457,117 +543,10 @@ async function deleteUser(id) {
 }
 
 function unsubscribeUsers() {
-    if (usersListener) {
-        usersListener();
-        usersListener = null;
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
     }
-}
-
-/**
- * Sync user operations with backend database
- * @param {string} operation - 'create', 'update', or 'delete'
- * @param {object} userData - User data to sync
- */
-async function syncUserWithBackend(operation, userData) {
-    try {
-        // Check if backend is available
-        const isBackendConnected = await testBackendConnection();
-        if (!isBackendConnected) {
-            // Backend not available - skipping sync
-            return;
-        }
-
-        // Note: Backend sync requires admin authentication
-        // In development, this may fail with 403 Forbidden - that's expected
-
-        // Only log errors, not every sync operation
-        switch (operation) {
-            case 'create':
-                await syncCreateUserWithBackend(userData);
-                break;
-            case 'update':
-                await syncUpdateUserWithBackend(userData);
-                break;
-            case 'delete':
-                await syncDeleteUserWithBackend(userData);
-                break;
-            default:
-                console.warn('Unknown sync operation:', operation);
-        }
-
-        // Sync completed successfully
-
-    } catch (error) {
-        console.error(`❌ Failed to sync user ${operation} with backend:`, error);
-        // Don't throw error - Firebase operation already succeeded
-        
-        if (error.message.includes('403') || error.message.includes('Forbidden')) {
-            console.warn('Backend sync failed: Admin authentication required');
-            // Don't show notification for auth issues - it's expected in development
-        } else {
-            addNotification(`User ${operation}d in Firebase, but backend sync failed. Backend will sync later.`, 'warning');
-        }
-    }
-}
-
-/**
- * Create user in backend database
- */
-async function syncCreateUserWithBackend(userData) {
-    const payload = {
-        uid: userData.uid,
-        email: userData.email,
-        name: userData.name,
-        role: userData.role,
-        department: userData.department,
-        student_id: userData.studentId,
-        staff_id: userData.staffId,
-        is_active: userData.isActive,
-        profile_completed: userData.profileCompleted
-    };
-
-    const response = await makeAuthenticatedRequest(
-        API_ENDPOINTS.users.create,
-        {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        }
-    );
-    return response;
-}
-
-/**
- * Update user in backend database
- */
-async function syncUpdateUserWithBackend(userData) {
-    const payload = {
-        email: userData.email,
-        name: userData.name,
-        role: userData.role,
-        department: userData.department
-    };
-
-    const response = await makeAuthenticatedRequest(
-        `${API_ENDPOINTS.users.update}/${userData.uid}`,
-        {
-            method: 'PUT',
-            body: JSON.stringify(payload)
-        }
-    );
-    return response;
-}
-
-/**
- * Delete/disable user in backend database
- */
-async function syncDeleteUserWithBackend(userData) {
-    const response = await makeAuthenticatedRequest(
-        `${API_ENDPOINTS.users.delete}/${userData.uid}`,
-        {
-            method: 'DELETE'
-        }
-    );
-    return response;
 }
 
 export { 
@@ -581,5 +560,5 @@ export {
     handleEditUser, 
     deleteUser, 
     unsubscribeUsers,
-    loadDepartmentFilterFromFirebase
+    loadDepartmentFilterOptions
 };
