@@ -18,7 +18,7 @@ router = APIRouter(prefix="/api/profiles", tags=["Profiles"])
 async def get_all_profiles(
     limit: int = Query(50, le=100),
     offset: int = Query(0),
-    current_user: dict = Depends(verify_firebase_token),
+    current_user: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
 ):
     """Get all profiles"""
@@ -61,7 +61,7 @@ async def get_all_profiles(
 @router.get("/{user_id}")
 async def get_profile_by_user_id(
     user_id: str,
-    current_user: dict = Depends(verify_firebase_token),
+    current_user: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
 ):
     """Get profile by user ID"""
@@ -106,7 +106,7 @@ async def search_profiles(
     q: Optional[str] = Query(None, description="Search query"),
     department: Optional[str] = Query(None),
     limit: int = Query(20, le=100),
-    current_user: dict = Depends(verify_firebase_token),
+    current_user: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
 ):
     """Search profiles"""

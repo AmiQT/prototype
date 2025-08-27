@@ -9,7 +9,7 @@ router = APIRouter()
 @router.post("/upload/image")
 async def upload_image(
     file: UploadFile = File(...),
-    current_user: dict = Depends(verify_firebase_token)
+    current_user: dict = Depends(verify_supabase_token)
 ):
     """
     Upload an image file to Cloudinary
@@ -37,7 +37,7 @@ async def upload_image(
 @router.post("/upload/video")
 async def upload_video(
     file: UploadFile = File(...),
-    current_user: dict = Depends(verify_firebase_token)
+    current_user: dict = Depends(verify_supabase_token)
 ):
     """
     Upload a video file to Cloudinary
@@ -68,7 +68,7 @@ async def get_optimized_url(
     width: int = None,
     height: int = None,
     quality: str = "auto",
-    current_user: dict = Depends(verify_firebase_token)
+    current_user: dict = Depends(verify_supabase_token)
 ):
     """
     Get optimized URL for a media file

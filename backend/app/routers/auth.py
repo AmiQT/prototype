@@ -3,7 +3,7 @@ Authentication API endpoints
 """
 from fastapi import APIRouter, Depends, HTTPException
 # Supabase auth integration
-from app.auth import verify_firebase_token, verify_admin_user
+from app.auth import verify_supabase_token, verify_admin_user
 from app.models.user import User
 from app.database import get_db
 from sqlalchemy.orm import Session
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
 @router.post("/verify")
-async def verify_token(current_user: dict = Depends(verify_firebase_token)):
+async def verify_token(current_user: dict = Depends(verify_supabase_token)):
     """
     Verify Firebase token and return user info
     """
@@ -30,7 +30,7 @@ async def verify_token(current_user: dict = Depends(verify_firebase_token)):
 
 @router.get("/profile")
 async def get_user_profile(
-    current_user: dict = Depends(verify_firebase_token),
+    current_user: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
 ):
     """

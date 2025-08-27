@@ -32,7 +32,7 @@ class CreateShowcasePostRequest(BaseModel):
 @router.post("/")
 async def create_showcase_post(
     post_data: CreateShowcasePostRequest,
-    current_user: dict = Depends(verify_firebase_token),
+    current_user: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
 ):
     """Create a new showcase post"""
@@ -132,7 +132,7 @@ async def get_showcase_posts(
     limit: int = 20,
     offset: int = 0,
     category: Optional[str] = None,
-    current_user: dict = Depends(verify_firebase_token),
+    current_user: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
 ):
     """Get showcase posts with pagination"""
@@ -225,7 +225,7 @@ async def get_showcase_posts(
 @router.get("/{post_id}")
 async def get_showcase_post(
     post_id: str,
-    current_user: dict = Depends(verify_firebase_token),
+    current_user: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
 ):
     """Get a specific showcase post by ID"""
@@ -283,7 +283,7 @@ async def get_showcase_post(
 @router.post("/{post_id}/like")
 async def toggle_like_post(
     post_id: str,
-    current_user: dict = Depends(verify_firebase_token),
+    current_user: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
 ):
     """Toggle like on a showcase post"""
@@ -339,7 +339,7 @@ async def upload_showcase_media(
     file: UploadFile = File(...),
     user_id: str = None,
     type: str = "showcase_image",
-    current_user: dict = Depends(verify_firebase_token),
+    current_user: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
 ):
     """Upload media for showcase posts"""
@@ -373,7 +373,7 @@ async def upload_showcase_media(
 @router.delete("/{post_id}")
 async def delete_showcase_post(
     post_id: str,
-    current_user: dict = Depends(verify_firebase_token),
+    current_user: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
 ):
     """Delete a showcase post"""

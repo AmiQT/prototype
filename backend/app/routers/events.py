@@ -87,7 +87,7 @@ async def get_all_events(
     limit: int = Query(50, le=100),
     category: Optional[str] = Query(None),
     featured: Optional[bool] = Query(None),
-    current_user: dict = Depends(verify_firebase_token),
+    current_user: dict = Depends(verify_supabase_token),
 ):
     """Get all events"""
     try:
@@ -117,7 +117,7 @@ async def get_all_events(
 @router.get("/{event_id}")
 async def get_event_by_id(
     event_id: str,
-    current_user: dict = Depends(verify_firebase_token),
+    current_user: dict = Depends(verify_supabase_token),
 ):
     """Get event by ID"""
     try:

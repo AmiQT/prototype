@@ -8,7 +8,7 @@ from typing import List, Optional
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 # Supabase auth integration
-from app.auth import verify_firebase_token, verify_admin_user
+from app.auth import verify_supabase_token, verify_admin_user
 from app.models.user import User, UserRole
 from app.models.profile import Profile
 from app.database import get_db
@@ -50,7 +50,7 @@ async def search_users(
     department: Optional[str] = Query(None, description="Filter by department"),
     limit: int = Query(50, le=100, description="Maximum results"),
     offset: int = Query(0, description="Pagination offset"),
-    current_user: dict = Depends(verify_firebase_token),
+    current_user: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
 ):
     """
@@ -162,7 +162,7 @@ async def get_user_stats(
 @router.get("/{user_id}")
 async def get_user(
     user_id: str,
-    current_user: dict = Depends(verify_firebase_token),
+    current_user: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
 ):
     """

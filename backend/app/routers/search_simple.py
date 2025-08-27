@@ -27,7 +27,7 @@ async def search_students_simple(
     limit: int = Query(20, le=50, description="Maximum results"),
     offset: int = Query(0, description="Pagination offset"),
     
-    current_user: dict = Depends(verify_firebase_token),
+    current_user: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
 ):
     """
@@ -110,7 +110,7 @@ async def search_students_simple(
 
 @router.get("/departments")
 async def get_departments(
-    current_user: dict = Depends(verify_firebase_token),
+    current_user: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
 ):
     """
@@ -149,7 +149,7 @@ async def get_departments(
 
 @router.get("/stats")
 async def get_search_stats(
-    current_user: dict = Depends(verify_firebase_token),
+    current_user: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
 ):
     """
@@ -199,7 +199,7 @@ async def get_search_stats(
 
 @router.get("/test-data-check")
 async def check_test_data(
-    current_user: dict = Depends(verify_firebase_token),
+    current_user: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
 ):
     """

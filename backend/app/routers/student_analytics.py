@@ -9,7 +9,7 @@ import logging
 from datetime import datetime, timedelta
 
 # Supabase auth integration
-from app.auth import verify_firebase_token, verify_admin_user
+from app.auth import verify_supabase_token, verify_admin_user
 from app.database import get_db
 from app.models.user import User, UserRole
 from app.models.profile import Profile
@@ -22,7 +22,7 @@ router = APIRouter(prefix="/api/student", tags=["Student Analytics"])
 
 @router.get("/dashboard")
 async def get_student_dashboard(
-    current_user: dict = Depends(verify_firebase_token),
+    current_user: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
 ):
     """
@@ -129,7 +129,7 @@ async def get_student_dashboard(
 
 @router.get("/recommendations")
 async def get_student_recommendations(
-    current_user: dict = Depends(verify_firebase_token),
+    current_user: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
 ):
     """
@@ -255,7 +255,7 @@ async def get_student_recommendations(
 
 @router.get("/progress")
 async def get_student_progress(
-    current_user: dict = Depends(verify_firebase_token),
+    current_user: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
 ):
     """

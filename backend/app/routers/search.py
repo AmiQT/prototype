@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 
 # Firebase auth removed - using Supabase auth
 from app.database import get_db
+from app.auth import verify_supabase_token
 from app.models.user import User, UserRole
 from app.models.profile import Profile
 from app.models.achievement import Achievement
@@ -54,7 +55,7 @@ async def search_students(
     sort_by: Optional[str] = Query("name", description="Sort by field"),
     sort_order: Optional[str] = Query("asc", description="Sort order (asc/desc)"),
     
-    current_user: dict = Depends(verify_firebase_token),
+    current_user: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
 ):
     """
@@ -269,7 +270,7 @@ async def search_students(
 async def find_similar_students(
     student_id: str,
     limit: int = Query(10, le=20, description="Maximum similar students to return"),
-    current_user: dict = Depends(verify_firebase_token),
+    current_user: dict = Depends(verify_supabase_token),
     db: Session = Depends(get_db)
 ):
     """
