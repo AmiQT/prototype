@@ -9,6 +9,7 @@ import logging
 
 # Firebase auth removed - using Supabase auth
 from app.database import get_db
+from app.auth import verify_supabase_token
 from app.models.user import User, UserRole
 from app.models.profile import Profile
 from app.models.achievement import Achievement

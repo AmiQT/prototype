@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from pydantic import BaseModel
 # Firebase auth removed - using Supabase auth
+from app.auth import verify_supabase_token
 from app.models.showcase import ShowcasePost
 from app.models.user import User
 from app.database import get_db

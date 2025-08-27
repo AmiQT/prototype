@@ -1,5 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 # Firebase auth removed - using Supabase auth
+from app.auth import verify_supabase_token
 from app.services.media_service import MediaService
 import logging
 

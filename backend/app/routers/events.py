@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from datetime import datetime
 # Firebase auth removed - using Supabase auth
 from app.database import get_db
+from app.auth import verify_supabase_token
 import logging
 
 logger = logging.getLogger(__name__)
