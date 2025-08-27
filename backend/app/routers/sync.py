@@ -9,6 +9,7 @@ from datetime import datetime
 
 # Firebase auth removed - using Supabase auth
 from app.database import get_db
+from app.auth import verify_admin_user
 from app.models.user import User, UserRole
 from app.models.profile import Profile
 from app.models.achievement import Achievement
