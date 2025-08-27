@@ -216,7 +216,7 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: AppTheme.errorColor,
+        backgroundColor: Theme.of(context).colorScheme.error,
         duration: const Duration(seconds: 5),
       ),
     );
@@ -265,7 +265,7 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
         title: const Text('STAP UTHM Advisor'),
         centerTitle: true,
@@ -329,18 +329,18 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.error_outline,
               size: 64,
-              color: AppTheme.errorColor,
+              color: Theme.of(context).colorScheme.error,
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Chat Unavailable',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimaryColor,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
@@ -349,8 +349,8 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
               child: Text(
                 _errorMessage!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppTheme.textSecondaryColor,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ),
@@ -365,29 +365,29 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
     }
 
     if (_messages.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.chat_bubble_outline,
               size: 64,
-              color: AppTheme.primaryColor,
+              color: Theme.of(context).colorScheme.primary,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               'Start a Conversation',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimaryColor,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               'Ask me anything about your studies, career, or skills!',
               style: TextStyle(
-                color: AppTheme.textSecondaryColor,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ],

@@ -4,6 +4,7 @@ import '../../models/showcase_models.dart';
 import '../../models/user_model.dart';
 import '../moderation/report_dialog.dart';
 import 'media_display_widget.dart';
+import '../../utils/app_theme.dart';
 
 class PostCardWidget extends StatelessWidget {
   final ShowcasePostModel post;
@@ -36,13 +37,13 @@ class PostCardWidget extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.white, // Always white for showcase cards
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
         ],
       ),

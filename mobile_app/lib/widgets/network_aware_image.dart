@@ -28,25 +28,27 @@ class NetworkAwareImage extends StatefulWidget {
 
 class _NetworkAwareImageState extends State<NetworkAwareImage> {
   final NetworkService _networkService = NetworkService();
-  
+
   @override
   Widget build(BuildContext context) {
     // Get optimized image URL based on network conditions
     final optimizedUrl = _getOptimizedImageUrl();
-    
+
     return CachedNetworkImage(
       imageUrl: optimizedUrl,
       width: widget.width,
       height: widget.height,
       fit: widget.fit,
       placeholder: (context, url) => widget.placeholder ?? _buildPlaceholder(),
-      errorWidget: (context, url, error) => widget.errorWidget ?? _buildErrorWidget(),
+      errorWidget: (context, url, error) =>
+          widget.errorWidget ?? _buildFallbackImage(),
       // Optimize caching for mobile data
       memCacheWidth: _networkService.isOnMobile ? 400 : null,
       memCacheHeight: _networkService.isOnMobile ? 300 : null,
       // Progressive loading for slow connections
       progressIndicatorBuilder: widget.enableProgressiveLoading
-          ? (context, url, progress) => _buildProgressIndicator(progress as ImageChunkEvent?)
+          ? (context, url, progress) =>
+              _buildProgressIndicator(progress as ImageChunkEvent?)
           : null,
     );
   }
@@ -59,10 +61,10 @@ class _NetworkAwareImageState extends State<NetworkAwareImage> {
       final queryParams = Map<String, String>.from(uri.queryParameters);
       queryParams['quality'] = 'medium';
       queryParams['width'] = '800';
-      
+
       return uri.replace(queryParameters: queryParams).toString();
     }
-    
+
     return widget.imageUrl;
   }
 
@@ -114,6 +116,24 @@ class _NetworkAwareImageState extends State<NetworkAwareImage> {
         ),
       ),
     );
+  }
+
+  /// Build a fallback image when network image fails
+  Widget _buildFallbackImage() {
+    // Try to use a local asset image as fallback
+    try {
+      return Image.asset(
+        'assets/images/default_profile.png',
+        width: widget.width,
+        height: widget.height,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildErrorWidget();
+        },
+      );
+    } catch (e) {
+      return _buildErrorWidget();
+    }
   }
 
   Widget _buildProgressIndicator(ImageChunkEvent? progress) {
@@ -230,8 +250,8 @@ class _NetworkStatusIndicatorState extends State<NetworkStatusIndicator> {
         color: Colors.orange[100],
         child: Row(
           children: [
-            Icon(Icons.signal_cellular_4_bar, 
-                 color: Colors.orange[800], size: 16),
+            Icon(Icons.signal_cellular_4_bar,
+                color: Colors.orange[800], size: 16),
             const SizedBox(width: 8),
             Text(
               'Using mobile data - Data saver mode active',

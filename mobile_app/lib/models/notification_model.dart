@@ -120,7 +120,7 @@ class AppNotification {
       case NotificationType.message:
         return Colors.green;
       case NotificationType.system:
-        return Colors.grey;
+        return const Color(0xFF6B7280); // Neutral grey
       case NotificationType.reminder:
         return Colors.orange;
       case NotificationType.social:
@@ -225,7 +225,7 @@ extension NotificationTypeExtension on NotificationType {
       case NotificationType.message:
         return Colors.green;
       case NotificationType.system:
-        return Colors.grey;
+        return const Color(0xFF6B7280); // Neutral grey
       case NotificationType.reminder:
         return Colors.orange;
       case NotificationType.social:

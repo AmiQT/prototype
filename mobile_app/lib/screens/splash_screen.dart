@@ -71,11 +71,6 @@ class _SplashScreenState extends State<SplashScreen>
 
       if (_disposed || !mounted) return;
 
-      // DEBUG: Force logout to clear any existing sessions
-      debugPrint(
-          'SplashScreen: Force logging out to clear any existing sessions...');
-      await authService.signOut();
-
       // Check if user is authenticated with Supabase
       final supabaseUser = authService.supabaseUser;
       debugPrint('SplashScreen: Supabase user check: ${supabaseUser?.id}');
@@ -189,11 +184,11 @@ class _SplashScreenState extends State<SplashScreen>
                       width: 120,
                       height: 120,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.surface,
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
+                            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
                             blurRadius: 10,
                             offset: const Offset(0, 5),
                           ),
@@ -212,22 +207,22 @@ class _SplashScreenState extends State<SplashScreen>
                       'Student Talent',
                       style:
                           Theme.of(context).textTheme.displayMedium?.copyWith(
-                                color: Colors.white,
+                                color: Theme.of(context).colorScheme.onPrimary,
                                 fontWeight: FontWeight.bold,
                               ),
                     ),
                     Text(
                       'Profiling App',
                       style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                            color: Colors.white.withValues(alpha: 0.9),
-                            fontWeight: FontWeight.w500,
-                          ),
+                             color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.9),
+                              fontWeight: FontWeight.w500,
+                            ),
                     ),
                     const SizedBox(height: 48),
 
                     // Loading indicator
-                    const CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.onPrimary),
                       strokeWidth: 3,
                     ),
                     const SizedBox(height: 24),
@@ -236,17 +231,17 @@ class _SplashScreenState extends State<SplashScreen>
                     Text(
                       'UTHM FSKTM',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Colors.white.withValues(alpha: 0.8),
-                          ),
+                             color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.8),
+                            ),
                     ),
 
                     // Error message if navigation fails
                     if (!_disposed && !mounted)
-                      const Padding(
-                        padding: EdgeInsets.only(top: 24),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 24),
                         child: Text(
                           'An error occurred. Please restart the app.',
-                          style: TextStyle(color: Colors.red, fontSize: 16),
+                          style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 16),
                         ),
                       ),
                   ],

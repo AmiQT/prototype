@@ -5,7 +5,7 @@ import '../config/supabase_config.dart';
 
 class SupabaseAuthService {
   static const String baseUrl =
-      'https://c3168f89d034.ngrok-free.app'; // Your backend URL
+      'https://prototype-348e.onrender.com'; // Render backend
 
   UserModel? _currentUser;
 
@@ -42,7 +42,21 @@ class SupabaseAuthService {
       if (session != null) {
         debugPrint(
             'SupabaseAuthService: Found existing session for user: ${session.user.id}');
-        await _loadUserProfile(session.user.id);
+        debugPrint(
+            'SupabaseAuthService: Session expires at: ${session.expiresAt}');
+        debugPrint(
+            'SupabaseAuthService: Session is valid: ${!session.isExpired}');
+
+        // Only load profile if session is valid
+        if (!session.isExpired) {
+          await _loadUserProfile(session.user.id);
+          debugPrint(
+              'SupabaseAuthService: Session restored successfully for user: ${session.user.id}');
+        } else {
+          debugPrint(
+              'SupabaseAuthService: Session expired, clearing user data');
+          _currentUser = null;
+        }
       } else {
         debugPrint('SupabaseAuthService: No existing session found');
       }
@@ -57,16 +71,27 @@ class SupabaseAuthService {
         switch (event) {
           case AuthChangeEvent.signedIn:
             if (session?.user != null) {
-              _loadUserProfile(session!.user.id);
+              debugPrint(
+                  'SupabaseAuthService: User signed in: ${session!.user.id}');
+              _loadUserProfile(session.user.id);
             }
             break;
           case AuthChangeEvent.signedOut:
+            debugPrint('SupabaseAuthService: User signed out');
             _currentUser = null;
             break;
           case AuthChangeEvent.tokenRefreshed:
             debugPrint('SupabaseAuthService: Token refreshed');
             break;
+          case AuthChangeEvent.initialSession:
+            if (session?.user != null) {
+              debugPrint(
+                  'SupabaseAuthService: Initial session restored: ${session!.user.id}');
+              _loadUserProfile(session.user.id);
+            }
+            break;
           default:
+            debugPrint('SupabaseAuthService: Unhandled auth event: $event');
             break;
         }
       });
@@ -354,16 +379,15 @@ class SupabaseAuthService {
       final token = await getAuthToken();
       if (token == null) return null;
 
-      // Make API call to your backend to get user data
-      // This integrates with your existing backend
-      final response = await SupabaseConfig.client.functions.invoke(
-        'get-user',
-        body: {'user_id': userId},
-        headers: {'Authorization': 'Bearer $token'},
-      );
+      // Get user data directly from users table
+      final response = await SupabaseConfig.client
+          .from('users')
+          .select()
+          .eq('id', userId)
+          .single();
 
-      if (response.data != null) {
-        return UserModel.fromJson(response.data);
+      if (response != null) {
+        return UserModel.fromJson(response);
       }
     } catch (e) {
       debugPrint('SupabaseAuthService: Error getting user from backend: $e');
@@ -580,5 +604,36 @@ class SupabaseAuthService {
   // Get user data (alias for getUserById for compatibility)
   Future<UserModel?> getUserData(String uid) async {
     return await getUserById(uid);
+  }
+
+  // Check if user should stay logged in
+  bool get shouldStayLoggedIn {
+    final session = SupabaseConfig.auth.currentSession;
+    if (session == null) return false;
+
+    // Check if session is expired
+    if (session.isExpired) return false;
+
+    // Check if we have user data
+    if (_currentUser == null) return false;
+
+    return true;
+  }
+
+  // Get current session info for debugging
+  Map<String, dynamic> get sessionInfo {
+    final session = SupabaseConfig.auth.currentSession;
+    if (session == null) {
+      return {'status': 'no_session'};
+    }
+
+    return {
+      'status': 'active',
+      'user_id': session.user.id,
+      'expires_at': session.expiresAt?.toString(),
+      'is_expired': session.isExpired,
+      'has_user_data': _currentUser != null,
+      'current_user_id': _currentUser?.id,
+    };
   }
 }

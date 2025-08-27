@@ -7,11 +7,12 @@ import 'dart:async';
 import '../models/showcase_models.dart';
 import '../models/post_creation_models.dart';
 import '../utils/media_utils.dart';
+import '../config/cloudinary_config.dart';
 import 'auth_service_supabase_ready.dart';
 
 class ShowcaseService {
   static const String baseUrl =
-      'https://c3168f89d034.ngrok-free.app'; // ngrok tunnel - ACTIVE ✅
+      'https://prototype-348e.onrender.com'; // Render backend - ACTIVE ✅
 
   final AuthService _authService = AuthService();
 
@@ -54,31 +55,90 @@ class ShowcaseService {
     _uploadControllers.clear();
   }
 
+  /// Test database connection and check table schema
+  Future<bool> testDatabaseConnection() async {
+    try {
+      debugPrint('ShowcaseService: Testing database connection...');
+
+      // Try to fetch one row to test connection
+      final response =
+          await _supabase.from('showcase_posts').select('id').limit(1);
+
+      debugPrint('ShowcaseService: Database connection successful');
+      return true;
+    } catch (e) {
+      debugPrint('ShowcaseService: Database connection failed: $e');
+      return false;
+    }
+  }
+
+  /// Check if required columns exist in showcase_posts table
+  Future<Map<String, bool>> checkTableSchema() async {
+    try {
+      debugPrint('ShowcaseService: Checking table schema...');
+
+      // Try to select all columns to see which ones exist
+      final response =
+          await _supabase.from('showcase_posts').select('*').limit(1);
+
+      if (response.isNotEmpty) {
+        final columns = response.first.keys.toList();
+        debugPrint('ShowcaseService: Available columns: $columns');
+
+        return {
+          'allow_comments': columns.contains('allow_comments'),
+          'media_urls': columns.contains('media_urls'),
+          'media_types': columns.contains('media_types'),
+          'is_public': columns.contains('is_public'),
+        };
+      }
+
+      return {};
+    } catch (e) {
+      debugPrint('ShowcaseService: Error checking schema: $e');
+      return {};
+    }
+  }
+
   /// Create a new showcase post
   Future<void> createPost(Map<String, dynamic> postData) async {
     try {
       debugPrint('ShowcaseService: Creating post with Supabase...');
       debugPrint('ShowcaseService: Post data: ${json.encode(postData)}');
 
+      // First test database connection
+      final isConnected = await testDatabaseConnection();
+      if (!isConnected) {
+        throw Exception('Database connection failed');
+      }
+
+      // Check table schema
+      final schema = await checkTableSchema();
+      debugPrint('ShowcaseService: Table schema: $schema');
+
       final currentUserId = _authService.currentUserId;
       if (currentUserId == null) {
         throw Exception('User not authenticated');
       }
 
-      final requestBody = {
+      // Build request body based on available columns
+      final requestBody = <String, dynamic>{
         'user_id': currentUserId,
         'title': postData['title'] ?? '',
         'description': postData['description'] ?? '',
         'content': postData['content'] ?? '',
         'category': postData['category'] ?? 'general',
         'tags': postData['tags'] ?? [],
-        'skills_used': postData['skillsUsed'] ?? [],
-        'media_urls': postData['mediaUrls'] ?? [],
-        'media_types': postData['mediaTypes'] ?? [],
-        'is_public': postData['isPublic'] ?? true,
-        'allow_comments': postData['allowComments'] ?? true,
+        'skills_used': postData['skills_used'] ?? [],
+        'media_urls': postData['media_urls'] ?? [],
+        'media_types': postData['media_types'] ?? [],
         'created_at': DateTime.now().toIso8601String(),
       };
+
+      // Only add columns that exist in the database
+      if (schema['is_public'] == true) {
+        requestBody['is_public'] = postData['is_public'] ?? true;
+      }
 
       debugPrint('ShowcaseService: Request body: ${json.encode(requestBody)}');
 
@@ -91,24 +151,104 @@ class ShowcaseService {
     }
   }
 
+  /// Helper method to efficiently fetch profiles for multiple users
+  Future<Map<String, Map<String, dynamic>>> _fetchProfilesForUsers(
+      List<String> userIds) async {
+    try {
+      if (userIds.isEmpty) return {};
+
+      final profileResponse = await _supabase
+          .from('profiles')
+          .select('user_id, full_name, profile_image_url')
+          .inFilter('user_id', userIds);
+
+      final Map<String, Map<String, dynamic>> profilesMap = {};
+      for (final profile in profileResponse) {
+        final userId = profile['user_id'] as String;
+        profilesMap[userId] = {
+          'full_name': profile['full_name'],
+          'profile_image_url':
+              _getSafeProfileImageUrl(profile['profile_image_url']),
+        };
+      }
+
+      return profilesMap;
+    } catch (e) {
+      debugPrint('ShowcaseService: Error fetching profiles: $e');
+      return {};
+    }
+  }
+
+  /// Helper method to get safe profile image URL
+  String? _getSafeProfileImageUrl(dynamic imageUrl) {
+    if (imageUrl == null || imageUrl.toString().isEmpty) {
+      return null;
+    }
+
+    final url = imageUrl.toString();
+
+    // Check if it's a problematic placeholder URL
+    if (url.contains('via.placeholder.com') ||
+        url.contains('placeholder.com') ||
+        url.contains('dummyimage.com') ||
+        url.contains('placehold.it')) {
+      // Return null to trigger fallback widget
+      return null;
+    }
+
+    return url;
+  }
+
   /// Get all showcase posts
   Future<List<Map<String, dynamic>>> getAllPosts() async {
     try {
       debugPrint('ShowcaseService: Fetching posts from Supabase...');
 
+      // Use the correct query structure that works with Supabase
       final response = await _supabase.from('showcase_posts').select('''
-            *,
-            profiles:user_id (
-              name,
-              profile_picture_url
-            )
+            id,
+            user_id,
+            content,
+            category,
+            tags,
+            media_urls,
+            media_types,
+            is_public,
+            created_at,
+            updated_at,
+            is_edited,
+            location,
+            skills_used,
+            description,
+            title
           ''').eq('is_public', true).order('created_at', ascending: false);
 
       debugPrint(
-          'ShowcaseService: Retrieved ${response.length} posts from Supabase');
-      return response.map<Map<String, dynamic>>((post) => post).toList();
+          'ShowcaseService: Fetched ${response.length} posts from Supabase');
+
+      // Extract unique user IDs
+      final userIds =
+          response.map((post) => post['user_id'] as String).toSet().toList();
+
+      // Fetch all profiles efficiently in one query
+      final profilesMap = await _fetchProfilesForUsers(userIds);
+
+      // Combine post data with profile data
+      final List<Map<String, dynamic>> postsWithProfiles = response.map((post) {
+        final userId = post['user_id'] as String;
+        final profile = profilesMap[userId] ?? {};
+
+        return {
+          ...post,
+          'profiles': profile,
+        };
+      }).toList();
+
+      debugPrint(
+          'ShowcaseService: Successfully fetched ${postsWithProfiles.length} posts with profiles');
+      return postsWithProfiles;
     } catch (e) {
-      debugPrint('Error fetching showcase posts: $e');
+      debugPrint('ShowcaseService: Error fetching posts: $e');
       return [];
     }
   }
@@ -140,7 +280,7 @@ class ShowcaseService {
   /// Delete a showcase post
   Future<void> deletePost(String postId) async {
     try {
-      // First delete associated media files
+      // First delete associated media files from Cloudinary
       final postData = await _supabase
           .from('showcase_posts')
           .select('media_urls')
@@ -150,9 +290,8 @@ class ShowcaseService {
       if (postData['media_urls'] != null) {
         final mediaUrls = List<String>.from(postData['media_urls']);
         for (String url in mediaUrls) {
-          // Extract file path from URL and delete from storage
-          final fileName = url.split('/').last;
-          await _supabase.storage.from('showcase-media').remove([fileName]);
+          // Delete from Cloudinary using the deleteMediaFile method
+          await deleteMediaFile(url);
         }
       }
 
@@ -160,9 +299,6 @@ class ShowcaseService {
       await _supabase.from('showcase_posts').delete().eq('id', postId);
 
       debugPrint('ShowcaseService: Post deleted successfully: $postId');
-      // await SupabaseConfig.from('showcase_posts')
-      //     .delete()
-      //     .eq('id', postId);
     } catch (e) {
       debugPrint('Error deleting showcase post: $e');
       rethrow;
@@ -172,22 +308,42 @@ class ShowcaseService {
   /// Get posts by user ID
   Future<List<Map<String, dynamic>>> getPostsByUserId(String userId) async {
     try {
+      debugPrint('ShowcaseService: Getting posts for user: $userId');
+
       final response = await _supabase.from('showcase_posts').select('''
-            *,
-            profiles:user_id (
-              name,
-              profile_picture_url
-            )
+            id,
+            user_id,
+            content,
+            category,
+            tags,
+            media_urls,
+            media_types,
+            is_public,
+            created_at,
+            updated_at,
+            is_edited,
+            location,
+            skills_used,
+            description,
+            title
           ''').eq('user_id', userId).order('created_at', ascending: false);
 
-      return response.map<Map<String, dynamic>>((post) => post).toList();
-      // final response = await SupabaseConfig.from('showcase_posts')
-      //     .select()
-      //     .eq('userId', userId)
-      //     .order('createdAt', ascending: false);
-      // return response.map((post) => post as Map<String, dynamic>).toList();
+      // Fetch profile data for this user
+      final profileResponse = await _supabase
+          .from('profiles')
+          .select('full_name, profile_image_url')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      // Combine posts with profile data
+      return response.map<Map<String, dynamic>>((post) {
+        return {
+          ...post,
+          'profiles': profileResponse ?? {},
+        };
+      }).toList();
     } catch (e) {
-      debugPrint('Error fetching user posts: $e');
+      debugPrint('ShowcaseService: Error fetching user posts: $e');
       return [];
     }
   }
@@ -233,6 +389,46 @@ class ShowcaseService {
     }
   }
 
+  /// Upload file to Cloudinary with progress tracking
+  Future<String> _uploadFileToCloudinary({
+    required File file,
+    required String userId,
+    Function(double progress)? onProgress,
+  }) async {
+    try {
+      debugPrint('ShowcaseService: Uploading file to Cloudinary...');
+
+      final filePath = file.path;
+      final fileExtension = filePath.split('.').last.toLowerCase();
+
+      String cloudinaryUrl;
+
+      // Determine if it's image or video and upload accordingly
+      if (['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(fileExtension)) {
+        cloudinaryUrl = await CloudinaryConfig.uploadImage(
+          filePath: filePath,
+          userId: userId,
+          onProgress: onProgress,
+        );
+      } else if (['mp4', 'mov', 'avi', 'mkv'].contains(fileExtension)) {
+        cloudinaryUrl = await CloudinaryConfig.uploadVideo(
+          filePath: filePath,
+          userId: userId,
+          onProgress: onProgress,
+        );
+      } else {
+        throw Exception('Unsupported file type: $fileExtension');
+      }
+
+      debugPrint(
+          'ShowcaseService: File uploaded successfully to Cloudinary: $cloudinaryUrl');
+      return cloudinaryUrl;
+    } catch (e) {
+      debugPrint('Error uploading file to Cloudinary: $e');
+      rethrow;
+    }
+  }
+
   /// Upload single media file with compression and progress tracking
   Future<MediaModel?> _uploadSingleMediaFile({
     required File file,
@@ -250,11 +446,10 @@ class ShowcaseService {
       // Compress file if needed
       final processedFile = await MediaUtils.compressImage(file) ?? file;
 
-      // Upload to storage
-      final downloadUrl = await _uploadFileToStorage(
+      // Upload to Cloudinary instead of Supabase Storage
+      final downloadUrl = await _uploadFileToCloudinary(
         file: processedFile,
-        path: _imagesPath,
-        fileName: '$mediaId.${processedFile.path.split('.').last}',
+        userId: userId,
         onProgress: onProgress,
       );
 
@@ -270,34 +465,6 @@ class ShowcaseService {
     } catch (e) {
       debugPrint('Error uploading single media file: $e');
       return null;
-    }
-  }
-
-  /// Upload file to Supabase Storage with progress tracking
-  Future<String> _uploadFileToStorage({
-    required File file,
-    required String path,
-    required String fileName,
-    Function(double progress)? onProgress,
-  }) async {
-    try {
-      final uniqueFileName =
-          '${DateTime.now().millisecondsSinceEpoch}_${fileName}';
-
-      // Upload file to Supabase Storage
-      await _supabase.storage
-          .from('showcase-media')
-          .upload(uniqueFileName, file);
-
-      // Get public URL
-      final publicUrl =
-          _supabase.storage.from('showcase-media').getPublicUrl(uniqueFileName);
-
-      debugPrint('ShowcaseService: File uploaded successfully to: $publicUrl');
-      return publicUrl;
-    } catch (e) {
-      debugPrint('Error uploading file to storage: $e');
-      rethrow;
     }
   }
 
@@ -364,7 +531,7 @@ class ShowcaseService {
     }
   }
 
-  /// Create showcase post with media using backend API
+  /// Create showcase post with media using Supabase
   Future<PostCreationResult> createShowcasePost({
     required String content,
     required PostType type,
@@ -378,41 +545,50 @@ class ShowcaseService {
     try {
       debugPrint('ShowcaseService: Creating showcase post with media...');
 
-      final token = await _getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token available');
+      final currentUserId = _authService.currentUserId;
+      if (currentUserId == null) {
+        throw Exception('User not authenticated');
       }
 
-      // Upload media files first
+      // Upload media files first if any
       List<MediaModel> uploadedMedia = [];
       if (mediaFiles.isNotEmpty) {
+        debugPrint(
+            'ShowcaseService: Uploading ${mediaFiles.length} media files...');
         uploadedMedia = await uploadMediaFiles(
           files: mediaFiles,
-          userId: _authService.currentUserId ?? 'anonymous',
+          userId: currentUserId,
           onProgress: (mediaId, progress) {
             debugPrint(
                 'Upload progress for $mediaId: ${(progress * 100).toStringAsFixed(1)}%');
           },
         );
+        debugPrint(
+            'ShowcaseService: Successfully uploaded ${uploadedMedia.length} media files');
       }
 
       // Create post data
       final postData = {
+        'user_id': currentUserId,
         'content': content,
-        'type': type.toString().split('.').last,
+        'title':
+            content.length > 50 ? '${content.substring(0, 50)}...' : content,
+        'description': content,
         'category': category.toString().split('.').last,
-        'privacy': privacy.toString().split('.').last,
         'tags': tags,
-        'mentions': mentions.map((m) => m.toJson()).toList(),
-        'mediaUrls': uploadedMedia.map((m) => m.url).toList(),
-        'mediaTypes': uploadedMedia.map((m) => m.type).toList(),
-        'location': location,
-        'isPublic': privacy == PostPrivacy.public,
-        'allowComments': true,
+        'media_urls': uploadedMedia.map((m) => m.url).toList(),
+        'media_types': uploadedMedia.map((m) => m.type).toList(),
+        'is_public': privacy == PostPrivacy.public,
+        'allow_comments': true,
+        'created_at': DateTime.now().toIso8601String(),
       };
 
-      // Create post via backend API
+      debugPrint('ShowcaseService: Creating post with data: ${postData.keys}');
+
+      // Create post via Supabase
       await createPost(postData);
+
+      debugPrint('ShowcaseService: Post created successfully!');
 
       return PostCreationResult(
         success: true,
@@ -428,7 +604,7 @@ class ShowcaseService {
     }
   }
 
-  /// Get showcase posts with pagination and filtering
+  /// Get showcase posts with pagination and filtering (simple, reliable method)
   Future<List<ShowcasePostModel>> getShowcasePosts({
     int limit = 10,
     String? lastPostId,
@@ -437,87 +613,211 @@ class ShowcaseService {
     String? userId,
   }) async {
     try {
-      final response = await _supabase
-          .from('showcase_posts')
-          .select('''
-            *,
-            profiles:user_id (
-              name,
-              profile_picture_url
-            )
-          ''')
-          .eq('is_public', true)
-          .order('created_at', ascending: false)
-          .limit(limit);
+      debugPrint('ShowcaseService: Getting showcase posts (simple method)...');
 
-      return response
-          .map<ShowcasePostModel>((post) => ShowcasePostModel.fromJson(post))
-          .toList();
-      // final response = await SupabaseConfig.from('showcase_posts')
-      //     .select()
-      //     .order('createdAt', ascending: false)
-      //     .limit(limit);
-      // return response.map((post) =>
-      //     ShowcasePostModel.fromJson(post as Map<String, dynamic>)).toList();
-    } catch (e) {
-      debugPrint('Error getting showcase posts: $e');
-      return [];
-    }
-  }
-
-  /// Get showcase posts as a stream
-  Stream<List<ShowcasePostModel>> getShowcasePostsStream({
-    int limit = 10,
-    PostPrivacy? privacy,
-    PostCategory? category,
-    String? userId,
-  }) {
-    try {
-      dynamic query = _supabase.from('showcase_posts').select('''
-            *,
-            profiles:user_id (
-              name,
-              profile_picture_url
-            )
+      // Build the base query
+      var query = _supabase.from('showcase_posts').select('''
+            id,
+            user_id,
+            content,
+            category,
+            tags,
+            media_urls,
+            media_types,
+            is_public,
+            created_at,
+            updated_at,
+            is_edited,
+            location,
+            skills_used,
+            description,
+            title
           ''');
 
-      // Apply filters before ordering and limiting
+      // Apply filters
       if (privacy != null) {
         query = query.eq('is_public', privacy == PostPrivacy.public);
+      } else {
+        // Default to public posts
+        query = query.eq('is_public', true);
       }
+
       if (category != null) {
         query = query.eq('category', category.toString().split('.').last);
       }
+
       if (userId != null) {
         query = query.eq('user_id', userId);
       }
 
-      // Apply ordering and limiting after filters
-      final finalQuery =
-          query.order('created_at', ascending: false).limit(limit);
+      // Apply ordering and limiting
+      final response =
+          await query.order('created_at', ascending: false).limit(limit);
 
-      return finalQuery.asStream().map((data) => data
-          .map<ShowcasePostModel>((post) => ShowcasePostModel.fromJson(post))
-          .toList());
+      debugPrint('ShowcaseService: Retrieved ${response.length} posts');
+
+      // Extract unique user IDs
+      final userIds =
+          response.map((post) => post['user_id'] as String).toSet().toList();
+
+      // Fetch all profiles efficiently in one query
+      final profilesMap = await _fetchProfilesForUsers(userIds);
+
+      // Parse posts to ShowcasePostModel
+      final List<ShowcasePostModel> postsWithProfiles = [];
+
+      for (final post in response) {
+        try {
+          final userId = post['user_id'] as String;
+          final profile = profilesMap[userId] ?? {};
+
+          // Combine post data with profile data
+          final postWithProfile = {
+            ...post,
+            'profiles': profile,
+          };
+
+          // Parse to ShowcasePostModel
+          final postModel = ShowcasePostModel.fromJson(postWithProfile);
+          postsWithProfiles.add(postModel);
+        } catch (e) {
+          debugPrint('ShowcaseService: Error parsing post ${post['id']}: $e');
+          // Skip this post if there's an error
+          continue;
+        }
+      }
+
+      debugPrint(
+          'ShowcaseService: Successfully parsed ${postsWithProfiles.length} posts');
+      return postsWithProfiles;
     } catch (e) {
-      debugPrint('Error getting showcase posts stream: $e');
-      return Stream.value([]);
+      debugPrint('ShowcaseService: Error getting showcase posts: $e');
+      return [];
     }
   }
 
-  /// Delete media file from storage
+  /// Get showcase posts without real-time (fallback method)
+  Future<List<ShowcasePostModel>> getShowcasePostsSimple({
+    int limit = 10,
+    PostPrivacy? privacy,
+    PostCategory? category,
+    String? userId,
+  }) async {
+    try {
+      debugPrint(
+          'ShowcaseService: Getting showcase posts (simple fallback method)...');
+
+      // Use the simple method that we know works
+      return await getShowcasePosts(
+        limit: limit,
+        privacy: privacy,
+        category: category,
+        userId: userId,
+      );
+    } catch (e) {
+      debugPrint('ShowcaseService: Error in simple method: $e');
+      return [];
+    }
+  }
+
+  /// Refresh showcase feed after new post creation
+  Future<void> refreshFeed() async {
+    try {
+      debugPrint('ShowcaseService: Refreshing showcase feed...');
+
+      // Trigger a refresh by updating a timestamp or using a refresh mechanism
+      // This will be handled by the UI layer calling getShowcasePosts() again
+
+      debugPrint('ShowcaseService: Feed refresh triggered');
+    } catch (e) {
+      debugPrint('ShowcaseService: Error refreshing feed: $e');
+    }
+  }
+
+  /// Get showcase posts as a real-time stream (fixed method)
+  Stream<List<ShowcasePostModel>> getShowcasePostsRealtimeStream({
+    int limit = 10,
+    PostCategory? category,
+    PostPrivacy? privacy,
+    String? userId,
+  }) {
+    try {
+      debugPrint('ShowcaseService: Setting up real-time subscription...');
+
+      // Use the working approach: fetch posts first, then profiles
+      return Stream.periodic(const Duration(seconds: 5)).asyncMap((_) async {
+        try {
+          // Use the working getShowcasePosts method
+          return await getShowcasePosts(
+            limit: limit,
+            privacy: privacy,
+            category: category,
+            userId: userId,
+          );
+        } catch (e) {
+          debugPrint('ShowcaseService: Error in real-time stream: $e');
+          return <ShowcasePostModel>[];
+        }
+      }).handleError((error) {
+        debugPrint('ShowcaseService: Real-time stream error: $error');
+        return <ShowcasePostModel>[];
+      });
+    } catch (e) {
+      debugPrint(
+          'ShowcaseService: Error in getShowcasePostsRealtimeStream: $e');
+      return Stream.value(<ShowcasePostModel>[]);
+    }
+  }
+
+  /// Helper method to fetch and emit posts
+  Future<void> _fetchAndEmitPosts(
+    StreamController<List<ShowcasePostModel>> controller,
+    int limit,
+    PostCategory? category,
+    PostPrivacy? privacy,
+    String? userId,
+  ) async {
+    try {
+      final posts = await getShowcasePosts(
+        limit: limit,
+        privacy: privacy,
+        category: category,
+        userId: userId,
+      );
+
+      if (!controller.isClosed) {
+        controller.add(posts);
+      }
+    } catch (e) {
+      debugPrint('ShowcaseService: Error fetching posts for stream: $e');
+      if (!controller.isClosed) {
+        controller.add([]);
+      }
+    }
+  }
+
+  /// Delete media file from Cloudinary
   Future<void> deleteMediaFile(String mediaUrl) async {
     try {
-      // Extract filename from URL
-      final uri = Uri.parse(mediaUrl);
-      final fileName = uri.pathSegments.last;
+      // Extract public ID from Cloudinary URL
+      final publicId = CloudinaryConfig.getPublicId(mediaUrl);
 
-      // Delete from Supabase Storage
-      await _supabase.storage.from('showcase-media').remove([fileName]);
-
-      debugPrint('ShowcaseService: Media file deleted successfully: $fileName');
+      if (publicId != null) {
+        // Delete from Cloudinary
+        final success = await CloudinaryConfig.deleteFile(publicId);
+        if (success) {
+          debugPrint(
+              'ShowcaseService: Media file deleted successfully from Cloudinary: $publicId');
+        } else {
+          debugPrint(
+              'ShowcaseService: Failed to delete media file from Cloudinary: $publicId');
+        }
+      } else {
+        debugPrint(
+            'ShowcaseService: Could not extract public ID from URL: $mediaUrl');
+      }
     } catch (e) {
-      debugPrint('Error deleting media file: $e');
+      debugPrint('Error deleting media file from Cloudinary: $e');
       // Don't rethrow - file might already be deleted
     }
   }
@@ -681,10 +981,26 @@ class ShowcaseService {
   /// Increment view count
   Future<void> incrementViewCount(String postId) async {
     try {
-      // Use RPC function to increment view count atomically
-      await _supabase.rpc('increment_view_count', params: {'post_id': postId});
+      // TODO: Create the increment_view_count function in Supabase
+      // For now, just log the view increment
+      debugPrint(
+          'ShowcaseService: View count increment requested for post: $postId');
 
-      debugPrint('ShowcaseService: View count incremented for post: $postId');
+      // Option 1: Use a simple update (if you have a view_count column)
+      // await _supabase
+      //     .from('showcase_posts')
+      //     .update({'view_count': _supabase.sql('view_count + 1')})
+      //     .eq('id', postId);
+
+      // Option 2: Create the function in Supabase SQL Editor:
+      // CREATE OR REPLACE FUNCTION increment_view_count(post_id UUID)
+      // RETURNS void AS $$
+      // BEGIN
+      //   UPDATE showcase_posts
+      //   SET view_count = COALESCE(view_count, 0) + 1
+      //   WHERE id = post_id;
+      // END;
+      // $$ LANGUAGE plpgsql;
     } catch (e) {
       debugPrint('Error incrementing view count: $e');
       // Don't rethrow - view count is not critical
@@ -857,5 +1173,12 @@ class _MockDocument {
     // TODO: Implement with Supabase
     debugPrint('Mock get called for document $id');
     return null;
+  }
+
+  /// Add snapshots() method for compatibility with PostDetailScreen
+  Stream<dynamic> snapshots() {
+    // Return an empty stream for now
+    debugPrint('Mock snapshots() called for document $id');
+    return Stream.value(null);
   }
 }

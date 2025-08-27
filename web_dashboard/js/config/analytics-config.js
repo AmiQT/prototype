@@ -106,13 +106,7 @@ export const METRICS = {
         byDepartment: 'Users by Department',
         growth: 'User Growth'
     },
-    ACHIEVEMENTS: {
-        total: 'Total Achievements',
-        verified: 'Verified Achievements',
-        pending: 'Pending Achievements',
-        byType: 'Achievements by Type',
-        byPoints: 'Achievements by Points'
-    },
+
     EVENTS: {
         total: 'Total Events',
         active: 'Active Events',

@@ -4,6 +4,7 @@ import '../../services/supabase_auth_service.dart';
 import '../../models/user_model.dart';
 import '../../widgets/settings_widgets.dart';
 import '../../widgets/settings/language_selector.dart';
+import '../../widgets/settings/theme_selector.dart';
 import '../../l10n/generated/app_localizations.dart';
 // import '../../debug/api_debug_screen.dart'; // Debug screen removed
 // import '../debug/fix_user_document_screen.dart'; // Debug screen removed
@@ -44,10 +45,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content:
-                Text('No user data found. Please try logging out and back in.'),
-            backgroundColor: Colors.red,
+                const Text('No user data found. Please try logging out and back in.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -59,7 +60,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error loading user data: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -120,7 +121,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
             child: const Text('Sign Out'),
           ),
         ],
@@ -142,7 +143,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Error signing out: ${e.toString()}'),
-              backgroundColor: Colors.red,
+              backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
         }
@@ -153,11 +154,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: const Text('Settings'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0.5,
         centerTitle: true,
       ),
@@ -178,7 +179,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             CircleAvatar(
                               radius: 30,
                               backgroundColor: Theme.of(context)
-                                  .primaryColor
+                                  .colorScheme
+                                  .primary
                                   .withValues(alpha: 0.1),
                               child: Text(
                                 _currentUser!.name.isNotEmpty
@@ -187,7 +189,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 style: TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).primaryColor,
+                                  color: Theme.of(context).colorScheme.primary,
                                 ),
                               ),
                             ),
@@ -208,7 +210,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     _currentUser!.email,
                                     style: TextStyle(
                                       fontSize: 14,
-                                      color: Colors.grey[600],
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -219,7 +223,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     ),
                                     decoration: BoxDecoration(
                                       color: Theme.of(context)
-                                          .primaryColor
+                                          .colorScheme.primary
                                           .withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -232,7 +236,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w500,
-                                        color: Theme.of(context).primaryColor,
+                                        color: Theme.of(context).colorScheme.primary,
                                       ),
                                     ),
                                   ),
@@ -278,6 +282,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     subtitle:
                         AppLocalizations.of(context).customizeYourExperience,
                   ),
+
+                  // Theme Selector
+                  const ThemeSelector(),
+
                   SettingsCard(
                     child: Column(
                       children: [

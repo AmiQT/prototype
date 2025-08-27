@@ -56,10 +56,10 @@ class RichTextMessage extends StatelessWidget {
   }
 
   MarkdownStyleSheet _buildMarkdownStyleSheet(BuildContext context) {
-    final baseColor = isUser ? Colors.white : AppTheme.textPrimaryColor;
+    final baseColor = isUser ? Colors.white : Theme.of(context).colorScheme.onSurfaceVariant;
     final secondaryColor = isUser
         ? Colors.white.withValues(alpha: 0.8)
-        : AppTheme.textSecondaryColor;
+        : Theme.of(context).colorScheme.onSurfaceVariant;
 
     return MarkdownStyleSheet(
       // Paragraph text
@@ -120,22 +120,22 @@ class RichTextMessage extends StatelessWidget {
 
       // Code
       code: TextStyle(
-        color: isUser ? Colors.white : AppTheme.primaryColor,
+        color: isUser ? Colors.white : Theme.of(context).colorScheme.primary,
         backgroundColor: isUser
             ? Colors.white.withValues(alpha: 0.2)
-            : AppTheme.primaryColor.withValues(alpha: 0.1),
+            : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
         fontFamily: 'monospace',
         fontSize: 14,
       ),
       codeblockDecoration: BoxDecoration(
         color: isUser
             ? Colors.white.withValues(alpha: 0.1)
-            : AppTheme.surfaceColor.withValues(alpha: 0.5),
+            : Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isUser
               ? Colors.white.withValues(alpha: 0.3)
-              : AppTheme.primaryColor.withValues(alpha: 0.2),
+              : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
         ),
       ),
       codeblockPadding: const EdgeInsets.all(12),
@@ -149,9 +149,9 @@ class RichTextMessage extends StatelessWidget {
 
       // Links
       a: TextStyle(
-        color: isUser ? Colors.white : AppTheme.primaryColor,
+        color: isUser ? Colors.white : Theme.of(context).colorScheme.primary,
         decoration: TextDecoration.underline,
-        decorationColor: isUser ? Colors.white : AppTheme.primaryColor,
+        decorationColor: isUser ? Colors.white : Theme.of(context).colorScheme.primary,
       ),
 
       // Blockquotes
@@ -164,7 +164,7 @@ class RichTextMessage extends StatelessWidget {
           left: BorderSide(
             color: isUser
                 ? Colors.white.withValues(alpha: 0.5)
-                : AppTheme.primaryColor,
+                : Theme.of(context).colorScheme.primary,
             width: 4,
           ),
         ),
@@ -182,7 +182,7 @@ class RichTextMessage extends StatelessWidget {
       tableBorder: TableBorder.all(
         color: isUser
             ? Colors.white.withValues(alpha: 0.3)
-            : AppTheme.primaryColor.withValues(alpha: 0.2),
+            : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
       ),
       tableCellsPadding: const EdgeInsets.all(8),
 
@@ -192,7 +192,7 @@ class RichTextMessage extends StatelessWidget {
           top: BorderSide(
             color: isUser
                 ? Colors.white.withValues(alpha: 0.3)
-                : AppTheme.primaryColor.withValues(alpha: 0.2),
+                : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
             width: 1,
           ),
         ),

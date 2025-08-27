@@ -48,10 +48,10 @@ class _ChatInputFieldState extends State<ChatInputField> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
+        color: Theme.of(context).colorScheme.surface,
         border: Border(
           top: BorderSide(
-            color: AppTheme.grayColor.withValues(alpha: 0.2),
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
             width: 1,
           ),
         ),
@@ -72,10 +72,10 @@ class _ChatInputFieldState extends State<ChatInputField> {
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: AppTheme.backgroundColor,
+                      color: Theme.of(context).colorScheme.surfaceVariant,
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                        color: AppTheme.grayColor.withValues(alpha: 0.3),
+                        color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -90,8 +90,8 @@ class _ChatInputFieldState extends State<ChatInputField> {
                         hintText: widget.enabled
                             ? 'Ask me anything about your studies...'
                             : 'Chat is temporarily unavailable',
-                        hintStyle: const TextStyle(
-                          color: AppTheme.textSecondaryColor,
+                        hintStyle: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontSize: 16,
                         ),
                         border: InputBorder.none,
@@ -101,8 +101,8 @@ class _ChatInputFieldState extends State<ChatInputField> {
                         ),
                         counterText: '', // Hide character counter
                       ),
-                      style: const TextStyle(
-                        color: AppTheme.textPrimaryColor,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 16,
                       ),
                       onSubmitted: widget.enabled && _hasText
@@ -116,8 +116,8 @@ class _ChatInputFieldState extends State<ChatInputField> {
                   duration: const Duration(milliseconds: 200),
                   child: Material(
                     color: _hasText && widget.enabled
-                        ? AppTheme.primaryColor
-                        : AppTheme.grayColor.withValues(alpha: 0.3),
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(24),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(24),
@@ -131,8 +131,8 @@ class _ChatInputFieldState extends State<ChatInputField> {
                         child: Icon(
                           Icons.send_rounded,
                           color: _hasText && widget.enabled
-                              ? Colors.white
-                              : AppTheme.textSecondaryColor,
+                              ? Theme.of(context).colorScheme.onPrimary
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
                           size: 20,
                         ),
                       ),

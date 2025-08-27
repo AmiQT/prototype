@@ -68,9 +68,8 @@ function testDOMElements() {
     
     const elements = [
         'analytics',
-        'userChart',
-        'eventChart', 
-        'achievementChart'
+                'totalUserChart',
+        'courseChart'
     ];
     
     const found = [];

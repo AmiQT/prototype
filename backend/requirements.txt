@@ -9,6 +9,7 @@ aiofiles>=23.0.0
 
 # Authentication & Security
 python-jose[cryptography]>=3.3.0
+PyJWT>=2.8.0
 
 # Media handling
 cloudinary>=1.36.0

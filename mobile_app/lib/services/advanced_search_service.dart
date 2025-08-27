@@ -3,8 +3,9 @@ import 'package:http/http.dart' as http;
 import '../config/supabase_config.dart';
 
 class AdvancedSearchService {
-  static const String baseUrl = 'https://c3168f89d034.ngrok-free.app'; // ngrok tunnel
-  
+  static const String baseUrl =
+      'https://prototype-348e.onrender.com'; // Render backend
+
   // Get Supabase auth token for authentication
   static Future<String?> _getAuthToken() async {
     try {
@@ -17,7 +18,7 @@ class AdvancedSearchService {
       return null;
     }
   }
-  
+
   // Check if test data exists
   static Future<Map<String, dynamic>> checkTestData() async {
     try {
@@ -25,7 +26,7 @@ class AdvancedSearchService {
       if (token == null) {
         throw Exception('No authentication token available');
       }
-      
+
       final response = await http.get(
         Uri.parse('$baseUrl/api/search-simple/test-data-check'),
         headers: {
@@ -33,7 +34,7 @@ class AdvancedSearchService {
           'Authorization': 'Bearer $token',
         },
       );
-      
+
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
@@ -43,7 +44,7 @@ class AdvancedSearchService {
       throw Exception('Test data check error: $e');
     }
   }
-  
+
   // Get search statistics
   static Future<Map<String, dynamic>> getSearchStats() async {
     try {
@@ -51,7 +52,7 @@ class AdvancedSearchService {
       if (token == null) {
         throw Exception('No authentication token available');
       }
-      
+
       final response = await http.get(
         Uri.parse('$baseUrl/api/search-simple/stats'),
         headers: {
@@ -59,7 +60,7 @@ class AdvancedSearchService {
           'Authorization': 'Bearer $token',
         },
       );
-      
+
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
@@ -69,7 +70,7 @@ class AdvancedSearchService {
       throw Exception('Search stats error: $e');
     }
   }
-  
+
   // Simplified student search that works reliably
   static Future<Map<String, dynamic>> searchStudents({
     String? query,
@@ -93,58 +94,143 @@ class AdvancedSearchService {
     String sortOrder = 'asc',
   }) async {
     try {
-      final token = await _getAuthToken();
-      if (token == null) {
-        throw Exception('No authentication token available');
+      // Try backend first, fallback to direct Supabase query
+      try {
+        final token = await _getAuthToken();
+        if (token != null) {
+          // Build query parameters
+          final queryParams = <String, String>{
+            'limit': limit.toString(),
+            'offset': offset.toString(),
+            'sort_by': sortBy,
+            'sort_order': sortOrder,
+          };
+
+          // Add optional parameters
+          if (query != null && query.isNotEmpty) queryParams['q'] = query;
+          if (name != null && name.isNotEmpty) queryParams['name'] = name;
+          if (email != null && email.isNotEmpty) queryParams['email'] = email;
+          if (studentId != null && studentId.isNotEmpty)
+            queryParams['student_id'] = studentId;
+          if (department != null && department.isNotEmpty)
+            queryParams['department'] = department;
+          if (faculty != null && faculty.isNotEmpty)
+            queryParams['faculty'] = faculty;
+          if (yearOfStudy != null && yearOfStudy.isNotEmpty)
+            queryParams['year_of_study'] = yearOfStudy;
+          if (skills != null && skills.isNotEmpty)
+            queryParams['skills'] = skills;
+          if (interests != null && interests.isNotEmpty)
+            queryParams['interests'] = interests;
+          if (minAchievements != null)
+            queryParams['min_achievements'] = minAchievements.toString();
+          if (achievementCategory != null && achievementCategory.isNotEmpty)
+            queryParams['achievement_category'] = achievementCategory;
+          if (minEvents != null)
+            queryParams['min_events'] = minEvents.toString();
+          if (eventCategory != null && eventCategory.isNotEmpty)
+            queryParams['event_category'] = eventCategory;
+          if (minCgpa != null) queryParams['min_cgpa'] = minCgpa.toString();
+          if (maxCgpa != null) queryParams['max_cgpa'] = maxCgpa.toString();
+
+          final uri = Uri.parse('$baseUrl/api/search-simple/students').replace(
+            queryParameters: queryParams,
+          );
+
+          final response = await http.get(
+            uri,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          );
+
+          if (response.statusCode == 200) {
+            return json.decode(response.body);
+          }
+        }
+      } catch (e) {
+        print('Backend search failed, using Supabase fallback: $e');
       }
-      
-      // Build query parameters
-      final queryParams = <String, String>{
-        'limit': limit.toString(),
-        'offset': offset.toString(),
-        'sort_by': sortBy,
-        'sort_order': sortOrder,
-      };
-      
-      // Add optional parameters
-      if (query != null && query.isNotEmpty) queryParams['q'] = query;
-      if (name != null && name.isNotEmpty) queryParams['name'] = name;
-      if (email != null && email.isNotEmpty) queryParams['email'] = email;
-      if (studentId != null && studentId.isNotEmpty) queryParams['student_id'] = studentId;
-      if (department != null && department.isNotEmpty) queryParams['department'] = department;
-      if (faculty != null && faculty.isNotEmpty) queryParams['faculty'] = faculty;
-      if (yearOfStudy != null && yearOfStudy.isNotEmpty) queryParams['year_of_study'] = yearOfStudy;
-      if (skills != null && skills.isNotEmpty) queryParams['skills'] = skills;
-      if (interests != null && interests.isNotEmpty) queryParams['interests'] = interests;
-      if (minAchievements != null) queryParams['min_achievements'] = minAchievements.toString();
-      if (achievementCategory != null && achievementCategory.isNotEmpty) queryParams['achievement_category'] = achievementCategory;
-      if (minEvents != null) queryParams['min_events'] = minEvents.toString();
-      if (eventCategory != null && eventCategory.isNotEmpty) queryParams['event_category'] = eventCategory;
-      if (minCgpa != null) queryParams['min_cgpa'] = minCgpa.toString();
-      if (maxCgpa != null) queryParams['max_cgpa'] = maxCgpa.toString();
-      
-      final uri = Uri.parse('$baseUrl/api/search-simple/students').replace(
-        queryParameters: queryParams,
+
+      // Fallback: Direct Supabase query
+      return await _searchStudentsFromSupabase(
+        query: query,
+        name: name,
+        email: email,
+        studentId: studentId,
+        department: department,
+        faculty: faculty,
+        yearOfStudy: yearOfStudy,
+        skills: skills,
+        interests: interests,
+        limit: limit,
+        offset: offset,
       );
-      
-      final response = await http.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
-      
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
-      } else {
-        throw Exception('Search failed: ${response.body}');
-      }
     } catch (e) {
       throw Exception('Advanced search error: $e');
     }
   }
-  
+
+  // Direct Supabase search fallback
+  static Future<Map<String, dynamic>> _searchStudentsFromSupabase({
+    String? query,
+    String? name,
+    String? email,
+    String? studentId,
+    String? department,
+    String? faculty,
+    String? yearOfStudy,
+    String? skills,
+    String? interests,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    try {
+      var supabaseQuery = SupabaseConfig.client
+          .from('profiles')
+          .select('*')
+          .range(offset, offset + limit - 1);
+
+      // Apply filters
+      if (query != null && query.isNotEmpty) {
+        supabaseQuery = supabaseQuery.or(
+            'full_name.ilike.%$query%,bio.ilike.%$query%,department.ilike.%$query%');
+      }
+      if (name != null && name.isNotEmpty) {
+        supabaseQuery = supabaseQuery.ilike('full_name', '%$name%');
+      }
+      if (email != null && email.isNotEmpty) {
+        supabaseQuery = supabaseQuery.ilike('email', '%$email%');
+      }
+      if (studentId != null && studentId.isNotEmpty) {
+        supabaseQuery = supabaseQuery.eq('student_id', studentId);
+      }
+      if (department != null && department.isNotEmpty) {
+        supabaseQuery = supabaseQuery.ilike('department', '%$department%');
+      }
+      if (faculty != null && faculty.isNotEmpty) {
+        supabaseQuery = supabaseQuery.ilike('faculty', '%$faculty%');
+      }
+      if (yearOfStudy != null && yearOfStudy.isNotEmpty) {
+        supabaseQuery = supabaseQuery.eq('year_of_study', yearOfStudy);
+      }
+
+      final results = await supabaseQuery.order('created_at', ascending: false);
+
+      return {
+        'success': true,
+        'data': results,
+        'total': results.length,
+        'limit': limit,
+        'offset': offset,
+        'source': 'supabase_fallback'
+      };
+    } catch (e) {
+      throw Exception('Supabase search error: $e');
+    }
+  }
+
   // Find students similar to a specific student
   static Future<Map<String, dynamic>> findSimilarStudents(
     String studentId, {
@@ -155,11 +241,12 @@ class AdvancedSearchService {
       if (token == null) {
         throw Exception('No authentication token available');
       }
-      
-      final uri = Uri.parse('$baseUrl/api/search/similar-students/$studentId').replace(
+
+      final uri =
+          Uri.parse('$baseUrl/api/search/similar-students/$studentId').replace(
         queryParameters: {'limit': limit.toString()},
       );
-      
+
       final response = await http.get(
         uri,
         headers: {
@@ -167,7 +254,7 @@ class AdvancedSearchService {
           'Authorization': 'Bearer $token',
         },
       );
-      
+
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
@@ -177,29 +264,30 @@ class AdvancedSearchService {
       throw Exception('Similar students error: $e');
     }
   }
-  
+
   // Quick search presets for common use cases (simplified)
-  static Future<Map<String, dynamic>> searchByDepartment(String department) async {
+  static Future<Map<String, dynamic>> searchByDepartment(
+      String department) async {
     return await searchStudents(
       department: department,
       limit: 20,
     );
   }
-  
+
   static Future<Map<String, dynamic>> searchByName(String name) async {
     return await searchStudents(
       query: name,
       limit: 20,
     );
   }
-  
+
   static Future<Map<String, dynamic>> searchFSKTMStudents() async {
     return await searchStudents(
       department: 'FSKTM',
       limit: 20,
     );
   }
-  
+
   static Future<Map<String, dynamic>> searchAllStudents() async {
     return await searchStudents(
       limit: 20,

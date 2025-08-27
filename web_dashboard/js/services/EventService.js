@@ -42,13 +42,6 @@ export class EventService extends BaseService {
     // Create new event
     async createEvent(eventData) {
         try {
-            // Process badges if they're a string
-            if (typeof eventData.badges === 'string') {
-                eventData.badges = eventData.badges
-                    .split(',')
-                    .map(b => b.trim())
-                    .filter(b => b);
-            }
 
             const response = await this.request(this.apiEndpoint, {
                 method: 'POST',
@@ -69,13 +62,6 @@ export class EventService extends BaseService {
     // Update event
     async updateEvent(eventId, eventData) {
         try {
-            // Process badges if they're a string
-            if (typeof eventData.badges === 'string') {
-                eventData.badges = eventData.badges
-                    .split(',')
-                    .map(b => b.trim())
-                    .filter(b => b);
-            }
 
             const response = await this.request(`${this.apiEndpoint}/${eventId}`, {
                 method: 'PUT',
@@ -194,7 +180,6 @@ export class EventService extends BaseService {
             total: this.events.length,
             byCategory: {},
             withRegistration: 0,
-            withBadges: 0,
             upcoming: 0
         };
 
@@ -210,10 +195,7 @@ export class EventService extends BaseService {
                 stats.withRegistration++;
             }
             
-            // Count events with badges
-            if (event.badges && event.badges.length > 0) {
-                stats.withBadges++;
-            }
+
             
             // Count upcoming events
             if (event.date && new Date(event.date) >= now) {

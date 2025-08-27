@@ -9,7 +9,7 @@ import '../config/supabase_config.dart';
 
 class ProfileService {
   static const String baseUrl =
-      'https://c3168f89d034.ngrok-free.app'; // ngrok tunnel
+      'https://prototype-348e.onrender.com'; // Render backend
 
   // Get Supabase auth token for authentication
   static Future<String?> _getAuthToken() async {
@@ -251,7 +251,7 @@ class ProfileService {
     }
   }
 
-  // Get all profiles
+  /// Get all profiles
   Future<List<ProfileModel>> getAllProfiles() async {
     try {
       final response = await SupabaseConfig.client
@@ -266,7 +266,8 @@ class ProfileService {
                 fullName: data['full_name'] ?? '',
                 headline: data['headline'],
                 bio: data['bio'],
-                profileImageUrl: data['profile_image_url'],
+                profileImageUrl:
+                    _getSafeProfileImageUrl(data['profile_image_url']),
                 academicInfo: data['academic_info'] != null
                     ? AcademicInfoModel.fromJson(data['academic_info'])
                     : null,
@@ -280,13 +281,23 @@ class ProfileService {
                         ?.map((p) => ProjectModel.fromJson(p))
                         .toList() ??
                     [],
+                linkedinUrl: data['linkedin_url'],
+                githubUrl: data['github_url'],
+                portfolioUrl: data['portfolio_url'],
+                phone: data['phone'],
+                studentId: data['student_id'],
+                department: data['department'],
+                faculty: data['faculty'],
+                yearOfStudy: data['year_of_study'],
+                cgpa: data['cgpa']?.toString(),
+                languages: List<String>.from(data['languages'] ?? []),
                 isProfileComplete: data['is_profile_complete'] ?? false,
                 completedSections: ['basic'], // Default sections
                 createdAt: data['created_at'] != null
-                    ? DateTime.parse(data['created_at'])
+                    ? DateTime.parse(data['created_at'].toString())
                     : DateTime.now(),
                 updatedAt: data['updated_at'] != null
-                    ? DateTime.parse(data['updated_at'])
+                    ? DateTime.parse(data['updated_at'].toString())
                     : DateTime.now(),
               ))
           .toList();
@@ -294,6 +305,25 @@ class ProfileService {
       debugPrint('ProfileService: Error getting all profiles: $e');
       return [];
     }
+  }
+
+  /// Helper method to get safe profile image URL
+  String? _getSafeProfileImageUrl(dynamic imageUrl) {
+    if (imageUrl == null || imageUrl.toString().isEmpty) {
+      return null;
+    }
+
+    final url = imageUrl.toString();
+
+    // Check if it's a placeholder URL that might fail
+    if (url.contains('via.placeholder.com') ||
+        url.contains('placeholder.com') ||
+        url.contains('dummyimage.com')) {
+      // Return a more reliable placeholder or null
+      return null;
+    }
+
+    return url;
   }
 
   // Get profile by ID

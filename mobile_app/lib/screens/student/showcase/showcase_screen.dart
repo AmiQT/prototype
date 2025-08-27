@@ -4,7 +4,6 @@ import 'showcase_feed_screen.dart';
 import '../../../widgets/modern/modern_home_header.dart';
 import '../../../utils/app_theme.dart';
 import '../../shared/notifications_screen.dart';
-// import '../../debug/simple_backend_test.dart'; // Debug screen removed
 
 class ShowcaseScreen extends StatefulWidget {
   const ShowcaseScreen({super.key});
@@ -17,7 +16,7 @@ class _ShowcaseScreenState extends State<ShowcaseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: Column(
         children: [
           ModernHomeHeader(
@@ -27,26 +26,6 @@ class _ShowcaseScreenState extends State<ShowcaseScreen> {
               // Navigate to profile tab
               _navigateToProfile(context);
             },
-          ),
-          // Backend Test Button (temporary for testing)
-          Container(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const Scaffold(body: Center(child: Text('Debug screen removed'))),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.api),
-              label: const Text('Test Backend'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
-              ),
-            ),
           ),
           const Expanded(
             child: ShowcaseFeedScreen(),
@@ -80,10 +59,10 @@ class _ShowcaseScreenState extends State<ShowcaseScreen> {
     if (dashboardContext != null) {
       // Try to access the dashboard's setState to change tab
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content:
-              Text('Tap the Profile tab at the bottom to view your profile'),
-          backgroundColor: AppTheme.infoColor,
+        SnackBar(
+          content: const Text(
+              'Tap the Profile tab at the bottom to view your profile'),
+          backgroundColor: Theme.of(context).colorScheme.primary,
         ),
       );
     }

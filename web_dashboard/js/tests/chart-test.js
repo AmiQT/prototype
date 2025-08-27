@@ -1,102 +1,28 @@
 /**
- * Chart Testing Utility
- * Test charts with sample data and verify they render correctly
+ * Chart Testing Utility for UTHM Talent Profiling Dashboard
+ * Tests the new Total User and Department charts
  */
 
-import { SampleDataGenerator } from '../utils/sample-data-generator.js';
+class ChartTester {
+    constructor() {
+        this.testData = null;
+    }
 
-export class ChartTester {
-    
     /**
-     * Test all analytics charts with sample data
+     * Test all charts with sample data
      */
     static async testChartsWithSampleData() {
         console.log('🧪 Testing charts with sample data...');
         
         try {
-            // Get sample data
-            const sampleData = SampleDataGenerator.getSampleDataSet();
-            console.log('✅ Sample data generated:', {
-                users: sampleData.users.length,
-                achievements: sampleData.achievements.length,
-                events: sampleData.events.length,
-            });
+            // Generate sample data
+            const sampleData = this.generateSampleData();
             
-            // Navigate to analytics section
-            const analyticsNav = document.querySelector('[data-section="analytics"]');
-            if (analyticsNav) {
-                analyticsNav.click();
-                console.log('✅ Navigated to analytics section');
-            }
+            // Test total user chart
+            await this.testTotalUserChart(sampleData.users);
             
-            // Wait for section to load
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // Check if charts exist
-            const charts = this.checkChartCanvases();
-            console.log('📊 Chart canvases found:', charts);
-            
-            // Test chart rendering with sample data
-            await this.renderTestCharts(sampleData);
-            
-            return {
-                success: true,
-                sampleData,
-                charts
-            };
-            
-        } catch (error) {
-            console.error('❌ Chart testing failed:', error);
-            return {
-                success: false,
-                error: error.message
-            };
-        }
-    }
-    
-    /**
-     * Check which chart canvases exist in the DOM
-     */
-    static checkChartCanvases() {
-        const expectedCharts = [
-            'userChart',
-            'eventChart', 
-            'achievementChart',
-            'userGrowthChart'
-        ];
-        
-        const foundCharts = {};
-        
-        expectedCharts.forEach(chartId => {
-            const canvas = document.getElementById(chartId);
-            foundCharts[chartId] = {
-                exists: !!canvas,
-                visible: canvas ? canvas.offsetParent !== null : false,
-                dimensions: canvas ? `${canvas.width}x${canvas.height}` : 'N/A'
-            };
-        });
-        
-        return foundCharts;
-    }
-    
-    /**
-     * Render test charts with sample data
-     */
-    static async renderTestCharts(sampleData) {
-        console.log('🎨 Rendering test charts...');
-        
-        try {
-            // Import analytics module
-            const analytics = await import('../features/analytics.js');
-            
-            // Test user chart
-            await this.testUserChart(sampleData.users);
-            
-            // Test event chart  
-            await this.testEventChart(sampleData.events);
-            
-            // Test achievement chart
-            await this.testAchievementChart(sampleData.achievements);
+                    // Test department chart
+        await this.testDepartmentChart(sampleData.profiles);
             
             console.log('✅ All test charts rendered successfully');
             
@@ -105,34 +31,33 @@ export class ChartTester {
             throw error;
         }
     }
-    
+
     /**
-     * Test user chart with sample data
+     * Test total user chart with sample data
      */
-    static async testUserChart(users) {
-        const canvas = document.getElementById('userChart');
+    static async testTotalUserChart(users) {
+        const canvas = document.getElementById('totalUserChart');
         if (!canvas) {
-            console.log('⚠️ User chart canvas not found');
+            console.log('⚠️ Total User chart canvas not found');
             return;
         }
         
         try {
             // Process user data for chart
-            const monthlyData = this.processUserTrendData(users);
+            const roleData = this.processRoleData(users);
             
             // Create chart manually for testing
             const ctx = canvas.getContext('2d');
             const chart = new Chart(ctx, {
-                type: 'line',
+                type: 'doughnut',
                 data: {
-                    labels: monthlyData.labels,
+                    labels: Object.keys(roleData),
                     datasets: [{
-                        label: 'User Registrations',
-                        data: monthlyData.data,
-                        borderColor: '#2563eb',
-                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                        tension: 0.4,
-                        fill: true
+                        label: 'Total Users',
+                        data: Object.values(roleData),
+                        backgroundColor: ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+                        borderColor: '#ffffff',
+                        borderWidth: 2
                     }]
                 },
                 options: {
@@ -140,43 +65,40 @@ export class ChartTester {
                     maintainAspectRatio: false,
                     plugins: {
                         legend: { display: true }
-                    },
-                    scales: {
-                        y: { beginAtZero: true }
                     }
                 }
             });
             
-            console.log('✅ User chart rendered with', monthlyData.data.length, 'data points');
+            console.log('✅ Total User chart rendered with', Object.keys(roleData).length, 'roles');
             
         } catch (error) {
-            console.error('❌ User chart test failed:', error);
+            console.error('❌ Total User chart test failed:', error);
         }
     }
-    
+
     /**
-     * Test event chart with sample data
+     * Test department chart with sample data
      */
-    static async testEventChart(events) {
-        const canvas = document.getElementById('eventChart');
+    static async testDepartmentChart(profiles) {
+        const canvas = document.getElementById('courseChart');
         if (!canvas) {
-            console.log('⚠️ Event chart canvas not found');
+            console.log('⚠️ Department chart canvas not found');
             return;
         }
         
         try {
-            // Process event data for chart
-            const eventData = this.processEventData(events);
+            // Process department data for chart
+            const departmentData = this.processDepartmentData(profiles);
             
             // Create chart manually for testing
             const ctx = canvas.getContext('2d');
             const chart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: eventData.labels,
+                    labels: departmentData.labels,
                     datasets: [{
-                        label: 'Event Participation',
-                        data: eventData.data,
+                        label: 'Department Distribution',
+                        data: departmentData.data,
                         backgroundColor: '#10b981',
                         borderColor: '#10b981',
                         borderWidth: 1
@@ -194,116 +116,101 @@ export class ChartTester {
                 }
             });
             
-            console.log('✅ Event chart rendered with', eventData.data.length, 'categories');
+            console.log('✅ Department chart rendered with', departmentData.data.length, 'departments');
             
         } catch (error) {
-            console.error('❌ Event chart test failed:', error);
+            console.error('❌ Department chart test failed:', error);
         }
     }
-    
+
     /**
-     * Test achievement chart with sample data
+     * Check if chart canvases exist and are visible
      */
-    static async testAchievementChart(achievements) {
-        const canvas = document.getElementById('achievementChart');
-        if (!canvas) {
-            console.log('⚠️ Achievement chart canvas not found');
-            return;
-        }
+    static checkChartCanvases() {
+        const expectedCharts = [
+            'totalUserChart',
+            'courseChart'
+        ];
         
-        try {
-            // Process achievement data for chart
-            const achievementData = this.processAchievementData(achievements);
-            
-            // Create chart manually for testing
-            const ctx = canvas.getContext('2d');
-            const chart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: achievementData.labels,
-                    datasets: [{
-                        data: achievementData.data,
-                        backgroundColor: [
-                            '#2563eb',
-                            '#10b981', 
-                            '#f59e0b',
-                            '#ef4444',
-                            '#8b5cf6'
-                        ],
-                        borderWidth: 2,
-                        borderColor: '#ffffff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
-            
-            console.log('✅ Achievement chart rendered with', achievementData.data.length, 'categories');
-            
-        } catch (error) {
-            console.error('❌ Achievement chart test failed:', error);
-        }
-    }
-    
-    /**
-     * Process user trend data (same as in analytics.js)
-     */
-    static processUserTrendData(users) {
-        const monthlyData = {};
+        const results = {};
         
-        users.forEach(user => {
-            if (user.createdAt) {
-                const date = new Date(user.createdAt);
-                if (!isNaN(date.getTime())) {
-                    const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-                    monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1;
-                }
+        expectedCharts.forEach(chartId => {
+            const canvas = document.getElementById(chartId);
+            if (canvas) {
+                const rect = canvas.getBoundingClientRect();
+                results[chartId] = {
+                    exists: true,
+                    dimensions: `${rect.width}x${rect.height}`,
+                    visible: rect.width > 0 && rect.height > 0
+                };
+            } else {
+                results[chartId] = {
+                    exists: false,
+                    dimensions: 'N/A',
+                    visible: false
+                };
             }
         });
         
-        const labels = Object.keys(monthlyData).sort();
-        const data = labels.map(label => monthlyData[label]);
+        return results;
+    }
+
+    /**
+     * Generate sample data for testing
+     */
+    static generateSampleData() {
+        return {
+            users: [
+                { role: 'student', name: 'Student 1' },
+                { role: 'student', name: 'Student 2' },
+                { role: 'lecturer', name: 'Lecturer 1' },
+                { role: 'admin', name: 'Admin 1' },
+                { role: 'student', name: 'Student 3' }
+            ],
+            profiles: [
+                { academic_info: { department: 'Computer Science', faculty: 'FSKTM' }, name: 'Profile 1' },
+                { academic_info: { department: 'Computer Science', faculty: 'FSKTM' }, name: 'Profile 2' },
+                { academic_info: { department: 'Information Technology', faculty: 'FSKTM' }, name: 'Profile 3' },
+                { academic_info: { department: 'Software Engineering', faculty: 'FSKTM' }, name: 'Profile 4' },
+                { academic_info: { department: 'Computer Science', faculty: 'FSKTM' }, name: 'Profile 5' }
+            ]
+        };
+    }
+
+    /**
+     * Process role data for total user chart
+     */
+    static processRoleData(users) {
+        const roleCounts = {};
         
-        return { labels, data };
+        if (!users || !Array.isArray(users)) {
+            return {};
+        }
+        
+        users.forEach(user => {
+            const role = user.role || 'Unknown';
+            roleCounts[role] = (roleCounts[role] || 0) + 1;
+        });
+        
+        return roleCounts;
     }
     
     /**
-     * Process event data (same as in analytics.js)
+     * Process department data for department chart
      */
-    static processEventData(events) {
-        const eventTypes = {};
-        events.forEach(event => {
-            const type = event.type || event.category || 'Other';
-            eventTypes[type] = (eventTypes[type] || 0) + 1;
+    static processDepartmentData(profiles) {
+        const departmentCounts = {};
+        
+        if (!profiles || !Array.isArray(profiles)) {
+            return {};
+        }
+        
+        profiles.forEach(profile => {
+            const department = profile.academic_info?.department || profile.department || 'Unknown';
+            departmentCounts[department] = (departmentCounts[department] || 0) + 1;
         });
         
-        return {
-            labels: Object.keys(eventTypes),
-            data: Object.values(eventTypes)
-        };
-    }
-    
-    /**
-     * Process achievement data (same as in analytics.js)
-     */
-    static processAchievementData(achievements) {
-        const typeData = {};
-        achievements.forEach(achievement => {
-            const type = achievement.type || 'other';
-            typeData[type] = (typeData[type] || 0) + 1;
-        });
-        
-        return {
-            labels: Object.keys(typeData),
-            data: Object.values(typeData)
-        };
+        return departmentCounts;
     }
     
     /**

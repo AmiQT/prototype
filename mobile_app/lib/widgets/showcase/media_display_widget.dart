@@ -31,7 +31,8 @@ class MediaDisplayWidget extends StatelessWidget {
     }
   }
 
-  Widget _buildSingleMedia(BuildContext context, MediaModel mediaItem, int index) {
+  Widget _buildSingleMedia(
+      BuildContext context, MediaModel mediaItem, int index) {
     return GestureDetector(
       onTap: () => onMediaTap?.call(index),
       child: Container(
@@ -39,11 +40,11 @@ class MediaDisplayWidget extends StatelessWidget {
         width: double.infinity,
         decoration: BoxDecoration(
           borderRadius: borderRadius ?? BorderRadius.circular(12),
-          color: Colors.grey[100],
+          color: Colors.white, // Always white for showcase cards
         ),
         child: ClipRRect(
           borderRadius: borderRadius ?? BorderRadius.circular(12),
-          child: _buildMediaContent(mediaItem),
+          child: _buildMediaContent(mediaItem, context),
         ),
       ),
     );
@@ -55,11 +56,11 @@ class MediaDisplayWidget extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: _buildMediaThumbnail(media[0], 0),
+            child: _buildMediaThumbnail(media[0], 0, context),
           ),
           const SizedBox(width: 2),
           Expanded(
-            child: _buildMediaThumbnail(media[1], 1),
+            child: _buildMediaThumbnail(media[1], 1, context),
           ),
         ],
       ),
@@ -73,18 +74,18 @@ class MediaDisplayWidget extends StatelessWidget {
         children: [
           Expanded(
             flex: 2,
-            child: _buildMediaThumbnail(media[0], 0),
+            child: _buildMediaThumbnail(media[0], 0, context),
           ),
           const SizedBox(width: 2),
           Expanded(
             child: Column(
               children: [
                 Expanded(
-                  child: _buildMediaThumbnail(media[1], 1),
+                  child: _buildMediaThumbnail(media[1], 1, context),
                 ),
                 const SizedBox(height: 2),
                 Expanded(
-                  child: _buildMediaThumbnail(media[2], 2),
+                  child: _buildMediaThumbnail(media[2], 2, context),
                 ),
               ],
             ),
@@ -101,25 +102,26 @@ class MediaDisplayWidget extends StatelessWidget {
         children: [
           Expanded(
             flex: 2,
-            child: _buildMediaThumbnail(media[0], 0),
+            child: _buildMediaThumbnail(media[0], 0, context),
           ),
           const SizedBox(width: 2),
           Expanded(
             child: Column(
               children: [
                 Expanded(
-                  child: _buildMediaThumbnail(media[1], 1),
+                  child: _buildMediaThumbnail(media[1], 1, context),
                 ),
                 const SizedBox(height: 2),
                 Expanded(
                   child: Stack(
                     children: [
-                      _buildMediaThumbnail(media[2], 2),
+                      _buildMediaThumbnail(media[2], 2, context),
                       if (media.length > 3)
                         Container(
                           decoration: BoxDecoration(
                             color: Colors.black.withValues(alpha: 0.6),
-                            borderRadius: borderRadius ?? BorderRadius.circular(8),
+                            borderRadius:
+                                borderRadius ?? BorderRadius.circular(8),
                           ),
                           child: Center(
                             child: Text(
@@ -143,34 +145,37 @@ class MediaDisplayWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildMediaThumbnail(MediaModel mediaItem, int index) {
+  Widget _buildMediaThumbnail(
+      MediaModel mediaItem, int index, BuildContext context) {
     return GestureDetector(
       onTap: () => onMediaTap?.call(index),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: borderRadius ?? BorderRadius.circular(8),
-          color: Colors.grey[100],
+          color: Colors.white, // Always white for showcase cards
         ),
         child: ClipRRect(
           borderRadius: borderRadius ?? BorderRadius.circular(8),
-          child: _buildMediaContent(mediaItem),
+          child: _buildMediaContent(mediaItem, context),
         ),
       ),
     );
   }
 
-  Widget _buildMediaContent(MediaModel mediaItem) {
-    debugPrint('MediaDisplayWidget: Rendering media - URL: ${mediaItem.url}, Type: ${mediaItem.type}');
-    
+  Widget _buildMediaContent(MediaModel mediaItem, BuildContext context) {
+    debugPrint(
+        'MediaDisplayWidget: Rendering media - URL: ${mediaItem.url}, Type: ${mediaItem.type}');
+
     // Check for invalid URLs first
-    if (mediaItem.url.isEmpty || 
+    if (mediaItem.url.isEmpty ||
         mediaItem.url.trim().isEmpty ||
         mediaItem.url == 'null' ||
         mediaItem.url == 'file:///' ||
         Uri.tryParse(mediaItem.url)?.hasAbsolutePath != true) {
-      debugPrint('MediaDisplayWidget: Invalid URL detected: "${mediaItem.url}"');
+      debugPrint(
+          'MediaDisplayWidget: Invalid URL detected: "${mediaItem.url}"');
       return Container(
-        color: Colors.grey[300],
+        color: Colors.white, // Always white for showcase cards
         child: const Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -190,26 +195,26 @@ class MediaDisplayWidget extends StatelessWidget {
         ),
       );
     }
-    
+
     if (mediaItem.type == 'video') {
       return Stack(
         fit: StackFit.expand,
         children: [
           // Video thumbnail
-          if (mediaItem.thumbnailUrl != null && 
-              mediaItem.thumbnailUrl!.isNotEmpty && 
+          if (mediaItem.thumbnailUrl != null &&
+              mediaItem.thumbnailUrl!.isNotEmpty &&
               Uri.tryParse(mediaItem.thumbnailUrl!)?.hasAbsolutePath == true)
             CachedNetworkImage(
               imageUrl: mediaItem.thumbnailUrl!,
               fit: BoxFit.cover,
               placeholder: (context, url) => Container(
-                color: Colors.grey[300],
+                color: Colors.white, // Always white for showcase cards
                 child: const Center(
                   child: CircularProgressIndicator(),
                 ),
               ),
               errorWidget: (context, url, error) => Container(
-                color: Colors.grey[300],
+                color: Colors.white, // Always white for showcase cards
                 child: const Icon(
                   Icons.error,
                   color: Colors.red,
@@ -267,9 +272,10 @@ class MediaDisplayWidget extends StatelessWidget {
     } else {
       // Image
       // Check if URL is valid before trying to load
-      if (mediaItem.url.isEmpty || Uri.tryParse(mediaItem.url)?.hasAbsolutePath != true) {
+      if (mediaItem.url.isEmpty ||
+          Uri.tryParse(mediaItem.url)?.hasAbsolutePath != true) {
         return Container(
-          color: Colors.grey[300],
+          color: Colors.white, // Always white for showcase cards
           child: const Center(
             child: Icon(
               Icons.broken_image,
@@ -279,18 +285,18 @@ class MediaDisplayWidget extends StatelessWidget {
           ),
         );
       }
-      
+
       return CachedNetworkImage(
         imageUrl: mediaItem.url,
         fit: BoxFit.cover,
         placeholder: (context, url) => Container(
-          color: Colors.grey[300],
+          color: Colors.white, // Always white for showcase cards
           child: const Center(
             child: CircularProgressIndicator(),
           ),
         ),
         errorWidget: (context, url, error) => Container(
-          color: Colors.grey[300],
+          color: Colors.white, // Always white for showcase cards
           child: const Icon(
             Icons.error,
             color: Colors.red,
@@ -305,7 +311,7 @@ class MediaDisplayWidget extends StatelessWidget {
       const maxHeight = 400.0;
       const minHeight = 200.0;
       const screenWidth = 350.0; // Approximate screen width minus padding
-      
+
       final calculatedHeight = screenWidth / mediaItem.aspectRatio!;
       return calculatedHeight.clamp(minHeight, maxHeight);
     }

@@ -24,7 +24,7 @@ class SettingsSectionHeader extends StatelessWidget {
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: Theme.of(context).primaryColor,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
           ),
           if (subtitle != null) ...[
@@ -32,7 +32,7 @@ class SettingsSectionHeader extends StatelessWidget {
             Text(
               subtitle!,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
             ),
           ],
@@ -97,7 +97,10 @@ class SettingsItem extends StatelessWidget {
                 )
               : null,
           trailing:
-              trailing ?? const Icon(Icons.chevron_right, color: Colors.grey),
+              trailing ?? Icon(
+                Icons.chevron_right,
+                color: Theme.of(context).colorScheme.onSurfaceVariant
+              ),
           onTap: onTap,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

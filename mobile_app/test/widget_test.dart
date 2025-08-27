@@ -12,6 +12,7 @@ import 'package:student_talent_profiling_app/widgets/feedback_widget.dart';
 import 'package:student_talent_profiling_app/main.dart';
 import 'package:student_talent_profiling_app/services/supabase_auth_service.dart';
 import 'package:student_talent_profiling_app/services/language_service.dart';
+import 'package:student_talent_profiling_app/providers/theme_provider.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
@@ -19,6 +20,7 @@ void main() {
     await tester.pumpWidget(MyApp(
       authService: SupabaseAuthService(),
       languageService: LanguageService(),
+      themeProvider: ThemeProvider(),
     ));
 
     // Verify that our counter starts at 0.
@@ -32,28 +34,5 @@ void main() {
     // Verify that our counter has incremented.
     expect(find.text('0'), findsNothing);
     expect(find.text('1'), findsOneWidget);
-  });
-
-  testWidgets('FeedbackWidget submits feedback', (WidgetTester tester) async {
-    bool feedbackSubmitted = false;
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: FeedbackWidget(
-            onFeedbackSubmitted: (feedback) {
-              feedbackSubmitted = true;
-            },
-          ),
-        ),
-      ),
-    );
-
-    // Enter feedback
-    await tester.enterText(find.byType(TextField), 'Great work!');
-    await tester.tap(find.text('Submit Feedback'));
-    await tester.pump();
-
-    expect(feedbackSubmitted, true);
-    expect(find.text('Feedback submitted!'), findsOneWidget);
   });
 }

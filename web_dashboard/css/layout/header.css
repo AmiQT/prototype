@@ -90,6 +90,64 @@
   }
 }
 
+/* Breadcrumbs */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.breadcrumb span {
+  color: var(--text-secondary);
+}
+
+.breadcrumb span.current {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.breadcrumb i {
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.breadcrumb a {
+  color: var(--button-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.breadcrumb a:hover {
+  color: var(--text-primary);
+}
+
+/* Dark mode breadcrumbs */
+[data-theme="dark"] .breadcrumb {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .breadcrumb span {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .breadcrumb span.current {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .breadcrumb a {
+  color: var(--button-primary);
+}
+
+[data-theme="dark"] .breadcrumb a:hover {
+  color: var(--text-primary);
+}
+
 /* Section Headers */
 .section-header {
   display: flex;
@@ -112,6 +170,59 @@
 
 .section-header h2 i {
   color: var(--button-primary);
+}
+
+/* Quick Actions Toolbar */
+.quick-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-lg);
+  flex-wrap: wrap;
+}
+
+.quick-actions .btn {
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.quick-actions .btn i {
+  font-size: var(--font-size-sm);
+}
+
+.quick-actions-label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-right: var(--spacing-md);
+  white-space: nowrap;
+}
+
+.quick-actions-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border-color);
+  margin: 0 var(--spacing-sm);
+}
+
+/* Dark mode quick actions */
+[data-theme="dark"] .quick-actions {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .quick-actions-label {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .quick-actions-divider {
+  background: var(--border-color);
 }
 
 /* Mobile Header Adjustments */

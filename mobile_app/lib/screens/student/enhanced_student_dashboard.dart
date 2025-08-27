@@ -10,6 +10,26 @@ import 'event_program/event_program_screen.dart';
 import 'profile/student_profile_screen.dart';
 import '../chat/chat_screen.dart';
 
+class _ChatbotButtonDelegate extends SingleChildLayoutDelegate {
+  @override
+  BoxConstraints getConstraints(BoxConstraints constraints) {
+    return BoxConstraints.tightFor(
+      width: 60,
+      height: 60,
+    );
+  }
+
+  @override
+  Offset getPositionForChild(Size size, Size childSize) {
+    return Offset(0, 0);
+  }
+
+  @override
+  bool shouldRelayout(covariant SingleChildLayoutDelegate oldDelegate) {
+    return false;
+  }
+}
+
 class EnhancedStudentDashboard extends StatefulWidget {
   const EnhancedStudentDashboard({super.key});
 
@@ -20,7 +40,8 @@ class EnhancedStudentDashboard extends StatefulWidget {
 
 class _EnhancedStudentDashboardState extends State<EnhancedStudentDashboard>
     with TickerProviderStateMixin {
-  int _selectedIndex = 0;
+  int _currentIndex = 0;
+  late TabController _tabController;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
@@ -63,18 +84,24 @@ class _EnhancedStudentDashboardState extends State<EnhancedStudentDashboard>
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 4, vsync: this);
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
     _loadUserData();
   }
 
   @override
   void dispose() {
+    _tabController.dispose();
     _animationController.dispose();
     super.dispose();
   }
@@ -109,22 +136,18 @@ class _EnhancedStudentDashboardState extends State<EnhancedStudentDashboard>
     }
   }
 
-  void _onNavItemTapped(int index) {
-    if (_selectedIndex != index) {
-      setState(() {
-        _selectedIndex = index;
-      });
-
-      // Add haptic feedback
-      // HapticFeedback.lightImpact();
-    }
+  void _onTabTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+    _tabController.animateTo(index);
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: AppTheme.backgroundColor,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -132,26 +155,28 @@ class _EnhancedStudentDashboardState extends State<EnhancedStudentDashboard>
               Container(
                 padding: const EdgeInsets.all(AppTheme.spaceLg),
                 decoration: BoxDecoration(
-                  color: AppTheme.surfaceColor,
+                  color: Colors.white, // Always white for better visibility
                   borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
+                      color:
+                          Colors.black.withValues(alpha: 0.1), // Lighter shadow
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
                     ),
                   ],
                 ),
-                child: const CircularProgressIndicator(
-                  valueColor:
-                      AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).colorScheme.primary,
+                  ),
                 ),
               ),
               const SizedBox(height: AppTheme.spaceLg),
               Text(
                 'Loading your dashboard...',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: AppTheme.textSecondaryColor,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
               ),
             ],
@@ -161,120 +186,170 @@ class _EnhancedStudentDashboardState extends State<EnhancedStudentDashboard>
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor:
+          Theme.of(context).colorScheme.background, // Keep dark for homepage
       body: SafeArea(
         child: FadeTransition(
           opacity: _fadeAnimation,
           child: IndexedStack(
-            index: _selectedIndex,
+            index: _currentIndex,
             children: _pages,
           ),
         ),
       ),
       bottomNavigationBar: _buildModernBottomNav(),
-      floatingActionButton: _buildFloatingActionButton(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      // Floating action button removed - now integrated in navbar
     );
   }
 
   Widget _buildModernBottomNav() {
     return Container(
-      margin: const EdgeInsets.all(AppTheme.spaceMd),
+      height: 130, // Increased height to accommodate larger chatbot button
       decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
-        borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+        color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+            spreadRadius: 0,
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppTheme.radiusXl),
-        child: BottomNavigationBar(
-          currentIndex: _selectedIndex,
-          onTap: _onNavItemTapped,
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          selectedItemColor: _navItems[_selectedIndex].color,
-          unselectedItemColor: AppTheme.textSecondaryColor,
-          selectedLabelStyle: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 12,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+              horizontal: 20, vertical: 18), // Adjusted vertical padding
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildNavItem(0, Icons.home_rounded, 'Home'),
+              _buildNavItem(1, Icons.search_rounded, 'Discover'),
+              _buildChatbotButton(), // Integrated chatbot button
+              _buildNavItem(2, Icons.event_rounded, 'Events'),
+              _buildNavItem(3, Icons.person_rounded, 'Profile'),
+            ],
           ),
-          unselectedLabelStyle: const TextStyle(
-            fontWeight: FontWeight.w500,
-            fontSize: 11,
-          ),
-          items: _navItems.asMap().entries.map((entry) {
-            final index = entry.key;
-            final item = entry.value;
-            final isSelected = _selectedIndex == index;
-
-            return BottomNavigationBarItem(
-              icon: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.all(AppTheme.spaceXs),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? item.color.withValues(alpha: 0.1)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                ),
-                child: Icon(
-                  isSelected ? item.activeIcon : item.icon,
-                  size: 24,
-                ),
-              ),
-              label: item.label,
-            );
-          }).toList(),
         ),
       ),
     );
   }
 
-  Widget? _buildFloatingActionButton() {
-    final authService =
-        Provider.of<SupabaseAuthService>(context, listen: false);
-    final userRole = authService.currentUser?.role;
+  Widget _buildChatbotButton() {
+    return SizedBox(
+      width: 70,
+      height: 70,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          GestureDetector(
+            onTap: () {
+              // Navigate to chat screen or show chat interface
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ChatScreen(),
+                ),
+              );
+            },
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(28),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ChatScreen(),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.primaryColor.withValues(alpha: 0.4),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.auto_awesome_rounded,
+                    size: 24,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 3),
+          Flexible(
+            child: Text(
+              'Chat',
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[700],
+              ),
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-    if ((userRole == UserRole.student || userRole == UserRole.lecturer)) {
-      return Container(
+  Widget _buildNavItem(int index, IconData icon, String label) {
+    final isSelected = _currentIndex == index;
+    return GestureDetector(
+      onTap: () => _onTabTapped(index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          gradient: AppTheme.primaryGradient,
-          borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-          boxShadow: [
-            BoxShadow(
-              color: AppTheme.primaryColor.withValues(alpha: 0.3),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
+          color: isSelected
+              ? Theme.of(context).colorScheme.primaryContainer
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 22,
+              color: isSelected
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.grey[600],
+            ),
+            const SizedBox(height: 3),
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),
-        child: FloatingActionButton(
-          heroTag: "enhanced_dashboard_chat_fab",
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ChatScreen()),
-            );
-          },
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          tooltip: 'STAP UTHM Advisor',
-          child: const Icon(
-            Icons.smart_toy_rounded,
-            color: Colors.white,
-            size: 28,
-          ),
-        ),
-      );
-    }
-    return null;
+      ),
+    );
   }
 }
 

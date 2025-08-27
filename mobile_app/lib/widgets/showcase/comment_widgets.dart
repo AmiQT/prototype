@@ -100,8 +100,8 @@ class _CommentWidgetState extends State<CommentWidget>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(16),
+                    color: Colors.white, // Always white for showcase cards
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

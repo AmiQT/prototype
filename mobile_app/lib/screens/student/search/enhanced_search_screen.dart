@@ -269,7 +269,7 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
   Widget build(BuildContext context) {
     if (_isInitialLoad) {
       return Scaffold(
-        backgroundColor: AppTheme.backgroundColor,
+        backgroundColor: Theme.of(context).colorScheme.background,
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -277,26 +277,29 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
               Container(
                 padding: const EdgeInsets.all(AppTheme.spaceLg),
                 decoration: BoxDecoration(
-                  color: AppTheme.surfaceColor,
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.1),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
                   ],
                 ),
-                child: const CircularProgressIndicator(
-                  valueColor:
-                      AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                      Theme.of(context).colorScheme.primary),
                 ),
               ),
               const SizedBox(height: AppTheme.spaceLg),
               Text(
                 'Preparing search...',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: AppTheme.textSecondaryColor,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
               ),
             ],
@@ -306,7 +309,7 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: Theme.of(context).colorScheme.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -325,10 +328,10 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceMd),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
+        color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -392,8 +395,8 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
               child: FilterChip(
                 label: const Text('Clear All'),
                 onSelected: (selected) => _clearAllFilters(),
-                backgroundColor: AppTheme.errorColor.withValues(alpha: 0.1),
-                selectedColor: AppTheme.errorColor,
+                backgroundColor: Theme.of(context).colorScheme.surface,
+                selectedColor: Theme.of(context).colorScheme.error,
                 side: BorderSide.none,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusFull),
@@ -409,9 +412,9 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
               label: Text(filter.name),
               selected: true,
               onSelected: (selected) => _onFilterToggle(filter),
-              backgroundColor: AppTheme.surfaceVariant,
-              selectedColor: AppTheme.primaryColor,
-              checkmarkColor: Colors.white,
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              selectedColor: Theme.of(context).colorScheme.primary,
+              checkmarkColor: Theme.of(context).colorScheme.onPrimary,
               side: BorderSide.none,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusFull),
@@ -440,18 +443,19 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
   }
 
   Widget _buildModernLoadingState() {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+            valueColor: AlwaysStoppedAnimation<Color>(
+                Theme.of(context).colorScheme.primary),
           ),
-          SizedBox(height: AppTheme.spaceMd),
+          const SizedBox(height: AppTheme.spaceMd),
           Text(
             'Searching...',
             style: TextStyle(
-              color: AppTheme.textSecondaryColor,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               fontSize: 16,
             ),
           ),
@@ -470,13 +474,16 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
             Container(
               padding: const EdgeInsets.all(AppTheme.spaceLg),
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppTheme.radiusFull),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.search_off_rounded,
                 size: 64,
-                color: AppTheme.primaryColor,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
             const SizedBox(height: AppTheme.spaceLg),
@@ -484,7 +491,7 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
               'No Results Found',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimaryColor,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
             ),
             const SizedBox(height: AppTheme.spaceSm),
@@ -492,7 +499,7 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
               'Try adjusting your search terms or filters',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppTheme.textSecondaryColor,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
             ),
           ],
@@ -516,11 +523,11 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.spaceMd),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.05),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -530,11 +537,12 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
         contentPadding: const EdgeInsets.all(AppTheme.spaceMd),
         leading: CircleAvatar(
           radius: 28,
-          backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+          backgroundColor:
+              Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
           child: Text(
             result.displayName.substring(0, 1).toUpperCase(),
-            style: const TextStyle(
-              color: AppTheme.primaryColor,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
               fontWeight: FontWeight.bold,
               fontSize: 18,
             ),
@@ -544,7 +552,7 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
           result.displayName,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimaryColor,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
         ),
         subtitle: ConstrainedBox(
@@ -559,7 +567,7 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
                 Text(
                   result.department!,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.textSecondaryColor,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -574,13 +582,16 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(AppTheme.radiusXs),
                     ),
                     child: Text(
                       'Matches: ${result.matchedFields.join(', ')}',
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: AppTheme.primaryColor,
+                            color: Theme.of(context).colorScheme.primary,
                             fontWeight: FontWeight.w500,
                           ),
                       maxLines: 2,
@@ -595,13 +606,13 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
         trailing: Container(
           padding: const EdgeInsets.all(AppTheme.spaceXs),
           decoration: BoxDecoration(
-            color: AppTheme.primaryColor.withValues(alpha: 0.1),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(AppTheme.radiusSm),
           ),
           child: Text(
             result.roleDisplay.toUpperCase(),
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppTheme.primaryColor,
+                  color: Theme.of(context).colorScheme.primary,
                   fontWeight: FontWeight.w600,
                 ),
           ),
@@ -644,7 +655,7 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
               'Recent Searches',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimaryColor,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
             ),
             TextButton(
@@ -667,9 +678,9 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.spaceXs),
       child: ListTile(
-        leading: const Icon(
+        leading: Icon(
           Icons.history_rounded,
-          color: AppTheme.textSecondaryColor,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
         title: Text(item.query),
         subtitle: Text('${item.resultCount} results'),
@@ -709,7 +720,7 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
           'Trending Topics',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: AppTheme.textPrimaryColor,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
         ),
         const SizedBox(height: AppTheme.spaceMd),
@@ -735,26 +746,26 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
           vertical: AppTheme.spaceSm,
         ),
         decoration: BoxDecoration(
-          color: AppTheme.surfaceColor,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusFull),
           border: Border.all(
-            color: AppTheme.primaryColor.withValues(alpha: 0.2),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
             width: 1,
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.trending_up_rounded,
               size: 16,
-              color: AppTheme.primaryColor,
+              color: Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(width: AppTheme.spaceXs),
             Text(
               topic,
-              style: const TextStyle(
-                color: AppTheme.primaryColor,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -818,9 +829,9 @@ class _FilterBottomSheetState extends State<FilterBottomSheet>
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         children: [
@@ -833,7 +844,10 @@ class _FilterBottomSheetState extends State<FilterBottomSheet>
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.grey[300],
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outline
+                        .withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -856,7 +870,9 @@ class _FilterBottomSheetState extends State<FilterBottomSheet>
                             '$selectedCount filter${selectedCount == 1 ? '' : 's'} applied',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.grey[600],
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
                             ),
                           ),
                       ],
@@ -903,7 +919,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet>
                   borderRadius: BorderRadius.circular(12),
                 ),
                 filled: true,
-                fillColor: Colors.grey[50],
+                fillColor: Theme.of(context).colorScheme.surfaceVariant,
               ),
               onChanged: (value) {
                 setState(() {
@@ -920,7 +936,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet>
             controller: _tabController,
             isScrollable: true,
             labelColor: Theme.of(context).primaryColor,
-            unselectedLabelColor: Colors.grey,
+            unselectedLabelColor:
+                Theme.of(context).colorScheme.onSurfaceVariant,
             indicatorColor: Theme.of(context).primaryColor,
             tabs: widget.availableFilters.keys.map((category) {
               final categoryFilters = widget.availableFilters[category]!;
@@ -943,8 +960,8 @@ class _FilterBottomSheetState extends State<FilterBottomSheet>
                         ),
                         child: Text(
                           selectedInCategory.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
@@ -974,10 +991,13 @@ class _FilterBottomSheetState extends State<FilterBottomSheet>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .shadow
+                      .withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, -2),
                 ),
@@ -990,7 +1010,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet>
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: Theme.of(context).primaryColor,
-                  foregroundColor: Colors.white,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -1143,7 +1163,7 @@ class _FilterBottomSheetState extends State<FilterBottomSheet>
         Text(
           'Semester ${_semesterRange.start.round()} - ${_semesterRange.end.round()}',
           style: TextStyle(
-            color: Colors.grey[600],
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
             fontSize: 12,
           ),
         ),

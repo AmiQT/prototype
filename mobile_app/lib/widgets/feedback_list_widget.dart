@@ -35,7 +35,7 @@ class FeedbackListWidget extends StatelessWidget {
               backgroundColor: Colors.blue.shade100,
               child: Icon(
                 Icons.feedback,
-                color: Colors.blue.shade700,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
             title: Text(

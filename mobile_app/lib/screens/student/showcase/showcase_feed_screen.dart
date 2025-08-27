@@ -57,7 +57,180 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
     _selectedCategory = widget.filterCategory;
     _loadCurrentUser();
     _setupScrollListener();
-    _loadInitialPosts();
+    _setupRealTimeSubscription();
+  }
+
+  /// Setup real-time subscription for posts
+  void _setupRealTimeSubscription() {
+    try {
+      // Setup real-time subscription
+      _postsSubscription = _showcaseService
+          .getShowcasePostsRealtimeStream(
+        limit: _postsPerPage,
+        category: _selectedCategory,
+      )
+          .listen(
+        (posts) {
+          debugPrint(
+              'ShowcaseFeedScreen: Real-time update received: ${posts.length} posts');
+          if (posts.isNotEmpty) {
+            debugPrint(
+                'ShowcaseFeedScreen: First post data: ${posts.first.id} - ${posts.first.content.substring(0, posts.first.content.length > 20 ? 20 : posts.first.content.length)}...');
+          }
+
+          if (mounted) {
+            debugPrint(
+                'ShowcaseFeedScreen: Successfully received ${posts.length} posts');
+
+            setState(() {
+              _posts = posts;
+              _isLoading = false;
+              _hasMore = posts.length >= _postsPerPage;
+              _error = null;
+            });
+
+            debugPrint(
+                'ShowcaseFeedScreen: Feed updated with ${posts.length} posts');
+          }
+        },
+        onError: (error) {
+          debugPrint(
+              'ShowcaseFeedScreen: Real-time subscription error: $error');
+          if (mounted) {
+            setState(() {
+              _error = error.toString();
+              _isLoading = false;
+            });
+          }
+          // Fallback to manual loading
+          _loadInitialPosts();
+        },
+      );
+    } catch (e) {
+      debugPrint('ShowcaseFeedScreen: Error setting up subscription: $e');
+      // Fallback to manual loading
+      _loadInitialPosts();
+    }
+  }
+
+  /// Refresh feed manually (called from external sources)
+  void refreshFeed() {
+    debugPrint('ShowcaseFeedScreen: Manual refresh requested');
+    _setupRealTimeSubscription();
+  }
+
+  /// Refresh feed and show loading indicator
+  Future<void> _refreshFeedWithLoading() async {
+    debugPrint('ShowcaseFeedScreen: Refresh with loading indicator');
+
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    // Wait a bit for real-time update
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // If no real-time update received, fallback to manual refresh
+    if (_posts.isEmpty) {
+      _loadInitialPosts();
+    }
+  }
+
+  /// Update category filter and refresh feed
+  void _updateCategoryFilter(PostCategory? category) {
+    setState(() {
+      _selectedCategory = category;
+    });
+    _setupRealTimeSubscription();
+  }
+
+  /// Force refresh feed by calling backend API directly
+  Future<void> forceRefreshFeed() async {
+    debugPrint('ShowcaseFeedScreen: Force refreshing feed...');
+
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      // Cancel existing subscription temporarily
+      _postsSubscription?.cancel();
+
+      // Load posts directly from backend using the working method
+      final posts = await _showcaseService.getShowcasePosts(
+        limit: _postsPerPage,
+        category: _selectedCategory,
+      );
+      debugPrint('ShowcaseFeedScreen: Force refresh got ${posts.length} posts');
+
+      if (posts.isNotEmpty) {
+        debugPrint(
+            'ShowcaseFeedScreen: First post data: ${posts.first.id} - ${posts.first.content.substring(0, posts.first.content.length > 20 ? 20 : posts.first.content.length)}...');
+      }
+
+      debugPrint(
+          'ShowcaseFeedScreen: Force refresh successfully received ${posts.length} posts');
+
+      if (mounted) {
+        setState(() {
+          _posts = posts;
+          _isLoading = false;
+          _hasMore = posts.length >= _postsPerPage;
+        });
+      }
+
+      // Re-setup real-time subscription
+      _setupRealTimeSubscription();
+    } catch (e) {
+      debugPrint('ShowcaseFeedScreen: Force refresh error: $e');
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  /// Debug section for testing
+  Widget _buildDebugSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Debug Controls',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              ElevatedButton(
+                onPressed: forceRefreshFeed,
+                child: const Text('Force Refresh'),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () {
+                  debugPrint(
+                      'ShowcaseFeedScreen: Current posts count: ${_posts.length}');
+                  if (_posts.isNotEmpty) {
+                    debugPrint(
+                        'ShowcaseFeedScreen: Posts: ${_posts.map((p) => '${p.id}: ${p.content.substring(0, p.content.length > 20 ? 20 : p.content.length)}...').join(', ')}');
+                  } else {
+                    debugPrint('ShowcaseFeedScreen: No posts loaded');
+                  }
+                },
+                child: const Text('Debug Info'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -99,16 +272,14 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
     try {
       _postsSubscription?.cancel();
 
-      debugPrint('ShowcaseFeedScreen: Calling getAllPosts()...');
-      // Use backend API instead of Firestore stream
-      final postsData = await _showcaseService.getAllPosts();
+      debugPrint('ShowcaseFeedScreen: Calling getShowcasePosts()...');
+      // Use the working getShowcasePosts method
+      final posts = await _showcaseService.getShowcasePosts(
+        limit: _postsPerPage,
+        category: _selectedCategory,
+      );
       debugPrint(
-          'ShowcaseFeedScreen: Received ${postsData.length} posts from backend');
-      final posts = postsData
-          .map((postData) => ShowcasePostModel.fromJson(postData))
-          .toList();
-      debugPrint(
-          'ShowcaseFeedScreen: Converted to ${posts.length} ShowcasePostModel objects');
+          'ShowcaseFeedScreen: Received ${posts.length} posts from backend');
 
       if (mounted) {
         setState(() {
@@ -134,10 +305,10 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
 
     try {
       // For now, just reload all posts since backend doesn't support pagination yet
-      final postsData = await _showcaseService.getAllPosts();
-      final allPosts = postsData
-          .map((postData) => ShowcasePostModel.fromJson(postData))
-          .toList();
+      final allPosts = await _showcaseService.getShowcasePosts(
+        limit: _postsPerPage * 2, // Get more posts for pagination
+        category: _selectedCategory,
+      );
 
       // Simple pagination simulation - skip already loaded posts
       final newPosts =
@@ -174,6 +345,21 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
     );
   }
 
+  /// Navigate to post creation with callback to refresh feed
+  void _navigateToPostCreation() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PostCreationScreen(
+          onPostCreated: () {
+            debugPrint('ShowcaseFeedScreen: Post created, refreshing feed...');
+            refreshFeed();
+          },
+        ),
+      ),
+    );
+  }
+
   Widget _buildBody() {
     if (_error != null && _posts.isEmpty) {
       return _buildErrorState();
@@ -189,7 +375,7 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
 
     return RefreshIndicator(
       key: _refreshIndicatorKey,
-      onRefresh: _refreshFeed,
+      onRefresh: _refreshFeedWithLoading,
       child: CustomScrollView(
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
@@ -238,10 +424,7 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
             Chip(
               label: Text(_getCategoryDisplayName(_selectedCategory!)),
               onDeleted: () {
-                setState(() {
-                  _selectedCategory = null;
-                });
-                _loadInitialPosts();
+                _updateCategoryFilter(null);
               },
               backgroundColor:
                   Theme.of(context).primaryColor.withValues(alpha: 0.1),
@@ -308,7 +491,8 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
             Text(
               _error ?? 'Unknown error occurred',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[600]),
+              style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
@@ -332,13 +516,16 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
             Container(
               padding: const EdgeInsets.all(AppTheme.space2xl),
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppTheme.radiusFull),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.auto_awesome_rounded,
                 size: 64,
-                color: AppTheme.primaryColor,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
             const SizedBox(height: AppTheme.spaceLg),
@@ -346,7 +533,7 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
               'Ready to Shine?',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimaryColor,
+                    color: null, // Use theme default
                   ),
             ),
             const SizedBox(height: AppTheme.spaceSm),
@@ -354,7 +541,7 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
               'Share your talents, achievements, and connect with the UTHM community!',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppTheme.textSecondaryColor,
+                    color: null, // Use theme default
                     height: 1.5,
                   ),
             ),
@@ -365,21 +552,17 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.3),
                     blurRadius: 15,
                     offset: const Offset(0, 8),
                   ),
                 ],
               ),
               child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const PostCreationScreen(),
-                    ),
-                  );
-                },
+                onPressed: _navigateToPostCreation,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
@@ -388,16 +571,20 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
                     vertical: AppTheme.spaceMd,
                   ),
                 ),
-                icon: const Icon(Icons.add_rounded, color: Colors.white),
-                label: const Text(
+                icon: Icon(Icons.add_rounded,
+                    color: Theme.of(context).colorScheme.onPrimary),
+                label: Text(
                   'Create Your First Post',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onPrimary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
             ),
+            const SizedBox(height: AppTheme.spaceLg),
+            // Debug section
+            _buildDebugSection(),
           ],
         ),
       ),

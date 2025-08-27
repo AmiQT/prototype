@@ -6,7 +6,6 @@ import 'dart:io';
 import '../../../services/supabase_auth_service.dart';
 import '../../../services/profile_service.dart';
 import '../../../config/supabase_config.dart';
-// import '../../debug/backend_test_screen.dart'; // Debug screen removed
 import '../../../models/profile_model.dart';
 import '../../../models/achievement_model.dart';
 import '../../../models/experience_model.dart';
@@ -14,8 +13,6 @@ import '../../../models/project_model.dart';
 import 'package:share_plus/share_plus.dart';
 import '../achievements/achievements_screen.dart';
 import '../../settings/settings_screen.dart';
-// import '../../debug/sample_data_debug_screen.dart'; // Debug screen removed
-// import '../../debug/migrate_profile_documents_screen.dart'; // Debug screen removed
 import '../../auth/comprehensive_profile_setup_screen.dart';
 import '../../profile/comprehensive_edit_profile_screen.dart';
 

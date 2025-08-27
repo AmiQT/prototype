@@ -290,3 +290,420 @@ tr.disabled {
     max-width: 80px;
   }
 }
+
+/* ===== DARK MODE SUPPORT ===== */
+[data-theme="dark"] .table-container {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .table,
+[data-theme="dark"] .data-table {
+  background: var(--card-bg);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .table th,
+[data-theme="dark"] .data-table th {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .table td,
+[data-theme="dark"] .data-table td {
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .table tbody tr:hover,
+[data-theme="dark"] .data-table tbody tr:hover {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .table tbody tr:nth-child(even),
+[data-theme="dark"] .data-table tbody tr:nth-child(even) {
+  background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .table tbody tr:nth-child(even):hover,
+[data-theme="dark"] .data-table tbody tr:nth-child(even):hover {
+  background: var(--bg-tertiary);
+}
+
+/* Search and filter controls */
+[data-theme="dark"] .table-controls {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .search-input {
+  background: var(--input-bg);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .search-input::placeholder {
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .filter-select {
+  background: var(--input-bg);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+/* Pagination */
+[data-theme="dark"] .table-pagination {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .pagination-info {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .pagination-btn {
+  background: var(--input-bg);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .pagination-btn:hover:not(:disabled) {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .pagination-btn.active {
+  background: var(--button-primary);
+  color: white;
+  border-color: var(--button-primary);
+}
+
+[data-theme="dark"] .pagination-btn:disabled {
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+}
+
+/* Action buttons in table */
+[data-theme="dark"] .table-action-btn {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .table-action-btn:hover {
+  background: var(--button-primary);
+  color: white;
+}
+
+[data-theme="dark"] .table-action-btn.danger:hover {
+  background: var(--danger-color);
+}
+
+/* ===== ENHANCED TABLE ACTIONS ===== */
+.table-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+  justify-content: center;
+}
+
+.table-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+}
+
+.table-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.table-action-btn.view {
+  color: var(--button-primary);
+  border-color: var(--button-primary);
+}
+
+.table-action-btn.view:hover {
+  background: var(--button-primary);
+  color: white;
+}
+
+.table-action-btn.edit {
+  color: var(--warning-color);
+  border-color: var(--warning-color);
+}
+
+.table-action-btn.edit:hover {
+  background: var(--warning-color);
+  color: white;
+}
+
+.table-action-btn.delete {
+  color: var(--danger-color);
+  border-color: var(--danger-color);
+}
+
+.table-action-btn.delete:hover {
+  background: var(--danger-color);
+  color: white;
+}
+
+.table-action-btn.success {
+  color: var(--success-color);
+  border-color: var(--success-color);
+}
+
+.table-action-btn.success:hover {
+  background: var(--success-color);
+  color: white;
+}
+
+/* Action button with text */
+.table-action-btn.with-text {
+  width: auto;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  gap: var(--spacing-xs);
+}
+
+.table-action-btn.with-text span {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+}
+
+/* Action dropdown */
+.table-action-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.table-action-dropdown-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+}
+
+.table-action-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  min-width: 150px;
+  z-index: 1000;
+  display: none;
+}
+
+.table-action-dropdown.active .table-action-dropdown-menu {
+  display: block;
+}
+
+.table-action-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+  transition: background var(--transition-fast);
+}
+
+.table-action-dropdown-item:hover {
+  background: var(--bg-secondary);
+}
+
+.table-action-dropdown-item.danger {
+  color: var(--danger-color);
+}
+
+.table-action-dropdown-item.danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Dark mode table actions */
+[data-theme="dark"] .table-action-btn {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .table-action-btn:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .table-action-dropdown-btn {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .table-action-dropdown-menu {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .table-action-dropdown-item {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .table-action-dropdown-item:hover {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .table-action-dropdown-item.danger:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* ===== BULK ACTIONS ===== */
+.bulk-actions {
+  display: none;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-lg);
+  animation: slideDown 0.3s ease-out;
+}
+
+.bulk-actions.show {
+  display: flex;
+}
+
+.bulk-actions-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.bulk-actions-info i {
+  color: var(--button-primary);
+}
+
+.selected-count {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.bulk-actions-buttons {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-left: auto;
+}
+
+.bulk-actions .btn {
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-xs) var(--spacing-md);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.bulk-select-all {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-md);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.bulk-select-all input[type="checkbox"] {
+  margin: 0;
+}
+
+.bulk-select-all label {
+  margin: 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Table row selection */
+.table tbody tr.selected {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: var(--button-primary);
+}
+
+.table tbody tr.selected td {
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.row-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--button-primary);
+  cursor: pointer;
+}
+
+.checkbox-cell {
+  width: 40px;
+  text-align: center;
+  padding: var(--spacing-sm) !important;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dark mode bulk actions */
+[data-theme="dark"] .bulk-actions {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .bulk-actions-info {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .selected-count {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .bulk-select-all {
+  background: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .table tbody tr.selected {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+[data-theme="dark"] .table tbody tr.selected td {
+  background: rgba(59, 130, 246, 0.1);
+}

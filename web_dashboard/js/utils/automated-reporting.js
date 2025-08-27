@@ -262,7 +262,7 @@ export class AutomatedReporting {
             },
             breakdown: {
                 byRole: this.groupBy(data.users, 'role'),
-                byDepartment: this.groupBy(data.profiles, 'department'),
+                byDepartment: this.groupBy(data.profiles, 'academic_info.department'),
                 byMonth: this.groupByMonth(data.users)
             },
             insights: []
@@ -312,7 +312,7 @@ export class AutomatedReporting {
                 `Total registered users: ${data.users.length}`,
                 `Active achievements: ${data.achievements.length}`,
                 `Events conducted: ${data.events.length}`,
-                `Departments participating: ${new Set(data.profiles.map(p => p.department)).size}`
+                `Departments participating: ${new Set(data.profiles.map(p => p.academic_info?.department || p.department)).size}`
             ],
             performanceIndicators: {
                 userEngagement: this.calculateEngagementRate(data),
@@ -328,7 +328,14 @@ export class AutomatedReporting {
      */
     groupBy(array, field) {
         return array.reduce((groups, item) => {
-            const key = item[field] || 'Unknown';
+            let key;
+            if (field.includes('.')) {
+                // Handle nested field access (e.g., 'academic_info.department')
+                const parts = field.split('.');
+                key = parts.reduce((obj, part) => obj?.[part], item) || 'Unknown';
+            } else {
+                key = item[field] || 'Unknown';
+            }
             groups[key] = (groups[key] || 0) + 1;
             return groups;
         }, {});

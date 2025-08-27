@@ -23,11 +23,10 @@ async def verify_supabase_token(credentials: HTTPAuthorizationCredentials = Depe
     try:
         token = credentials.credentials
         
-        # For development, we'll use a simple verification
-        # In production, you should verify the JWT signature properly
+        # Verify JWT signature using Supabase JWT secret
         try:
-            # Decode without verification for now (development only)
-            payload = jwt.decode(token, options={"verify_signature": False})
+            # Decode with proper signature verification
+            payload = jwt.decode(token, SUPABASE_JWT_SECRET, algorithms=["HS256"])
             
             # Extract user info from token
             user_info = {

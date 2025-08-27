@@ -62,13 +62,33 @@ async function loadModalComponents() {
         { path: './modals/add-user-modal.html' },
         { path: './modals/edit-user-modal.html' },
         { path: './modals/add-event-modal.html' },
-        { path: './modals/edit-event-modal.html' },
-        { path: './modals/add-achievement-modal.html' },
-        { path: './modals/edit-achievement-modal.html' },
-        { path: './modals/delete-achievement-modal.html' }
+        { path: './modals/edit-event-modal.html' }
     ];
     
     await loadComponents(modalComponents);
+    
+    // FORCE HIDE ALL MODALS AFTER LOADING
+    setTimeout(() => {
+        const modalIds = [
+            'add-user-modal',
+            'edit-user-modal', 
+            'add-event-modal',
+            'edit-event-modal'
+        ];
+        
+        modalIds.forEach(modalId => {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+                modal.style.visibility = 'hidden';
+                modal.style.opacity = '0';
+                modal.classList.remove('show');
+                console.log(`✅ Modal ${modalId} properly hidden`);
+            }
+        });
+        
+        console.log('✅ All modals properly hidden after loading');
+    }, 100);
 }
 
 /**

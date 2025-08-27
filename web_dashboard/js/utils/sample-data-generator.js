@@ -42,38 +42,7 @@ export class SampleDataGenerator {
         return users;
     }
     
-    /**
-     * Generate sample achievements
-     */
-    static generateSampleAchievements(count = 30) {
-        const achievements = [];
-        const types = ['academic', 'leadership', 'competition', 'skill', 'community'];
-        const titles = [
-            'Dean\'s List Achievement', 'Programming Competition Winner', 'Leadership Excellence',
-            'Community Service Award', 'Research Publication', 'Innovation Challenge',
-            'Academic Excellence', 'Team Leadership', 'Technical Skills Mastery',
-            'Public Speaking Award', 'Project Management', 'Entrepreneurship Award'
-        ];
-        
-        for (let i = 0; i < count; i++) {
-            const createdDate = new Date();
-            createdDate.setDate(createdDate.getDate() - Math.floor(Math.random() * 365)); // Last year
-            
-            achievements.push({
-                id: `achievement_${i + 1}`,
-                title: titles[i % titles.length],
-                description: `Outstanding achievement in ${types[Math.floor(Math.random() * types.length)]}`,
-                type: types[Math.floor(Math.random() * types.length)],
-                points: Math.floor(Math.random() * 100) + 10,
-                isVerified: Math.random() > 0.2, // 80% verified
-                createdAt: createdDate.toISOString(),
-                userId: `user_${Math.floor(Math.random() * 20) + 1}`,
-                verifiedBy: Math.random() > 0.2 ? `lecturer_${Math.floor(Math.random() * 5) + 1}` : null
-            });
-        }
-        
-        return achievements;
-    }
+
     
     /**
      * Generate sample events
@@ -150,7 +119,6 @@ export class SampleDataGenerator {
             console.log('🎯 Adding sample data to Supabase...');
             
             const users = this.generateSampleUsers(20);
-            const achievements = this.generateSampleAchievements(30);
             const events = this.generateSampleEvents(15);
             
             // Add users
@@ -158,10 +126,7 @@ export class SampleDataGenerator {
                 db.collection('users').doc(user.id).set(user)
             );
             
-            // Add achievements
-            const achievementPromises = achievements.map(achievement => 
-                db.collection('achievements').doc(achievement.id).set(achievement)
-            );
+
             
             // Add events
             const eventPromises = events.map(event => 
@@ -172,17 +137,14 @@ export class SampleDataGenerator {
             
             await Promise.all([
                 ...userPromises,
-                ...achievementPromises,
-                ...eventPromises,
-                ...claimPromises
+                ...eventPromises
             ]);
             
             console.log('✅ Sample data added successfully!');
-            console.log(`Added: ${users.length} users, ${achievements.length} achievements, ${events.length} events`);
+            console.log(`Added: ${users.length} users, ${events.length} events`);
             
             return {
                 users: users.length,
-                achievements: achievements.length,
                 events: events.length,
             };
             
@@ -199,14 +161,14 @@ export class SampleDataGenerator {
         try {
             console.log('🧹 Clearing sample data from Supabase...');
             
-            const collections = ['users', 'achievements', 'events'];
+            const collections = ['users', 'events'];
             const deletePromises = [];
             
             for (const collectionName of collections) {
                 const snapshot = await db.collection(collectionName).get();
                 snapshot.docs.forEach(doc => {
-                    if (doc.id.startsWith('user_') || doc.id.startsWith('achievement_') || 
-                        doc.id.startsWith('event_') || doc.id.startsWith('claim_')) {
+                                    if (doc.id.startsWith('user_') || 
+                    doc.id.startsWith('event_')) {
                         deletePromises.push(doc.ref.delete());
                     }
                 });
@@ -227,7 +189,6 @@ export class SampleDataGenerator {
     static getSampleDataSet() {
         return {
             users: this.generateSampleUsers(20),
-            achievements: this.generateSampleAchievements(30),
             events: this.generateSampleEvents(15),
         };
     }

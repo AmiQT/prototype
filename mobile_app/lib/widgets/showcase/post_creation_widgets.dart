@@ -141,14 +141,14 @@ class CategorySelectorWidget extends StatelessWidget {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? Theme.of(context).primaryColor
-                        : Colors.grey[100],
-                    borderRadius: BorderRadius.circular(20),
+                    color: isSelected 
+                        ? Theme.of(context).colorScheme.primary 
+                        : Colors.white, // Always white when not selected
+                    borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: isSelected
-                          ? Theme.of(context).primaryColor
-                          : Colors.grey[300]!,
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.outline,
                     ),
                   ),
                   child: Row(

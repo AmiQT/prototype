@@ -342,51 +342,109 @@ class ShowcasePostModel {
     return mediaList;
   }
 
+  // Helper methods for parsing enum values
+  static PostType _parsePostType(dynamic value) {
+    if (value is PostType) return value;
+    if (value is String) {
+      return PostType.values.firstWhere(
+        (e) => e.toString().split('.').last == value,
+        orElse: () => PostType.text,
+      );
+    }
+    return PostType.text;
+  }
+
+  static PostCategory _parsePostCategory(dynamic value) {
+    if (value is PostCategory) return value;
+    if (value is String) {
+      return PostCategory.values.firstWhere(
+        (e) => e.toString().split('.').last == value,
+        orElse: () => PostCategory.general,
+      );
+    }
+    return PostCategory.general;
+  }
+
+  static PostPrivacy _parsePostPrivacy(dynamic value) {
+    if (value is PostPrivacy) return value;
+    if (value is String) {
+      if (value == 'true' || value == 'false') {
+        return value == 'true' ? PostPrivacy.public : PostPrivacy.department;
+      }
+      return PostPrivacy.values.firstWhere(
+        (e) => e.toString().split('.').last == value,
+        orElse: () => PostPrivacy.public,
+      );
+    }
+    if (value is bool) {
+      return value ? PostPrivacy.public : PostPrivacy.department;
+    }
+    return PostPrivacy.public;
+  }
+
+  static List<MentionModel> _parseMentions(dynamic value) {
+    if (value is List) {
+      return value.map((m) => MentionModel.fromJson(m)).toList();
+    }
+    return [];
+  }
+
+  static List<CommentModel> _parseComments(dynamic value) {
+    if (value is List) {
+      return value.map((c) => CommentModel.fromJson(c)).toList();
+    }
+    return [];
+  }
+
+  static DateTime _parseDateTime(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is DateTime) return value;
+    if (value is String) {
+      try {
+        return DateTime.parse(value);
+      } catch (e) {
+        return DateTime.now();
+      }
+    }
+    if (value is int) {
+      return DateTime.fromMillisecondsSinceEpoch(value);
+    }
+    return DateTime.now();
+  }
+
   factory ShowcasePostModel.fromJson(Map<String, dynamic> json) {
+    // Handle Supabase nested profile data
+    final profiles = json['profiles'] as Map<String, dynamic>?;
+    final userName = profiles?['full_name'] ??
+        json['user_name'] ??
+        json['userName'] ??
+        'Unknown User';
+    final userProfileImage = profiles?['profile_image_url'] ??
+        json['user_profile_image'] ??
+        json['userProfileImage'];
+
     return ShowcasePostModel(
       id: json['id'] ?? '',
       userId: json['user_id'] ?? json['userId'] ?? '',
-      userName: json['user_name'] ?? json['userName'] ?? '',
-      userProfileImage: json['user_profile_image'] ?? json['userProfileImage'],
+      userName: userName,
+      userProfileImage: userProfileImage,
       userRole: json['user_role'] ?? json['userRole'],
       userDepartment: json['user_department'] ?? json['userDepartment'],
       userHeadline: json['user_headline'] ?? json['userHeadline'],
       content: json['content'] ?? '',
-      type: PostType.values.firstWhere(
-        (e) => e.toString().split('.').last == json['type'],
-        orElse: () => PostType.text,
-      ),
-      category: PostCategory.values.firstWhere(
-        (e) => e.toString().split('.').last == json['category'],
-        orElse: () => PostCategory.general,
-      ),
-      privacy: PostPrivacy.values.firstWhere(
-        (e) => e.toString().split('.').last == json['privacy'],
-        orElse: () => PostPrivacy.public,
-      ),
+      type: _parsePostType(json['type'] ?? 'text'),
+      category: _parsePostCategory(json['category'] ?? 'general'),
+      privacy:
+          _parsePostPrivacy(json['is_public'] ?? json['privacy'] ?? 'public'),
       media: _parseMediaFromJson(json),
       tags: List<String>.from(json['tags'] ?? []),
-      mentions: (json['mentions'] as List?)
-              ?.map((m) => MentionModel.fromJson(m))
-              .toList() ??
-          [],
+      mentions: _parseMentions(json['mentions'] ?? []),
       likes: List<String>.from(json['likes'] ?? []),
-      comments: (json['comments'] as List?)
-              ?.map((c) => CommentModel.fromJson(c))
-              .toList() ??
-          [],
+      comments: _parseComments(json['comments'] ?? []),
       shares: List<String>.from(json['shares'] ?? []),
       viewCount: json['views_count'] ?? json['viewCount'] ?? 0,
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
-          : (json['createdAt'] is String
-              ? DateTime.parse(json['createdAt'])
-              : DateTime.fromMillisecondsSinceEpoch(json['createdAt'] ?? 0)),
-      updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'])
-          : (json['updatedAt'] is String
-              ? DateTime.parse(json['updatedAt'])
-              : DateTime.fromMillisecondsSinceEpoch(json['updatedAt'] ?? 0)),
+      createdAt: _parseDateTime(json['created_at'] ?? json['createdAt']),
+      updatedAt: _parseDateTime(json['updated_at'] ?? json['updatedAt']),
       isEdited: json['is_edited'] ?? json['isEdited'] ?? false,
       isPinned: json['is_pinned'] ?? json['isPinned'] ?? false,
       isArchived: json['is_archived'] ?? json['isArchived'] ?? false,

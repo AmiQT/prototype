@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "**/*",
+      "src": "web_dashboard/**",
       "use": "@vercel/static"
     }
   ],
@@ -21,7 +21,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/$1"
+      "dest": "/web_dashboard/$1"
     }
   ]
 }

@@ -19,12 +19,14 @@ class PostCreationScreen extends StatefulWidget {
   final PostDraft? draft;
   final PostTemplate? template;
   final ShowcasePostModel? editingPost;
+  final VoidCallback? onPostCreated; // Callback when post is successfully created
 
   const PostCreationScreen({
     super.key,
     this.draft,
     this.template,
     this.editingPost,
+    this.onPostCreated,
   });
 
   @override
@@ -1339,6 +1341,9 @@ class _PostCreationScreenState extends State<PostCreationScreen>
           await _clearSavedDraft();
           _successAnimationController.forward();
           _showSuccessDialog(result.postId!);
+          
+          // Call callback to refresh feed
+          widget.onPostCreated?.call();
         } else {
           _showError(result.error ?? 'Failed to create post');
         }

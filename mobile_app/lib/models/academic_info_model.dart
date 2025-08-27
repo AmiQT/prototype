@@ -41,18 +41,33 @@ class AcademicInfoModel {
       return DateTime.now();
     }
 
+    // Safe cgpa parsing
+    double? parseCgpa(dynamic value) {
+      if (value == null) return null;
+      if (value is double) return value;
+      if (value is int) return value.toDouble();
+      if (value is String) {
+        try {
+          return double.parse(value);
+        } catch (e) {
+          return null;
+        }
+      }
+      return null;
+    }
+
     return AcademicInfoModel(
       studentId: json['studentId'] ?? '',
       program: json['program'] ?? '',
       department: json['department'] ?? '',
       faculty: json['faculty'] ?? '',
       currentSemester: json['currentSemester'] ?? 1,
-      cgpa: json['cgpa']?.toDouble(),
+      cgpa: parseCgpa(json['cgpa']),
       totalCredits: json['totalCredits'],
       completedCredits: json['completedCredits'],
       enrollmentDate: parseDateTime(json['enrollmentDate']),
-      expectedGraduation: json['expectedGraduation'] != null 
-          ? parseDateTime(json['expectedGraduation']) 
+      expectedGraduation: json['expectedGraduation'] != null
+          ? parseDateTime(json['expectedGraduation'])
           : null,
       specialization: json['specialization'],
       minors: List<String>.from(json['minors'] ?? []),

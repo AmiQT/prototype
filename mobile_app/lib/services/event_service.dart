@@ -6,8 +6,9 @@ import 'auto_notification_service.dart';
 import '../config/supabase_config.dart';
 
 class EventService {
-  static const String baseUrl = 'https://c3168f89d034.ngrok-free.app'; // ngrok tunnel
-  
+  static const String baseUrl =
+      'https://prototype-348e.onrender.com'; // Render backend
+
   // Get Supabase auth token for authentication
   static Future<String?> _getAuthToken() async {
     try {
@@ -41,11 +42,11 @@ class EventService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final List<dynamic> eventsJson = data['events'] ?? data;
-        
+
         final events = <EventModel>[];
         for (final eventData in eventsJson) {
           debugPrint('📄 Backend Event Data: $eventData');
-          
+
           final event = EventModel(
             id: eventData['id'] ?? '',
             title: eventData['title'] ?? '',
@@ -53,15 +54,16 @@ class EventService {
             imageUrl: eventData['image_url'] ?? eventData['imageUrl'] ?? '',
             category: eventData['category'] ?? '',
             favoriteUserIds: [], // Will be handled separately
-            registerUrl: eventData['register_url'] ?? eventData['registerUrl'] ?? '',
-            createdAt: eventData['created_at'] != null 
+            registerUrl:
+                eventData['register_url'] ?? eventData['registerUrl'] ?? '',
+            createdAt: eventData['created_at'] != null
                 ? DateTime.parse(eventData['created_at'])
                 : DateTime.now(),
             updatedAt: eventData['updated_at'] != null
                 ? DateTime.parse(eventData['updated_at'])
                 : DateTime.now(),
           );
-          
+
           debugPrint('📄 Created event: ${event.title}');
           events.add(event);
         }
@@ -100,8 +102,9 @@ class EventService {
           imageUrl: eventData['image_url'] ?? eventData['imageUrl'] ?? '',
           category: eventData['category'] ?? '',
           favoriteUserIds: [], // Will be handled separately
-          registerUrl: eventData['register_url'] ?? eventData['registerUrl'] ?? '',
-          createdAt: eventData['created_at'] != null 
+          registerUrl:
+              eventData['register_url'] ?? eventData['registerUrl'] ?? '',
+          createdAt: eventData['created_at'] != null
               ? DateTime.parse(eventData['created_at'])
               : DateTime.now(),
           updatedAt: eventData['updated_at'] != null
@@ -270,10 +273,10 @@ class EventService {
 
   // Helper method to get events with polling
   Stream<List<EventModel>> streamEventsWithPolling({Duration? interval}) {
-    return Stream.periodic(
-      interval ?? const Duration(seconds: 30), 
-      (_) async => await getAllEvents()
-    ).asyncMap((future) => future).handleError((error) {
+    return Stream.periodic(interval ?? const Duration(seconds: 30),
+            (_) async => await getAllEvents())
+        .asyncMap((future) => future)
+        .handleError((error) {
       debugPrint('❌ Error in event polling: $error');
       return <EventModel>[];
     });

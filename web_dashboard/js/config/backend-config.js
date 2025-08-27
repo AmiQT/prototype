@@ -4,8 +4,9 @@
  */
 
 const BACKEND_CONFIG = {
-  // Backend API URLs - Use environment variable or fallback
-  baseUrl: 'https://prototype-348e.onrender.com',
+  // COMMENTED OUT: Custom backend - Using Supabase direct calls only
+  // baseUrl: window.location.origin,
+  baseUrl: null, // Disabled for Supabase-only approach
   
   // API Endpoints
   endpoints: {
@@ -25,7 +26,7 @@ const BACKEND_CONFIG = {
       update: '/api/events',
       delete: '/api/events'
     },
-    achievements: '/api/achievements',
+
     media: '/api/media',
     search: '/api/search',
     analytics: '/api/analytics',
@@ -108,42 +109,53 @@ async function getAuthHeaders() {
   };
 }
 
-// Helper function to test backend connection
+// COMMENTED OUT: Backend connection test - Using Supabase only
+// async function testBackendConnection() {
+//   try {
+//     const response = await fetch(`${BACKEND_CONFIG.baseUrl}/health`, {
+//       method: 'GET',
+//       headers: BACKEND_CONFIG.cors.headers,
+//       timeout: BACKEND_CONFIG.timeout
+//     });
+//     return response.ok;
+//   } catch (error) {
+//     console.warn('Backend connection test failed, using fallback:', error.message);
+//     return false;
+//   }
+// }
+
+// Fallback function for Supabase-only approach
 async function testBackendConnection() {
-  try {
-    // Try the correct health endpoint
-    const response = await fetch(`${BACKEND_CONFIG.baseUrl}/health`, {
-      method: 'GET',
-      headers: BACKEND_CONFIG.cors.headers,
-      timeout: BACKEND_CONFIG.timeout
-    });
-    return response.ok;
-  } catch (error) {
-    console.warn('Backend connection test failed, using fallback:', error.message);
-    return false;
-  }
+  console.warn('Custom backend disabled - using Supabase only');
+  return false; // Always return false since no backend
 }
 
-// Helper function to make authenticated requests
+// COMMENTED OUT: Custom backend requests - Using Supabase direct calls only
+// async function makeAuthenticatedRequest(endpoint, options = {}) {
+//   try {
+//     const url = getApiUrl(endpoint);
+//     const headers = await getAuthHeaders();
+//     
+//     const response = await fetch(url, {
+//       ...options,
+//       headers: { ...headers, ...options.headers }
+//     });
+//     
+//     if (!response.ok) {
+//       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+//     }
+//     
+//     return await response.json();
+//   } catch (error) {
+//     console.error('Authenticated request failed:', error);
+//     throw error;
+//   }
+// }
+
+// Fallback function for Supabase-only approach
 async function makeAuthenticatedRequest(endpoint, options = {}) {
-  try {
-    const url = getApiUrl(endpoint);
-    const headers = await getAuthHeaders(); // Now async
-    
-    const response = await fetch(url, {
-      ...options,
-      headers: { ...headers, ...options.headers }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Authenticated request failed:', error);
-    throw error;
-  }
+  console.warn('Custom backend disabled - using Supabase direct calls');
+  throw new Error('Custom backend disabled - use Supabase direct calls instead');
 }
 
 // Export configuration for ES6 modules

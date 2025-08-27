@@ -85,9 +85,7 @@ export class AnalyticsValidator {
             case 'users':
                 this.validateUserRecord(record, result, index);
                 break;
-            case 'achievements':
-                this.validateAchievementRecord(record, result, index);
-                break;
+
             case 'events':
                 this.validateEventRecord(record, result, index);
                 break;
@@ -145,18 +143,7 @@ export class AnalyticsValidator {
         }
     }
     
-    /**
-     * Validate achievement record
-     */
-    static validateAchievementRecord(record, result, index) {
-        if (record.points && (typeof record.points !== 'number' || record.points < 0)) {
-            result.warnings.push(`Record ${index}: Invalid points value`);
-        }
-        
-        if (record.type && !['academic', 'competition', 'leadership', 'skill', 'other'].includes(record.type)) {
-            result.warnings.push(`Record ${index}: Unknown achievement type '${record.type}'`);
-        }
-    }
+
     
     /**
      * Validate event record

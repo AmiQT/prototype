@@ -3,8 +3,9 @@ import 'package:http/http.dart' as http;
 import '../config/supabase_config.dart';
 
 class StudentAnalyticsService {
-  static const String baseUrl = 'https://c3168f89d034.ngrok-free.app'; // ngrok tunnel
-  
+  static const String baseUrl =
+      'https://prototype-348e.onrender.com'; // Render backend
+
   // Get Supabase auth token for authentication
   static Future<String?> _getAuthToken() async {
     try {
@@ -17,7 +18,7 @@ class StudentAnalyticsService {
       return null;
     }
   }
-  
+
   // Get personalized dashboard data for current student
   static Future<Map<String, dynamic>> getStudentDashboard() async {
     try {
@@ -25,7 +26,7 @@ class StudentAnalyticsService {
       if (token == null) {
         throw Exception('No authentication token available');
       }
-      
+
       final response = await http.get(
         Uri.parse('$baseUrl/api/student/dashboard'),
         headers: {
@@ -33,7 +34,7 @@ class StudentAnalyticsService {
           'Authorization': 'Bearer $token',
         },
       );
-      
+
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
@@ -43,7 +44,7 @@ class StudentAnalyticsService {
       throw Exception('Dashboard error: $e');
     }
   }
-  
+
   // Get personalized recommendations for current student
   static Future<Map<String, dynamic>> getStudentRecommendations() async {
     try {
@@ -51,7 +52,7 @@ class StudentAnalyticsService {
       if (token == null) {
         throw Exception('No authentication token available');
       }
-      
+
       final response = await http.get(
         Uri.parse('$baseUrl/api/student/recommendations'),
         headers: {
@@ -59,7 +60,7 @@ class StudentAnalyticsService {
           'Authorization': 'Bearer $token',
         },
       );
-      
+
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
@@ -69,7 +70,7 @@ class StudentAnalyticsService {
       throw Exception('Recommendations error: $e');
     }
   }
-  
+
   // Get student progress analytics over time
   static Future<Map<String, dynamic>> getStudentProgress() async {
     try {
@@ -77,7 +78,7 @@ class StudentAnalyticsService {
       if (token == null) {
         throw Exception('No authentication token available');
       }
-      
+
       final response = await http.get(
         Uri.parse('$baseUrl/api/student/progress'),
         headers: {
@@ -85,7 +86,7 @@ class StudentAnalyticsService {
           'Authorization': 'Bearer $token',
         },
       );
-      
+
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
@@ -95,19 +96,20 @@ class StudentAnalyticsService {
       throw Exception('Progress error: $e');
     }
   }
-  
+
   // Helper method to get user stats summary
   static Future<Map<String, dynamic>> getUserStatsSummary() async {
     try {
       final dashboard = await getStudentDashboard();
       final stats = dashboard['stats'] ?? {};
-      
+
       return {
         'total_achievements': stats['achievements']?['total'] ?? 0,
         'total_events': stats['events']?['total'] ?? 0,
         'total_posts': stats['showcase']?['total_posts'] ?? 0,
         'total_likes': stats['showcase']?['total_likes'] ?? 0,
-        'profile_completion': dashboard['user_info']?['profile_completion'] ?? 0,
+        'profile_completion':
+            dashboard['user_info']?['profile_completion'] ?? 0,
         'engagement_score': dashboard['insights']?['engagement_score'] ?? 0,
         'activity_level': dashboard['insights']?['activity_level'] ?? 'Low',
       };
@@ -115,15 +117,15 @@ class StudentAnalyticsService {
       throw Exception('Stats summary error: $e');
     }
   }
-  
+
   // Helper method to get recent activity
   static Future<List<Map<String, dynamic>>> getRecentActivity() async {
     try {
       final dashboard = await getStudentDashboard();
       final stats = dashboard['stats'] ?? {};
-      
+
       List<Map<String, dynamic>> activities = [];
-      
+
       // Add recent achievements
       final recentAchievements = stats['achievements']?['recent'] ?? [];
       for (var achievement in recentAchievements) {
@@ -135,7 +137,7 @@ class StudentAnalyticsService {
           'icon': '🏆',
         });
       }
-      
+
       // Add recent events
       final recentEvents = stats['events']?['recent'] ?? [];
       for (var event in recentEvents) {
@@ -147,26 +149,27 @@ class StudentAnalyticsService {
           'icon': '📅',
         });
       }
-      
+
       // Sort by date (most recent first)
       activities.sort((a, b) {
         final dateA = DateTime.tryParse(a['date'] ?? '') ?? DateTime(1970);
         final dateB = DateTime.tryParse(b['date'] ?? '') ?? DateTime(1970);
         return dateB.compareTo(dateA);
       });
-      
+
       return activities.take(5).toList(); // Return top 5 recent activities
     } catch (e) {
       throw Exception('Recent activity error: $e');
     }
   }
-  
+
   // Helper method to get top recommendations
-  static Future<List<Map<String, dynamic>>> getTopRecommendations({int limit = 3}) async {
+  static Future<List<Map<String, dynamic>>> getTopRecommendations(
+      {int limit = 3}) async {
     try {
       final recommendations = await getStudentRecommendations();
       final recList = recommendations['recommendations'] ?? [];
-      
+
       // Sort by priority (high, medium, low)
       recList.sort((a, b) {
         final priorityOrder = {'high': 3, 'medium': 2, 'low': 1};
@@ -174,7 +177,7 @@ class StudentAnalyticsService {
         final priorityB = priorityOrder[b['priority']] ?? 0;
         return priorityB.compareTo(priorityA);
       });
-      
+
       return List<Map<String, dynamic>>.from(recList.take(limit));
     } catch (e) {
       throw Exception('Top recommendations error: $e');

@@ -45,7 +45,7 @@ class ChatMessageBubble extends StatelessWidget {
       ),
       child: Icon(
         isUser ? Icons.person : Icons.smart_toy_rounded,
-        color: Colors.white,
+        color: AppTheme.primaryColor,
         size: 18,
       ),
     );
@@ -60,7 +60,9 @@ class ChatMessageBubble extends StatelessWidget {
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: isUser ? AppTheme.primaryColor : AppTheme.surfaceColor,
+          color: isUser
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(18),
             topRight: const Radius.circular(18),
@@ -69,7 +71,8 @@ class ChatMessageBubble extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color:
+                  Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -82,7 +85,9 @@ class ChatMessageBubble extends StatelessWidget {
               content: message.content,
               isUser: isUser,
               baseStyle: TextStyle(
-                color: isUser ? Colors.white : AppTheme.textPrimaryColor,
+                color: isUser
+                    ? Theme.of(context).colorScheme.onPrimary
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 16,
                 height: 1.4,
               ),
@@ -95,8 +100,11 @@ class ChatMessageBubble extends StatelessWidget {
                   _formatTime(message.timestamp),
                   style: TextStyle(
                     color: isUser
-                        ? Colors.white.withValues(alpha: 0.7)
-                        : AppTheme.textSecondaryColor,
+                        ? Theme.of(context)
+                            .colorScheme
+                            .onPrimary
+                            .withValues(alpha: 0.7)
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
                     fontSize: 12,
                   ),
                 ),
@@ -106,16 +114,22 @@ class ChatMessageBubble extends StatelessWidget {
                     Icons.token,
                     size: 12,
                     color: isUser
-                        ? Colors.white.withValues(alpha: 0.7)
-                        : AppTheme.textSecondaryColor,
+                        ? Theme.of(context)
+                            .colorScheme
+                            .onPrimary
+                            .withValues(alpha: 0.7)
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 2),
                   Text(
                     '${message.tokens}',
                     style: TextStyle(
                       color: isUser
-                          ? Colors.white.withValues(alpha: 0.7)
-                          : AppTheme.textSecondaryColor,
+                          ? Theme.of(context)
+                              .colorScheme
+                              .onPrimary
+                              .withValues(alpha: 0.7)
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 10,
                     ),
                   ),
@@ -139,15 +153,15 @@ class ChatMessageBubble extends StatelessWidget {
     switch (message.status) {
       case MessageStatus.sending:
         icon = Icons.access_time;
-        color = Colors.white.withValues(alpha: 0.7);
+        color = AppTheme.primaryColor.withValues(alpha: 0.7);
         break;
       case MessageStatus.sent:
         icon = Icons.check;
-        color = Colors.white.withValues(alpha: 0.7);
+        color = AppTheme.primaryColor.withValues(alpha: 0.7);
         break;
       case MessageStatus.delivered:
         icon = Icons.done_all;
-        color = Colors.white.withValues(alpha: 0.7);
+        color = AppTheme.primaryColor.withValues(alpha: 0.7);
         break;
       case MessageStatus.failed:
         icon = Icons.error_outline;
@@ -220,7 +234,8 @@ class ChatMessageBubble extends StatelessWidget {
                   // Feedback system placeholder - to be implemented
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Thank you for your feedback! We will improve.'),
+                      content:
+                          Text('Thank you for your feedback! We will improve.'),
                       backgroundColor: AppTheme.warningColor,
                     ),
                   );

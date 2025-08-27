@@ -69,6 +69,7 @@ class _ModernSearchBarState extends State<ModernSearchBar>
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
 
+    // Initialize color animation without Theme.of(context) in initState
     _colorAnimation = ColorTween(
       begin: AppTheme.surfaceVariant,
       end: AppTheme.primaryColor.withValues(alpha: 0.1),
@@ -78,6 +79,17 @@ class _ModernSearchBarState extends State<ModernSearchBar>
     widget.focusNode.addListener(_onFocusChange);
     widget.controller.addListener(_onTextChange);
     _hasText = widget.controller.text.isNotEmpty;
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Update color animation with proper theme colors after dependencies are ready
+    _colorAnimation = ColorTween(
+      begin: AppTheme.surfaceVariant,
+      end: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+    ).animate(
+        CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
   }
 
   @override
@@ -176,14 +188,16 @@ class _ModernSearchBarState extends State<ModernSearchBar>
                         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                         border: Border.all(
                           color: _isFocused
-                              ? AppTheme.primaryColor
+                              ? Theme.of(context).colorScheme.primary
                               : Colors.transparent,
                           width: 2,
                         ),
                         boxShadow: _isFocused
                             ? [
                                 BoxShadow(
-                                  color: AppTheme.primaryColor
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primary
                                       .withValues(alpha: 0.2),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
@@ -197,13 +211,15 @@ class _ModernSearchBarState extends State<ModernSearchBar>
                         enabled: widget.enabled,
                         onSubmitted: widget.onSubmitted,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: AppTheme.textPrimaryColor,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                         decoration: InputDecoration(
                           hintText: widget.hintText,
                           hintStyle:
                               Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: AppTheme.textSecondaryColor,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
                                   ),
                           prefixIcon: widget.prefixIcon ??
                               Container(
@@ -211,8 +227,10 @@ class _ModernSearchBarState extends State<ModernSearchBar>
                                 child: Icon(
                                   Icons.search_rounded,
                                   color: _isFocused
-                                      ? AppTheme.primaryColor
-                                      : AppTheme.textSecondaryColor,
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
                                   size: 20,
                                 ),
                               ),
@@ -221,9 +239,11 @@ class _ModernSearchBarState extends State<ModernSearchBar>
                                   padding:
                                       const EdgeInsets.all(AppTheme.spaceXs),
                                   child: IconButton(
-                                    icon: const Icon(
+                                    icon: Icon(
                                       Icons.clear_rounded,
-                                      color: AppTheme.textSecondaryColor,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
                                       size: 20,
                                     ),
                                     onPressed: _clearText,
@@ -252,15 +272,21 @@ class _ModernSearchBarState extends State<ModernSearchBar>
               const SizedBox(width: AppTheme.spaceSm),
               Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.surfaceColor,
+                  color: Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                   border: Border.all(
-                    color: AppTheme.textSecondaryColor.withValues(alpha: 0.2),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .outline
+                        .withValues(alpha: 0.2),
                     width: 1,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .shadow
+                          .withValues(alpha: 0.05),
                       blurRadius: 4,
                       offset: const Offset(0, 1),
                     ),
@@ -268,9 +294,9 @@ class _ModernSearchBarState extends State<ModernSearchBar>
                 ),
                 child: IconButton(
                   onPressed: widget.onFilter,
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.tune_rounded,
-                    color: AppTheme.textSecondaryColor,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                     size: 20,
                   ),
                   constraints: const BoxConstraints(
@@ -289,17 +315,23 @@ class _ModernSearchBarState extends State<ModernSearchBar>
           Container(
             margin: const EdgeInsets.only(top: AppTheme.spaceXs),
             decoration: BoxDecoration(
-              color: AppTheme.surfaceColor,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .shadow
+                      .withValues(alpha: 0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
               ],
               border: Border.all(
-                color: AppTheme.primaryColor.withValues(alpha: 0.2),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.2),
                 width: 1,
               ),
             ),
@@ -317,7 +349,7 @@ class _ModernSearchBarState extends State<ModernSearchBar>
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.textSecondaryColor,
+                        color: null, // Use theme default
                       ),
                     ),
                   ),
@@ -336,7 +368,7 @@ class _ModernSearchBarState extends State<ModernSearchBar>
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.textSecondaryColor,
+                        color: null, // Use theme default
                       ),
                     ),
                   ),
@@ -380,17 +412,17 @@ class _ModernSearchBarState extends State<ModernSearchBar>
                 children: [
                   Text(
                     suggestion.text,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: AppTheme.textPrimaryColor,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   Text(
                     _getSuggestionTypeLabel(suggestion.type),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppTheme.textSecondaryColor,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -419,26 +451,26 @@ class _ModernSearchBarState extends State<ModernSearchBar>
         ),
         child: Row(
           children: [
-            const Icon(
+            Icon(
               Icons.history_rounded,
               size: 18,
-              color: AppTheme.textSecondaryColor,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: AppTheme.spaceSm),
             Expanded(
               child: Text(
                 item.query,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
-                  color: AppTheme.textPrimaryColor,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ),
             Text(
               '${item.resultCount} results',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: AppTheme.textSecondaryColor,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -465,7 +497,7 @@ class _ModernSearchBarState extends State<ModernSearchBar>
   Color _getSuggestionColor(SearchSuggestionType type) {
     switch (type) {
       case SearchSuggestionType.name:
-        return AppTheme.primaryColor;
+        return Theme.of(context).colorScheme.primary;
       case SearchSuggestionType.skill:
         return Theme.of(context).colorScheme.secondary;
       case SearchSuggestionType.department:
@@ -474,7 +506,7 @@ class _ModernSearchBarState extends State<ModernSearchBar>
         return Theme.of(context).colorScheme.tertiary;
       default:
         return Theme.of(context).textTheme.bodyMedium?.color ??
-            AppTheme.textSecondaryColor;
+            Theme.of(context).colorScheme.onSurfaceVariant;
     }
   }
 
@@ -534,20 +566,23 @@ class ModernSearchBarWithVoice extends StatelessWidget {
         const SizedBox(width: AppTheme.spaceSm),
         Container(
           decoration: BoxDecoration(
-            color: AppTheme.primaryColor,
+            color: Theme.of(context).colorScheme.primary,
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.3),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
             ],
           ),
           child: IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.mic_rounded,
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.onPrimary,
             ),
             onPressed: onVoiceSearch ??
                 () {
@@ -595,10 +630,14 @@ class SearchSuggestionChip extends StatelessWidget {
           vertical: AppTheme.spaceSm,
         ),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primaryColor : AppTheme.surfaceColor,
+          color: isSelected
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusFull),
           border: Border.all(
-            color: isSelected ? AppTheme.primaryColor : AppTheme.surfaceVariant,
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.surfaceVariant,
             width: 1,
           ),
         ),
@@ -610,7 +649,7 @@ class SearchSuggestionChip extends StatelessWidget {
                 icon,
                 size: 16,
                 color: isSelected
-                    ? Colors.white
+                    ? Theme.of(context).colorScheme.onPrimary
                     : Theme.of(context).textTheme.bodyMedium?.color,
               ),
               const SizedBox(width: AppTheme.spaceXs),
@@ -619,7 +658,7 @@ class SearchSuggestionChip extends StatelessWidget {
               text,
               style: TextStyle(
                 color: isSelected
-                    ? Colors.white
+                    ? Theme.of(context).colorScheme.onPrimary
                     : Theme.of(context).textTheme.bodyMedium?.color,
                 fontWeight: FontWeight.w500,
                 fontSize: 14,
@@ -633,7 +672,7 @@ class SearchSuggestionChip extends StatelessWidget {
                   Icons.close_rounded,
                   size: 16,
                   color: isSelected
-                      ? Colors.white
+                      ? Theme.of(context).colorScheme.onPrimary
                       : Theme.of(context).textTheme.bodyMedium?.color,
                 ),
               ),

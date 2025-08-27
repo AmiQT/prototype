@@ -59,19 +59,41 @@ async function loadEventsTable() {
     tableBody.innerHTML = '<tr><td colspan="7">Loading events from backend...</td></tr>';
 
     try {
-        // Load real events from backend
-        console.log('📊 Loading events from backend API...');
+        // COMMENTED OUT: Custom backend events loading
+        // console.log('📊 Loading events from backend API...');
+        // const response = await makeAuthenticatedRequest(API_ENDPOINTS.events.list);
+        // if (response && Array.isArray(response)) {
+        //     allEventsCache = response;
+        //     console.log(`Loaded ${allEventsCache.length} events from backend`);
+        // } else if (response && response.events && Array.isArray(response.events)) {
+        //     allEventsCache = response.events;
+        //     console.log(`Loaded ${allEventsCache.length} events from backend`);
+        // } else {
+        //     console.warn('No events data received from backend');
+        //     allEventsCache = [];
+        // }
         
-        const response = await makeAuthenticatedRequest(API_ENDPOINTS.events.list);
+        // SUPABASE DIRECT CALLS: Load real events from Supabase
+        console.log('📊 Loading events from Supabase...');
         
-        if (response && Array.isArray(response)) {
-            allEventsCache = response;
-            console.log(`Loaded ${allEventsCache.length} events from backend`);
-        } else if (response && response.events && Array.isArray(response.events)) {
-            allEventsCache = response.events;
-            console.log(`Loaded ${allEventsCache.length} events from backend`);
-        } else {
-            console.warn('No events data received from backend');
+        try {
+            const { supabase } = await import('../../config/supabase-config.js');
+            
+            const { data: events, error } = await supabase
+                .from('events')
+                .select('*')
+                .order('created_at', { ascending: false });
+            
+            if (error) {
+                console.error('❌ Error loading events from Supabase:', error);
+                allEventsCache = [];
+            } else {
+                allEventsCache = events || [];
+                console.log(`✅ Loaded ${allEventsCache.length} events from Supabase`);
+            }
+            
+        } catch (error) {
+            console.error('❌ Error connecting to Supabase:', error);
             allEventsCache = [];
         }
             
@@ -115,10 +137,7 @@ function renderEventsTable(events) {
                 }
             </td>
             <td>
-                ${event.badges && event.badges.length > 0 ? 
-                    event.badges.map(badge => `<span class="badge badge-success">${badge}</span>`).join(' ') : 
-                    '<span class="text-muted">No badges</span>'
-                }
+                <span class="text-muted">N/A</span>
             </td>
             <td>
                 <button class="btn btn-sm btn-secondary" onclick="showEditEventModal('${event.id}')">
@@ -164,11 +183,18 @@ function filterEvents() {
 function showAddEventModal() {
     const modal = document.getElementById('add-event-modal');
     if (modal) {
-        modal.style.display = 'block';
+        // Show modal with proper class and styling (same as edit modal)
+        modal.classList.add('show');
+        modal.style.display = 'flex';
+        modal.style.visibility = 'visible';
+        modal.style.opacity = '1';
+        modal.style.zIndex = '1000';
         
         // Reset form
         const form = document.getElementById('add-event-form');
         if (form) form.reset();
+        
+        console.log('✅ Add event modal opened');
     }
 }
 
@@ -191,18 +217,20 @@ async function showEditEventModal(eventId) {
         document.getElementById('edit-event-image').value = event.image_url || '';
         document.getElementById('edit-event-register-url').value = event.registration_url || '';
         
-        // Handle badges if they exist
-        if (event.badges && Array.isArray(event.badges)) {
-            const badgesContainer = document.getElementById('edit-event-badges');
-            if (badgesContainer) {
-                badgesContainer.value = event.badges.join(', ');
-            }
-        }
+
         
-        modal.style.display = 'block';
+        // Show modal with proper class and styling (same as user modals)
+        modal.classList.add('show');
+        modal.style.display = 'flex';
+        modal.style.visibility = 'visible';
+        modal.style.opacity = '1';
+        modal.style.zIndex = '1000';
+        
+        console.log('✅ Edit event modal opened for:', event.title);
+        
     } catch (error) {
-        console.error('Error loading event for edit:', error);
-        addNotification('Error loading event data', 'error');
+        console.error('❌ Error loading event for edit:', error);
+        alert(`Error loading event data: ${error.message}`);
     }
 }
 
@@ -215,7 +243,7 @@ async function handleAddEvent(form) {
             category: formData.get('category'),
             image_url: formData.get('image_url'),
             registration_url: formData.get('registration_url'),
-            badges: formData.get('badges') ? formData.get('badges').split(',').map(b => b.trim()).filter(b => b) : []
+            badges: []
         };
         
         // Validate required fields
@@ -254,7 +282,7 @@ async function handleEditEvent(form) {
             category: formData.get('category'),
             image_url: formData.get('image_url'),
             registration_url: formData.get('registration_url'),
-            badges: formData.get('badges') ? formData.get('badges').split(',').map(b => b.trim()).filter(b => b) : []
+            badges: []
         };
         
         // Update event via backend API

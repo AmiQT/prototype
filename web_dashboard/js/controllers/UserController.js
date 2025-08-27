@@ -346,7 +346,7 @@ export class UserController {
         
         if (roleSelect && deptField && deptLabel) {
             if (roleSelect.value === 'student') {
-                deptLabel.textContent = 'Course';
+                deptLabel.textContent = 'Department';
                 deptField.placeholder = 'e.g., Computer Science, Engineering';
             } else if (roleSelect.value === 'lecturer') {
                 deptLabel.textContent = 'Department';

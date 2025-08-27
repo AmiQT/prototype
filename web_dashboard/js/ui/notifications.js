@@ -136,8 +136,6 @@ function closeModal(id) {
 // Helper function to identify dynamically created modals
 function isDynamicModal(id) {
     const dynamicModalIds = [
-        'assign-badge-modal',
-        'claim-badge-modal',
         'qr-codes-modal'
     ];
     return dynamicModalIds.includes(id);
@@ -190,14 +188,33 @@ function logout() {
 // Settings functionality
 function changeTheme(theme) {
     const html = document.documentElement;
+    const themeSelect = document.getElementById('theme-select');
     
     if (theme === 'auto') {
         const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         theme = systemPrefersDark ? 'dark' : 'light';
     }
     
+    // Apply theme with smooth transition
+    html.style.transition = 'background-color 0.3s ease, color 0.3s ease';
     html.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
+    
+    // Update theme selector
+    if (themeSelect) {
+        themeSelect.value = theme;
+    }
+    
+    // Update charts if they exist
+    if (typeof updateChartsTheme === 'function') {
+        updateChartsTheme(theme);
+    }
+    
+    // Remove transition after animation
+    setTimeout(() => {
+        html.style.transition = '';
+    }, 300);
+    
     addNotification(`Switched to ${theme} mode`, 'success');
 }
 

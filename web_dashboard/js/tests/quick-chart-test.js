@@ -23,7 +23,7 @@ export function quickChartTest() {
         console.log('✅ Analytics section found');
         
         // Check for chart canvases
-        const charts = ['userChart', 'eventChart', 'achievementChart'];
+        const charts = ['totalUserChart', 'courseChart'];
         const foundCharts = [];
         
         charts.forEach(chartId => {

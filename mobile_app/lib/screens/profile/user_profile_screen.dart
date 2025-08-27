@@ -98,12 +98,10 @@ class _UserProfileScreenState extends State<UserProfileScreen>
     });
 
     try {
-      final posts = await _showcaseService
-          .getShowcasePostsStream(
-            userId: widget.userId,
-            limit: 20,
-          )
-          .first;
+      final posts = await _showcaseService.getShowcasePosts(
+        userId: widget.userId,
+        limit: 20,
+      );
 
       setState(() {
         _userPosts = posts;

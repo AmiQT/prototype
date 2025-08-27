@@ -153,7 +153,7 @@ export class EventController {
                 category: formData.get('category'),
                 image_url: formData.get('image_url'),
                 registration_url: formData.get('registration_url'),
-                badges: formData.get('badges')
+                badges: []
             };
 
             // Validate event data
@@ -183,7 +183,7 @@ export class EventController {
                 category: formData.get('category'),
                 image_url: formData.get('image_url'),
                 registration_url: formData.get('registration_url'),
-                badges: formData.get('badges')
+                badges: []
             };
 
             // Validate event data
@@ -243,13 +243,7 @@ export class EventController {
             document.getElementById('edit-event-image').value = event.image_url || '';
             document.getElementById('edit-event-register-url').value = event.registration_url || '';
             
-            // Handle badges
-            if (event.badges && Array.isArray(event.badges)) {
-                const badgesField = document.getElementById('edit-event-badges');
-                if (badgesField) {
-                    badgesField.value = event.badges.join(', ');
-                }
-            }
+
             
             modal.style.display = 'block';
         } catch (error) {
@@ -289,10 +283,7 @@ export class EventController {
                     }
                 </td>
                 <td>
-                    ${event.badges && event.badges.length > 0 ? 
-                        event.badges.map(badge => `<span class="badge badge-success">${badge}</span>`).join(' ') : 
-                        '<span class="text-muted">No badges</span>'
-                    }
+                    <span class="text-muted">N/A</span>
                 </td>
                 <td>
                     <button class="btn btn-sm btn-secondary" onclick="eventController.showEditEventModal('${event.id}')">

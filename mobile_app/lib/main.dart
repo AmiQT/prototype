@@ -17,6 +17,7 @@ import 'config/app_config.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'screens/splash_screen.dart';
 import 'utils/app_theme.dart';
+import 'providers/theme_provider.dart';
 // Firebase completely removed - using Supabase only
 
 void main() async {
@@ -50,6 +51,9 @@ void main() async {
   final languageService = LanguageService();
   await languageService.initialize();
 
+  final themeProvider = ThemeProvider();
+  // Theme provider auto-initializes in constructor
+
   // Initialize chat services with Gemini
   if (AppConfig.hasGeminiApiKey) {
     debugPrint('Main: Using Gemini chat service');
@@ -68,17 +72,20 @@ void main() async {
   runApp(MyApp(
     authService: authService,
     languageService: languageService,
+    themeProvider: themeProvider,
   ));
 }
 
 class MyApp extends StatelessWidget {
   final SupabaseAuthService authService;
   final LanguageService languageService;
+  final ThemeProvider themeProvider;
 
   const MyApp({
     super.key,
     required this.authService,
     required this.languageService,
+    required this.themeProvider,
   });
 
   @override
@@ -106,14 +113,17 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<LanguageService>(
           create: (_) => languageService,
         ),
+        ChangeNotifierProvider<ThemeProvider>(
+          create: (_) => themeProvider,
+        ),
       ],
-      child: Consumer<LanguageService>(
-        builder: (context, languageService, child) {
+      child: Consumer2<LanguageService, ThemeProvider>(
+        builder: (context, languageService, themeProvider, child) {
           return MaterialApp(
             title: 'Student Talent Profiling App',
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
-            themeMode: ThemeMode.system,
+            themeMode: themeProvider.materialThemeMode,
             debugShowCheckedModeBanner: false,
             locale: languageService.currentLocale,
             localizationsDelegates: const [

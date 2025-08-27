@@ -1,8 +1,9 @@
 // Fallback to working version while fixing OOP imports
 import { initializeComponents } from './core/component-loader.js';
 import { testBackendConnection, makeAuthenticatedRequest, API_ENDPOINTS } from './config/backend-config.js';
+import { auth } from './config/supabase-config.js';
 import { initializeSystemMonitoring, checkSystemStatus, createTestData, testBackendConnectivity } from './features/system-monitoring.js';
-import { setupNavigation, updateActiveNav, setupUserModals, setupDarkModeToggle, closeModal, closeAndCleanupModal, logout, removeNotification, changeTheme, toggleReducedMotion, toggleHighContrast, saveSettings, resetSettings, changePassword } from './ui/notifications.js';
+import { setupNavigation, updateActiveNav, setupUserModals, setupDarkModeToggle, removeNotification, changeTheme, toggleReducedMotion, toggleHighContrast, saveSettings, resetSettings, changePassword } from './ui/notifications.js';
 import { setupUserFilters, loadUsersTable, showAddUserModal, toggleDepartmentField, toggleEditDepartmentField, showEditUserModal, handleAddUser, handleEditUser, deleteUser, cleanup as cleanupUsers } from './features/users/users.js';
 import { setupEventsSection, loadEventsTable, showAddEventModal, showEditEventModal, handleAddEvent, handleEditEvent, deleteEvent, cleanup as cleanupEvents } from './features/events/events.js';
 import { loadOverviewStats, refreshOverviewStats, setupAnalytics, generateReport, generateCustomChart, exportToCSV, refreshChart, cleanupAnalytics } from './features/analytics.js';
@@ -163,9 +164,7 @@ function navigateToSection(section) {
     if (section === 'events') {
         loadEventsTable();
     }
-    // Achievements section removed
     if (section === 'student-claiming') {
-        // Initialize student badge assignment interface
         // Load all events by default
         loadAllEventsForAssignment();
     }
@@ -300,21 +299,152 @@ function testQRCodeLibrary() {
 // Close the development imports if block
 }
 
+// Theme initialization function
+function initializeTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    const themeSelect = document.getElementById('theme-select');
+    const html = document.documentElement;
+    
+    // Apply saved theme
+    html.setAttribute('data-theme', savedTheme);
+    
+    // Update theme selector if it exists
+    if (themeSelect) {
+        themeSelect.value = savedTheme;
+    }
+    
+    // Listen for system theme changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    mediaQuery.addEventListener('change', (e) => {
+        if (localStorage.getItem('theme') === 'auto') {
+            const newTheme = e.matches ? 'dark' : 'light';
+            html.setAttribute('data-theme', newTheme);
+        }
+    });
+    
+    console.log(`🎨 Theme initialized: ${savedTheme}`);
+}
+
+// Global modal control functions (renamed to avoid conflicts)
+function closeModalCustom(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+        modal.style.visibility = 'hidden';
+        modal.style.opacity = '0';
+        modal.classList.remove('show');
+        console.log(`✅ Modal ${modalId} closed`);
+    }
+}
+
+function openModalCustom(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.style.visibility = 'visible';
+        modal.style.opacity = '1';
+        modal.classList.add('show');
+        console.log(`✅ Modal ${modalId} opened`);
+    }
+}
+
+// Hide all modals function
+function hideAllModals() {
+    const modalIds = [
+        'add-user-modal',
+        'edit-user-modal', 
+        'add-event-modal',
+        'edit-event-modal',
+        'add-achievement-modal',
+        'edit-achievement-modal',
+        'delete-achievement-modal'
+    ];
+    
+    modalIds.forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'none';
+            modal.style.visibility = 'hidden';
+            modal.style.opacity = '0';
+            modal.classList.remove('show');
+        }
+    });
+    
+    console.log('✅ All modals hidden');
+}
+
+// Logout function
+function logoutUser() {
+    if (confirm('Are you sure you want to logout?')) {
+        // Clear any stored data
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('userToken');
+        
+        // Redirect to login page
+        window.location.href = 'login.html';
+    }
+}
+
+// Close and cleanup modal function
+function closeAndCleanupModalCustom(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+        modal.style.visibility = 'hidden';
+        modal.style.opacity = '0';
+        modal.classList.remove('show');
+        
+        // Clear form data if it's a form modal
+        const form = modal.querySelector('form');
+        if (form) {
+            form.reset();
+        }
+        
+        console.log(`✅ Modal ${modalId} closed and cleaned up`);
+    }
+}
+
+// Make functions globally available (use existing ones if they exist)
+if (!window.closeModal) {
+    window.closeModal = closeModalCustom;
+}
+if (!window.openModal) {
+    window.openModal = openModalCustom;
+}
+if (!window.logout) {
+    window.logout = logoutUser;
+}
+if (!window.closeAndCleanupModal) {
+    window.closeAndCleanupModal = closeAndCleanupModalCustom;
+}
+window.hideAllModals = hideAllModals;
+
 // Initialize dashboard when DOM is loaded
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('🚀 Initializing UTHM Talent Profiling Dashboard...');
     
-    // Check authentication first
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
-    if (!isLoggedIn || isLoggedIn !== 'true') {
-        console.log('🔒 User not authenticated, redirecting to login...');
-        window.location.href = 'login.html';
-        return;
-    }
+    // Initialize theme first
+    initializeTheme();
+    
+    // COMMENTED OUT: Custom backend authentication check
+    // Using Supabase authentication instead
+    // const isLoggedIn = localStorage.getItem('isLoggedIn');
+    // if (!isLoggedIn || isLoggedIn !== 'true') {
+    //     console.log('🔒 User not authenticated, redirecting to login...');
+    //     window.location.href = 'login.html';
+    //     return;
+    // }
+    
+    console.log('🔒 Using Supabase authentication...');
     
     try {
         // Initialize components first
         await initializeComponents();
+        
+        // Ensure all modals are hidden after loading
+        setTimeout(() => {
+            hideAllModals();
+        }, 200);
         
         // Setup navigation and UI
         setupNavigation(navigateToSection);
@@ -329,9 +459,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         // Setup analytics
         setupAnalytics();
         
-        // Initialize system monitoring
-        await initializeSystemMonitoring();
-        console.log('✅ Backend integration initialized');
+        // COMMENTED OUT: System monitoring - Not needed for Supabase-only approach
+        // await initializeSystemMonitoring();
+        console.log('✅ Supabase integration initialized');
     } catch (error) {
         console.warn('⚠️ Backend integration failed, using fallback:', error);
     }

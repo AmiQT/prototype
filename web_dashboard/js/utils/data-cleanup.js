@@ -14,7 +14,7 @@ export class DataCleanup {
         try {
             console.log('🧹 Clearing sample data from Supabase...');
             
-            const collections = ['users', 'achievements', 'events', 'badgeClaims', 'profiles'];
+            const collections = ['users', 'events', 'profiles'];
             let totalDeleted = 0;
             
             for (const collectionName of collections) {
@@ -27,9 +27,7 @@ export class DataCleanup {
                     const docId = doc.id;
                     // Delete documents that look like sample data
                     if (docId.startsWith('user_') || 
-                        docId.startsWith('achievement_') || 
                         docId.startsWith('event_') || 
-                        docId.startsWith('claim_') ||
                         docId.startsWith('profile_')) {
                         deletePromises.push(doc.ref.delete());
                         totalDeleted++;
@@ -96,7 +94,7 @@ export class DataCleanup {
         try {
             console.log('📊 Counting documents in collections...');
             
-            const collections = ['users', 'achievements', 'events', 'badgeClaims', 'profiles'];
+            const collections = ['users', 'events', 'profiles'];
             const counts = {};
             
             for (const collectionName of collections) {

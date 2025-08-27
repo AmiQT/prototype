@@ -40,28 +40,59 @@ async function loadUsersTable() {
     tableBody.innerHTML = '<tr><td colspan="6">Loading users from Supabase...</td></tr>';
 
     try {
-        // Check if backend is available
-        const isBackendConnected = await testBackendConnection();
-        if (!isBackendConnected) {
-            throw new Error('Backend connection failed');
-        }
-
-        // Fetch real users from Supabase via backend API
+        // SUPABASE DIRECT CALLS: Load real users from Supabase
         console.log('📊 Loading real user data from Supabase...');
         
-        const response = await makeAuthenticatedRequest(
-            API_ENDPOINTS.users.list,
-            { method: 'GET' }
-        );
-
-        if (!response.ok) {
-            throw new Error(`Failed to fetch users: ${response.status} ${response.statusText}`);
-        }
-
-        const usersData = await response.json();
-        allUsersCache = usersData.users || usersData || [];
+        const { supabase } = await import('../../config/supabase-config.js');
         
-        console.log(`Loaded ${allUsersCache.length} users from Supabase`);
+        // Get users first, then profiles separately to avoid complex join issues
+        const { data: users, error: usersError } = await supabase
+            .from('users')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (usersError) {
+            throw usersError;
+        }
+        
+        // Get profiles separately (handle potential missing columns gracefully)
+        const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('*');
+        
+        if (profilesError) {
+            console.warn('❌ Error loading profiles:', profilesError);
+        }
+        
+        // Create a map of profiles by user_id for easy lookup
+        const profilesMap = {};
+        profiles?.forEach(profile => {
+            profilesMap[profile.user_id] = profile;
+        });
+        
+        // Format users data for table display, merging with profiles
+        allUsersCache = users?.map(user => {
+            const userProfile = profilesMap[user.id] || {};
+            
+            return {
+                id: user.id,
+                uid: user.uid || user.id,
+                name: user.name || userProfile.full_name || 'N/A',
+                email: user.email || 'N/A',
+                role: user.role || 'student',
+                department: user.department || userProfile.academic_info?.department || userProfile.department || 'N/A',
+                faculty: userProfile.academic_info?.faculty || userProfile.faculty || 'N/A',
+                student_id: user.student_id || userProfile.academic_info?.studentId || userProfile.student_id || 'N/A',
+                phone: userProfile.phone_number || userProfile.phone || 'N/A',
+                bio: userProfile.bio || 'N/A',
+                is_active: user.is_active !== false,
+                status: user.is_active !== false ? 'active' : 'inactive',
+                created_at: user.created_at,
+                profile_completed: user.profile_completed || false
+            };
+        }) || [];
+        
+        console.log(`✅ Loaded ${allUsersCache.length} users from Supabase`);
         
         applyUserFiltersAndRender();
         
@@ -172,11 +203,21 @@ function getStatusBadgeClass(status) {
 function showAddUserModal() {
     const modal = document.getElementById('add-user-modal');
     if (modal) {
-        modal.style.display = 'block';
+        // Show modal with proper class and styling (same as edit modal)
+        modal.classList.add('show');
+        modal.style.display = 'flex';
+        modal.style.visibility = 'visible';
+        modal.style.opacity = '1';
+        modal.style.zIndex = '1000';
         
         // Reset form
         const form = document.getElementById('add-user-form');
         if (form) form.reset();
+        
+        // Show/hide fields based on default role
+        toggleDepartmentField();
+        
+        console.log('✅ Add user modal opened');
     }
 }
 
@@ -185,35 +226,89 @@ async function showEditUserModal(userId) {
     if (!modal) return;
     
     try {
-        // Fetch user data from Supabase via backend API
-        console.log('Fetching user data from Supabase for editing, ID:', userId);
+        // SUPABASE DIRECT: Fetch user data from cache first
+        console.log('Loading user data for editing, ID:', userId);
         
-        const response = await makeAuthenticatedRequest(
-            `${API_ENDPOINTS.users.get}/${userId}`,
-            { method: 'GET' }
-        );
-
-        if (!response.ok) {
-            throw new Error(`Failed to fetch user: ${response.status}`);
+        // Find user in cache
+        let userData = allUsersCache.find(user => user.id === userId || user.uid === userId);
+        
+        if (!userData) {
+            // If not in cache, fetch from Supabase directly
+            const { supabase } = await import('../../config/supabase-config.js');
+            
+            const { data: user, error: userError } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', userId)
+                .single();
+                
+            if (userError) throw userError;
+            
+            const { data: profile, error: profileError } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('user_id', userId)
+                .single();
+                
+            // Merge user and profile data
+            userData = {
+                id: user.id,
+                uid: user.uid || user.id,
+                name: user.name || profile?.full_name || '',
+                email: user.email || '',
+                role: user.role || 'student',
+                department: user.department || profile?.academic_info?.department || profile?.department || '',
+                student_id: user.student_id || profile?.academic_info?.studentId || profile?.student_id || '',
+                status: user.is_active !== false ? 'active' : 'inactive'
+            };
         }
-
-        const userData = await response.json();
         
-        // Populate form fields
+        // Populate form fields with correct IDs
         document.getElementById('edit-user-id').value = userData.id;
         document.getElementById('edit-user-name').value = userData.name || '';
         document.getElementById('edit-user-email').value = userData.email || '';
         document.getElementById('edit-user-role').value = userData.role || '';
-        document.getElementById('edit-user-department').value = userData.department || '';
-        document.getElementById('edit-user-matrix-id').value = userData.matrix_id || '';
+        document.getElementById('edit-user-status').value = userData.status || 'active';
+        
+        // Handle department field
+        const courseField = document.getElementById('edit-user-course');
+        if (courseField) {
+            courseField.value = userData.department || '';
+        }
+        
+        // Handle matrix/staff ID field
+        const matrixField = document.getElementById('edit-user-matrix-id');
+        if (matrixField) {
+            matrixField.value = userData.student_id || '';
+        }
         
         // Show/hide fields based on role
         toggleEditDepartmentField();
         
-        modal.style.display = 'block';
+        // Show modal with proper class and debugging
+        modal.classList.add('show');
+        modal.style.display = 'flex';
+        modal.style.visibility = 'visible';
+        modal.style.opacity = '1';
+        modal.style.zIndex = '1000';
+        
+        // Debug modal state
+        console.log('🔍 Modal element:', modal);
+        console.log('🔍 Modal classes:', modal.className);
+        console.log('🔍 Modal display:', modal.style.display);
+        console.log('🔍 Modal visibility:', modal.style.visibility);
+        
+        // Force focus on modal
+        setTimeout(() => {
+            modal.focus();
+        }, 100);
+        
+        console.log('✅ User data loaded for editing:', userData);
+        console.log('✅ Modal should be visible now!');
+        
     } catch (error) {
-        console.error('Error loading user for edit:', error);
-        addNotification(`Error loading user data: ${error.message}`, 'error');
+        console.error('❌ Error loading user for edit:', error);
+        alert(`Error loading user data: ${error.message}`);
     }
 }
 
@@ -293,52 +388,76 @@ async function handleEditUser(form) {
             name: formData.get('name'),
             email: formData.get('email'),
             role: formData.get('role'),
-            department: formData.get('department'),
-            matrix_id: formData.get('matrixId')
+            status: formData.get('status'),
+            department: formData.get('course'),
+            matrixId: formData.get('matrixId')
         };
         
-        // Update user in Supabase via backend API
-        console.log('Updating user in Supabase via backend API:', userData);
-        
-        const updatePayload = {
-            name: userData.name,
-            email: userData.email,
-            role: userData.role,
-            department: userData.department,
-            matrix_id: userData.matrix_id,
-            updated_at: new Date().toISOString()
-        };
-
-        const response = await makeAuthenticatedRequest(
-            `${API_ENDPOINTS.users.update}/${userId}`,
-            {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(updatePayload)
-            }
-        );
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || `Failed to update user: ${response.status}`);
+        // Validate required fields
+        if (!userData.name || !userData.email || !userData.role) {
+            throw new Error('Please fill in all required fields');
         }
-
-        const updatedUser = await response.json();
+        
+        // SUPABASE DIRECT: Update user in Supabase
+        console.log('✅ Updating user in Supabase:', userData);
+        
+        const { supabase } = await import('../../config/supabase-config.js');
+        
+        // Update users table
+        const { data: updatedUser, error: userError } = await supabase
+            .from('users')
+            .update({
+                name: userData.name,
+                email: userData.email,
+                role: userData.role,
+                is_active: userData.status === 'active',
+                department: userData.department,
+                student_id: userData.matrixId,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', userId)
+            .select()
+            .single();
+            
+        if (userError) throw userError;
+        
+        // Update profiles table if exists
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert({
+                user_id: userId,
+                full_name: userData.name,
+                department: userData.department,
+                student_id: userData.matrixId,
+                updated_at: new Date().toISOString()
+            });
+            
+        if (profileError) {
+            console.warn('Profile update warning:', profileError);
+        }
         
         // Update local cache
-        const index = allUsersCache.findIndex(user => user.id === userId);
+        const index = allUsersCache.findIndex(user => user.id === userId || user.uid === userId);
         if (index !== -1) {
-            allUsersCache[index] = { ...allUsersCache[index], ...updatedUser };
+            allUsersCache[index] = {
+                ...allUsersCache[index],
+                name: userData.name,
+                email: userData.email,
+                role: userData.role,
+                department: userData.department,
+                student_id: userData.matrixId,
+                status: userData.status,
+                is_active: userData.status === 'active'
+            };
         }
         
-        addNotification('User updated successfully in Supabase', 'success');
+        alert('✅ User updated successfully!');
         closeModal('edit-user-modal');
         await loadUsersTable(); // Refresh the table
+        
     } catch (error) {
-        console.error('Error updating user:', error);
-        addNotification(error.message || 'Error updating user', 'error');
+        console.error('❌ Error updating user:', error);
+        alert(`Error updating user: ${error.message}`);
     }
 }
 
@@ -379,8 +498,8 @@ function toggleDepartmentField() {
     
     if (roleSelect && deptField && deptLabel) {
         if (roleSelect.value === 'student') {
-            deptLabel.textContent = 'Course';
-            deptField.placeholder = 'e.g., Computer Science, Engineering';
+            deptLabel.textContent = 'Department';
+            deptField.placeholder = 'e.g., Computer Science, Information Technology';
         } else if (roleSelect.value === 'lecturer') {
             deptLabel.textContent = 'Department';
             deptField.placeholder = 'e.g., Faculty of Computer Science';
@@ -393,19 +512,46 @@ function toggleDepartmentField() {
 
 function toggleEditDepartmentField() {
     const roleSelect = document.getElementById('edit-user-role');
-    const deptField = document.getElementById('edit-user-department');
-    const deptLabel = document.querySelector('label[for="edit-user-department"]');
+    const deptFieldGroup = document.getElementById('edit-department-field-group');
+    const idFieldGroup = document.getElementById('edit-id-field-group');
+    const deptLabel = document.getElementById('edit-user-department-label');
+    const idLabel = document.getElementById('edit-id-field-label');
     
-    if (roleSelect && deptField && deptLabel) {
-        if (roleSelect.value === 'student') {
-            deptLabel.textContent = 'Course';
-            deptField.placeholder = 'e.g., Computer Science, Engineering';
-        } else if (roleSelect.value === 'lecturer') {
-            deptLabel.textContent = 'Department';
-            deptField.placeholder = 'e.g., Faculty of Computer Science';
+    if (roleSelect && deptFieldGroup && idFieldGroup) {
+        const selectedRole = roleSelect.value;
+        
+        if (selectedRole === 'student' || selectedRole === 'lecturer') {
+            // Show both fields for students and lecturers
+            deptFieldGroup.style.display = 'block';
+            idFieldGroup.style.display = 'block';
+            
+            if (selectedRole === 'student') {
+                if (deptLabel) {
+                    deptLabel.innerHTML = '<i class="fas fa-building"></i> Department *';
+                }
+                if (idLabel) {
+                    idLabel.innerHTML = '<i class="fas fa-id-card"></i> Matrix Number *';
+                }
+                const courseField = document.getElementById('edit-user-course');
+                const matrixField = document.getElementById('edit-user-matrix-id');
+                if (courseField) courseField.placeholder = 'e.g., Computer Science, Information Technology';
+                if (matrixField) matrixField.placeholder = 'e.g., CD21110123';
+            } else if (selectedRole === 'lecturer') {
+                if (deptLabel) {
+                    deptLabel.innerHTML = '<i class="fas fa-building"></i> Department *';
+                }
+                if (idLabel) {
+                    idLabel.innerHTML = '<i class="fas fa-id-badge"></i> Staff ID *';
+                }
+                const courseField = document.getElementById('edit-user-course');
+                const matrixField = document.getElementById('edit-user-matrix-id');
+                if (courseField) courseField.placeholder = 'e.g., Faculty of Computer Science';
+                if (matrixField) matrixField.placeholder = 'e.g., STAFF001';
+            }
         } else {
-            deptLabel.textContent = 'Department';
-            deptField.placeholder = 'Department';
+            // Hide fields for admin and other roles
+            deptFieldGroup.style.display = 'none';
+            idFieldGroup.style.display = 'none';
         }
     }
 }

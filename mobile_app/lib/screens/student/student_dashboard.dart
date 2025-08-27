@@ -8,7 +8,6 @@ import 'showcase/showcase_screen.dart';
 import 'search/enhanced_search_screen.dart';
 import 'event_program/event_program_screen.dart';
 import '../chat/chat_screen.dart';
-// import '../debug/backend_test_screen.dart'; // Debug screen removed
 
 class StudentDashboard extends StatefulWidget {
   const StudentDashboard({super.key});
@@ -90,9 +89,9 @@ class _StudentDashboardState extends State<StudentDashboard> {
         onTap: (index) => setState(() => _selectedIndex = index),
         items: _getNavItems(context),
         type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: Colors.blue[800],
-        unselectedItemColor: Colors.grey[500],
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        selectedItemColor: Theme.of(context).colorScheme.primary,
+        unselectedItemColor: Theme.of(context).colorScheme.onSurfaceVariant,
         showUnselectedLabels: true,
         selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
         iconSize: 28,
