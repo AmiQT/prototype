@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/supabase_auth_service.dart';
 import '../models/user_model.dart';
+import '../config/supabase_config.dart';
 import 'auth/comprehensive_profile_setup_screen.dart';
 import 'auth/login_screen.dart';
 import 'student/enhanced_student_dashboard.dart';
 import 'lecturer/lecturer_dashboard.dart';
-import 'admin/admin_dashboard.dart';
+import '../../utils/debug_config.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -47,7 +48,7 @@ class _SplashScreenState extends State<SplashScreen>
     ));
 
     _animationController.forward();
-    _checkAuthState();
+    _checkAuthStatus();
   }
 
   @override
@@ -57,57 +58,53 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
-  Future<void> _checkAuthState() async {
-    await Future.delayed(const Duration(seconds: 3));
-
-    if (_disposed || !mounted) return;
-
+  Future<void> _checkAuthStatus() async {
     try {
-      final authService =
-          Provider.of<SupabaseAuthService>(context, listen: false);
-
-      // Initialize auth service
-      await authService.initialize();
-
-      if (_disposed || !mounted) return;
-
       // Check if user is authenticated with Supabase
-      final supabaseUser = authService.supabaseUser;
-      debugPrint('SplashScreen: Supabase user check: ${supabaseUser?.id}');
+      final supabaseUser = SupabaseConfig.auth.currentUser;
+      DebugConfig.logAuth('Supabase user check: ${supabaseUser?.id}');
 
       if (supabaseUser != null) {
-        // User is authenticated, check profile completion
-        debugPrint(
-            'SplashScreen: User authenticated, checking profile completion...');
-        final hasCompletedProfile =
-            await authService.hasCompletedProfile(supabaseUser.id);
+        // User is authenticated, check if profile is complete
+        DebugConfig.logAuth(
+            'User authenticated, checking profile completion...');
 
-        if (hasCompletedProfile) {
-          // Profile complete, navigate to dashboard
-          debugPrint('SplashScreen: Profile complete, navigating to dashboard');
-          final user = authService.currentUser;
-          if (user != null) {
-            _navigateBasedOnRole(user);
-          } else {
-            debugPrint('SplashScreen: Current user is null, going to login');
-            _navigateToLogin();
-          }
+        // Use a simpler profile check for now
+        final hasProfile = await _checkProfileExists(supabaseUser.id);
+
+        if (hasProfile) {
+          DebugConfig.logAuth('Profile complete, navigating to dashboard');
+          _navigateToDashboard(supabaseUser.id);
         } else {
-          // Profile incomplete, go to profile setup
-          debugPrint(
-              'SplashScreen: Profile incomplete, going to profile setup');
-          _navigateToProfileSetup();
+          DebugConfig.logAuth(
+              'Profile incomplete, navigating to profile setup');
+          _navigateToProfileSetup(supabaseUser.id);
         }
       } else {
-        // No authenticated user, go to login
-        debugPrint('SplashScreen: No authenticated user, going to login');
+        // For now, just go to login if no Supabase user
+        DebugConfig.logAuth('No authenticated user, going to login');
         _navigateToLogin();
       }
     } catch (e) {
-      debugPrint('SplashScreen: Error during auth check: $e');
-      if (!_disposed && mounted) {
-        _navigateToLogin();
-      }
+      DebugConfig.logError('Error during auth check: $e');
+      _navigateToLogin();
+    }
+  }
+
+  // Simple profile existence check
+  Future<bool> _checkProfileExists(String userId) async {
+    try {
+      // Check if profile exists in Supabase
+      final response = await SupabaseConfig.client
+          .from('profiles')
+          .select('id')
+          .eq('user_id', userId)
+          .limit(1);
+
+      return response.isNotEmpty;
+    } catch (e) {
+      DebugConfig.logWarning('Error checking profile: $e');
+      return false;
     }
   }
 
@@ -115,6 +112,14 @@ class _SplashScreenState extends State<SplashScreen>
     // Check if user has completed their profile
     final authService =
         Provider.of<SupabaseAuthService>(context, listen: false);
+
+    // Ensure user has valid uid
+    if (user.uid.isEmpty) {
+      debugPrint('SplashScreen: User uid is empty, going to login');
+      _navigateToLogin();
+      return;
+    }
+
     final hasCompletedProfile = await authService.hasCompletedProfile(user.uid);
 
     if (!hasCompletedProfile) {
@@ -140,7 +145,8 @@ class _SplashScreenState extends State<SplashScreen>
         targetScreen = const LecturerDashboard();
         break;
       case UserRole.admin:
-        targetScreen = const AdminDashboard();
+        // Admin uses same interface as students
+        targetScreen = const EnhancedStudentDashboard();
         break;
     }
 
@@ -151,17 +157,22 @@ class _SplashScreenState extends State<SplashScreen>
     }
   }
 
-  void _navigateToLogin() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
-    );
+  void _navigateToDashboard(String userId) {
+    if (mounted) {
+      Navigator.of(context).pushReplacementNamed('/dashboard');
+    }
   }
 
-  void _navigateToProfileSetup() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-          builder: (context) => const ComprehensiveProfileSetupScreen()),
-    );
+  void _navigateToProfileSetup(String userId) {
+    if (mounted) {
+      Navigator.of(context).pushReplacementNamed('/profile-setup');
+    }
+  }
+
+  void _navigateToLogin() {
+    if (mounted) {
+      Navigator.of(context).pushReplacementNamed('/login');
+    }
   }
 
   @override
@@ -188,7 +199,10 @@ class _SplashScreenState extends State<SplashScreen>
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.1),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .shadow
+                                .withValues(alpha: 0.1),
                             blurRadius: 10,
                             offset: const Offset(0, 5),
                           ),
@@ -214,15 +228,19 @@ class _SplashScreenState extends State<SplashScreen>
                     Text(
                       'Profiling App',
                       style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                             color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.9),
-                              fontWeight: FontWeight.w500,
-                            ),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimary
+                                .withValues(alpha: 0.9),
+                            fontWeight: FontWeight.w500,
+                          ),
                     ),
                     const SizedBox(height: 48),
 
                     // Loading indicator
                     CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.onPrimary),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(context).colorScheme.onPrimary),
                       strokeWidth: 3,
                     ),
                     const SizedBox(height: 24),
@@ -231,8 +249,11 @@ class _SplashScreenState extends State<SplashScreen>
                     Text(
                       'UTHM FSKTM',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                             color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.8),
-                            ),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimary
+                                .withValues(alpha: 0.8),
+                          ),
                     ),
 
                     // Error message if navigation fails
@@ -241,7 +262,9 @@ class _SplashScreenState extends State<SplashScreen>
                         padding: const EdgeInsets.only(top: 24),
                         child: Text(
                           'An error occurred. Please restart the app.',
-                          style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 16),
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                              fontSize: 16),
                         ),
                       ),
                   ],

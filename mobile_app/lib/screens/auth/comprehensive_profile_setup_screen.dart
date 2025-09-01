@@ -9,7 +9,6 @@ import '../../models/experience_model.dart';
 import '../../models/project_model.dart';
 import '../student/enhanced_student_dashboard.dart';
 import '../lecturer/lecturer_dashboard.dart';
-import '../admin/admin_dashboard.dart';
 
 class ComprehensiveProfileSetupScreen extends StatefulWidget {
   const ComprehensiveProfileSetupScreen({super.key});
@@ -672,6 +671,7 @@ class _ComprehensiveProfileSetupScreenState
   List<String> _getDepartmentsByFaculty(String faculty) {
     switch (faculty) {
       case 'FCSIT':
+      case 'FSKTM': // Alias for FCSIT
         return [
           'Computer Science',
           'Information Technology',
@@ -1336,7 +1336,8 @@ class _ComprehensiveProfileSetupScreenState
     Widget dashboard;
     switch (role) {
       case UserRole.admin:
-        dashboard = const AdminDashboard();
+        // Admin uses same interface as students
+        dashboard = const EnhancedStudentDashboard();
         break;
       case UserRole.lecturer:
         dashboard = const LecturerDashboard();

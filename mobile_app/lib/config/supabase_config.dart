@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
+import '../utils/debug_config.dart';
 
 class SupabaseConfig {
   // Supabase configuration
@@ -16,28 +17,21 @@ class SupabaseConfig {
       );
 
       if (kDebugMode) {
-        debugPrint('Supabase initialized successfully');
-        debugPrint('Supabase URL: $supabaseUrl');
-        debugPrint('Supabase Anon Key: ${supabaseAnonKey.substring(0, 20)}...');
+        DebugConfig.logInit('Supabase initialized successfully');
+        DebugConfig.logInit('Supabase URL: $supabaseUrl');
+        DebugConfig.logInit(
+            'Supabase Anon Key: ${supabaseAnonKey.substring(0, 20)}...');
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('Failed to initialize Supabase: $e');
+        DebugConfig.logError('Failed to initialize Supabase: $e');
       }
       rethrow;
     }
   }
 
   static SupabaseClient get client {
-    final client = Supabase.instance.client;
-    if (kDebugMode) {
-      final user = client.auth.currentUser;
-      debugPrint(
-          'SupabaseConfig: Client requested, current user: ${user?.id ?? 'null'}');
-      debugPrint(
-          'SupabaseConfig: Client auth state: ${client.auth.currentSession != null ? 'authenticated' : 'not authenticated'}');
-    }
-    return client;
+    return Supabase.instance.client;
   }
 
   // Helper getters for common operations

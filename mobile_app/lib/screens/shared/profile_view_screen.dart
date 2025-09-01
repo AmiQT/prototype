@@ -125,24 +125,31 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_user == null) {
       return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
           title: const Text('Profile'),
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
+          backgroundColor: theme.appBarTheme.backgroundColor,
+          foregroundColor: theme.appBarTheme.foregroundColor,
           elevation: 0.5,
         ),
-        body: const Center(
+        body: Center(
           child: Text(
             'User not found',
-            style: TextStyle(fontSize: 18, color: Colors.grey),
+            style: TextStyle(
+              fontSize: 18,
+              color: theme.textTheme.bodyLarge?.color ?? Colors.grey,
+            ),
           ),
         ),
       );
@@ -151,10 +158,11 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
     // If profile is null but user exists, show basic user info with message
     if (_profile == null) {
       return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
           title: Text(_user!.name),
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
+          backgroundColor: theme.appBarTheme.backgroundColor,
+          foregroundColor: theme.appBarTheme.foregroundColor,
           elevation: 0.5,
           centerTitle: true,
         ),
@@ -166,23 +174,23 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
               children: [
                 CircleAvatar(
                   radius: 50,
-                  backgroundColor:
-                      Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                  backgroundColor: theme.primaryColor.withValues(alpha: 0.1),
                   child: Text(
                     _user!.name.isNotEmpty ? _user!.name[0].toUpperCase() : 'U',
                     style: TextStyle(
                       fontSize: 36,
                       fontWeight: FontWeight.bold,
-                      color: Theme.of(context).primaryColor,
+                      color: theme.primaryColor,
                     ),
                   ),
                 ),
                 const SizedBox(height: 24),
                 Text(
                   _user!.name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
+                    color: theme.textTheme.headlineMedium?.color,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -205,24 +213,24 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                 const SizedBox(height: 16),
                 Text(
                   _user!.email,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
-                    color: Colors.grey,
+                    color: theme.textTheme.bodyMedium?.color,
                   ),
                 ),
                 const SizedBox(height: 32),
-                const Icon(
+                Icon(
                   Icons.info_outline,
                   size: 48,
-                  color: Colors.grey,
+                  color: theme.textTheme.bodyMedium?.color,
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'Profile not set up yet',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey,
+                    color: theme.textTheme.bodyMedium?.color,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -230,9 +238,9 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                   _isCurrentUser
                       ? 'Complete your profile to showcase your skills and experience'
                       : 'This user hasn\'t completed their profile yet',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
-                    color: Colors.grey,
+                    color: theme.textTheme.bodySmall?.color,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -264,7 +272,8 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                         await profileService
                             .getProfileById('profile_${widget.userId}');
                         // Try to get all profiles and find this user
-                        final allProfiles = await profileService.getAllProfiles();
+                        final allProfiles =
+                            await profileService.getAllProfiles();
                         final userProfile = allProfiles
                             .where((p) => p.userId == widget.userId)
                             .toList();
@@ -291,40 +300,40 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
           _profile!.fullName,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.w600,
-            color: AppTheme.textPrimaryColor,
+            color: theme.appBarTheme.foregroundColor,
           ),
         ),
-        backgroundColor: AppTheme.surfaceColor,
-        foregroundColor: AppTheme.textPrimaryColor,
+        backgroundColor: theme.appBarTheme.backgroundColor,
+        foregroundColor: theme.appBarTheme.foregroundColor,
         elevation: 0,
         centerTitle: true,
         actions: [
           if (!_isCurrentUser && !widget.isViewOnly) ...[
             IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.message_rounded,
-                color: AppTheme.primaryColor,
+                color: theme.primaryColor,
               ),
               onPressed: () {
                 // Messaging feature placeholder - to be implemented in future version
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Messaging feature coming soon!'),
-                    backgroundColor: AppTheme.infoColor,
+                  SnackBar(
+                    content: const Text('Messaging feature coming soon!'),
+                    backgroundColor: theme.colorScheme.primary,
                   ),
                 );
               },
             ),
             IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.more_vert_rounded,
-                color: AppTheme.textSecondaryColor,
+                color: theme.textTheme.bodyMedium?.color,
               ),
               onPressed: () => _showMoreOptionsMenu(),
             ),
@@ -350,16 +359,23 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
   }
 
   Widget _buildProfileHeader() {
+    final theme = Theme.of(context);
     final completeness = _calculateProfileCompleteness();
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: AppTheme.spaceMd),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
+        color: theme.brightness == Brightness.dark
+            ? Colors.grey[800]?.withValues(alpha: 0.9)
+            : theme.cardColor,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.2),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: theme.shadowColor.withValues(alpha: 0.15),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -375,8 +391,8 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  AppTheme.primaryColor.withValues(alpha: 0.8),
-                  AppTheme.primaryColor.withValues(alpha: 0.6),
+                  theme.primaryColor.withValues(alpha: 0.8),
+                  theme.primaryColor.withValues(alpha: 0.6),
                 ],
               ),
               borderRadius: const BorderRadius.only(
@@ -400,12 +416,12 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: AppTheme.surfaceColor,
+                            color: theme.cardColor,
                             width: 4,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
+                              color: theme.shadowColor.withValues(alpha: 0.1),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -422,17 +438,17 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                                   : null)
                               : null,
                           backgroundColor:
-                              AppTheme.primaryColor.withValues(alpha: 0.1),
+                              theme.primaryColor.withValues(alpha: 0.1),
                           child: _profile!.profileImageUrl == null ||
                                   _profile!.profileImageUrl!.isEmpty
                               ? Text(
                                   _profile!.fullName.isNotEmpty
                                       ? _profile!.fullName[0].toUpperCase()
                                       : 'U',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 32,
                                     fontWeight: FontWeight.bold,
-                                    color: AppTheme.primaryColor,
+                                    color: theme.primaryColor,
                                   ),
                                 )
                               : null,
@@ -444,10 +460,10 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                       // Name and Title
                       Text(
                         _profile!.fullName,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.textPrimaryColor,
+                          color: theme.textTheme.headlineMedium?.color,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -487,9 +503,9 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                         const SizedBox(height: AppTheme.spaceSm),
                         Text(
                           _profile!.headline!,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
-                            color: AppTheme.textSecondaryColor,
+                            color: theme.textTheme.bodyMedium?.color,
                             fontWeight: FontWeight.w500,
                           ),
                           textAlign: TextAlign.center,
@@ -510,11 +526,14 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                       Container(
                         padding: const EdgeInsets.all(AppTheme.spaceMd),
                         decoration: BoxDecoration(
-                          color: AppTheme.surfaceVariant,
+                          color: theme.brightness == Brightness.dark
+                              ? Colors.grey[800]?.withValues(alpha: 0.8)
+                              : theme.colorScheme.surfaceContainerHighest,
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusMd),
                           border: Border.all(
-                            color: AppTheme.primaryColor.withValues(alpha: 0.2),
+                            color: theme.colorScheme.outline
+                                .withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -527,8 +546,9 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                               child: CircularProgressIndicator(
                                 value: completeness / 100,
                                 strokeWidth: 3,
-                                backgroundColor: AppTheme.textSecondaryColor
-                                    .withValues(alpha: 0.2),
+                                backgroundColor: theme
+                                    .textTheme.bodyMedium?.color
+                                    ?.withValues(alpha: 0.2),
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   _getCompletenessColor(completeness),
                                 ),
@@ -540,17 +560,17 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                               children: [
                                 Text(
                                   '${completeness.round()}% Complete',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: AppTheme.textPrimaryColor,
+                                    color: theme.textTheme.bodyLarge?.color,
                                   ),
                                 ),
-                                const Text(
+                                Text(
                                   'Profile Strength',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: AppTheme.textSecondaryColor,
+                                    color: theme.textTheme.bodyMedium?.color,
                                   ),
                                 ),
                               ],
@@ -587,6 +607,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
   }
 
   Widget _buildInfoChip(IconData icon, String text) {
+    final theme = Theme.of(context);
     return Container(
       constraints: const BoxConstraints(maxWidth: 180),
       padding: const EdgeInsets.symmetric(
@@ -594,10 +615,12 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
         vertical: AppTheme.spaceXs,
       ),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceVariant,
+        color: theme.brightness == Brightness.dark
+            ? Colors.grey[800]?.withValues(alpha: 0.8)
+            : theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(AppTheme.radiusFull),
         border: Border.all(
-          color: AppTheme.primaryColor.withValues(alpha: 0.2),
+          color: theme.colorScheme.outline.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -607,15 +630,17 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
           Icon(
             icon,
             size: 16,
-            color: AppTheme.primaryColor,
+            color: theme.brightness == Brightness.dark
+                ? Colors.white
+                : theme.primaryColor,
           ),
           const SizedBox(width: AppTheme.spaceXs),
           Flexible(
             child: Text(
               text,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: AppTheme.textSecondaryColor,
+                color: theme.textTheme.bodyMedium?.color,
                 fontWeight: FontWeight.w500,
               ),
               overflow: TextOverflow.ellipsis,
@@ -671,6 +696,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
   }
 
   Widget _buildSkillsSection() {
+    final theme = Theme.of(context);
     return _buildSection(
       title: 'Skills',
       icon: Icons.psychology_rounded,
@@ -684,33 +710,37 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                     vertical: AppTheme.spaceXs,
                   ),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppTheme.primaryColor.withValues(alpha: 0.1),
-                        AppTheme.primaryColor.withValues(alpha: 0.05),
-                      ],
-                    ),
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.grey[700]?.withValues(alpha: 0.8)
+                        : theme.primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                     border: Border.all(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                      color: theme.brightness == Brightness.dark
+                          ? (Colors.grey[500] ?? Colors.grey)
+                              .withValues(alpha: 0.5)
+                          : theme.primaryColor.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.star_rounded,
                         size: 14,
-                        color: AppTheme.primaryColor,
+                        color: theme.brightness == Brightness.dark
+                            ? Colors.grey[300]
+                            : theme.primaryColor,
                       ),
                       const SizedBox(width: AppTheme.spaceXs),
                       Text(
                         skill,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
-                          color: AppTheme.primaryColor,
+                          color: theme.brightness == Brightness.dark
+                              ? Colors.white
+                              : theme.primaryColor,
                         ),
                       ),
                     ],
@@ -722,6 +752,8 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
   }
 
   Widget _buildInterestsSection() {
+    final theme = Theme.of(context);
+    final interestColor = theme.colorScheme.secondary;
     return _buildSection(
       title: 'Interests',
       icon: Icons.favorite_rounded,
@@ -735,33 +767,37 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                     vertical: AppTheme.spaceXs,
                   ),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.green.withValues(alpha: 0.1),
-                        Colors.green.withValues(alpha: 0.05),
-                      ],
-                    ),
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.grey[700]?.withValues(alpha: 0.8)
+                        : interestColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                     border: Border.all(
-                      color: Colors.green.withValues(alpha: 0.3),
+                      color: theme.brightness == Brightness.dark
+                          ? (Colors.grey[500] ?? Colors.grey)
+                              .withValues(alpha: 0.5)
+                          : interestColor.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.favorite_rounded,
                         size: 14,
-                        color: Colors.green,
+                        color: theme.brightness == Brightness.dark
+                            ? Colors.white
+                            : interestColor,
                       ),
                       const SizedBox(width: AppTheme.spaceXs),
                       Text(
                         interest,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
-                          color: Colors.green,
+                          color: theme.brightness == Brightness.dark
+                              ? Colors.white
+                              : interestColor,
                         ),
                       ),
                     ],
@@ -773,6 +809,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
   }
 
   Widget _buildExperienceSection() {
+    final theme = Theme.of(context);
     return _buildSection(
       title: 'Experience',
       icon: Icons.work,
@@ -782,17 +819,33 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.grey[50],
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.grey[800]?.withValues(alpha: 0.8)
+                        : theme.colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: theme.colorScheme.outline.withValues(alpha: 0.4),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.shadowColor.withValues(alpha: 0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         exp.title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
+                          color: theme.brightness == Brightness.dark
+                              ? Colors.white
+                              : theme.textTheme.bodyLarge?.color,
                         ),
                       ),
                       if (exp.company.isNotEmpty) ...[
@@ -800,7 +853,9 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                         Text(
                           exp.company,
                           style: TextStyle(
-                            color: Colors.grey[600],
+                            color: theme.brightness == Brightness.dark
+                                ? Colors.white70
+                                : theme.textTheme.bodyMedium?.color,
                             fontSize: 14,
                           ),
                         ),
@@ -809,7 +864,12 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                         const SizedBox(height: 8),
                         Text(
                           exp.description,
-                          style: const TextStyle(fontSize: 14),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: theme.brightness == Brightness.dark
+                                ? Colors.white70
+                                : theme.textTheme.bodyMedium?.color,
+                          ),
                         ),
                       ],
                     ],
@@ -821,6 +881,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
   }
 
   Widget _buildProjectsSection() {
+    final theme = Theme.of(context);
     return _buildSection(
       title: 'Projects',
       icon: Icons.code,
@@ -830,24 +891,45 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.grey[50],
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.grey[800]?.withValues(alpha: 0.8)
+                        : theme.colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: theme.colorScheme.outline.withValues(alpha: 0.4),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.shadowColor.withValues(alpha: 0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         project.title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
+                          color: theme.brightness == Brightness.dark
+                              ? Colors.white
+                              : theme.textTheme.bodyLarge?.color,
                         ),
                       ),
                       if (project.description.isNotEmpty) ...[
                         const SizedBox(height: 8),
                         Text(
                           project.description,
-                          style: const TextStyle(fontSize: 14),
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: theme.brightness == Brightness.dark
+                                ? Colors.white70
+                                : theme.textTheme.bodyMedium?.color,
+                          ),
                         ),
                       ],
                       if (project.technologies.isNotEmpty) ...[
@@ -860,14 +942,24 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 8, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: Colors.blue[100],
+                                      color: theme.primaryColor
+                                          .withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: theme.primaryColor
+                                            .withValues(alpha: 0.3),
+                                        width: 1,
+                                      ),
                                     ),
                                     child: Text(
                                       tech,
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Colors.blue[700],
+                                        color:
+                                            theme.brightness == Brightness.dark
+                                                ? Colors.white
+                                                : theme.primaryColor,
+                                        fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                   ))
@@ -883,6 +975,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
   }
 
   Widget _buildAchievementsSection() {
+    final theme = Theme.of(context);
     return _buildSection(
       title: 'Achievements',
       icon: Icons.emoji_events,
@@ -892,13 +985,30 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.amber[50],
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.grey[800]?.withValues(alpha: 0.8)
+                        : theme.colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.amber[200]!),
+                    border: Border.all(
+                      color: theme.colorScheme.outline.withValues(alpha: 0.4),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.shadowColor.withValues(alpha: 0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.emoji_events, color: Colors.amber[700]),
+                      Icon(
+                        Icons.emoji_events,
+                        color: theme.brightness == Brightness.dark
+                            ? Colors.white
+                            : theme.colorScheme.primary,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -906,16 +1016,24 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                           children: [
                             Text(
                               achievement.title,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 16,
+                                color: theme.brightness == Brightness.dark
+                                    ? Colors.white
+                                    : theme.textTheme.bodyLarge?.color,
                               ),
                             ),
                             if (achievement.description.isNotEmpty) ...[
                               const SizedBox(height: 4),
                               Text(
                                 achievement.description,
-                                style: const TextStyle(fontSize: 14),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: theme.brightness == Brightness.dark
+                                      ? Colors.white70
+                                      : theme.textTheme.bodyMedium?.color,
+                                ),
                               ),
                             ],
                           ],
@@ -934,23 +1052,26 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
     required IconData icon,
     required Widget child,
   }) {
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.symmetric(
         horizontal: AppTheme.spaceMd,
         vertical: AppTheme.spaceXs,
       ),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
+        color: theme.brightness == Brightness.dark
+            ? Colors.grey[800]?.withValues(alpha: 0.9)
+            : theme.cardColor,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: theme.shadowColor.withValues(alpha: 0.15),
             blurRadius: 12,
             offset: const Offset(0, 3),
           ),
         ],
         border: Border.all(
-          color: AppTheme.primaryColor.withValues(alpha: 0.1),
+          color: theme.colorScheme.outline.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -961,7 +1082,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
           Container(
             padding: const EdgeInsets.all(AppTheme.spaceLg),
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withValues(alpha: 0.05),
+              color: theme.primaryColor.withValues(alpha: 0.05),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(AppTheme.radiusLg),
                 topRight: Radius.circular(AppTheme.radiusLg),
@@ -972,22 +1093,24 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
                 Container(
                   padding: const EdgeInsets.all(AppTheme.spaceXs),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                    color: theme.primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                   ),
                   child: Icon(
                     icon,
-                    color: AppTheme.primaryColor,
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.white
+                        : theme.primaryColor,
                     size: 20,
                   ),
                 ),
                 const SizedBox(width: AppTheme.spaceSm),
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimaryColor,
+                    color: theme.textTheme.headlineSmall?.color,
                   ),
                 ),
               ],
@@ -1005,6 +1128,7 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
   }
 
   Widget _buildInfoRow(String label, String value) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -1014,16 +1138,23 @@ class _ProfileViewScreenState extends State<ProfileViewScreen> {
             width: 100,
             child: Text(
               '$label:',
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w500,
-                color: Colors.grey,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white70
+                    : theme.textTheme.bodyMedium?.color,
               ),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(fontSize: 16),
+              style: TextStyle(
+                fontSize: 16,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : theme.textTheme.bodyLarge?.color,
+              ),
             ),
           ),
         ],

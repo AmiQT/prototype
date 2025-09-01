@@ -9,6 +9,7 @@ import '../../services/showcase_service.dart';
 import '../../screens/student/showcase/post_creation_screen.dart';
 import '../../utils/app_theme.dart';
 import '../showcase/media_display_widget.dart';
+import '../showcase/linkedin_reactions_widget.dart';
 
 class ModernPostCard extends StatefulWidget {
   final ShowcasePostModel post;
@@ -18,6 +19,10 @@ class ModernPostCard extends StatefulWidget {
   final Function(ShowcasePostModel) onShare;
   final Function(ShowcasePostModel) onUserTap;
   final Function(ShowcasePostModel) onPostTap;
+  final Function(ReactionType, String postId)?
+      onReaction; // LinkedIn-style reactions
+  final VoidCallback?
+      onPostDeleted; // Callback when post is successfully deleted
 
   const ModernPostCard({
     super.key,
@@ -28,6 +33,8 @@ class ModernPostCard extends StatefulWidget {
     required this.onShare,
     required this.onUserTap,
     required this.onPostTap,
+    this.onReaction,
+    this.onPostDeleted,
   });
 
   @override
@@ -40,6 +47,9 @@ class _ModernPostCardState extends State<ModernPostCard>
   late Animation<double> _scaleAnimation;
   bool _isLiked = false;
 
+  // Counter for reducing console spam
+  int _noMediaCount = 0;
+
   @override
   void initState() {
     super.initState();
@@ -50,7 +60,7 @@ class _ModernPostCardState extends State<ModernPostCard>
     _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
-    _isLiked = widget.post.likes.contains(widget.currentUser?.id);
+    _isLiked = widget.post.likes.contains(widget.currentUser?.uid);
   }
 
   @override
@@ -59,29 +69,45 @@ class _ModernPostCardState extends State<ModernPostCard>
     super.dispose();
   }
 
+  @override
+  void didUpdateWidget(ModernPostCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Update _isLiked when the post data changes
+    if (oldWidget.post.id != widget.post.id ||
+        oldWidget.post.likes != widget.post.likes ||
+        oldWidget.currentUser?.uid != widget.currentUser?.uid) {
+      setState(() {
+        _isLiked = widget.post.likes.contains(widget.currentUser?.uid);
+      });
+    }
+  }
+
   void _handleLike() {
+    // Update local state optimistically
     setState(() {
       _isLiked = !_isLiked;
     });
-    widget.onLike(widget.post);
 
     // Add animation feedback
     _animationController.forward().then((_) {
       _animationController.reverse();
     });
+
+    // Call the parent's like handler
+    widget.onLike(widget.post);
   }
 
   ImageProvider? _getProfileImageProvider(String? imageUrl) {
     // Check for null, empty, or invalid URLs
-    if (imageUrl == null || 
-        imageUrl.isEmpty || 
+    if (imageUrl == null ||
+        imageUrl.isEmpty ||
         imageUrl.trim().isEmpty ||
         imageUrl == 'null' ||
         imageUrl == 'file:///' ||
         Uri.tryParse(imageUrl)?.hasAbsolutePath != true) {
       return null;
     }
-    
+
     try {
       if (imageUrl.startsWith('data:image')) {
         // Handle base64 images
@@ -123,7 +149,10 @@ class _ModernPostCardState extends State<ModernPostCard>
                 borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                 boxShadow: [
                   BoxShadow(
-                    color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.05),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .shadow
+                        .withValues(alpha: 0.05),
                     blurRadius: 15,
                     offset: const Offset(0, 5),
                   ),
@@ -135,17 +164,15 @@ class _ModernPostCardState extends State<ModernPostCard>
                   _buildPostHeader(),
                   if (widget.post.content.isNotEmpty) _buildPostContent(),
                   if (widget.post.hasMedia) ...[
-                    // Debug: Show that we're about to build media content
+                    // Only log media building every 50th time to reduce console spam
                     Builder(builder: (context) {
-                      debugPrint(
-                          'ModernPostCard: About to build media content for post ${widget.post.id}');
+                      _noMediaCount++;
                       return _buildMediaContent();
                     }),
                   ] else ...[
-                    // Debug: Show why media content is not being built
+                    // Only log no media every 50th card to reduce console spam
                     Builder(builder: (context) {
-                      debugPrint(
-                          'ModernPostCard: NOT building media content for post ${widget.post.id} - hasMedia: ${widget.post.hasMedia}, media.length: ${widget.post.media.length}');
+                      _noMediaCount++;
                       return const SizedBox.shrink();
                     }),
                   ],
@@ -177,7 +204,10 @@ class _ModernPostCardState extends State<ModernPostCard>
               ),
               child: CircleAvatar(
                 radius: 22,
-                backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                backgroundColor: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.1),
                 backgroundImage:
                     _getProfileImageProvider(widget.post.userProfileImage),
                 child: _getProfileImageProvider(widget.post.userProfileImage) ==
@@ -231,6 +261,20 @@ class _ModernPostCardState extends State<ModernPostCard>
                       ),
                   ],
                 ),
+                // Display user headline if available
+                if (widget.post.userHeadline != null &&
+                    widget.post.userHeadline!.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    widget.post.userHeadline!,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.textSecondaryColor,
+                          fontStyle: FontStyle.italic,
+                        ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
                 const SizedBox(height: 2),
                 Text(
                   _formatTimeAgo(widget.post.createdAt),
@@ -430,6 +474,11 @@ class _ModernPostCardState extends State<ModernPostCard>
             backgroundColor: AppTheme.successColor,
           ),
         );
+
+        // Call callback to refresh feed
+        if (widget.onPostDeleted != null) {
+          widget.onPostDeleted!();
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -610,18 +659,6 @@ class _ModernPostCardState extends State<ModernPostCard>
   }
 
   Widget _buildMediaContent() {
-    // Debug logging
-    debugPrint(
-        'ModernPostCard: Building media content for post ${widget.post.id}');
-    debugPrint('ModernPostCard: hasMedia = ${widget.post.hasMedia}');
-    debugPrint('ModernPostCard: media.length = ${widget.post.media.length}');
-    if (widget.post.media.isNotEmpty) {
-      debugPrint(
-          'ModernPostCard: First media URL = ${widget.post.media.first.url}');
-      debugPrint(
-          'ModernPostCard: First media type = ${widget.post.media.first.type}');
-    }
-
     if (widget.post.media.isEmpty) return const SizedBox.shrink();
 
     return Container(
@@ -644,24 +681,38 @@ class _ModernPostCardState extends State<ModernPostCard>
   Widget _buildEngagementSection() {
     return Padding(
       padding: const EdgeInsets.all(AppTheme.spaceMd),
-      child: Row(
+      child: Column(
         children: [
-          _buildEngagementItem(
-            icon: Icons.favorite_rounded,
-            count: widget.post.likes.length,
-            color: AppTheme.secondaryColor,
-          ),
-          const SizedBox(width: AppTheme.spaceLg),
-          _buildEngagementItem(
-            icon: Icons.chat_bubble_rounded,
-            count: widget.post.comments.length,
-            color: AppTheme.primaryColor,
-          ),
-          const SizedBox(width: AppTheme.spaceLg),
-          _buildEngagementItem(
-            icon: Icons.visibility_rounded,
-            count: widget.post.viewCount,
-            color: AppTheme.textSecondaryColor,
+          // LinkedIn-style reactions
+          if (widget.onReaction != null)
+            CompactReactionsWidget(
+              post: widget.post,
+              onReaction: widget.onReaction!,
+            ),
+
+          const SizedBox(height: AppTheme.spaceSm),
+
+          // Traditional engagement metrics
+          Row(
+            children: [
+              _buildEngagementItem(
+                icon: Icons.favorite_rounded,
+                count: widget.post.likes.length,
+                color: AppTheme.secondaryColor,
+              ),
+              const SizedBox(width: AppTheme.spaceLg),
+              _buildEngagementItem(
+                icon: Icons.chat_bubble_rounded,
+                count: widget.post.comments.length,
+                color: AppTheme.primaryColor,
+              ),
+              const SizedBox(width: AppTheme.spaceLg),
+              _buildEngagementItem(
+                icon: Icons.visibility_rounded,
+                count: widget.post.viewCount,
+                color: AppTheme.textSecondaryColor,
+              ),
+            ],
           ),
         ],
       ),

@@ -53,7 +53,7 @@ class _ModernEventHeaderState extends State<ModernEventHeader> {
     return Container(
       decoration: const BoxDecoration(
         gradient: AppTheme.primaryGradient,
-        borderRadius: BorderRadius.only(
+        borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(AppTheme.radiusXl),
           bottomRight: Radius.circular(AppTheme.radiusXl),
         ),

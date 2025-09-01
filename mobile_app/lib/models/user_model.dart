@@ -49,7 +49,7 @@ class UserModel {
 
     return UserModel(
       id: json['id'] ?? '',
-      uid: json['uid'] ?? '',
+      uid: json['uid'] ?? json['id'] ?? '', // Use id as fallback for uid
       email: json['email'] ?? '',
       name: json['name'] ?? '',
       role: UserRole.values.firstWhere(
@@ -57,13 +57,15 @@ class UserModel {
         orElse: () => UserRole.student,
       ),
       studentId: json['studentId'],
+      staffId: json['staffId'],
       department: json['department'],
       createdAt: parseDateTime(json['createdAt']),
       lastLoginAt: json['lastLoginAt'] != null
           ? parseDateTime(json['lastLoginAt'])
           : null,
       isActive: json['isActive'] ?? true,
-      profileCompleted: json['profileCompleted'] ?? false,
+      profileCompleted:
+          json['profileCompleted'] ?? json['profile_completed'] ?? false,
     );
   }
 

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'dart:io';
+import '../../config/cloudinary_config.dart';
 import '../../models/profile_model.dart';
 import '../../models/academic_info_model.dart';
 import '../../models/experience_model.dart';
@@ -153,13 +154,14 @@ class _ComprehensiveEditProfileScreenState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(l10n.editProfile),
-        backgroundColor: AppTheme.primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: theme.appBarTheme.backgroundColor,
+        foregroundColor: theme.appBarTheme.foregroundColor,
         elevation: 0,
         bottom: TabBar(
           controller: _tabController,
@@ -208,12 +210,25 @@ class _ComprehensiveEditProfileScreenState
             AppLocalizations.of(context).basicInformation,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryColor,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : AppTheme.primaryColor,
                 ),
           ),
 
           const SizedBox(height: AppTheme.spaceMd),
 
+          // Full Name Label
+          Text(
+            AppLocalizations.of(context).fullName,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black87,
+                ),
+          ),
+          const SizedBox(height: AppTheme.spaceXs),
           ModernTextField(
             controller: _fullNameController,
             label: AppLocalizations.of(context).fullName,
@@ -228,6 +243,17 @@ class _ComprehensiveEditProfileScreenState
 
           const SizedBox(height: AppTheme.spaceMd),
 
+          // Headline Label
+          Text(
+            AppLocalizations.of(context).headline,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black87,
+                ),
+          ),
+          const SizedBox(height: AppTheme.spaceXs),
           ModernTextField(
             controller: _headlineController,
             label: AppLocalizations.of(context).headline,
@@ -237,6 +263,17 @@ class _ComprehensiveEditProfileScreenState
 
           const SizedBox(height: AppTheme.spaceMd),
 
+          // Phone Number Label
+          Text(
+            AppLocalizations.of(context).phoneNumber,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black87,
+                ),
+          ),
+          const SizedBox(height: AppTheme.spaceXs),
           ModernTextField(
             controller: _phoneController,
             label: AppLocalizations.of(context).phoneNumber,
@@ -247,6 +284,17 @@ class _ComprehensiveEditProfileScreenState
 
           const SizedBox(height: AppTheme.spaceMd),
 
+          // Address Label
+          Text(
+            AppLocalizations.of(context).address,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black87,
+                ),
+          ),
+          const SizedBox(height: AppTheme.spaceXs),
           ModernTextField(
             controller: _addressController,
             label: AppLocalizations.of(context).address,
@@ -256,6 +304,17 @@ class _ComprehensiveEditProfileScreenState
 
           const SizedBox(height: AppTheme.spaceMd),
 
+          // Bio Label
+          Text(
+            AppLocalizations.of(context).bio,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : Colors.black87,
+                ),
+          ),
+          const SizedBox(height: AppTheme.spaceXs),
           ModernTextField(
             controller: _bioController,
             label: AppLocalizations.of(context).bio,
@@ -335,7 +394,9 @@ class _ComprehensiveEditProfileScreenState
             AppLocalizations.of(context).academicInformation,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryColor,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : AppTheme.primaryColor,
                 ),
           ),
 
@@ -383,9 +444,18 @@ class _ComprehensiveEditProfileScreenState
           Container(
             padding: const EdgeInsets.all(AppTheme.spaceMd),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.white,
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              border: Border.all(color: AppTheme.lightGrayColor),
+              border: Border.all(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Theme.of(context)
+                        .colorScheme
+                        .outline
+                        .withValues(alpha: 0.3)
+                    : AppTheme.lightGrayColor,
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -394,6 +464,9 @@ class _ComprehensiveEditProfileScreenState
                   AppLocalizations.of(context).currentSemester,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.black
+                            : Colors.black87,
                       ),
                 ),
                 const SizedBox(height: AppTheme.spaceSm),
@@ -503,7 +576,9 @@ class _ComprehensiveEditProfileScreenState
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceMd),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.white
+            : Colors.white,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
@@ -533,25 +608,52 @@ class _ComprehensiveEditProfileScreenState
       );
 
       if (image != null) {
-        // Convert image to base64 for storage
-        final bytes = await image.readAsBytes();
-        final base64String = 'data:image/jpeg;base64,${base64Encode(bytes)}';
-
         setState(() {
-          _profileImageUrl = base64String;
+          _isLoading = true;
         });
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content:
-                  Text(AppLocalizations.of(context).imageSelectedSuccessfully),
-              backgroundColor: AppTheme.successColor,
-            ),
+        try {
+          // Upload image to Cloudinary
+          final cloudinaryUrl = await CloudinaryConfig.uploadImage(
+            filePath: image.path,
+            userId: widget.profile.userId,
+            folder: 'profile_images',
           );
+
+          setState(() {
+            _profileImageUrl = cloudinaryUrl;
+            _isLoading = false;
+          });
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                    AppLocalizations.of(context).imageSelectedSuccessfully),
+                backgroundColor: AppTheme.successColor,
+              ),
+            );
+          }
+        } catch (uploadError) {
+          setState(() {
+            _isLoading = false;
+          });
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to upload image: $uploadError'),
+                backgroundColor: AppTheme.errorColor,
+              ),
+            );
+          }
         }
       }
     } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

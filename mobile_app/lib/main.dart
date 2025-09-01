@@ -10,90 +10,47 @@ import 'services/showcase_service.dart';
 import 'services/search_service.dart';
 import 'services/notification_service.dart';
 import 'services/language_service.dart';
-// Removed OpenRouter chat service import to use Gemini only
-import 'services/gemini_chat_service.dart';
-import 'services/chat_history_service.dart';
-import 'config/app_config.dart';
 import 'l10n/generated/app_localizations.dart';
-import 'screens/splash_screen.dart';
 import 'utils/app_theme.dart';
+import 'utils/debug_config.dart';
 import 'providers/theme_provider.dart';
-// Firebase completely removed - using Supabase only
+import 'widgets/app_initializer.dart';
+import 'screens/auth/login_screen.dart';
+import 'screens/student/student_dashboard.dart';
+import 'screens/auth/profile_setup_screen.dart';
+
+// Override debugPrint for complete silence
+void _silentDebugPrint(String? message, {int? wrapWidth}) {
+  // Do nothing - complete silence
+}
 
 void main() async {
+  // Override debugPrint globally
+  debugPrint = _silentDebugPrint;
+
   WidgetsFlutterBinding.ensureInitialized();
-  // Initialize app configuration
-  if (kDebugMode) {
-    debugPrint('Main: Initializing app configuration...');
-  }
-  await AppConfig.initialize();
-  if (kDebugMode) {
-    debugPrint('Main: App configuration initialized');
-    debugPrint('Main: OpenRouter API key configured: ${AppConfig.hasApiKey}');
-    debugPrint('Main: Gemini API key configured: ${AppConfig.hasGeminiApiKey}');
-  }
-  // Initialize Supabase
+
+  // Always initialize Supabase to prevent initialization errors
   try {
     await SupabaseConfig.initialize();
-    if (kDebugMode) {
-      debugPrint('Main: Supabase initialized successfully');
-    }
+    // Skip success logging for clean terminal
   } catch (e) {
-    if (kDebugMode) {
-      debugPrint('Main: Failed to initialize Supabase: $e');
-    }
+    DebugConfig.logCritical('Failed to initialize Supabase: $e');
   }
 
-  // Initialize services
-  final authService = SupabaseAuthService();
-  await authService.initialize();
-
-  final languageService = LanguageService();
-  await languageService.initialize();
-
-  final themeProvider = ThemeProvider();
-  // Theme provider auto-initializes in constructor
-
-  // Initialize chat services with Gemini
-  if (AppConfig.hasGeminiApiKey) {
-    debugPrint('Main: Using Gemini chat service');
-    final historyService = ChatHistoryService();
-    await historyService.initialize();
-    // Instantiate service to ensure eager init
-    GeminiChatService(historyService);
-    debugPrint('Main: Gemini chat service initialized successfully');
-  } else {
-    debugPrint(
-        'Main: No Gemini API key found. Chat will be unavailable until GEMINI_API_KEY is provided.');
-  }
-
-  debugPrint('Main: Chat services check completed');
-
-  runApp(MyApp(
-    authService: authService,
-    languageService: languageService,
-    themeProvider: themeProvider,
-  ));
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final SupabaseAuthService authService;
-  final LanguageService languageService;
-  final ThemeProvider themeProvider;
-
-  const MyApp({
-    super.key,
-    required this.authService,
-    required this.languageService,
-    required this.themeProvider,
-  });
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        // Simplified provider chain for better hot restart
         Provider<SupabaseAuthService>(
-          create: (_) => authService,
+          create: (_) => SupabaseAuthService(),
         ),
         Provider<ProfileService>(
           create: (_) => ProfileService(),
@@ -111,10 +68,10 @@ class MyApp extends StatelessWidget {
           create: (_) => NotificationService(),
         ),
         ChangeNotifierProvider<LanguageService>(
-          create: (_) => languageService,
+          create: (_) => LanguageService(),
         ),
         ChangeNotifierProvider<ThemeProvider>(
-          create: (_) => themeProvider,
+          create: (_) => ThemeProvider(),
         ),
       ],
       child: Consumer2<LanguageService, ThemeProvider>(
@@ -133,7 +90,19 @@ class MyApp extends StatelessWidget {
               GlobalCupertinoLocalizations.delegate,
             ],
             supportedLocales: LanguageService.supportedLocales,
-            home: const SplashScreen(),
+            home: const AppInitializer(),
+            routes: {
+              '/login': (context) => const LoginScreen(),
+              '/dashboard': (context) => const StudentDashboard(),
+              '/profile-setup': (context) => const ProfileSetupScreen(),
+            },
+            onUnknownRoute: (settings) {
+              // Fallback for unknown routes
+              DebugConfig.logWarning('Unknown route: ${settings.name}');
+              return MaterialPageRoute(
+                builder: (context) => const LoginScreen(),
+              );
+            },
           );
         },
       ),

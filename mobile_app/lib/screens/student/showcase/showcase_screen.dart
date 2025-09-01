@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'post_creation_screen.dart';
 import 'showcase_feed_screen.dart';
 import '../../../widgets/modern/modern_home_header.dart';
-import '../../../utils/app_theme.dart';
 import '../../shared/notifications_screen.dart';
 
 class ShowcaseScreen extends StatefulWidget {
@@ -13,6 +12,9 @@ class ShowcaseScreen extends StatefulWidget {
 }
 
 class _ShowcaseScreenState extends State<ShowcaseScreen> {
+  final GlobalKey<State<ShowcaseFeedScreen>> _feedScreenKey =
+      GlobalKey<State<ShowcaseFeedScreen>>();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,8 +29,8 @@ class _ShowcaseScreenState extends State<ShowcaseScreen> {
               _navigateToProfile(context);
             },
           ),
-          const Expanded(
-            child: ShowcaseFeedScreen(),
+          Expanded(
+            child: ShowcaseFeedScreen(key: _feedScreenKey),
           ),
         ],
       ),
@@ -41,7 +43,14 @@ class _ShowcaseScreenState extends State<ShowcaseScreen> {
       MaterialPageRoute(
         builder: (context) => const PostCreationScreen(),
       ),
-    );
+    ).then((result) {
+      // Trigger refresh if post was created successfully
+      if (result == true) {
+        debugPrint('ShowcaseScreen: Post created, triggering refresh');
+        // Call refresh on the feed screen
+        (_feedScreenKey.currentState as dynamic)?.forceRefreshFeed();
+      }
+    });
   }
 
   void _navigateToNotifications(BuildContext context) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/profile_model.dart';
 import '../../utils/app_theme.dart';
+import '../profile/profile_image_widget.dart';
 
 class ModernUserCard extends StatefulWidget {
   final ProfileModel profile;
@@ -30,7 +31,6 @@ class _ModernUserCardState extends State<ModernUserCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
-
 
   @override
   void initState() {
@@ -140,7 +140,8 @@ class _ModernUserCardState extends State<ModernUserCard>
                 ],
               ),
               const SizedBox(height: 2),
-              if (widget.profile.department != null && widget.profile.department!.isNotEmpty)
+              if (widget.profile.department != null &&
+                  widget.profile.department!.isNotEmpty)
                 Text(
                   widget.profile.department!,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -170,22 +171,13 @@ class _ModernUserCardState extends State<ModernUserCard>
           width: 2,
         ),
       ),
-      child: CircleAvatar(
-        radius: 28,
+      child: ProfileImageWidget(
+        imageUrl: widget.profile.profileImageUrl,
+        size: 56,
+        fallbackText: _getInitials(),
         backgroundColor: _getRoleColor().withValues(alpha: 0.1),
-        backgroundImage: (widget.profile.profileImageUrl?.isNotEmpty ?? false)
-            ? (Uri.tryParse(widget.profile.profileImageUrl!)?.hasAbsolutePath == true ? NetworkImage(widget.profile.profileImageUrl!) : null)
-            : null,
-        child: (widget.profile.profileImageUrl?.isEmpty ?? true)
-            ? Text(
-                _getInitials(),
-                style: TextStyle(
-                  color: _getRoleColor(),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              )
-            : null,
+        textColor: _getRoleColor(),
+        shape: BoxShape.circle,
       ),
     );
   }

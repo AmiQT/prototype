@@ -6,8 +6,7 @@ import '../../widgets/settings_widgets.dart';
 import '../../widgets/settings/language_selector.dart';
 import '../../widgets/settings/theme_selector.dart';
 import '../../l10n/generated/app_localizations.dart';
-// import '../../debug/api_debug_screen.dart'; // Debug screen removed
-// import '../debug/fix_user_document_screen.dart'; // Debug screen removed
+
 import 'account_settings_screen.dart';
 import 'security_settings_screen.dart';
 import 'notification_settings_screen.dart';
@@ -46,8 +45,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content:
-                const Text('No user data found. Please try logging out and back in.'),
+            content: const Text(
+                'No user data found. Please try logging out and back in.'),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
@@ -121,7 +120,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
+            style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.error),
             child: const Text('Sign Out'),
           ),
         ],
@@ -153,17 +153,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Settings'),
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        foregroundColor: Theme.of(context).colorScheme.onSurface,
+        backgroundColor: theme.appBarTheme.backgroundColor,
+        foregroundColor: theme.appBarTheme.foregroundColor,
         elevation: 0.5,
         centerTitle: true,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: CircularProgressIndicator(
+                color: theme.primaryColor,
+              ),
+            )
           : SingleChildScrollView(
               child: Column(
                 children: [
@@ -178,9 +184,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           children: [
                             CircleAvatar(
                               radius: 30,
-                              backgroundColor: Theme.of(context)
-                                  .colorScheme
-                                  .primary
+                              backgroundColor: theme.colorScheme.primary
                                   .withValues(alpha: 0.1),
                               child: Text(
                                 _currentUser!.name.isNotEmpty
@@ -189,7 +193,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 style: TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.primary,
+                                  color: theme.colorScheme.primary,
                                 ),
                               ),
                             ),
@@ -200,9 +204,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 children: [
                                   Text(
                                     _currentUser!.name,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w600,
+                                      color: theme.brightness == Brightness.dark
+                                          ? Colors.black
+                                          : Colors.black87,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
@@ -210,9 +217,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     _currentUser!.email,
                                     style: TextStyle(
                                       fontSize: 14,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurfaceVariant,
+                                      color: theme.brightness == Brightness.dark
+                                          ? Colors.grey[600]
+                                          : theme.colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -222,8 +229,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       vertical: 2,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: Theme.of(context)
-                                          .colorScheme.primary
+                                      color: theme.colorScheme.primary
                                           .withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -236,7 +242,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w500,
-                                        color: Theme.of(context).colorScheme.primary,
+                                        color: theme.colorScheme.primary,
                                       ),
                                     ),
                                   ),
@@ -341,37 +347,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ),
                             );
                           },
-                        ),
-                        SettingsItem(
-                          icon: Icons.bug_report,
-                          title: 'API Debug',
-                          subtitle: 'Debug API configuration and keys',
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const Scaffold(
-                                    body: Center(
-                                        child: Text('Debug screen removed'))),
-                              ),
-                            );
-                          },
-                        ),
-                        SettingsItem(
-                          icon: Icons.healing,
-                          title: 'Fix Permission Errors',
-                          subtitle: 'Fix user document and permission issues',
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const Scaffold(
-                                    body: Center(
-                                        child: Text('Debug screen removed'))),
-                              ),
-                            );
-                          },
-                          showDivider: false,
                         ),
                       ],
                     ),

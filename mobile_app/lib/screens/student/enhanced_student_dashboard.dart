@@ -1,34 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../services/supabase_auth_service.dart';
 import '../../services/profile_service.dart';
-import '../../models/user_model.dart';
+
 import '../../utils/app_theme.dart';
 import 'showcase/showcase_screen.dart';
 import 'search/enhanced_search_screen.dart';
 import 'event_program/event_program_screen.dart';
 import 'profile/student_profile_screen.dart';
 import '../chat/chat_screen.dart';
-
-class _ChatbotButtonDelegate extends SingleChildLayoutDelegate {
-  @override
-  BoxConstraints getConstraints(BoxConstraints constraints) {
-    return BoxConstraints.tightFor(
-      width: 60,
-      height: 60,
-    );
-  }
-
-  @override
-  Offset getPositionForChild(Size size, Size childSize) {
-    return Offset(0, 0);
-  }
-
-  @override
-  bool shouldRelayout(covariant SingleChildLayoutDelegate oldDelegate) {
-    return false;
-  }
-}
 
 class EnhancedStudentDashboard extends StatefulWidget {
   const EnhancedStudentDashboard({super.key});
@@ -41,9 +22,9 @@ class EnhancedStudentDashboard extends StatefulWidget {
 class _EnhancedStudentDashboardState extends State<EnhancedStudentDashboard>
     with TickerProviderStateMixin {
   int _currentIndex = 0;
+  int _previousIndex = 0;
   late TabController _tabController;
   late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
 
   bool _isLoading = true;
 
@@ -54,33 +35,6 @@ class _EnhancedStudentDashboardState extends State<EnhancedStudentDashboard>
     const StudentProfileScreen(),
   ];
 
-  final List<NavigationItem> _navItems = [
-    NavigationItem(
-      icon: Icons.home_rounded,
-      activeIcon: Icons.home,
-      label: 'Home',
-      color: AppTheme.primaryColor,
-    ),
-    NavigationItem(
-      icon: Icons.search_rounded,
-      activeIcon: Icons.search,
-      label: 'Discover',
-      color: AppTheme.successColor,
-    ),
-    NavigationItem(
-      icon: Icons.event_rounded,
-      activeIcon: Icons.event,
-      label: 'Events',
-      color: AppTheme.warningColor,
-    ),
-    NavigationItem(
-      icon: Icons.person_rounded,
-      activeIcon: Icons.person,
-      label: 'Profile',
-      color: AppTheme.secondaryColor,
-    ),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -89,13 +43,7 @@ class _EnhancedStudentDashboardState extends State<EnhancedStudentDashboard>
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+
     _loadUserData();
   }
 
@@ -137,10 +85,16 @@ class _EnhancedStudentDashboardState extends State<EnhancedStudentDashboard>
   }
 
   void _onTabTapped(int index) {
+    if (_currentIndex == index) return; // Don't animate if same tab
+
     setState(() {
+      _previousIndex = _currentIndex;
       _currentIndex = index;
     });
     _tabController.animateTo(index);
+
+    // Add haptic feedback for better UX
+    HapticFeedback.lightImpact();
   }
 
   @override
@@ -187,11 +141,26 @@ class _EnhancedStudentDashboardState extends State<EnhancedStudentDashboard>
 
     return Scaffold(
       backgroundColor:
-          Theme.of(context).colorScheme.background, // Keep dark for homepage
+          Theme.of(context).colorScheme.surface, // Keep dark for homepage
       body: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          transitionBuilder: (Widget child, Animation<double> animation) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: _currentIndex > _previousIndex
+                    ? const Offset(1.0, 0.0)
+                    : const Offset(-1.0, 0.0),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeInOut,
+              )),
+              child: child,
+            );
+          },
           child: IndexedStack(
+            key: ValueKey<int>(_currentIndex),
             index: _currentIndex,
             children: _pages,
           ),

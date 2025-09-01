@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import '../../utils/app_theme.dart';
 import 'file_upload_widget.dart';
 
 class ChatInputField extends StatefulWidget {
@@ -72,7 +71,7 @@ class _ChatInputFieldState extends State<ChatInputField> {
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceVariant,
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
                         color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),

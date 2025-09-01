@@ -1,5 +1,7 @@
 // Supabase showcase models
 // import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
+import '../utils/debug_config.dart';
 
 /// Enum for different types of showcase posts
 enum PostType {
@@ -26,6 +28,53 @@ enum PostCategory {
   achievement,
   project,
   general,
+}
+
+/// LinkedIn-style reaction types
+enum ReactionType {
+  like,
+  love,
+  celebrate,
+  insightful,
+  funny,
+  support,
+}
+
+/// Extension for reaction type display
+extension ReactionTypeExtension on ReactionType {
+  String get emoji {
+    switch (this) {
+      case ReactionType.like:
+        return '👍';
+      case ReactionType.love:
+        return '❤️';
+      case ReactionType.celebrate:
+        return '🎉';
+      case ReactionType.insightful:
+        return '💡';
+      case ReactionType.funny:
+        return '😂';
+      case ReactionType.support:
+        return '🤝';
+    }
+  }
+
+  String get name {
+    switch (this) {
+      case ReactionType.like:
+        return 'Like';
+      case ReactionType.love:
+        return 'Love';
+      case ReactionType.celebrate:
+        return 'Celebrate';
+      case ReactionType.insightful:
+        return 'Insightful';
+      case ReactionType.funny:
+        return 'Funny';
+      case ReactionType.support:
+        return 'Support';
+    }
+  }
 }
 
 /// Model for media content (images/videos)
@@ -145,30 +194,58 @@ class CommentModel {
   });
 
   factory CommentModel.fromJson(Map<String, dynamic> json) {
+    // Support both camelCase and snake_case keys (for legacy/alt sources)
+    String getString(dynamic a, dynamic b, [String fallback = '']) {
+      final v = a ?? b;
+      return v is String ? v : fallback;
+    }
+
+    dynamic pickValue(dynamic a, dynamic b) => a ?? b;
+
+    // Parse dates from either camelCase or snake_case
+    DateTime parseDate(dynamic a, dynamic b) {
+      final v = a ?? b;
+      if (v == null) return DateTime.now();
+      if (v is String) {
+        try {
+          return DateTime.parse(v);
+        } catch (_) {
+          return DateTime.now();
+        }
+      }
+      if (v is int) {
+        return DateTime.fromMillisecondsSinceEpoch(v);
+      }
+      return DateTime.now();
+    }
+
     return CommentModel(
-      id: json['id'] ?? '',
-      postId: json['postId'] ?? '',
-      userId: json['userId'] ?? '',
-      userName: json['userName'] ?? '',
-      userProfileImage: json['userProfileImage'],
-      content: json['content'] ?? '',
-      likes: List<String>.from(json['likes'] ?? []),
+      id: getString(json['id'], json['comment_id']),
+      postId: getString(json['postId'], json['post_id']),
+      userId: getString(json['userId'], json['user_id']),
+      userName: getString(json['userName'], json['user_name'], 'User'),
+      userProfileImage:
+          pickValue(json['userProfileImage'], json['user_profile_image'])
+              as String?,
+      content: getString(json['content'], json['text']),
+      likes: List<String>.from(
+          pickValue(json['likes'], json['likes'] ?? []) ?? []),
       mentions: (json['mentions'] as List?)
-              ?.map((m) => MentionModel.fromJson(m))
+              ?.map((m) => MentionModel.fromJson(Map<String, dynamic>.from(m)))
               .toList() ??
           [],
-      parentCommentId: json['parentCommentId'],
+      parentCommentId:
+          getString(json['parentCommentId'], json['parent_comment_id'], '')
+                  .isEmpty
+              ? null
+              : getString(json['parentCommentId'], json['parent_comment_id']),
       replies: (json['replies'] as List?)
-              ?.map((r) => CommentModel.fromJson(r))
+              ?.map((r) => CommentModel.fromJson(Map<String, dynamic>.from(r)))
               .toList() ??
           [],
-      createdAt: json['createdAt'] is String
-          ? DateTime.parse(json['createdAt'])
-          : DateTime.fromMillisecondsSinceEpoch(json['createdAt'] ?? 0),
-      updatedAt: json['updatedAt'] is String
-          ? DateTime.parse(json['updatedAt'])
-          : DateTime.fromMillisecondsSinceEpoch(json['updatedAt'] ?? 0),
-      isEdited: json['isEdited'] ?? false,
+      createdAt: parseDate(json['createdAt'], json['created_at']),
+      updatedAt: parseDate(json['updatedAt'], json['updated_at']),
+      isEdited: (json['isEdited'] ?? json['is_edited']) ?? false,
     );
   }
 
@@ -267,6 +344,8 @@ class ShowcasePostModel {
 
   // Engagement
   final List<String> likes;
+  final Map<String, int>
+      reactions; // LinkedIn-style reactions: {like: 5, love: 2, celebrate: 1}
   final List<CommentModel> comments;
   final List<String> shares;
   final int viewCount;
@@ -295,6 +374,7 @@ class ShowcasePostModel {
     this.tags = const [],
     this.mentions = const [],
     this.likes = const [],
+    this.reactions = const {},
     this.comments = const [],
     this.shares = const [],
     this.viewCount = 0,
@@ -413,15 +493,37 @@ class ShowcasePostModel {
   }
 
   factory ShowcasePostModel.fromJson(Map<String, dynamic> json) {
-    // Handle Supabase nested profile data
+    // Handle Supabase nested user data (if available)
+    final users = json['users'] as Map<String, dynamic>?;
     final profiles = json['profiles'] as Map<String, dynamic>?;
-    final userName = profiles?['full_name'] ??
+    final userName = users?['name'] ??
+        profiles?['full_name'] ??
         json['user_name'] ??
         json['userName'] ??
-        'Unknown User';
+        'User';
     final userProfileImage = profiles?['profile_image_url'] ??
         json['user_profile_image'] ??
         json['userProfileImage'];
+
+    // Debug logging for profile image
+    if (kDebugMode) {
+      DebugConfig.logShowcase(
+          'ShowcasePostModel.fromJson - Post ID: ${json['id']}');
+      DebugConfig.logShowcase('  - profiles data: $profiles');
+      DebugConfig.logShowcase(
+          '  - user_profile_image: ${json['user_profile_image']}');
+      DebugConfig.logShowcase(
+          '  - userProfileImage: ${json['userProfileImage']}');
+      DebugConfig.logShowcase('  - Final userProfileImage: $userProfileImage');
+    }
+
+    // Parse reactions from JSONB
+    Map<String, int> reactions = {};
+    if (json['reactions'] != null) {
+      if (json['reactions'] is Map) {
+        reactions = Map<String, int>.from(json['reactions']);
+      }
+    }
 
     return ShowcasePostModel(
       id: json['id'] ?? '',
@@ -440,6 +542,7 @@ class ShowcasePostModel {
       tags: List<String>.from(json['tags'] ?? []),
       mentions: _parseMentions(json['mentions'] ?? []),
       likes: List<String>.from(json['likes'] ?? []),
+      reactions: reactions,
       comments: _parseComments(json['comments'] ?? []),
       shares: List<String>.from(json['shares'] ?? []),
       viewCount: json['views_count'] ?? json['viewCount'] ?? 0,
@@ -469,6 +572,7 @@ class ShowcasePostModel {
       'tags': tags,
       'mentions': mentions.map((m) => m.toJson()).toList(),
       'likes': likes,
+      'reactions': reactions,
       'comments': comments.map((c) => c.toJson()).toList(),
       'shares': shares,
       'viewCount': viewCount,
@@ -497,6 +601,7 @@ class ShowcasePostModel {
     List<String>? tags,
     List<MentionModel>? mentions,
     List<String>? likes,
+    Map<String, int>? reactions,
     List<CommentModel>? comments,
     List<String>? shares,
     int? viewCount,
@@ -523,6 +628,7 @@ class ShowcasePostModel {
       tags: tags ?? this.tags,
       mentions: mentions ?? this.mentions,
       likes: likes ?? this.likes,
+      reactions: reactions ?? this.reactions,
       comments: comments ?? this.comments,
       shares: shares ?? this.shares,
       viewCount: viewCount ?? this.viewCount,
@@ -540,6 +646,18 @@ class ShowcasePostModel {
   int get commentsCount => comments.length;
   int get sharesCount => shares.length;
 
+  // LinkedIn-style reaction methods
+  int get totalReactions =>
+      reactions.values.fold(0, (sum, count) => sum + count);
+  int getReactionCount(ReactionType type) => reactions[type.name] ?? 0;
+  bool hasReaction(ReactionType type) => getReactionCount(type) > 0;
+  String get topReaction {
+    if (reactions.isEmpty) return '';
+    final sorted = reactions.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    return sorted.first.key;
+  }
+
   bool isLikedBy(String userId) => likes.contains(userId);
   bool isSharedBy(String userId) => shares.contains(userId);
   bool isOwnedBy(String userId) => this.userId == userId;
@@ -549,6 +667,12 @@ class ShowcasePostModel {
   bool get hasVideos => media.any((m) => m.type == 'video');
   bool get hasTags => tags.isNotEmpty;
   bool get hasMentions => mentions.isNotEmpty;
+
+  // Backward compatibility getter for mediaUrls
+  List<String> get mediaUrls => media.map((m) => m.url).toList();
+
+  // Backward compatibility getter for userProfileImageUrl
+  String? get userProfileImageUrl => userProfileImage;
 
   String get timeAgo {
     final now = DateTime.now();

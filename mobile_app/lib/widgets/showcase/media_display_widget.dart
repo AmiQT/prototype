@@ -163,8 +163,7 @@ class MediaDisplayWidget extends StatelessWidget {
   }
 
   Widget _buildMediaContent(MediaModel mediaItem, BuildContext context) {
-    debugPrint(
-        'MediaDisplayWidget: Rendering media - URL: ${mediaItem.url}, Type: ${mediaItem.type}');
+    // Removed excessive logging to reduce console spam
 
     // Check for invalid URLs first
     if (mediaItem.url.isEmpty ||

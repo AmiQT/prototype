@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../models/showcase_models.dart';
 import '../../../models/user_model.dart';
@@ -57,7 +58,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   Future<void> _loadPost() async {
-    if (widget.initialPost != null) {
+    if (widget.initialPost != null && _post == null) {
       setState(() {
         _post = widget.initialPost;
       });
@@ -70,16 +71,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     });
 
     try {
-      // Get post from Firestore
-      final postDoc =
-          await _showcaseService.showcaseCollection.doc(widget.postId).get();
+      // Get post from Supabase using the new method
+      final post = await _showcaseService.getPostById(widget.postId);
 
-      if (postDoc.exists) {
-        final data = postDoc.data() as Map<String, dynamic>;
-        data['id'] = postDoc.id;
-
+      if (post != null) {
         setState(() {
-          _post = ShowcasePostModel.fromJson(data);
+          _post = post;
           _isLoading = false;
         });
       } else {
@@ -217,6 +214,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                 onPostTap: (_) {}, // Already on post detail
                 onEdit: _handleEdit,
                 onDelete: _handleDelete,
+                onReaction: _handleReaction, // LinkedIn-style reactions
                 showFullContent: true,
               ),
             ),
@@ -242,28 +240,45 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   Stream<ShowcasePostModel?> _getPostStream() {
-    return _showcaseService.showcaseCollection
-        .doc(widget.postId)
-        .snapshots()
-        .map((doc) {
-      if (doc.exists) {
-        final data = doc.data() as Map<String, dynamic>;
-        data['id'] = doc.id;
-        return ShowcasePostModel.fromJson(data);
-      }
-      return null;
-    });
+    return _showcaseService.showcaseCollection.doc(widget.postId).snapshots();
   }
 
   Future<void> _handleLike(ShowcasePostModel post) async {
     if (_currentUser == null) return;
 
+    // Add haptic feedback
+    HapticFeedback.lightImpact();
+
     try {
+      // Optimistic update
+      final updatedPost = post.copyWith(
+        likes: post.isLikedBy(_currentUser!.uid)
+            ? post.likes.where((id) => id != _currentUser!.uid).toList()
+            : [...post.likes, _currentUser!.uid],
+      );
+
+      setState(() {
+        _post = updatedPost;
+      });
+
+      // Real like/unlike
       await _showcaseService.toggleLike(post.id, _currentUser!.uid);
+
+      // Force refresh the post data to ensure UI is in sync
+      await _loadPost();
     } catch (e) {
+      // Revert optimistic update on error
+      setState(() {
+        _post = post;
+      });
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update like: $e')),
+          SnackBar(
+            content: Text('Failed to update like: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
         );
       }
     }
@@ -280,6 +295,36 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
   void _handleShare(ShowcasePostModel post) {
     _showShareDialog();
+  }
+
+  Future<void> _handleReaction(ReactionType reactionType, String postId) async {
+    if (_currentUser == null) return;
+
+    try {
+      // Add haptic feedback
+      HapticFeedback.lightImpact();
+
+      // Add reaction to the post
+      await _showcaseService.addReaction(postId, reactionType.name);
+
+      // Refresh the post data to show the new reaction immediately
+      await _loadPost();
+
+      // Also trigger a stream refresh to ensure UI updates
+      setState(() {
+        // This will trigger a rebuild with the updated post data
+      });
+
+      debugPrint(
+          'PostDetailScreen: Added ${reactionType.name} reaction to post $postId');
+    } catch (e) {
+      debugPrint('PostDetailScreen: Error adding reaction: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add reaction: $e')),
+        );
+      }
+    }
   }
 
   void _handleUserTap(ShowcasePostModel post) {
@@ -301,6 +346,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         _currentUser!.uid,
         content,
       );
+
+      // Refresh the post data to show the new comment immediately
+      await _loadPost();
+
+      // Also trigger a stream refresh to ensure UI updates
+      setState(() {
+        // This will trigger a rebuild with the updated post data
+      });
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

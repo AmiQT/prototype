@@ -73,7 +73,6 @@ class _ModernTextFieldState extends State<ModernTextField>
       duration: const Duration(milliseconds: 200),
       vsync: this,
     );
-
   }
 
   @override
@@ -113,6 +112,7 @@ class _ModernTextFieldState extends State<ModernTextField>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,10 +152,14 @@ class _ModernTextFieldState extends State<ModernTextField>
                 readOnly: widget.readOnly,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w500,
+                      color: theme.brightness == Brightness.dark
+                          ? Colors.black
+                          : Colors.black87,
                     ),
                 decoration: InputDecoration(
                   labelText: widget.label,
                   hintText: widget.hintText,
+                  floatingLabelBehavior: FloatingLabelBehavior.never,
                   prefixIcon: widget.icon != null
                       ? Icon(
                           widget.icon,
@@ -216,18 +220,22 @@ class _ModernTextFieldState extends State<ModernTextField>
                         ? AppTheme.errorColor
                         : (_isFocused
                             ? AppTheme.primaryColor
-                            : AppTheme.grayColor),
+                            : theme.brightness == Brightness.dark
+                                ? Colors.grey[600]
+                                : AppTheme.grayColor),
                     fontWeight: FontWeight.w500,
                   ),
                   hintStyle: TextStyle(
-                    color: AppTheme.grayColor.withValues(alpha: 0.7),
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.grey[500]
+                        : AppTheme.grayColor.withValues(alpha: 0.7),
                     fontWeight: FontWeight.normal,
                   ),
                   contentPadding: EdgeInsets.symmetric(
                     horizontal: AppTheme.spaceMd,
                     vertical: widget.maxLines > 1
-                        ? AppTheme.spaceMd
-                        : AppTheme.spaceSm,
+                        ? AppTheme.spaceLg
+                        : AppTheme.spaceMd,
                   ),
                   counterStyle: const TextStyle(
                     color: AppTheme.grayColor,

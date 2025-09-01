@@ -83,24 +83,27 @@ class SettingsItem extends StatelessWidget {
           ),
           title: Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w500,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.black
+                  : Colors.black87,
             ),
           ),
           subtitle: subtitle != null
               ? Text(
                   subtitle!,
                   style: TextStyle(
-                    color: Colors.grey[600],
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey[600]
+                        : Colors.grey[600],
                     fontSize: 13,
                   ),
                 )
               : null,
-          trailing:
-              trailing ?? Icon(
-                Icons.chevron_right,
-                color: Theme.of(context).colorScheme.onSurfaceVariant
-              ),
+          trailing: trailing ??
+              Icon(Icons.chevron_right,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
           onTap: onTap,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -158,15 +161,20 @@ class SettingsToggleItem extends StatelessWidget {
           ),
           title: Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w500,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.black
+                  : Colors.black87,
             ),
           ),
           subtitle: subtitle != null
               ? Text(
                   subtitle!,
                   style: TextStyle(
-                    color: Colors.grey[600],
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey[600]
+                        : Colors.grey[600],
                     fontSize: 13,
                   ),
                 )
@@ -277,11 +285,14 @@ class SettingsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Container(
       margin: margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: padding ?? const EdgeInsets.all(0),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color:
+            theme.brightness == Brightness.dark ? Colors.white : Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(

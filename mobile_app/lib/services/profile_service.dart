@@ -6,6 +6,7 @@ import '../models/academic_info_model.dart';
 import '../models/experience_model.dart';
 import '../models/project_model.dart';
 import '../config/supabase_config.dart';
+import '../utils/profile_image_cleanup.dart';
 
 class ProfileService {
   static const String baseUrl =
@@ -29,6 +30,13 @@ class ProfileService {
     try {
       debugPrint(
           'ProfileService: Saving profile for userId: ${profile.userId}');
+
+      // Clean up placeholder URLs before saving
+      if (ProfileImageCleanup.isPlaceholderUrl(profile.profileImageUrl)) {
+        debugPrint(
+            'ProfileService: Detected placeholder URL, setting to null for fallback');
+        profile = profile.copyWith(profileImageUrl: null);
+      }
 
       // Validate profile data before saving
       if (profile.userId.isEmpty || profile.fullName.isEmpty) {
@@ -118,19 +126,10 @@ class ProfileService {
       await client.from('profiles').upsert(profileData);
       debugPrint('ProfileService: Profile upsert successful');
 
-      // Prepare user update data
-      final userData = {
-        'id': profile.userId,
-        'profile_completed': profile.isProfileComplete,
-        'updated_at': DateTime.now().toIso8601String(),
-      };
-
+      // Skip users table update to avoid RLS policy infinite recursion
+      // Profile completion status is already stored in profiles table
       debugPrint(
-          'ProfileService: Attempting to upsert user data: ${userData.keys}');
-
-      // Update users table profile completion status
-      await client.from('users').upsert(userData);
-      debugPrint('ProfileService: User upsert successful');
+          'ProfileService: Skipping users table update to avoid RLS policy issues');
 
       debugPrint('ProfileService: Profile saved to Supabase successfully');
     } catch (e) {
@@ -145,10 +144,13 @@ class ProfileService {
     }
   }
 
+  /// Clean up placeholder URLs in all profiles
+  static Future<void> cleanupPlaceholderUrls() async {
+    await ProfileImageCleanup.cleanupPlaceholderUrls();
+  }
+
   Future<ProfileModel?> getProfileByUserId(String userId) async {
     try {
-      debugPrint('ProfileService: Getting profile for userId: $userId');
-
       final token = await _getAuthToken();
       if (token == null) {
         throw Exception('User not authenticated');
@@ -165,27 +167,18 @@ class ProfileService {
 
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
-          debugPrint(
-              'ProfileService: Profile retrieved successfully from backend');
           return ProfileModel.fromJson(data);
         } else if (response.statusCode == 404) {
-          debugPrint(
-              'ProfileService: Profile not found in backend for userId: $userId');
+          // Fallback to Supabase
+          return await _getProfileFromSupabase(userId);
         } else {
-          debugPrint(
-              'ProfileService: Failed to get profile from backend: ${response.body}');
-          throw Exception('Backend offline, trying Supabase fallback');
+          // Fallback to Supabase
+          return await _getProfileFromSupabase(userId);
         }
       } catch (e) {
-        debugPrint(
-            'ProfileService: Backend retrieval failed, using Supabase fallback: $e');
-
         // Fallback: Get from Supabase
         return await _getProfileFromSupabase(userId);
       }
-
-      // Also try Supabase as backup
-      return await _getProfileFromSupabase(userId);
     } catch (e) {
       debugPrint('ProfileService: Error getting profile: $e');
       return null;
@@ -195,9 +188,6 @@ class ProfileService {
   // Get profile from Supabase as fallback
   Future<ProfileModel?> _getProfileFromSupabase(String userId) async {
     try {
-      debugPrint(
-          'ProfileService: Getting profile from Supabase for userId: $userId');
-
       // Get authenticated client with user context
       final client = SupabaseConfig.client;
       final user = SupabaseConfig.auth.currentUser;
@@ -206,13 +196,12 @@ class ProfileService {
         throw Exception('User not authenticated in Supabase');
       }
 
-      debugPrint(
-          'ProfileService: Getting profile using authenticated user: ${user.id}');
-
       final response = await client
           .from('profiles')
           .select('*')
           .eq('user_id', userId)
+          .order('created_at', ascending: false)
+          .limit(1)
           .single();
 
       // Convert Supabase response to ProfileModel

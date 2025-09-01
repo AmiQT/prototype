@@ -170,7 +170,7 @@ class ModernHomeHeader extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '$timeOfDay, ${user?.name.split(' ').first ?? 'Student'}!',
+              '$timeOfDay, ${user?.name ?? 'Student'}!',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -213,7 +213,14 @@ class ModernHomeHeader extends StatelessWidget {
                 MaterialPageRoute(
                   builder: (context) => const PostCreationScreen(),
                 ),
-              );
+              ).then((result) {
+                // Trigger refresh if post was created successfully
+                if (result == true) {
+                  debugPrint(
+                      'ModernHomeHeader: Post created, triggering refresh');
+                  // You can add a callback here if needed
+                }
+              });
             },
           ),
         ),

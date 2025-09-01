@@ -8,7 +8,7 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../student/student_dashboard.dart';
 import '../lecturer/lecturer_dashboard.dart';
-import '../admin/admin_dashboard.dart';
+
 // import 'register_screen.dart';  // Registration removed
 import 'comprehensive_profile_setup_screen.dart';
 
@@ -41,7 +41,8 @@ class _LoginScreenState extends State<LoginScreen> {
         _isLoading = true;
       });
       try {
-        final authService = Provider.of<SupabaseAuthService>(context, listen: false);
+        final authService =
+            Provider.of<SupabaseAuthService>(context, listen: false);
         final email = _emailController.text.trim();
         final password = _passwordController.text.trim();
 
@@ -111,7 +112,8 @@ class _LoginScreenState extends State<LoginScreen> {
         dashboard = const LecturerDashboard();
         break;
       case UserRole.admin:
-        dashboard = const AdminDashboard();
+        // Admin uses same interface as students
+        dashboard = const StudentDashboard();
         break;
     }
 

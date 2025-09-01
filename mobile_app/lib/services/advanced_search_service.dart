@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'package:http/http.dart' as http;
 import '../config/supabase_config.dart';
 
@@ -107,31 +108,51 @@ class AdvancedSearchService {
           };
 
           // Add optional parameters
-          if (query != null && query.isNotEmpty) queryParams['q'] = query;
-          if (name != null && name.isNotEmpty) queryParams['name'] = name;
-          if (email != null && email.isNotEmpty) queryParams['email'] = email;
-          if (studentId != null && studentId.isNotEmpty)
+          if (query != null && query.isNotEmpty) {
+            queryParams['q'] = query;
+          }
+          if (name != null && name.isNotEmpty) {
+            queryParams['name'] = name;
+          }
+          if (email != null && email.isNotEmpty) {
+            queryParams['email'] = email;
+          }
+          if (studentId != null && studentId.isNotEmpty) {
             queryParams['student_id'] = studentId;
-          if (department != null && department.isNotEmpty)
+          }
+          if (department != null && department.isNotEmpty) {
             queryParams['department'] = department;
-          if (faculty != null && faculty.isNotEmpty)
+          }
+          if (faculty != null && faculty.isNotEmpty) {
             queryParams['faculty'] = faculty;
-          if (yearOfStudy != null && yearOfStudy.isNotEmpty)
+          }
+          if (yearOfStudy != null && yearOfStudy.isNotEmpty) {
             queryParams['year_of_study'] = yearOfStudy;
-          if (skills != null && skills.isNotEmpty)
+          }
+          if (skills != null && skills.isNotEmpty) {
             queryParams['skills'] = skills;
-          if (interests != null && interests.isNotEmpty)
+          }
+          if (interests != null && interests.isNotEmpty) {
             queryParams['interests'] = interests;
-          if (minAchievements != null)
+          }
+          if (minAchievements != null) {
             queryParams['min_achievements'] = minAchievements.toString();
-          if (achievementCategory != null && achievementCategory.isNotEmpty)
+          }
+          if (achievementCategory != null && achievementCategory.isNotEmpty) {
             queryParams['achievement_category'] = achievementCategory;
-          if (minEvents != null)
+          }
+          if (minEvents != null) {
             queryParams['min_events'] = minEvents.toString();
-          if (eventCategory != null && eventCategory.isNotEmpty)
+          }
+          if (eventCategory != null && eventCategory.isNotEmpty) {
             queryParams['event_category'] = eventCategory;
-          if (minCgpa != null) queryParams['min_cgpa'] = minCgpa.toString();
-          if (maxCgpa != null) queryParams['max_cgpa'] = maxCgpa.toString();
+          }
+          if (minCgpa != null) {
+            queryParams['min_cgpa'] = minCgpa.toString();
+          }
+          if (maxCgpa != null) {
+            queryParams['max_cgpa'] = maxCgpa.toString();
+          }
 
           final uri = Uri.parse('$baseUrl/api/search-simple/students').replace(
             queryParameters: queryParams,
@@ -150,7 +171,7 @@ class AdvancedSearchService {
           }
         }
       } catch (e) {
-        print('Backend search failed, using Supabase fallback: $e');
+        developer.log('Backend search failed, using Supabase fallback: $e');
       }
 
       // Fallback: Direct Supabase query
@@ -172,7 +193,7 @@ class AdvancedSearchService {
     }
   }
 
-  // Direct Supabase search fallback
+  // Simplified direct Supabase search fallback
   static Future<Map<String, dynamic>> _searchStudentsFromSupabase({
     String? query,
     String? name,
@@ -187,41 +208,39 @@ class AdvancedSearchService {
     int offset = 0,
   }) async {
     try {
-      var supabaseQuery = SupabaseConfig.client
+      // Simple query without complex filtering to avoid method issues
+      final results = await SupabaseConfig.client
           .from('profiles')
           .select('*')
-          .range(offset, offset + limit - 1);
+          .range(offset, offset + limit - 1)
+          .order('created_at', ascending: false);
 
-      // Apply filters
+      // Filter results in memory if needed (simple approach)
+      List<Map<String, dynamic>> filteredResults = List.from(results);
+      
       if (query != null && query.isNotEmpty) {
-        supabaseQuery = supabaseQuery.or(
-            'full_name.ilike.%$query%,bio.ilike.%$query%,department.ilike.%$query%');
+        filteredResults = filteredResults.where((profile) {
+          final fullName = (profile['full_name'] ?? '').toString().toLowerCase();
+          final bio = (profile['bio'] ?? '').toString().toLowerCase();
+          final dept = (profile['department'] ?? '').toString().toLowerCase();
+          final searchQuery = query.toLowerCase();
+          return fullName.contains(searchQuery) || 
+                 bio.contains(searchQuery) || 
+                 dept.contains(searchQuery);
+        }).toList();
       }
-      if (name != null && name.isNotEmpty) {
-        supabaseQuery = supabaseQuery.ilike('full_name', '%$name%');
-      }
-      if (email != null && email.isNotEmpty) {
-        supabaseQuery = supabaseQuery.ilike('email', '%$email%');
-      }
-      if (studentId != null && studentId.isNotEmpty) {
-        supabaseQuery = supabaseQuery.eq('student_id', studentId);
-      }
+      
       if (department != null && department.isNotEmpty) {
-        supabaseQuery = supabaseQuery.ilike('department', '%$department%');
+        filteredResults = filteredResults.where((profile) {
+          final profileDept = (profile['department'] ?? '').toString().toLowerCase();
+          return profileDept.contains(department.toLowerCase());
+        }).toList();
       }
-      if (faculty != null && faculty.isNotEmpty) {
-        supabaseQuery = supabaseQuery.ilike('faculty', '%$faculty%');
-      }
-      if (yearOfStudy != null && yearOfStudy.isNotEmpty) {
-        supabaseQuery = supabaseQuery.eq('year_of_study', yearOfStudy);
-      }
-
-      final results = await supabaseQuery.order('created_at', ascending: false);
 
       return {
         'success': true,
-        'data': results,
-        'total': results.length,
+        'data': filteredResults,
+        'total': filteredResults.length,
         'limit': limit,
         'offset': offset,
         'source': 'supabase_fallback'

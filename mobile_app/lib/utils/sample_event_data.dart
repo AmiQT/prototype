@@ -1,4 +1,3 @@
-
 class SampleEventData {
   static List<Map<String, dynamic>> getSampleEvents() {
     return [
@@ -7,11 +6,10 @@ class SampleEventData {
         'title': 'Tech Innovation Summit 2024',
         'description':
             'Join us for an exciting summit featuring the latest innovations in technology, AI, and digital transformation. Network with industry leaders and discover cutting-edge solutions.',
-        'imageUrl':
-            'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=400&fit=crop',
+        'imageUrl': '', // No hardcoded images - let users upload their own
         'category': 'Technology',
         'favoriteUserIds': [],
-        'registerUrl': 'https://example.com/register/tech-summit',
+        'registerUrl': '',
         'createdAt':
             DateTime.now().subtract(const Duration(days: 5)).toIso8601String(),
         'updatedAt':
@@ -22,11 +20,10 @@ class SampleEventData {
         'title': 'Career Development Workshop',
         'description':
             'Enhance your professional skills with our comprehensive career development workshop. Learn about resume writing, interview techniques, and networking strategies.',
-        'imageUrl':
-            'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=400&fit=crop',
+        'imageUrl': '', // No hardcoded images - let users upload their own
         'category': 'Career',
         'favoriteUserIds': [],
-        'registerUrl': 'https://example.com/register/career-workshop',
+        'registerUrl': '',
         'createdAt':
             DateTime.now().subtract(const Duration(days: 3)).toIso8601String(),
         'updatedAt':
@@ -37,11 +34,10 @@ class SampleEventData {
         'title': 'Entrepreneurship Bootcamp',
         'description':
             'A 3-day intensive bootcamp for aspiring entrepreneurs. Learn about business planning, funding strategies, and startup essentials from successful entrepreneurs.',
-        'imageUrl':
-            'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&h=400&fit=crop',
+        'imageUrl': '', // No hardcoded images - let users upload their own
         'category': 'Business',
         'favoriteUserIds': [],
-        'registerUrl': 'https://example.com/register/entrepreneur-bootcamp',
+        'registerUrl': '',
         'createdAt':
             DateTime.now().subtract(const Duration(days: 1)).toIso8601String(),
         'updatedAt':
@@ -55,7 +51,7 @@ class SampleEventData {
         'imageUrl': '', // No image to test placeholder
         'category': 'Marketing',
         'favoriteUserIds': [],
-        'registerUrl': 'https://example.com/register/digital-marketing',
+        'registerUrl': '',
         'createdAt': DateTime.now().toIso8601String(),
         'updatedAt': DateTime.now().toIso8601String(),
       },
@@ -64,11 +60,10 @@ class SampleEventData {
         'title': 'Leadership Excellence Program',
         'description':
             'Develop your leadership skills through interactive workshops, case studies, and mentorship sessions with experienced leaders.',
-        'imageUrl':
-            'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&h=400&fit=crop',
+        'imageUrl': '', // No hardcoded images - let users upload their own
         'category': 'Leadership',
         'favoriteUserIds': [],
-        'registerUrl': 'https://example.com/register/leadership-program',
+        'registerUrl': '',
         'createdAt':
             DateTime.now().add(const Duration(days: 2)).toIso8601String(),
         'updatedAt':

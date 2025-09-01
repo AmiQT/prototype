@@ -79,7 +79,9 @@ class _CommentWidgetState extends State<CommentWidget>
                 Theme.of(context).primaryColor.withValues(alpha: 0.1),
             child: widget.comment.userProfileImage == null
                 ? Text(
-                    widget.comment.userName[0].toUpperCase(),
+                    widget.comment.userName.isNotEmpty
+                        ? widget.comment.userName[0].toUpperCase()
+                        : '?',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Theme.of(context).primaryColor,
@@ -457,7 +459,9 @@ class _CommentSectionWidgetState extends State<CommentSectionWidget> {
                 backgroundColor:
                     Theme.of(context).primaryColor.withValues(alpha: 0.1),
                 child: Text(
-                  widget.currentUser!.name[0].toUpperCase(),
+                  widget.currentUser!.name.isNotEmpty
+                      ? widget.currentUser!.name[0].toUpperCase()
+                      : '?',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).primaryColor,

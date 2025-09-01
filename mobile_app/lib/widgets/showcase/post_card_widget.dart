@@ -4,6 +4,7 @@ import '../../models/showcase_models.dart';
 import '../../models/user_model.dart';
 import '../moderation/report_dialog.dart';
 import 'media_display_widget.dart';
+import 'linkedin_reactions_widget.dart';
 import '../../utils/app_theme.dart';
 
 class PostCardWidget extends StatelessWidget {
@@ -16,6 +17,8 @@ class PostCardWidget extends StatelessWidget {
   final Function(ShowcasePostModel) onPostTap;
   final Function(ShowcasePostModel)? onEdit;
   final Function(ShowcasePostModel)? onDelete;
+  final Function(ReactionType, String postId)?
+      onReaction; // LinkedIn-style reactions
   final bool showFullContent;
 
   const PostCardWidget({
@@ -29,6 +32,7 @@ class PostCardWidget extends StatelessWidget {
     required this.onPostTap,
     this.onEdit,
     this.onDelete,
+    this.onReaction,
     this.showFullContent = false,
   });
 
@@ -82,9 +86,10 @@ class PostCardWidget extends StatelessWidget {
             onTap: () => onUserTap(post),
             child: CircleAvatar(
               radius: 24,
-              backgroundImage: post.userProfileImage != null && 
-                  post.userProfileImage!.isNotEmpty &&
-                  Uri.tryParse(post.userProfileImage!)?.hasAbsolutePath == true
+              backgroundImage: post.userProfileImage != null &&
+                      post.userProfileImage!.isNotEmpty &&
+                      Uri.tryParse(post.userProfileImage!)?.hasAbsolutePath ==
+                          true
                   ? CachedNetworkImageProvider(post.userProfileImage!)
                   : null,
               backgroundColor:
@@ -374,64 +379,56 @@ class PostCardWidget extends StatelessWidget {
   }
 
   Widget _buildActionButtons(BuildContext context) {
-    final isLiked = currentUser != null && post.isLikedBy(currentUser!.uid);
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            child: TextButton.icon(
-              onPressed: () => onLike(post),
-              icon: Icon(
-                isLiked ? Icons.favorite : Icons.favorite_border,
-                color: isLiked ? Colors.red : Colors.grey[600],
-                size: 20,
-              ),
-              label: Text(
-                'Like',
-                style: TextStyle(
-                  color: isLiked ? Colors.red : Colors.grey[600],
+          // LinkedIn-style reactions
+          if (onReaction != null)
+            LinkedInReactionsWidget(
+              post: post,
+              onReaction: onReaction!,
+              showCounts: true,
+            ),
+
+          // Traditional action buttons
+          Row(
+            children: [
+              Expanded(
+                child: TextButton.icon(
+                  onPressed: () => onComment(post),
+                  icon: Icon(
+                    Icons.comment_outlined,
+                    color: Colors.grey[600],
+                    size: 20,
+                  ),
+                  label: Text(
+                    'Comment',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                  ),
                 ),
               ),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 8),
+              Expanded(
+                child: TextButton.icon(
+                  onPressed: () => onShare(post),
+                  icon: Icon(
+                    Icons.share_outlined,
+                    color: Colors.grey[600],
+                    size: 20,
+                  ),
+                  label: Text(
+                    'Share',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                  ),
+                ),
               ),
-            ),
-          ),
-          Expanded(
-            child: TextButton.icon(
-              onPressed: () => onComment(post),
-              icon: Icon(
-                Icons.comment_outlined,
-                color: Colors.grey[600],
-                size: 20,
-              ),
-              label: Text(
-                'Comment',
-                style: TextStyle(color: Colors.grey[600]),
-              ),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-              ),
-            ),
-          ),
-          Expanded(
-            child: TextButton.icon(
-              onPressed: () => onShare(post),
-              icon: Icon(
-                Icons.share_outlined,
-                color: Colors.grey[600],
-                size: 20,
-              ),
-              label: Text(
-                'Share',
-                style: TextStyle(color: Colors.grey[600]),
-              ),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-              ),
-            ),
+            ],
           ),
         ],
       ),

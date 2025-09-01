@@ -63,6 +63,7 @@ class _ModernEventCardState extends State<ModernEventCard>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return GestureDetector(
       onTap: () => widget.onTap(widget.event),
       child: AnimatedBuilder(
@@ -76,11 +77,17 @@ class _ModernEventCardState extends State<ModernEventCard>
                 vertical: AppTheme.spaceXs,
               ),
               decoration: BoxDecoration(
-                color: AppTheme.surfaceColor,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : theme.cardColor,
                 borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                border: Border.all(
+                  color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                  width: 1,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: theme.shadowColor.withValues(alpha: 0.15),
                     blurRadius: 15,
                     offset: const Offset(0, 5),
                   ),
@@ -141,6 +148,7 @@ class _ModernEventCardState extends State<ModernEventCard>
   }
 
   Widget _buildPlaceholderImage() {
+    final theme = Theme.of(context);
     return Container(
       height: 180,
       width: double.infinity,
@@ -148,10 +156,15 @@ class _ModernEventCardState extends State<ModernEventCard>
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppTheme.primaryColor.withValues(alpha: 0.1),
-            AppTheme.primaryColor.withValues(alpha: 0.2),
-          ],
+          colors: theme.brightness == Brightness.dark
+              ? [
+                  Colors.grey[700]?.withValues(alpha: 0.3) ?? Colors.grey,
+                  Colors.grey[600]?.withValues(alpha: 0.4) ?? Colors.grey,
+                ]
+              : [
+                  theme.primaryColor.withValues(alpha: 0.1),
+                  theme.primaryColor.withValues(alpha: 0.2),
+                ],
         ),
       ),
       child: Column(
@@ -160,13 +173,17 @@ class _ModernEventCardState extends State<ModernEventCard>
           Icon(
             Icons.event_rounded,
             size: 48,
-            color: AppTheme.primaryColor.withValues(alpha: 0.6),
+            color: theme.brightness == Brightness.dark
+                ? Colors.white70
+                : theme.primaryColor.withValues(alpha: 0.6),
           ),
           const SizedBox(height: AppTheme.spaceXs),
           Text(
             'Event Image',
             style: TextStyle(
-              color: AppTheme.primaryColor.withValues(alpha: 0.8),
+              color: theme.brightness == Brightness.dark
+                  ? Colors.white70
+                  : theme.primaryColor.withValues(alpha: 0.8),
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -192,17 +209,26 @@ class _ModernEventCardState extends State<ModernEventCard>
   }
 
   Widget _buildCategoryBadge() {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppTheme.spaceSm,
         vertical: AppTheme.spaceXs,
       ),
       decoration: BoxDecoration(
-        color: AppTheme.primaryColor,
+        color: theme.brightness == Brightness.dark
+            ? Colors.grey[700]?.withValues(alpha: 0.8)
+            : theme.primaryColor,
         borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+        border: Border.all(
+          color: theme.brightness == Brightness.dark
+              ? (Colors.grey[500] ?? Colors.grey).withValues(alpha: 0.5)
+              : theme.primaryColor.withValues(alpha: 0.3),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryColor.withValues(alpha: 0.3),
+            color: theme.shadowColor.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -210,8 +236,9 @@ class _ModernEventCardState extends State<ModernEventCard>
       ),
       child: Text(
         widget.event.category.toUpperCase(),
-        style: const TextStyle(
-          color: Colors.white,
+        style: TextStyle(
+          color:
+              theme.brightness == Brightness.dark ? Colors.white : Colors.white,
           fontWeight: FontWeight.bold,
           fontSize: 10,
           letterSpacing: 0.5,
@@ -221,16 +248,23 @@ class _ModernEventCardState extends State<ModernEventCard>
   }
 
   Widget _buildFavoriteButton() {
+    final theme = Theme.of(context);
     return GestureDetector(
       onTap: _handleFavorite,
       child: Container(
         padding: const EdgeInsets.all(AppTheme.spaceXs),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.9),
+          color: theme.brightness == Brightness.dark
+              ? Colors.grey[800]?.withValues(alpha: 0.9)
+              : Colors.white.withValues(alpha: 0.9),
           borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+          border: Border.all(
+            color: theme.colorScheme.outline.withValues(alpha: 0.2),
+            width: 1,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: theme.shadowColor.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -239,8 +273,12 @@ class _ModernEventCardState extends State<ModernEventCard>
         child: Icon(
           _isFavorite ? Icons.favorite : Icons.favorite_border,
           color: _isFavorite
-              ? AppTheme.secondaryColor
-              : AppTheme.textSecondaryColor,
+              ? (theme.brightness == Brightness.dark
+                  ? Colors.red[300]
+                  : theme.colorScheme.secondary)
+              : (theme.brightness == Brightness.dark
+                  ? Colors.white70
+                  : theme.textTheme.bodyMedium?.color),
           size: 20,
         ),
       ),
@@ -248,6 +286,7 @@ class _ModernEventCardState extends State<ModernEventCard>
   }
 
   Widget _buildEventContent() {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.all(AppTheme.spaceMd),
       child: Column(
@@ -257,10 +296,12 @@ class _ModernEventCardState extends State<ModernEventCard>
             widget.event.title.isNotEmpty
                 ? widget.event.title
                 : 'Untitled Event',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimaryColor,
-                ),
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.brightness == Brightness.dark
+                  ? Colors.black
+                  : theme.textTheme.titleLarge?.color,
+            ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -269,10 +310,12 @@ class _ModernEventCardState extends State<ModernEventCard>
             widget.event.description.isNotEmpty
                 ? widget.event.description
                 : 'No description available',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.textSecondaryColor,
-                  height: 1.4,
-                ),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.brightness == Brightness.dark
+                  ? Colors.grey[600]
+                  : theme.textTheme.bodyMedium?.color,
+              height: 1.4,
+            ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -284,47 +327,59 @@ class _ModernEventCardState extends State<ModernEventCard>
   }
 
   Widget _buildEventMeta() {
+    final theme = Theme.of(context);
     return Row(
       children: [
-        const Icon(
+        Icon(
           Icons.people_outline_rounded,
           size: 16,
-          color: AppTheme.textSecondaryColor,
+          color: theme.brightness == Brightness.dark
+              ? Colors.grey[600]
+              : theme.textTheme.bodySmall?.color,
         ),
         const SizedBox(width: AppTheme.spaceXs),
         Text(
           '${widget.event.favoriteUserIds.length} interested',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppTheme.textSecondaryColor,
-                fontWeight: FontWeight.w500,
-              ),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.brightness == Brightness.dark
+                ? Colors.grey[600]
+                : theme.textTheme.bodySmall?.color,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         const Spacer(),
-        const Icon(
+        Icon(
           Icons.access_time_rounded,
           size: 16,
-          color: AppTheme.textSecondaryColor,
+          color: theme.brightness == Brightness.dark
+              ? Colors.grey[600]
+              : theme.textTheme.bodySmall?.color,
         ),
         const SizedBox(width: AppTheme.spaceXs),
         Text(
           _formatDate(widget.event.createdAt),
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppTheme.textSecondaryColor,
-                fontWeight: FontWeight.w500,
-              ),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.brightness == Brightness.dark
+                ? Colors.grey[600]
+                : theme.textTheme.bodySmall?.color,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
     );
   }
 
   Widget _buildActionButtons() {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppTheme.spaceMd,
         vertical: AppTheme.spaceSm,
       ),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceVariant.withValues(alpha: 0.3),
+        color: theme.brightness == Brightness.dark
+            ? Colors.grey[50]
+            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(AppTheme.radiusLg),
           bottomRight: Radius.circular(AppTheme.radiusLg),
@@ -354,6 +409,7 @@ class _ModernEventCardState extends State<ModernEventCard>
     required String label,
     required VoidCallback onTap,
   }) {
+    final theme = Theme.of(context);
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -362,11 +418,24 @@ class _ModernEventCardState extends State<ModernEventCard>
           vertical: AppTheme.spaceXs,
         ),
         decoration: BoxDecoration(
-          gradient: AppTheme.primaryGradient,
+          gradient: theme.brightness == Brightness.dark
+              ? LinearGradient(
+                  colors: [
+                    Colors.grey[200] ?? Colors.grey,
+                    Colors.grey[100] ?? Colors.grey,
+                  ],
+                )
+              : AppTheme.primaryGradient,
           borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+          border: Border.all(
+            color: theme.brightness == Brightness.dark
+                ? Colors.grey[300] ?? Colors.grey
+                : theme.primaryColor.withValues(alpha: 0.3),
+            width: 1,
+          ),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.primaryColor.withValues(alpha: 0.3),
+              color: theme.shadowColor.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -378,15 +447,19 @@ class _ModernEventCardState extends State<ModernEventCard>
             Icon(
               icon,
               size: 18,
-              color: Colors.white,
+              color: theme.brightness == Brightness.dark
+                  ? Colors.black
+                  : Colors.white,
             ),
             const SizedBox(width: AppTheme.spaceXs),
             Text(
               label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.brightness == Brightness.dark
+                    ? Colors.black
+                    : Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
@@ -398,18 +471,27 @@ class _ModernEventCardState extends State<ModernEventCard>
     required IconData icon,
     required VoidCallback onTap,
   }) {
+    final theme = Theme.of(context);
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(AppTheme.spaceXs),
         decoration: BoxDecoration(
-          color: AppTheme.surfaceVariant,
+          color: theme.brightness == Brightness.dark
+              ? Colors.grey[100]
+              : theme.colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+          border: Border.all(
+            color: theme.colorScheme.outline.withValues(alpha: 0.2),
+            width: 1,
+          ),
         ),
         child: Icon(
           icon,
           size: 20,
-          color: AppTheme.textSecondaryColor,
+          color: theme.brightness == Brightness.dark
+              ? Colors.grey[600]
+              : theme.textTheme.bodyMedium?.color,
         ),
       ),
     );
@@ -418,6 +500,8 @@ class _ModernEventCardState extends State<ModernEventCard>
   bool _isValidImageUrl(String url) {
     if (url.isEmpty) return false;
     if (url.startsWith('data:')) return false;
+    if (url.contains('via.placeholder.com'))
+      return false; // Block problematic placeholder
     try {
       final uri = Uri.parse(url);
       return uri.hasScheme && (uri.scheme == 'http' || uri.scheme == 'https');

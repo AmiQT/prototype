@@ -139,8 +139,8 @@ class DatabaseFixService {
   Map<String, dynamic> getFallbackUserData(String userId) {
     return {
       'id': userId,
-      'name': 'Unknown User',
-      'email': 'unknown@example.com',
+      'name': 'User',
+      'email': '',
       'role': 'student',
       'profile_image_url': null,
     };

@@ -170,16 +170,25 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     if (_isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        body: Center(
+          child: CircularProgressIndicator(
+            color: theme.primaryColor,
+          ),
+        ),
       );
     }
 
     if (_profile == null) {
       return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
         appBar: AppBar(
           title: const Text('Profile'),
+          backgroundColor: theme.appBarTheme.backgroundColor,
+          foregroundColor: theme.appBarTheme.foregroundColor,
           actions: [
             IconButton(
               icon: const Icon(Icons.api, color: Colors.orange),
@@ -200,21 +209,28 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
+                Icon(
                   Icons.person_off,
                   size: 64,
-                  color: Colors.grey,
+                  color: theme.textTheme.bodyMedium?.color,
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'No profile found',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: theme.textTheme.headlineMedium?.color,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'Your profile may need to be migrated to the new format.',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: theme.textTheme.bodyMedium?.color,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
@@ -251,13 +267,16 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
 
     final profile = _profile!;
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Profile', style: TextStyle(color: Colors.black)),
-        backgroundColor: Colors.white,
+        title: Text(
+          'Profile',
+          style: TextStyle(color: theme.appBarTheme.foregroundColor),
+        ),
+        backgroundColor: theme.appBarTheme.backgroundColor,
         centerTitle: true,
         elevation: 0.5,
-        foregroundColor: Colors.black,
+        foregroundColor: theme.appBarTheme.foregroundColor,
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -631,14 +650,16 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     required IconData icon,
     required Widget child,
   }) {
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color:
+            theme.brightness == Brightness.dark ? Colors.white : Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: theme.shadowColor.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -666,10 +687,12 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                 const SizedBox(width: 12),
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.black
+                        : Colors.black87,
                   ),
                 ),
               ],
@@ -683,6 +706,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   }
 
   Widget _buildModernInfoItem(IconData icon, String label, String value) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -690,7 +714,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           Icon(
             icon,
             size: 18,
-            color: Colors.grey.shade600,
+            color: theme.brightness == Brightness.dark
+                ? Colors.grey[600]
+                : Colors.grey.shade600,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -701,16 +727,20 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   label,
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.grey.shade600,
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.grey[600]
+                        : Colors.grey.shade600,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   value,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
-                    color: Colors.black87,
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.black
+                        : Colors.black87,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -723,11 +753,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   }
 
   Widget _buildSkillsGrid(List<String> skills) {
+    final theme = Theme.of(context);
     if (skills.isEmpty) {
-      return const Text(
+      return Text(
         'No skills added yet',
         style: TextStyle(
-          color: Colors.grey,
+          color: theme.brightness == Brightness.dark
+              ? Colors.grey[600]
+              : Colors.grey,
           fontStyle: FontStyle.italic,
         ),
       );
@@ -740,17 +773,23 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.blue.shade50,
+            color: theme.brightness == Brightness.dark
+                ? Colors.white
+                : Colors.blue.shade50,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: Colors.blue.shade200,
+              color: theme.brightness == Brightness.dark
+                  ? theme.colorScheme.outline.withValues(alpha: 0.3)
+                  : Colors.blue.shade200,
               width: 1,
             ),
           ),
           child: Text(
             skill,
             style: TextStyle(
-              color: Colors.blue.shade700,
+              color: theme.brightness == Brightness.dark
+                  ? theme.primaryColor
+                  : Colors.blue.shade700,
               fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
@@ -761,11 +800,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   }
 
   Widget _buildInterestsGrid(List<String> interests) {
+    final theme = Theme.of(context);
     if (interests.isEmpty) {
-      return const Text(
+      return Text(
         'No interests added yet',
         style: TextStyle(
-          color: Colors.grey,
+          color: theme.brightness == Brightness.dark
+              ? Colors.grey[600]
+              : Colors.grey,
           fontStyle: FontStyle.italic,
         ),
       );
@@ -778,17 +820,23 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.purple.shade50,
+            color: theme.brightness == Brightness.dark
+                ? Colors.white
+                : Colors.purple.shade50,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: Colors.purple.shade200,
+              color: theme.brightness == Brightness.dark
+                  ? theme.colorScheme.outline.withValues(alpha: 0.3)
+                  : Colors.purple.shade200,
               width: 1,
             ),
           ),
           child: Text(
             interest,
             style: TextStyle(
-              color: Colors.purple.shade700,
+              color: theme.brightness == Brightness.dark
+                  ? Colors.purple[700]
+                  : Colors.purple.shade700,
               fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
@@ -799,14 +847,19 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   }
 
   Widget _buildExperienceItem(ExperienceModel experience) {
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: theme.brightness == Brightness.dark
+            ? Colors.white
+            : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.grey.shade200,
+          color: theme.brightness == Brightness.dark
+              ? theme.colorScheme.outline.withValues(alpha: 0.3)
+              : Colors.grey.shade200,
           width: 1,
         ),
       ),
@@ -815,10 +868,12 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         children: [
           Text(
             experience.title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: theme.brightness == Brightness.dark
+                  ? Colors.black
+                  : Colors.black87,
             ),
           ),
           const SizedBox(height: 4),
@@ -826,7 +881,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             experience.company,
             style: TextStyle(
               fontSize: 14,
-              color: Colors.blue.shade600,
+              color: theme.brightness == Brightness.dark
+                  ? Colors.blue[700]
+                  : Colors.blue.shade600,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -834,9 +891,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             const SizedBox(height: 8),
             Text(
               experience.description,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: Colors.black54,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.grey[600]
+                    : Colors.black54,
                 height: 1.4,
               ),
             ),
@@ -847,14 +906,19 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   }
 
   Widget _buildProjectItem(ProjectModel project) {
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: theme.brightness == Brightness.dark
+            ? Colors.white
+            : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.grey.shade200,
+          color: theme.brightness == Brightness.dark
+              ? theme.colorScheme.outline.withValues(alpha: 0.3)
+              : Colors.grey.shade200,
           width: 1,
         ),
       ),
@@ -863,19 +927,23 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         children: [
           Text(
             project.title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: theme.brightness == Brightness.dark
+                  ? Colors.black
+                  : Colors.black87,
             ),
           ),
           if (project.description.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
               project.description,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: Colors.black54,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.grey[600]
+                    : Colors.black54,
                 height: 1.4,
               ),
             ),
@@ -900,7 +968,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   child: Text(
                     tech,
                     style: TextStyle(
-                      color: Colors.green.shade700,
+                      color: theme.brightness == Brightness.dark
+                          ? Colors.green[700]
+                          : Colors.green.shade700,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -915,14 +985,19 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   }
 
   Widget _buildAchievementItem(AchievementModel achievement) {
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: theme.brightness == Brightness.dark
+            ? Colors.white
+            : Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.grey.shade200,
+          color: theme.brightness == Brightness.dark
+              ? theme.colorScheme.outline.withValues(alpha: 0.3)
+              : Colors.grey.shade200,
           width: 1,
         ),
       ),
@@ -940,10 +1015,12 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               Expanded(
                 child: Text(
                   achievement.title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.black
+                        : Colors.black87,
                   ),
                 ),
               ),
@@ -953,9 +1030,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             const SizedBox(height: 8),
             Text(
               achievement.description,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: Colors.black54,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.grey[600]
+                    : Colors.black54,
                 height: 1.4,
               ),
             ),

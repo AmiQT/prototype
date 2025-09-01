@@ -4,6 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../models/profile_model.dart';
 import '../models/search_models.dart';
+import '../models/academic_info_model.dart';
+import '../models/experience_model.dart';
+import '../models/project_model.dart';
 import '../services/profile_service.dart';
 import '../services/supabase_auth_service.dart';
 import 'search_analytics_service.dart';
@@ -11,8 +14,9 @@ import 'search_cache_service.dart';
 import '../config/supabase_config.dart';
 
 class SearchService {
-  static const String baseUrl = 'https://c3168f89d034.ngrok-free.app'; // ngrok tunnel
-  
+  static const String baseUrl =
+      'https://c3168f89d034.ngrok-free.app'; // ngrok tunnel
+
   final ProfileService _profileService = ProfileService();
   final SupabaseAuthService _authService = SupabaseAuthService();
   final SearchAnalyticsService _analyticsService = SearchAnalyticsService();
@@ -47,9 +51,6 @@ class SearchService {
     final startTime = DateTime.now();
 
     try {
-      debugPrint(
-          'SearchService: Searching for "$query" with ${filters.length} filters');
-
       // Check cache first
       final cachedResults = await _cacheService.getCachedResults(
         query: query,
@@ -57,8 +58,6 @@ class SearchService {
       );
 
       if (cachedResults != null) {
-        debugPrint(
-            'SearchService: Retrieved ${cachedResults.length} results from cache');
         return cachedResults;
       }
 
@@ -90,32 +89,61 @@ class SearchService {
       // Wait a moment for auth state to propagate to Firestore
       await Future.delayed(const Duration(milliseconds: 100));
 
-      // Get all users using AuthService which has working permissions
+      // Get all profiles directly (optimized - single query)
       debugPrint(
-          'SearchService: Attempting to get all users via AuthService...');
-      final allUsers = await _authService.getAllUsers();
+          'SearchService: Attempting to get all profiles via AuthService...');
+      final allProfiles = await _authService.getAllUsersWithProfiles();
       debugPrint(
-          'SearchService: Successfully retrieved ${allUsers.length} users');
+          'SearchService: Successfully retrieved ${allProfiles.length} profiles');
 
       List<SearchResult> results = [];
 
-      // Filter users to only include students and lecturers who are active
-      final filteredUsers = allUsers
-          .where((user) {
-            final role = user.role.toString().split('.').last;
-            return user.isActive && (role == 'student' || role == 'lecturer');
+      // Filter profiles to only include students and lecturers
+      final filteredProfiles = allProfiles
+          .where((profileData) {
+            final academicInfo = profileData['academic_info'];
+            if (academicInfo == null) return false;
+
+            // Check if it's a student or lecturer
+            final hasStudentId = academicInfo['studentId'] != null;
+            final hasPosition = academicInfo['position'] != null;
+
+            return hasStudentId || hasPosition; // Student or lecturer
           })
           .take(limit)
           .toList();
 
-      for (final user in filteredUsers) {
+      for (final profileData in filteredProfiles) {
         try {
-          // Get profile for this user
-          debugPrint(
-              'SearchService: Loading profile for user: ${user.name} (${user.id})');
-          final profile = await _profileService.getProfileByUserId(user.id);
-          debugPrint(
-              'SearchService: Profile loaded for ${user.name}: ${profile?.fullName ?? 'null'}');
+          // Convert profile data to UserModel
+          final user = UserModel(
+            id: profileData['user_id'] ?? '',
+            uid: profileData['user_id'] ?? '',
+            email: profileData['email'] ?? '',
+            name: profileData['full_name'] ?? '',
+            role: _getRoleFromProfileData(profileData),
+            studentId: profileData['academic_info']?['studentId'],
+            department: profileData['academic_info']?['department'] ??
+                profileData['academic_info']?['faculty'],
+            createdAt: profileData['created_at'] != null
+                ? DateTime.parse(profileData['created_at'])
+                : DateTime.now(),
+            lastLoginAt: null,
+            isActive: true,
+            profileCompleted: profileData['is_profile_complete'] ?? false,
+          );
+
+          // Create profile object from data (no additional API calls)
+          final profile = _createProfileFromData(profileData);
+
+          // Debug: Log skills data for troubleshooting
+          if (query.toLowerCase().contains('web') ||
+              query.toLowerCase().contains('development')) {
+            debugPrint(
+                'SearchService: Debug - User: ${user.name}, Skills: ${profile?.skills}');
+            debugPrint(
+                'SearchService: Debug - Raw skills data: ${profileData['skills']}');
+          }
 
           // Calculate relevance score
           final relevanceScore = _calculateRelevanceScore(query, user, profile);
@@ -123,21 +151,46 @@ class SearchService {
 
           // Apply filters
           if (_passesFilters(user, profile, filters)) {
+            // Debug: Log when we add a result
+            if (query.toLowerCase().contains('web') ||
+                query.toLowerCase().contains('development')) {
+              debugPrint(
+                  'SearchService: Adding result for user: ${user.name}, Score: $relevanceScore, Fields: $matchedFields');
+            }
+
             results.add(SearchResult(
               user: user,
               profile: profile,
               relevanceScore: relevanceScore,
               matchedFields: matchedFields,
             ));
+          } else {
+            // Debug: Log when result is filtered out
+            if (query.toLowerCase().contains('web') ||
+                query.toLowerCase().contains('development')) {
+              debugPrint(
+                  'SearchService: Result filtered out for user: ${user.name}, Score: $relevanceScore, Fields: $matchedFields');
+            }
           }
         } catch (e) {
-          debugPrint('SearchService: Error processing user ${user.id}: $e');
+          debugPrint(
+              'SearchService: Error processing profile ${profileData['full_name']}: $e');
           continue;
         }
       }
 
       // Sort by relevance score (highest first)
       results.sort((a, b) => b.relevanceScore.compareTo(a.relevanceScore));
+
+      // Debug: Log final results for troubleshooting
+      if (query.toLowerCase().contains('web') ||
+          query.toLowerCase().contains('development')) {
+        debugPrint('SearchService: Final results count: ${results.length}');
+        for (final result in results) {
+          debugPrint(
+              'SearchService: Result - User: ${result.user.name}, Score: ${result.relevanceScore}, Fields: ${result.matchedFields}');
+        }
+      }
 
       // Save search to history
       if (query.isNotEmpty) {
@@ -279,11 +332,48 @@ class SearchService {
     if (profile?.bio?.toLowerCase().contains(q) == true) score += 5.0;
     if (profile?.headline?.toLowerCase().contains(q) == true) score += 5.0;
 
-    // Skills matches
-    final skillMatches = profile?.skills
-            .where((skill) => skill.toLowerCase().contains(q))
-            .length ??
-        0;
+    // Skills matches - improved matching logic
+    int skillMatches = 0;
+    if (profile?.skills.isNotEmpty == true) {
+      for (final skill in profile!.skills) {
+        final skillLower = skill.toLowerCase();
+        final qLower = q.toLowerCase();
+
+        // Exact match
+        if (skillLower == qLower) {
+          skillMatches += 2; // Higher score for exact match
+        }
+        // Contains match
+        else if (skillLower.contains(qLower)) {
+          skillMatches += 1;
+        }
+        // Partial word match (for multi-word skills)
+        else if (qLower.split(' ').any((word) => skillLower.contains(word))) {
+          skillMatches += 1;
+        }
+      }
+    }
+
+    // Debug: Log skills matching for troubleshooting
+    if (q.contains('web') || q.contains('development')) {
+      debugPrint(
+          'SearchService: Skills matching debug - Query: "$q", Skills: ${profile?.skills}');
+      debugPrint(
+          'SearchService: Skills matching debug - Matches: $skillMatches');
+      if (profile?.skills.isNotEmpty == true) {
+        for (final skill in profile!.skills) {
+          final skillLower = skill.toLowerCase();
+          final qLower = q.toLowerCase();
+          final exactMatch = skillLower == qLower;
+          final containsMatch = skillLower.contains(qLower);
+          final partialMatch =
+              qLower.split(' ').any((word) => skillLower.contains(word));
+          debugPrint(
+              'SearchService: Skill "$skill" - Exact: $exactMatch, Contains: $containsMatch, Partial: $partialMatch');
+        }
+      }
+    }
+
     score += skillMatches * 3.0;
 
     // Interests matches
@@ -361,10 +451,20 @@ class SearchService {
       matchedFields.add('studentId');
     }
 
-    // Check skills
-    if (profile?.skills.any((skill) => skill.toLowerCase().contains(q)) ==
-        true) {
-      matchedFields.add('skills');
+    // Check skills - improved matching logic
+    if (profile?.skills.isNotEmpty == true) {
+      for (final skill in profile!.skills) {
+        final skillLower = skill.toLowerCase();
+        final qLower = q.toLowerCase();
+
+        // Check for exact match, contains match, or partial word match
+        if (skillLower == qLower ||
+            skillLower.contains(qLower) ||
+            qLower.split(' ').any((word) => skillLower.contains(word))) {
+          matchedFields.add('skills');
+          break; // Found a match, no need to check more skills
+        }
+      }
     }
 
     // Check interests
@@ -380,7 +480,14 @@ class SearchService {
   /// Check if result passes all applied filters
   bool _passesFilters(
       UserModel user, ProfileModel? profile, List<SearchFilter> filters) {
-    for (final filter in filters.where((f) => f.isSelected)) {
+    // Debug: Log filter checking
+    final selectedFilters = filters.where((f) => f.isSelected).toList();
+    if (selectedFilters.isNotEmpty) {
+      debugPrint(
+          'SearchService: Checking filters for user ${user.name}: ${selectedFilters.map((f) => '${f.category}:${f.name}').join(', ')}');
+    }
+
+    for (final filter in selectedFilters) {
       switch (filter.category) {
         case 'role':
           if (user.role.toString().split('.').last != filter.id) return false;
@@ -394,7 +501,21 @@ class SearchService {
           }
           break;
         case 'skills':
-          if (profile?.skills.contains(filter.name) != true) return false;
+          // Use case-insensitive matching for skills
+          final hasMatchingSkill = profile?.skills.any((skill) =>
+                  skill.toLowerCase() == filter.name.toLowerCase() ||
+                  skill.toLowerCase().contains(filter.name.toLowerCase()) ||
+                  filter.name
+                      .toLowerCase()
+                      .split(' ')
+                      .any((word) => skill.toLowerCase().contains(word))) ??
+              false;
+
+          // Debug: Log skills filter checking
+          debugPrint(
+              'SearchService: Skills filter - User: ${user.name}, Filter: ${filter.name}, Skills: ${profile?.skills}, Match: $hasMatchingSkill');
+
+          if (!hasMatchingSkill) return false;
           break;
         case 'semester':
           if (profile?.academicInfo?.currentSemester.toString() != filter.id) {
@@ -579,7 +700,7 @@ class SearchService {
   Future<List<UserModel>> _getAllUsers() async {
     try {
       // Use AuthService which has working permissions
-      debugPrint('SearchService: Getting all users via AuthService...');
+
       final allUsers = await _authService.getAllUsers();
 
       // Filter users to only include students and lecturers who are active
@@ -588,8 +709,6 @@ class SearchService {
         return user.isActive && (role == 'student' || role == 'lecturer');
       }).toList();
 
-      debugPrint(
-          'SearchService: Filtered to ${filteredUsers.length} active students/lecturers');
       return filteredUsers;
     } catch (e) {
       debugPrint('SearchService: Error getting all users: $e');
@@ -753,8 +872,6 @@ class SearchService {
       }
 
       await _cacheService.cachePopularResults(uniqueResults.values.toList());
-      debugPrint(
-          'SearchService: Cached ${uniqueResults.length} popular results for offline use');
     } catch (e) {
       debugPrint('SearchService: Error caching popular results: $e');
     }
@@ -809,7 +926,6 @@ class SearchService {
               filterList.map((f) => SearchFilter.fromJson(f)).toList();
         }
 
-        debugPrint('SearchService: Filter state loaded');
         return filters;
       }
     } catch (e) {
@@ -864,5 +980,58 @@ class SearchService {
         },
       },
     ];
+  }
+
+  // Helper method to determine role from profile data
+  UserRole _getRoleFromProfileData(Map<String, dynamic> profileData) {
+    final academicInfo = profileData['academic_info'];
+    if (academicInfo != null) {
+      if (academicInfo['studentId'] != null) {
+        return UserRole.student;
+      } else if (academicInfo['position'] != null) {
+        return UserRole.lecturer;
+      }
+    }
+    // Default to student if can't determine
+    return UserRole.student;
+  }
+
+  // Helper method to create profile from profile data (optimized)
+  ProfileModel? _createProfileFromData(Map<String, dynamic> profileData) {
+    try {
+      return ProfileModel(
+        id: profileData['id'] ?? '',
+        userId: profileData['user_id'] ?? '',
+        fullName: profileData['full_name'] ?? '',
+        bio: profileData['bio'] ?? '',
+        phoneNumber: profileData['phone_number'] ?? '',
+        address: profileData['address'] ?? '',
+        headline: profileData['headline'] ?? '',
+        profileImageUrl: profileData['profile_image_url'] ?? '',
+        academicInfo: profileData['academic_info'] != null
+            ? AcademicInfoModel.fromJson(profileData['academic_info'])
+            : null,
+        skills: List<String>.from(profileData['skills'] ?? []),
+        interests: List<String>.from(profileData['interests'] ?? []),
+        experiences: (profileData['experiences'] as List?)
+                ?.map((exp) => ExperienceModel.fromJson(exp))
+                .toList() ??
+            [],
+        projects: (profileData['projects'] as List?)
+                ?.map((proj) => ProjectModel.fromJson(proj))
+                .toList() ??
+            [],
+        isProfileComplete: profileData['is_profile_complete'] ?? false,
+        createdAt: profileData['created_at'] != null
+            ? DateTime.parse(profileData['created_at'])
+            : DateTime.now(),
+        updatedAt: profileData['updated_at'] != null
+            ? DateTime.parse(profileData['updated_at'])
+            : DateTime.now(),
+      );
+    } catch (e) {
+      debugPrint('SearchService: Error creating profile from data: $e');
+      return null;
+    }
   }
 }

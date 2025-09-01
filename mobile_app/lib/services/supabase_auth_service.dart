@@ -19,13 +19,9 @@ class SupabaseAuthService {
     try {
       final session = SupabaseConfig.auth.currentSession;
       if (session?.accessToken != null) {
-        debugPrint(
-            'SupabaseAuthService: Got auth token for user: ${session!.user.id}');
-        return session.accessToken;
-      } else {
-        debugPrint('SupabaseAuthService: No active session found');
-        return null;
+        return session!.accessToken;
       }
+      return null;
     } catch (e) {
       debugPrint('SupabaseAuthService: Error getting auth token: $e');
       return null;
@@ -35,30 +31,15 @@ class SupabaseAuthService {
   // Initialize service and restore session
   Future<void> initialize() async {
     try {
-      debugPrint('SupabaseAuthService: Initializing...');
-
       // Check if user is already signed in
       final session = SupabaseConfig.auth.currentSession;
       if (session != null) {
-        debugPrint(
-            'SupabaseAuthService: Found existing session for user: ${session.user.id}');
-        debugPrint(
-            'SupabaseAuthService: Session expires at: ${session.expiresAt}');
-        debugPrint(
-            'SupabaseAuthService: Session is valid: ${!session.isExpired}');
-
         // Only load profile if session is valid
         if (!session.isExpired) {
           await _loadUserProfile(session.user.id);
-          debugPrint(
-              'SupabaseAuthService: Session restored successfully for user: ${session.user.id}');
         } else {
-          debugPrint(
-              'SupabaseAuthService: Session expired, clearing user data');
           _currentUser = null;
         }
-      } else {
-        debugPrint('SupabaseAuthService: No existing session found');
       }
 
       // Listen to auth state changes
@@ -66,32 +47,23 @@ class SupabaseAuthService {
         final AuthChangeEvent event = data.event;
         final Session? session = data.session;
 
-        debugPrint('SupabaseAuthService: Auth state changed: $event');
-
         switch (event) {
           case AuthChangeEvent.signedIn:
             if (session?.user != null) {
-              debugPrint(
-                  'SupabaseAuthService: User signed in: ${session!.user.id}');
-              _loadUserProfile(session.user.id);
+              _loadUserProfile(session!.user.id);
             }
             break;
           case AuthChangeEvent.signedOut:
-            debugPrint('SupabaseAuthService: User signed out');
             _currentUser = null;
             break;
           case AuthChangeEvent.tokenRefreshed:
-            debugPrint('SupabaseAuthService: Token refreshed');
             break;
           case AuthChangeEvent.initialSession:
             if (session?.user != null) {
-              debugPrint(
-                  'SupabaseAuthService: Initial session restored: ${session!.user.id}');
-              _loadUserProfile(session.user.id);
+              _loadUserProfile(session!.user.id);
             }
             break;
           default:
-            debugPrint('SupabaseAuthService: Unhandled auth event: $event');
             break;
         }
       });
@@ -127,7 +99,7 @@ class SupabaseAuthService {
             id: response.user!.id,
             uid: response.user!.id,
             email: response.user!.email ?? email,
-            name: response.user!.email?.split('@')[0] ?? 'User',
+            name: response.user!.userMetadata?['name'] ?? 'User',
             role: UserRole.student,
             createdAt: DateTime.now(),
             isActive: true,
@@ -138,7 +110,7 @@ class SupabaseAuthService {
           await _ensureUserInSupabase(
             response.user!.id,
             response.user!.email ?? email,
-            response.user!.email?.split('@')[0] ?? 'User',
+            response.user!.userMetadata?['name'] ?? 'User',
             UserRole.student,
           );
         }
@@ -250,24 +222,15 @@ class SupabaseAuthService {
         final userId = currentUserId;
         if (userId != null) {
           try {
-            // Update users table
-            await SupabaseConfig.client.from('users').upsert({
-              'id': userId,
-              'profile_completed': updates['profileCompleted'],
+            // Skip users table update to avoid RLS policy infinite recursion
+            // Only update profiles table
+            await SupabaseConfig.client.from('profiles').upsert({
+              'user_id': userId,
+              'is_profile_complete': updates['profileCompleted'],
               'updated_at': DateTime.now().toIso8601String(),
             });
-
-            // Update profiles table if it exists
-            try {
-              await SupabaseConfig.client.from('profiles').upsert({
-                'user_id': userId,
-                'is_profile_complete': updates['profileCompleted'],
-                'updated_at': DateTime.now().toIso8601String(),
-              });
-            } catch (e) {
-              debugPrint(
-                  'SupabaseAuthService: Profiles table update failed: $e');
-            }
+            debugPrint(
+                'SupabaseAuthService: Profile completion status updated in profiles table');
           } catch (e) {
             debugPrint('SupabaseAuthService: Supabase update failed: $e');
           }
@@ -289,71 +252,16 @@ class SupabaseAuthService {
   // Load user profile from backend or Supabase
   Future<void> _loadUserProfile(String userId) async {
     try {
-      // Option 1: Load from your backend
-      final userData = await _getUserFromBackend(userId);
+      // Option 1: Try to load from profiles table first (this is the main source)
+      final userData = await getUserById(userId);
       if (userData != null) {
         _currentUser = userData;
         return;
       }
 
-      // Option 2: Load from Supabase user metadata and check profile completion
+      // Option 2: Fallback to Supabase user metadata if no profile found
       final supabaseUser = SupabaseConfig.auth.currentUser;
       if (supabaseUser != null) {
-        // Check if user has a profile in Supabase
-        bool profileCompleted = false;
-
-        // Try to check profile completion from profiles table
-        try {
-          final profileResponse = await SupabaseConfig.client
-              .from('profiles')
-              .select('is_profile_complete')
-              .eq('user_id', userId)
-              .single();
-
-          if (profileResponse['is_profile_complete'] != null) {
-            profileCompleted = profileResponse['is_profile_complete'] as bool;
-            debugPrint(
-                'SupabaseAuthService: Profile completion from profiles table: $profileCompleted');
-          }
-        } catch (e) {
-          debugPrint('SupabaseAuthService: Cannot access profiles table: $e');
-
-          // If permission denied or table access issue, assume profile incomplete
-          if (e.toString().contains('permission denied') ||
-              e.toString().contains('42501')) {
-            debugPrint(
-                'SupabaseAuthService: Permission issue with profiles table, assuming profile incomplete');
-            profileCompleted = false;
-          }
-        }
-
-        // Also try to check users table if profile not found
-        if (!profileCompleted) {
-          try {
-            final userResponse = await SupabaseConfig.client
-                .from('users')
-                .select('profile_completed')
-                .eq('id', userId)
-                .single();
-
-            if (userResponse['profile_completed'] != null) {
-              profileCompleted = userResponse['profile_completed'] as bool;
-              debugPrint(
-                  'SupabaseAuthService: Profile completion from users table: $profileCompleted');
-            }
-          } catch (e) {
-            debugPrint('SupabaseAuthService: Cannot access users table: $e');
-
-            // If permission denied, assume profile incomplete and continue
-            if (e.toString().contains('permission denied') ||
-                e.toString().contains('42501')) {
-              debugPrint(
-                  'SupabaseAuthService: Permission issue with users table, assuming profile incomplete');
-              profileCompleted = false;
-            }
-          }
-        }
-
         _currentUser = UserModel(
           id: supabaseUser.id,
           uid: supabaseUser.id,
@@ -365,34 +273,12 @@ class SupabaseAuthService {
           createdAt: DateTime.parse(supabaseUser.createdAt.toString()),
           lastLoginAt: DateTime.now(),
           isActive: true,
-          profileCompleted: profileCompleted,
+          profileCompleted: false, // No profile means not completed
         );
       }
     } catch (e) {
       debugPrint('SupabaseAuthService: Error loading user profile: $e');
     }
-  }
-
-  // Get user from your backend
-  Future<UserModel?> _getUserFromBackend(String userId) async {
-    try {
-      final token = await getAuthToken();
-      if (token == null) return null;
-
-      // Get user data directly from users table
-      final response = await SupabaseConfig.client
-          .from('users')
-          .select()
-          .eq('id', userId)
-          .single();
-
-      if (response != null) {
-        return UserModel.fromJson(response);
-      }
-    } catch (e) {
-      debugPrint('SupabaseAuthService: Error getting user from backend: $e');
-    }
-    return null;
   }
 
   // Create user in your backend
@@ -418,62 +304,14 @@ class SupabaseAuthService {
   Future<void> _ensureUserInSupabase(
       String userId, String email, String name, UserRole role) async {
     try {
-      // Check if user exists in users table
-      try {
-        await SupabaseConfig.client
-            .from('users')
-            .select('id')
-            .eq('id', userId)
-            .single();
-        // User exists, no need to create
-        debugPrint(
-            'SupabaseAuthService: User already exists in Supabase: $userId');
-        return;
-      } catch (e) {
-        debugPrint('SupabaseAuthService: User check error: $e');
-
-        // If permission denied, skip user creation for now
-        if (e.toString().contains('permission denied') ||
-            e.toString().contains('42501')) {
-          debugPrint(
-              'SupabaseAuthService: Permission denied for user check, skipping user creation');
-          return;
-        }
-
-        // User doesn't exist, create them
-        debugPrint(
-            'SupabaseAuthService: Creating new user in Supabase: $userId');
-      }
-
-      // Create user in users table
-      try {
-        await SupabaseConfig.client.from('users').insert({
-          'id': userId,
-          'email': email,
-          'name': name,
-          'role': role.toString().split('.').last,
-          'is_active': true,
-          'profile_completed': false,
-          'created_at': DateTime.now().toIso8601String(),
-          'updated_at': DateTime.now().toIso8601String(),
-        });
-
-        debugPrint(
-            'SupabaseAuthService: User created successfully in Supabase');
-      } catch (e) {
-        debugPrint('SupabaseAuthService: Error creating user in Supabase: $e');
-
-        // If permission denied, just log and continue
-        if (e.toString().contains('permission denied') ||
-            e.toString().contains('42501')) {
-          debugPrint(
-              'SupabaseAuthService: Permission denied for user creation, continuing without Supabase user record');
-        }
-      }
-
-      debugPrint('SupabaseAuthService: User created in Supabase successfully');
+      // Skip users table operations to avoid RLS policy infinite recursion
+      // User data will be managed through Supabase auth metadata and profiles table
+      debugPrint(
+          'SupabaseAuthService: Skipping users table operations to avoid RLS policy issues');
+      debugPrint(
+          'SupabaseAuthService: User authentication handled by Supabase auth: $userId');
     } catch (e) {
-      debugPrint('SupabaseAuthService: Error creating user in Supabase: $e');
+      debugPrint('SupabaseAuthService: Error in _ensureUserInSupabase: $e');
     }
   }
 
@@ -530,21 +368,59 @@ class SupabaseAuthService {
   // Check if user has completed profile
   Future<bool> hasCompletedProfile(String userId) async {
     try {
+      debugPrint(
+          'SupabaseAuthService: Checking profile completion for userId: $userId');
+
+      // If userId is empty, return false
+      if (userId.isEmpty) {
+        debugPrint(
+            'SupabaseAuthService: Empty userId provided, returning false');
+        return false;
+      }
+
       // Check if current user has a completed profile
       if (_currentUser != null && _currentUser!.uid == userId) {
+        debugPrint(
+            'SupabaseAuthService: Using cached user profile completion: ${_currentUser!.profileCompleted}');
         return _currentUser!.profileCompleted;
       }
 
+      // If _currentUser is null or doesn't match, load user profile first
+      if (_currentUser == null || _currentUser!.uid != userId) {
+        debugPrint(
+            'SupabaseAuthService: Loading user profile for userId: $userId');
+        await _loadUserProfile(userId);
+
+        // Check again after loading
+        if (_currentUser != null && _currentUser!.uid == userId) {
+          debugPrint(
+              'SupabaseAuthService: Using loaded user profile completion: ${_currentUser!.profileCompleted}');
+          return _currentUser!.profileCompleted;
+        }
+      }
+
+      // Check current auth user
+      final currentAuthUser = SupabaseConfig.auth.currentUser;
+      debugPrint(
+          'SupabaseAuthService: Current auth user: ${currentAuthUser?.id}');
+      debugPrint(
+          'SupabaseAuthService: Auth user matches userId: ${currentAuthUser?.id == userId}');
+
       // Try to get profile from Supabase profiles table
       try {
+        debugPrint('SupabaseAuthService: Checking profiles table...');
         final response = await SupabaseConfig.client
             .from('profiles')
             .select('is_profile_complete')
             .eq('user_id', userId)
             .single();
 
+        debugPrint('SupabaseAuthService: Profiles table response: $response');
         if (response['is_profile_complete'] != null) {
-          return response['is_profile_complete'] as bool;
+          final result = response['is_profile_complete'] as bool;
+          debugPrint(
+              'SupabaseAuthService: Profile completion from profiles table: $result');
+          return result;
         }
       } catch (e) {
         debugPrint('SupabaseAuthService: No profile found in Supabase: $e');
@@ -552,20 +428,27 @@ class SupabaseAuthService {
 
       // Try to get user from Supabase users table
       try {
+        debugPrint('SupabaseAuthService: Checking users table...');
         final response = await SupabaseConfig.client
             .from('users')
             .select('profile_completed')
             .eq('id', userId)
             .single();
 
+        debugPrint('SupabaseAuthService: Users table response: $response');
         if (response['profile_completed'] != null) {
-          return response['profile_completed'] as bool;
+          final result = response['profile_completed'] as bool;
+          debugPrint(
+              'SupabaseAuthService: Profile completion from users table: $result');
+          return result;
         }
       } catch (e) {
         debugPrint('SupabaseAuthService: No user found in Supabase: $e');
       }
 
       // If we can't get user data, assume profile is not complete
+      debugPrint(
+          'SupabaseAuthService: No profile data found, assuming incomplete');
       return false;
     } catch (e) {
       debugPrint('SupabaseAuthService: Error checking profile completion: $e');
@@ -576,25 +459,99 @@ class SupabaseAuthService {
   // Get all users (admin function)
   Future<List<UserModel>> getAllUsers() async {
     try {
-      debugPrint('SupabaseAuthService: Getting all users');
+      // Get all users from profiles table (has public access policy)
+      final response = await SupabaseConfig.client.from('profiles').select('*');
 
-      // This would typically fetch from your backend or Supabase users table
-      // For now, return empty list as a placeholder
-      return [];
+      final users = response.map<UserModel>((profileData) {
+        // Convert profile data to UserModel format
+        return UserModel(
+          id: profileData['user_id'] ?? '',
+          uid: profileData['user_id'] ?? '',
+          email: profileData['email'] ?? '',
+          name: profileData['full_name'] ?? '',
+          role: _getRoleFromProfile(profileData),
+          studentId: profileData['academic_info']?['studentId'],
+          department: profileData['academic_info']?['department'] ??
+              profileData['academic_info']?['faculty'],
+          createdAt: profileData['created_at'] != null
+              ? DateTime.parse(profileData['created_at'])
+              : DateTime.now(),
+          lastLoginAt: null,
+          isActive: true,
+          profileCompleted: profileData['is_profile_complete'] ?? false,
+        );
+      }).toList();
+
+      return users;
     } catch (e) {
       debugPrint('SupabaseAuthService: Error getting all users: $e');
       return [];
     }
   }
 
+  // Get all users with full profile data for search (optimized)
+  Future<List<Map<String, dynamic>>> getAllUsersWithProfiles() async {
+    try {
+      // Get all users from profiles table (has public access policy)
+      final response = await SupabaseConfig.client.from('profiles').select('*');
+
+      return response;
+    } catch (e) {
+      debugPrint(
+          'SupabaseAuthService: Error getting all users with profiles: $e');
+      return [];
+    }
+  }
+
+  // Helper method to determine role from profile data
+  UserRole _getRoleFromProfile(Map<String, dynamic> profileData) {
+    final academicInfo = profileData['academic_info'];
+    if (academicInfo != null) {
+      if (academicInfo['studentId'] != null) {
+        return UserRole.student;
+      } else if (academicInfo['position'] != null) {
+        return UserRole.lecturer;
+      }
+    }
+    // Default to student if can't determine
+    return UserRole.student;
+  }
+
   // Get user by ID
   Future<UserModel?> getUserById(String userId) async {
     try {
-      debugPrint('SupabaseAuthService: Getting user by ID: $userId');
+      // Try to get user from profiles table - get the latest profile if multiple exist
+      final response = await SupabaseConfig.client
+          .from('profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
 
-      // This would typically fetch from your backend or Supabase users table
-      // For now, return null as a placeholder
-      return null;
+      if (response == null) {
+        return null;
+      }
+
+      // Convert profile data to UserModel
+      final user = UserModel(
+        id: response['user_id'] ?? userId,
+        uid: response['user_id'] ?? userId,
+        email: response['email'] ?? '',
+        name: response['full_name'] ?? '',
+        role: _getRoleFromProfile(response),
+        studentId: response['academic_info']?['studentId'],
+        department: response['academic_info']?['department'] ??
+            response['academic_info']?['faculty'],
+        createdAt: response['created_at'] != null
+            ? DateTime.parse(response['created_at'])
+            : DateTime.now(),
+        lastLoginAt: null,
+        isActive: true,
+        profileCompleted: response['is_profile_complete'] ?? false,
+      );
+
+      return user;
     } catch (e) {
       debugPrint('SupabaseAuthService: Error getting user by ID: $e');
       return null;

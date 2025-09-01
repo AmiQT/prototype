@@ -6,7 +6,6 @@ import '../../services/gemini_chat_service.dart';
 import '../../services/chat_history_service.dart';
 import '../../services/supabase_auth_service.dart';
 import '../../models/chat_models.dart';
-import '../../utils/app_theme.dart';
 import '../../widgets/chat/chat_message_bubble.dart';
 import '../../widgets/chat/typing_indicator.dart';
 import '../../widgets/chat/chat_input_field.dart';
@@ -265,7 +264,7 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: const Text('STAP UTHM Advisor'),
         centerTitle: true,

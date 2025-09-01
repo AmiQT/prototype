@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../l10n/generated/app_localizations.dart';
-import '../../../services/supabase_auth_service.dart';
 
 import 'profile/student_profile_screen.dart';
 import 'showcase/showcase_screen.dart';
@@ -34,7 +32,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
       BottomNavigationBarItem(
           icon: const Icon(Icons.search), label: l10n.discover),
       const BottomNavigationBarItem(
-          icon: Icon(Icons.chat_bubble), label: 'AI Chat'), // AI Chat in center
+          icon: Icon(Icons.auto_awesome),
+          label: 'AI Chat'), // Sparkling star icon ⭐
       BottomNavigationBarItem(
           icon: const Icon(Icons.event_available), label: l10n.eventProgram),
       BottomNavigationBarItem(

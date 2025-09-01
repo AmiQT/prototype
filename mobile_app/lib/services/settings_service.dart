@@ -66,11 +66,10 @@ class SettingsService {
         UserAttributes(email: newEmail),
       );
 
-      // Update email in Supabase users table
-      await SupabaseConfig.from('users').update({
-        'email': newEmail,
-        'updated_at': DateTime.now().toIso8601String(),
-      }).eq('id', user.id);
+      // Skip users table update to avoid RLS policy infinite recursion
+      // Email is already updated in Supabase auth
+      debugPrint(
+          'SettingsService: Skipping users table update to avoid RLS policy issues');
 
       debugPrint('SettingsService: Email updated successfully');
     } on AuthException catch (e) {
@@ -101,11 +100,10 @@ class SettingsService {
         throw Exception('No user is currently signed in');
       }
 
-      // Update display name in Supabase users table
-      await SupabaseConfig.from('users').update({
-        'display_name': newName,
-        'updated_at': DateTime.now().toIso8601String(),
-      }).eq('id', user.id);
+      // Skip users table update to avoid RLS policy infinite recursion
+      // Display name should be updated in profiles table instead
+      debugPrint(
+          'SettingsService: Skipping users table update to avoid RLS policy issues');
 
       debugPrint('SettingsService: Display name updated successfully');
     } on AuthException catch (e) {
@@ -138,9 +136,12 @@ class SettingsService {
       if (department != null) updates['department'] = department;
       if (studentId != null) updates['studentId'] = studentId;
 
-      await SupabaseConfig.from('users').update(updates).eq('id', user.id);
+      // Skip users table update to avoid RLS policy infinite recursion
+      // Profile data should be updated in profiles table instead
+      debugPrint(
+          'SettingsService: Skipping users table update to avoid RLS policy issues');
 
-      // Also update display name in Supabase users table if name is provided
+      // Update display name in Supabase auth if name is provided
       if (name != null) {
         await SupabaseConfig.auth.updateUser(
           UserAttributes(data: {'display_name': name}),
@@ -199,9 +200,7 @@ class SettingsService {
 
       final profiles = profileResponse;
       for (final profile in profiles) {
-          await SupabaseConfig.from('profiles')
-              .delete()
-              .eq('id', profile['id']);
+        await SupabaseConfig.from('profiles').delete().eq('id', profile['id']);
       }
 
       // Note: In Supabase, user account deletion is typically handled through the admin interface

@@ -109,8 +109,6 @@ class SearchCacheService {
         cached.accessCount++;
         cached.lastAccessed = DateTime.now();
 
-        debugPrint(
-            'SearchCache: Retrieved ${cached.results.length} results from persistent cache');
         return cached.results;
       }
 
@@ -159,7 +157,6 @@ class SearchCacheService {
       };
 
       await prefs.setString(_popularResultsKey, jsonEncode(data));
-      debugPrint('SearchCache: Cached ${results.length} popular results');
     } catch (e) {
       debugPrint('SearchCache: Error caching popular results: $e');
     }

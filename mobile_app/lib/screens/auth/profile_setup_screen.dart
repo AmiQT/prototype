@@ -8,8 +8,8 @@ import '../../models/academic_info_model.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../student/student_dashboard.dart';
+import '../student/enhanced_student_dashboard.dart';
 import '../lecturer/lecturer_dashboard.dart';
-import '../admin/admin_dashboard.dart';
 
 class ProfileSetupScreen extends StatefulWidget {
   const ProfileSetupScreen({super.key});
@@ -241,7 +241,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
         dashboard = const LecturerDashboard();
         break;
       case UserRole.admin:
-        dashboard = const AdminDashboard();
+        // Admin uses same interface as students
+        dashboard = const EnhancedStudentDashboard();
         break;
     }
 

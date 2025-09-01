@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../utils/debug_config.dart';
 
 class AppConfig {
   // API Keys (loaded from environment)
@@ -42,14 +43,14 @@ class AppConfig {
       _geminiApiKey = dotenv.env['GEMINI_API_KEY'];
 
       if (kDebugMode) {
-        debugPrint('AppConfig: Environment variables loaded');
-        debugPrint('AppConfig: OpenRouter API key present: $hasApiKey');
-        debugPrint('AppConfig: Gemini API key present: $hasGeminiApiKey');
+        DebugConfig.logInit('Environment variables loaded');
+        DebugConfig.logInit('OpenRouter API key present: $hasApiKey');
+        DebugConfig.logInit('Gemini API key present: $hasGeminiApiKey');
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('AppConfig: Error loading environment variables: $e');
-        debugPrint('AppConfig: Continuing without API keys...');
+        DebugConfig.logError('Error loading environment variables: $e');
+        DebugConfig.logWarning('Continuing without API keys...');
       }
       // Set default values if loading fails
       _openRouterApiKey = null;

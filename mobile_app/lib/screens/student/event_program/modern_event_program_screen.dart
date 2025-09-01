@@ -125,8 +125,9 @@ class _ModernEventProgramScreenState extends State<ModernEventProgramScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Column(
         children: [
           ModernEventHeader(
@@ -201,6 +202,7 @@ class _ModernEventProgramScreenState extends State<ModernEventProgramScreen>
   }
 
   Widget _buildLoadingState() {
+    final theme = Theme.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -208,26 +210,34 @@ class _ModernEventProgramScreenState extends State<ModernEventProgramScreen>
           Container(
             padding: const EdgeInsets.all(AppTheme.spaceLg),
             decoration: BoxDecoration(
-              color: AppTheme.surfaceColor,
+              color: theme.brightness == Brightness.dark
+                  ? Colors.white
+                  : theme.cardColor,
               borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+              border: Border.all(
+                color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                width: 1,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                  color: theme.shadowColor.withValues(alpha: 0.15),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
               ],
             ),
-            child: const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(theme.primaryColor),
             ),
           ),
           const SizedBox(height: AppTheme.spaceLg),
           Text(
             'Loading amazing events...',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppTheme.textSecondaryColor,
-                ),
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: theme.brightness == Brightness.dark
+                  ? Colors.black
+                  : theme.textTheme.bodyLarge?.color,
+            ),
           ),
         ],
       ),
@@ -235,6 +245,7 @@ class _ModernEventProgramScreenState extends State<ModernEventProgramScreen>
   }
 
   Widget _buildErrorState() {
+    final theme = Theme.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppTheme.spaceLg),
@@ -244,31 +255,39 @@ class _ModernEventProgramScreenState extends State<ModernEventProgramScreen>
             Container(
               padding: const EdgeInsets.all(AppTheme.space2xl),
               decoration: BoxDecoration(
-                color: AppTheme.errorColor.withValues(alpha: 0.1),
+                color: theme.brightness == Brightness.dark
+                    ? Colors.red[800]?.withValues(alpha: 0.8)
+                    : theme.colorScheme.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppTheme.radiusFull),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.error_outline_rounded,
                 size: 64,
-                color: AppTheme.errorColor,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : theme.colorScheme.error,
               ),
             ),
             const SizedBox(height: AppTheme.spaceLg),
             Text(
               'Oops! Something went wrong',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimaryColor,
-                  ),
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : theme.textTheme.headlineSmall?.color,
+              ),
             ),
             const SizedBox(height: AppTheme.spaceSm),
             Text(
               _error ?? 'Unknown error occurred',
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppTheme.textSecondaryColor,
-                    height: 1.5,
-                  ),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white70
+                    : theme.textTheme.bodyLarge?.color,
+                height: 1.5,
+              ),
             ),
             const SizedBox(height: AppTheme.spaceLg),
             Container(
@@ -310,6 +329,7 @@ class _ModernEventProgramScreenState extends State<ModernEventProgramScreen>
   }
 
   Widget _buildEmptyState() {
+    final theme = Theme.of(context);
     final hasFilters =
         _selectedCategories.isNotEmpty || _searchQuery.isNotEmpty;
 
@@ -322,7 +342,9 @@ class _ModernEventProgramScreenState extends State<ModernEventProgramScreen>
             Container(
               padding: const EdgeInsets.all(AppTheme.space2xl),
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : theme.primaryColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppTheme.radiusFull),
               ),
               child: Icon(
@@ -330,16 +352,20 @@ class _ModernEventProgramScreenState extends State<ModernEventProgramScreen>
                     ? Icons.search_off_rounded
                     : Icons.event_busy_rounded,
                 size: 64,
-                color: AppTheme.primaryColor,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.grey[600]
+                    : theme.primaryColor,
               ),
             ),
             const SizedBox(height: AppTheme.spaceLg),
             Text(
               hasFilters ? 'No events found' : 'No events available',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimaryColor,
-                  ),
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.black
+                    : theme.textTheme.headlineSmall?.color,
+              ),
             ),
             const SizedBox(height: AppTheme.spaceSm),
             Text(
@@ -347,10 +373,12 @@ class _ModernEventProgramScreenState extends State<ModernEventProgramScreen>
                   ? 'Try adjusting your search or filters to find events'
                   : 'Check back later for exciting events at UTHM!',
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppTheme.textSecondaryColor,
-                    height: 1.5,
-                  ),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.brightness == Brightness.dark
+                    ? Colors.grey[600]
+                    : theme.textTheme.bodyLarge?.color,
+                height: 1.5,
+              ),
             ),
             if (hasFilters) ...[
               const SizedBox(height: AppTheme.spaceLg),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/search_models.dart';
 import '../services/search_service.dart';
 import '../models/user_model.dart';
+import 'profile/profile_image_widget.dart';
 
 /// Enhanced search bar with real-time search and suggestions
 class SearchBarWidget extends StatefulWidget {
@@ -424,27 +425,16 @@ class UserResultCard extends StatelessWidget {
                               width: 2,
                             ),
                           ),
-                          child: CircleAvatar(
-                            radius: 32,
-                            backgroundImage: result.profileImageUrl != null &&
-                                    result.profileImageUrl!.isNotEmpty
-                                ? NetworkImage(result.profileImageUrl!)
-                                : null,
+                          child: ProfileImageWidget(
+                            imageUrl: result.profileImageUrl,
+                            size: 64,
+                            fallbackText: result.displayName.isNotEmpty
+                                ? result.displayName[0].toUpperCase()
+                                : 'U',
                             backgroundColor: _getRoleColor(result.user.role)
                                 .withValues(alpha: 0.1),
-                            child: result.profileImageUrl == null ||
-                                    result.profileImageUrl!.isEmpty
-                                ? Text(
-                                    result.displayName.isNotEmpty
-                                        ? result.displayName[0].toUpperCase()
-                                        : 'U',
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                      color: _getRoleColor(result.user.role),
-                                    ),
-                                  )
-                                : null,
+                            textColor: _getRoleColor(result.user.role),
+                            shape: BoxShape.circle,
                           ),
                         ),
                         // Activity status indicator

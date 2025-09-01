@@ -1,13 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'debug_config.dart';
 
 class ErrorHandler {
   static void handleError(dynamic error, StackTrace? stackTrace) {
     if (kDebugMode) {
-      debugPrint('Error: $error');
+      DebugConfig.logError('Error: $error');
       if (stackTrace != null) {
-        debugPrint('StackTrace: $stackTrace');
+        DebugConfig.logError('StackTrace: $stackTrace');
       }
     }
 
@@ -25,45 +26,45 @@ class ErrorHandler {
 
   static void _handleAuthError(AuthException error) {
     if (kDebugMode) {
-      debugPrint('Auth Error: ${error.message}');
+      DebugConfig.logError('Auth Error: ${error.message}');
     }
-    
+
     switch (error.statusCode) {
       case '400':
-        debugPrint('Bad request - check your input data');
+        DebugConfig.logWarning('Bad request - check your input data');
         break;
       case '401':
-        debugPrint('Unauthorized - please sign in again');
+        DebugConfig.logWarning('Unauthorized - please sign in again');
         break;
       case '403':
-        debugPrint('Forbidden - insufficient permissions');
+        DebugConfig.logWarning('Forbidden - insufficient permissions');
         break;
       case '422':
-        debugPrint('Validation error - check your data format');
+        DebugConfig.logWarning('Validation error - check your data format');
         break;
       default:
-        debugPrint('Authentication error occurred');
+        DebugConfig.logWarning('Authentication error occurred');
     }
   }
 
   static void _handleDatabaseError(PostgrestException error) {
     if (kDebugMode) {
-      debugPrint('Database Error: ${error.message}');
-      debugPrint('Details: ${error.details}');
-      debugPrint('Hint: ${error.hint}');
+      DebugConfig.logError('Database Error: ${error.message}');
+      DebugConfig.logError('Details: ${error.details}');
+      DebugConfig.logError('Hint: ${error.hint}');
     }
   }
 
   static void _handleStorageError(StorageException error) {
     if (kDebugMode) {
-      debugPrint('Storage Error: ${error.message}');
-      debugPrint('Status Code: ${error.statusCode}');
+      DebugConfig.logError('Storage Error: ${error.message}');
+      DebugConfig.logError('Status Code: ${error.statusCode}');
     }
   }
 
   static void _handleGenericError(dynamic error) {
     if (kDebugMode) {
-      debugPrint('Generic Error: $error');
+      DebugConfig.logError('Generic Error: $error');
     }
   }
 
@@ -90,7 +91,7 @@ class ErrorHandler {
 
   // ==================== UI HELPER METHODS ====================
   // These methods are added for compatibility with existing UI code
-  
+
   static void showErrorSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

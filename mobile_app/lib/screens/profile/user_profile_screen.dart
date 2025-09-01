@@ -117,20 +117,29 @@ class _UserProfileScreenState extends State<UserProfileScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: _isLoading ? _buildLoadingState() : _buildContent(),
     );
   }
 
   Widget _buildLoadingState() {
-    return const Center(
+    final theme = Theme.of(context);
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(),
-          SizedBox(height: 16),
-          Text('Loading profile...'),
+          CircularProgressIndicator(
+            color: theme.primaryColor,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Loading profile...',
+            style: TextStyle(
+              color: theme.textTheme.bodyLarge?.color,
+            ),
+          ),
         ],
       ),
     );
@@ -138,6 +147,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
 
   // Enhanced error state with better UX
   Widget _buildErrorState() {
+    final theme = Theme.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(32),
@@ -147,13 +157,17 @@ class _UserProfileScreenState extends State<UserProfileScreen>
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.red.withValues(alpha: 0.1),
+              color: theme.brightness == Brightness.dark
+                  ? Colors.red[800]?.withValues(alpha: 0.8)
+                  : Colors.red.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.error_outline,
               size: 64,
-              color: Colors.red[400],
+              color: theme.brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.red[400],
             ),
           ),
           const SizedBox(height: 24),
@@ -162,7 +176,9 @@ class _UserProfileScreenState extends State<UserProfileScreen>
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[800],
+              color: theme.brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.grey[800],
             ),
           ),
           const SizedBox(height: 12),
@@ -171,7 +187,9 @@ class _UserProfileScreenState extends State<UserProfileScreen>
                 'Unable to load profile. Please check your connection and try again.',
             style: TextStyle(
               fontSize: 16,
-              color: Colors.grey[600],
+              color: theme.brightness == Brightness.dark
+                  ? Colors.white70
+                  : Colors.grey[600],
               height: 1.4,
             ),
             textAlign: TextAlign.center,
@@ -217,11 +235,12 @@ class _UserProfileScreenState extends State<UserProfileScreen>
 
   Widget _buildContent() {
     if (_error != null) {
+      final theme = Theme.of(context);
       return Scaffold(
         appBar: AppBar(
           title: const Text('Profile'),
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black87,
+          backgroundColor: theme.appBarTheme.backgroundColor,
+          foregroundColor: theme.appBarTheme.foregroundColor,
           elevation: 0,
         ),
         body: _buildErrorState(),
@@ -229,15 +248,21 @@ class _UserProfileScreenState extends State<UserProfileScreen>
     }
 
     if (_user == null) {
+      final theme = Theme.of(context);
       return Scaffold(
         appBar: AppBar(
           title: const Text('Profile'),
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black87,
+          backgroundColor: theme.appBarTheme.backgroundColor,
+          foregroundColor: theme.appBarTheme.foregroundColor,
           elevation: 0,
         ),
-        body: const Center(
-          child: Text('User not found'),
+        body: Center(
+          child: Text(
+            'User not found',
+            style: TextStyle(
+              color: theme.textTheme.bodyLarge?.color,
+            ),
+          ),
         ),
       );
     }
@@ -250,8 +275,8 @@ class _UserProfileScreenState extends State<UserProfileScreen>
               expandedHeight: 280, // Reduced from 300 to 280
               floating: false,
               pinned: true,
-              backgroundColor: Colors.white,
-              foregroundColor: Colors.black87,
+              backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+              foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
               elevation: 0,
               flexibleSpace: FlexibleSpaceBar(
                 background: _buildEnhancedProfileHeader(),
@@ -266,7 +291,8 @@ class _UserProfileScreenState extends State<UserProfileScreen>
                 TabBar(
                   controller: _tabController,
                   labelColor: Theme.of(context).primaryColor,
-                  unselectedLabelColor: Colors.grey,
+                  unselectedLabelColor:
+                      Theme.of(context).textTheme.bodyMedium?.color,
                   indicatorColor: Theme.of(context).primaryColor,
                   tabs: [
                     Semantics(
@@ -922,15 +948,17 @@ class _UserProfileScreenState extends State<UserProfileScreen>
 
   // Skeleton card for loading state
   Widget _buildPostSkeletonCard() {
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color:
+            theme.brightness == Brightness.dark ? Colors.white : Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: theme.shadowColor.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -946,7 +974,9 @@ class _UserProfileScreenState extends State<UserProfileScreen>
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: theme.brightness == Brightness.dark
+                      ? Colors.grey[600]
+                      : Colors.grey[300],
                   shape: BoxShape.circle,
                 ),
               ),
@@ -959,7 +989,9 @@ class _UserProfileScreenState extends State<UserProfileScreen>
                       width: 120,
                       height: 16,
                       decoration: BoxDecoration(
-                        color: Colors.grey[300],
+                        color: theme.brightness == Brightness.dark
+                            ? Colors.grey[600]
+                            : Colors.grey[300],
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
@@ -968,7 +1000,9 @@ class _UserProfileScreenState extends State<UserProfileScreen>
                       width: 80,
                       height: 12,
                       decoration: BoxDecoration(
-                        color: Colors.grey[300],
+                        color: theme.brightness == Brightness.dark
+                            ? Colors.grey[600]
+                            : Colors.grey[300],
                         borderRadius: BorderRadius.circular(6),
                       ),
                     ),
@@ -983,7 +1017,9 @@ class _UserProfileScreenState extends State<UserProfileScreen>
             width: double.infinity,
             height: 16,
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: theme.brightness == Brightness.dark
+                  ? Colors.grey[600]
+                  : Colors.grey[300],
               borderRadius: BorderRadius.circular(8),
             ),
           ),
@@ -992,7 +1028,9 @@ class _UserProfileScreenState extends State<UserProfileScreen>
             width: 200,
             height: 16,
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: theme.brightness == Brightness.dark
+                  ? Colors.grey[600]
+                  : Colors.grey[300],
               borderRadius: BorderRadius.circular(8),
             ),
           ),
@@ -1004,7 +1042,9 @@ class _UserProfileScreenState extends State<UserProfileScreen>
                 width: 60,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: theme.brightness == Brightness.dark
+                      ? Colors.grey[600]
+                      : Colors.grey[300],
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
@@ -1013,7 +1053,9 @@ class _UserProfileScreenState extends State<UserProfileScreen>
                 width: 60,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: theme.brightness == Brightness.dark
+                      ? Colors.grey[600]
+                      : Colors.grey[300],
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
@@ -1026,6 +1068,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
 
   // Enhanced empty state for posts
   Widget _buildPostsEmptyState() {
+    final theme = Theme.of(context);
     final isOwnProfile = _user!.uid == _currentUser?.uid;
 
     return Container(
@@ -1037,13 +1080,17 @@ class _UserProfileScreenState extends State<UserProfileScreen>
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.grey.withValues(alpha: 0.1),
+              color: theme.brightness == Brightness.dark
+                  ? Colors.grey[700]?.withValues(alpha: 0.8)
+                  : Colors.grey.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.post_add_outlined,
               size: 64,
-              color: Colors.grey[400],
+              color: theme.brightness == Brightness.dark
+                  ? Colors.grey[300]
+                  : Colors.grey[400],
             ),
           ),
           const SizedBox(height: 24),
@@ -1052,7 +1099,9 @@ class _UserProfileScreenState extends State<UserProfileScreen>
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[600],
+              color: theme.brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.grey[600],
             ),
           ),
           const SizedBox(height: 12),
@@ -1063,7 +1112,9 @@ class _UserProfileScreenState extends State<UserProfileScreen>
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 16,
-              color: Colors.grey[500],
+              color: theme.brightness == Brightness.dark
+                  ? Colors.white70
+                  : Colors.grey[500],
               height: 1.4,
             ),
           ),
@@ -1263,20 +1314,22 @@ class _UserProfileScreenState extends State<UserProfileScreen>
     required IconData icon,
     required Widget child,
   }) {
+    final theme = Theme.of(context);
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color:
+            theme.brightness == Brightness.dark ? Colors.white : Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: theme.shadowColor.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
         ],
         border: Border.all(
-          color: Colors.grey.withValues(alpha: 0.1),
+          color: theme.colorScheme.outline.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -1303,10 +1356,12 @@ class _UserProfileScreenState extends State<UserProfileScreen>
                 const SizedBox(width: 12),
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.black
+                        : Colors.black87,
                   ),
                 ),
               ],
@@ -1321,6 +1376,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
 
   // Modern Info Item with better styling
   Widget _buildModernInfoItem(IconData icon, String label, String value) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -1329,13 +1385,17 @@ class _UserProfileScreenState extends State<UserProfileScreen>
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: Colors.grey.withValues(alpha: 0.1),
+              color: theme.brightness == Brightness.dark
+                  ? Colors.grey[600]?.withValues(alpha: 0.3)
+                  : Colors.grey.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Icon(
               icon,
               size: 16,
-              color: Colors.grey[600],
+              color: theme.brightness == Brightness.dark
+                  ? Colors.grey[400]
+                  : Colors.grey[600],
             ),
           ),
           const SizedBox(width: 12),
@@ -1345,19 +1405,23 @@ class _UserProfileScreenState extends State<UserProfileScreen>
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: Colors.grey,
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.grey[400]
+                        : Colors.grey,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   value,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w400,
-                    color: Colors.black87,
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.black
+                        : Colors.black87,
                   ),
                 ),
               ],
@@ -1370,14 +1434,19 @@ class _UserProfileScreenState extends State<UserProfileScreen>
 
   // Achievement Item with modern design
   Widget _buildAchievementItem(AchievementModel achievement) {
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.amber.withValues(alpha: 0.05),
+        color: theme.brightness == Brightness.dark
+            ? Colors.white
+            : Colors.amber.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.amber.withValues(alpha: 0.2),
+          color: theme.brightness == Brightness.dark
+              ? theme.colorScheme.outline.withValues(alpha: 0.3)
+              : Colors.amber.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -1402,19 +1471,23 @@ class _UserProfileScreenState extends State<UserProfileScreen>
               children: [
                 Text(
                   achievement.title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.black
+                        : Colors.black87,
                   ),
                 ),
                 if (achievement.description.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text(
                     achievement.description,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey,
+                      color: theme.brightness == Brightness.dark
+                          ? Colors.grey[600]
+                          : Colors.grey,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -1424,9 +1497,11 @@ class _UserProfileScreenState extends State<UserProfileScreen>
                   const SizedBox(height: 4),
                   Text(
                     achievement.organization!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: Colors.amber,
+                      color: theme.brightness == Brightness.dark
+                          ? Colors.amber[700]
+                          : Colors.amber,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -1447,14 +1522,19 @@ class _UserProfileScreenState extends State<UserProfileScreen>
 
   // Experience Item with modern design
   Widget _buildExperienceItem(ExperienceModel experience) {
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue.withValues(alpha: 0.05),
+        color: theme.brightness == Brightness.dark
+            ? Colors.white
+            : Colors.blue.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.blue.withValues(alpha: 0.2),
+          color: theme.brightness == Brightness.dark
+              ? theme.colorScheme.outline.withValues(alpha: 0.3)
+              : Colors.blue.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -1482,17 +1562,21 @@ class _UserProfileScreenState extends State<UserProfileScreen>
                   children: [
                     Text(
                       experience.title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: theme.brightness == Brightness.dark
+                            ? Colors.black
+                            : Colors.black87,
                       ),
                     ),
                     Text(
                       experience.company,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
-                        color: Colors.blue,
+                        color: theme.brightness == Brightness.dark
+                            ? Colors.blue[700]
+                            : Colors.blue,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -1505,9 +1589,11 @@ class _UserProfileScreenState extends State<UserProfileScreen>
             const SizedBox(height: 12),
             Text(
               experience.description,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.grey[600]
+                    : Colors.grey,
                 height: 1.4,
               ),
             ),
@@ -1519,14 +1605,19 @@ class _UserProfileScreenState extends State<UserProfileScreen>
 
   // Project Item with modern design
   Widget _buildProjectItem(ProjectModel project) {
+    final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.green.withValues(alpha: 0.05),
+        color: theme.brightness == Brightness.dark
+            ? Colors.white
+            : Colors.green.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.green.withValues(alpha: 0.2),
+          color: theme.brightness == Brightness.dark
+              ? theme.colorScheme.outline.withValues(alpha: 0.3)
+              : Colors.green.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -1554,18 +1645,22 @@ class _UserProfileScreenState extends State<UserProfileScreen>
                   children: [
                     Text(
                       project.title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: theme.brightness == Brightness.dark
+                            ? Colors.black
+                            : Colors.black87,
                       ),
                     ),
                     if (project.category != null)
                       Text(
                         project.category!,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
-                          color: Colors.green,
+                          color: theme.brightness == Brightness.dark
+                              ? Colors.green[700]
+                              : Colors.green,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -1595,9 +1690,11 @@ class _UserProfileScreenState extends State<UserProfileScreen>
             const SizedBox(height: 12),
             Text(
               project.description,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.grey[600]
+                    : Colors.grey,
                 height: 1.4,
               ),
             ),
@@ -1617,9 +1714,11 @@ class _UserProfileScreenState extends State<UserProfileScreen>
                   ),
                   child: Text(
                     tech,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey,
+                      color: theme.brightness == Brightness.dark
+                          ? Colors.grey[600]
+                          : Colors.grey,
                     ),
                   ),
                 );
@@ -1672,6 +1771,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
 
   // Skills Grid with modern design
   Widget _buildSkillsGrid() {
+    final theme = Theme.of(context);
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -1679,15 +1779,14 @@ class _UserProfileScreenState extends State<UserProfileScreen>
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                Theme.of(context).primaryColor.withValues(alpha: 0.05),
-              ],
-            ),
+            color: theme.brightness == Brightness.dark
+                ? Colors.white
+                : theme.primaryColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(25),
             border: Border.all(
-              color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+              color: theme.brightness == Brightness.dark
+                  ? theme.colorScheme.outline.withValues(alpha: 0.3)
+                  : theme.primaryColor.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -1697,13 +1796,17 @@ class _UserProfileScreenState extends State<UserProfileScreen>
               Icon(
                 Icons.verified,
                 size: 16,
-                color: Theme.of(context).primaryColor,
+                color: theme.brightness == Brightness.dark
+                    ? theme.primaryColor
+                    : theme.primaryColor,
               ),
               const SizedBox(width: 6),
               Text(
                 skill,
                 style: TextStyle(
-                  color: Theme.of(context).primaryColor,
+                  color: theme.brightness == Brightness.dark
+                      ? theme.primaryColor
+                      : theme.primaryColor,
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
                 ),
@@ -1717,6 +1820,7 @@ class _UserProfileScreenState extends State<UserProfileScreen>
 
   // Interests Grid with modern design
   Widget _buildInterestsGrid() {
+    final theme = Theme.of(context);
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -1724,31 +1828,34 @@ class _UserProfileScreenState extends State<UserProfileScreen>
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.orange.withValues(alpha: 0.1),
-                Colors.orange.withValues(alpha: 0.05),
-              ],
-            ),
+            color: theme.brightness == Brightness.dark
+                ? Colors.white
+                : Colors.orange.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(25),
             border: Border.all(
-              color: Colors.orange.withValues(alpha: 0.3),
+              color: theme.brightness == Brightness.dark
+                  ? theme.colorScheme.outline.withValues(alpha: 0.3)
+                  : Colors.orange.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.favorite,
                 size: 16,
-                color: Colors.orange,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.orange[700]
+                    : Colors.orange,
               ),
               const SizedBox(width: 6),
               Text(
                 interest,
-                style: const TextStyle(
-                  color: Colors.orange,
+                style: TextStyle(
+                  color: theme.brightness == Brightness.dark
+                      ? Colors.orange[700]
+                      : Colors.orange,
                   fontWeight: FontWeight.w600,
                   fontSize: 14,
                 ),
@@ -1762,14 +1869,17 @@ class _UserProfileScreenState extends State<UserProfileScreen>
 
   // Empty state for skills tab
   Widget _buildSkillsEmptyState() {
+    final theme = Theme.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(
-        color: Colors.grey.withValues(alpha: 0.05),
+        color: theme.brightness == Brightness.dark
+            ? Colors.white
+            : Colors.grey.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.grey.withValues(alpha: 0.1),
+          color: theme.colorScheme.outline.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -1778,7 +1888,9 @@ class _UserProfileScreenState extends State<UserProfileScreen>
           Icon(
             Icons.psychology_outlined,
             size: 64,
-            color: Colors.grey[400],
+            color: theme.brightness == Brightness.dark
+                ? Colors.grey[600]
+                : Colors.grey[400],
           ),
           const SizedBox(height: 16),
           Text(
@@ -1786,7 +1898,9 @@ class _UserProfileScreenState extends State<UserProfileScreen>
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[600],
+              color: theme.brightness == Brightness.dark
+                  ? Colors.black
+                  : Colors.grey[600],
             ),
           ),
           const SizedBox(height: 8),
@@ -1795,7 +1909,9 @@ class _UserProfileScreenState extends State<UserProfileScreen>
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
-              color: Colors.grey[500],
+              color: theme.brightness == Brightness.dark
+                  ? Colors.grey[600]
+                  : Colors.grey[500],
               height: 1.4,
             ),
           ),
@@ -1879,7 +1995,7 @@ class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
-      color: Colors.white,
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: _tabBar,
     );
   }

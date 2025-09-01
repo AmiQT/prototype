@@ -19,7 +19,8 @@ class PostCreationScreen extends StatefulWidget {
   final PostDraft? draft;
   final PostTemplate? template;
   final ShowcasePostModel? editingPost;
-  final VoidCallback? onPostCreated; // Callback when post is successfully created
+  final VoidCallback?
+      onPostCreated; // Callback when post is successfully created
 
   const PostCreationScreen({
     super.key,
@@ -577,7 +578,12 @@ class _PostCreationScreenState extends State<PostCreationScreen>
                 ),
               ),
               TextButton(
-                onPressed: () => setState(() => _selectedMedia.clear()),
+                onPressed: () {
+                  setState(() {
+                    _selectedMedia.clear();
+                    _error = null; // Clear any previous errors
+                  });
+                },
                 child: const Text('Clear All'),
               ),
             ],
@@ -921,7 +927,12 @@ class _PostCreationScreenState extends State<PostCreationScreen>
             ),
           ),
           TextButton(
-            onPressed: () => setState(() => _error = null),
+            onPressed: () {
+              setState(() {
+                _error = null;
+                _isUploading = false; // Reset upload state if needed
+              });
+            },
             child: const Text('Dismiss'),
           ),
         ],
@@ -1337,14 +1348,15 @@ class _PostCreationScreenState extends State<PostCreationScreen>
         );
 
         if (result.success) {
+          debugPrint(
+              'PostCreation: Post created successfully! Post ID: ${result.postId}');
+
           // Clear saved draft on successful post creation
           await _clearSavedDraft();
           _successAnimationController.forward();
           _showSuccessDialog(result.postId!);
-          
-          // Call callback to refresh feed
-          widget.onPostCreated?.call();
         } else {
+          debugPrint('PostCreation: Post creation failed: ${result.error}');
           _showError(result.error ?? 'Failed to create post');
         }
       }
@@ -1419,15 +1431,18 @@ class _PostCreationScreenState extends State<PostCreationScreen>
         actions: [
           TextButton(
             onPressed: () {
+              debugPrint('PostCreation: Done button pressed, returning true');
               Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Close creation screen
+              Navigator.pop(context, true); // Close creation screen with result
             },
             child: const Text('Done'),
           ),
           ElevatedButton(
             onPressed: () {
+              debugPrint(
+                  'PostCreation: View Post button pressed, returning true');
               Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Close creation screen
+              Navigator.pop(context, true); // Close creation screen with result
               // Navigate to post detail or feed
             },
             child: const Text('View Post'),
