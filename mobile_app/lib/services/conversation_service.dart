@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/chat_models.dart';
 import '../config/supabase_config.dart';
+import '../config/backend_config.dart';
 
 /// Service for managing chat conversations with backend integration
 class ConversationService extends ChangeNotifier {
@@ -11,9 +12,7 @@ class ConversationService extends ChangeNotifier {
   factory ConversationService() => _instance;
   ConversationService._internal();
 
-  static const String baseUrl =
-      'https://c3168f89d034.ngrok-free.app'; // ngrok tunnel
-
+  static const String baseUrl = BackendConfig.baseUrl; // Use stable backend URL
 
   // Local caching
   final Map<String, List<ChatConversation>> _conversationCache = {};
@@ -38,9 +37,8 @@ class ConversationService extends ChangeNotifier {
           .order('updatedAt', ascending: false)
           .limit(ChatConfig.maxConversationsPerUser);
 
-      final conversations = response
-          .map((json) => ChatConversation.fromJson(json))
-          .toList();
+      final conversations =
+          response.map((json) => ChatConversation.fromJson(json)).toList();
 
       // Cache the results
       _conversationCache[userId] = conversations;
@@ -128,9 +126,8 @@ class ConversationService extends ChangeNotifier {
           .order('timestamp', ascending: false)
           .limit(limit);
 
-      final messages = response
-          .map((json) => ChatMessage.fromJson(json))
-          .toList();
+      final messages =
+          response.map((json) => ChatMessage.fromJson(json)).toList();
 
       // Reverse to show oldest first
       messages.sort((a, b) => a.timestamp.compareTo(b.timestamp));

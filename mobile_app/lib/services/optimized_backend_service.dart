@@ -3,11 +3,13 @@ import 'package:flutter/foundation.dart';
 import 'network_service.dart';
 import 'cache_service.dart';
 import '../config/supabase_config.dart';
+import '../config/backend_config.dart';
 
 class OptimizedBackendService {
-  static const String baseUrl = 'https://c3168f89d034.ngrok-free.app'; // ngrok tunnel
-  
-  static final OptimizedBackendService _instance = OptimizedBackendService._internal();
+  static const String baseUrl = BackendConfig.baseUrl; // Use stable backend URL
+
+  static final OptimizedBackendService _instance =
+      OptimizedBackendService._internal();
   factory OptimizedBackendService() => _instance;
   OptimizedBackendService._internal();
 
@@ -44,15 +46,13 @@ class OptimizedBackendService {
   }) async {
     // Build URL
     final uri = Uri.parse('$baseUrl$endpoint');
-    final finalUri = queryParams != null 
-        ? uri.replace(queryParameters: queryParams)
-        : uri;
+    final finalUri =
+        queryParams != null ? uri.replace(queryParameters: queryParams) : uri;
 
     // Generate cache key
     final cacheKey = 'api_${finalUri.toString().hashCode}';
 
     try {
-
       // Try cache first (unless force refresh or no network)
       if (!forceRefresh && _networkService.isConnected) {
         final cachedData = _cacheService.get<Map<String, dynamic>>(cacheKey);
@@ -79,7 +79,7 @@ class OptimizedBackendService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        
+
         // Cache successful responses
         if (cacheDuration != null) {
           await _cacheService.store(cacheKey, data, duration: cacheDuration);
@@ -88,21 +88,23 @@ class OptimizedBackendService {
         // Track data usage
         DataUsageTracker().trackDownload(response.contentLength ?? 0);
 
-        debugPrint('📡 API success: $endpoint (${response.contentLength ?? 0} bytes)');
+        debugPrint(
+            '📡 API success: $endpoint (${response.contentLength ?? 0} bytes)');
         return data;
       } else {
-        throw Exception('API request failed: ${response.statusCode} - ${response.body}');
+        throw Exception(
+            'API request failed: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       debugPrint('📡 API error: $endpoint - $e');
-      
+
       // Try to return cached data as fallback
       final cachedData = _cacheService.get<Map<String, dynamic>>(cacheKey);
       if (cachedData != null) {
         debugPrint('📡 Returning stale cache data for: $endpoint');
         return cachedData;
       }
-      
+
       rethrow;
     }
   }
@@ -140,7 +142,7 @@ class OptimizedBackendService {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = jsonDecode(response.body) as Map<String, dynamic>;
-        
+
         // Track data usage
         DataUsageTracker().trackUpload(body.length);
         DataUsageTracker().trackDownload(response.contentLength ?? 0);
@@ -148,7 +150,8 @@ class OptimizedBackendService {
         debugPrint('📡 POST success: $endpoint');
         return responseData;
       } else {
-        throw Exception('POST request failed: ${response.statusCode} - ${response.body}');
+        throw Exception(
+            'POST request failed: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       debugPrint('📡 POST error: $endpoint - $e');
@@ -162,23 +165,23 @@ class OptimizedBackendService {
     Duration cacheDuration = CacheService.mediumCache,
   }) async {
     final results = <Map<String, dynamic>>[];
-    
+
     // If on mobile data, process in smaller batches
     final batchSize = _networkService.isOnMobile ? 3 : 10;
-    
+
     for (int i = 0; i < endpoints.length; i += batchSize) {
       final batch = endpoints.skip(i).take(batchSize);
       final batchResults = await Future.wait(
         batch.map((endpoint) => get(endpoint, cacheDuration: cacheDuration)),
       );
       results.addAll(batchResults);
-      
-      // Add delay between batches on mobile to prevent overwhelming
+
+      // Reduced delay between batches for better performance
       if (_networkService.isOnMobile && i + batchSize < endpoints.length) {
-        await Future.delayed(const Duration(milliseconds: 500));
+        await Future.delayed(const Duration(milliseconds: 100));
       }
     }
-    
+
     return results;
   }
 
@@ -191,16 +194,18 @@ class OptimizedBackendService {
 
     try {
       debugPrint('📡 Starting critical data prefetch...');
-      
+
       // Prefetch user profile
       await get('/api/profiles/$userId', cacheDuration: CacheService.longCache);
-      
+
       // Prefetch user achievements
-      await get('/api/achievements?user_id=$userId', cacheDuration: CacheService.mediumCache);
-      
+      await get('/api/achievements?user_id=$userId',
+          cacheDuration: CacheService.mediumCache);
+
       // Prefetch recent events
-      await get('/api/events?limit=20', cacheDuration: CacheService.mediumCache);
-      
+      await get('/api/events?limit=20',
+          cacheDuration: CacheService.mediumCache);
+
       debugPrint('📡 Critical data prefetch completed');
     } catch (e) {
       debugPrint('📡 Prefetch failed: $e');
@@ -210,14 +215,14 @@ class OptimizedBackendService {
   // Check data usage and warn user
   Future<bool> checkDataUsageWarning() async {
     if (_networkService.isOnWifi) return true;
-    
+
     final tracker = DataUsageTracker();
     if (tracker.isHighDataUsage()) {
       // You can show a dialog here or return false to prevent the operation
       debugPrint('⚠️ High data usage detected');
       return false;
     }
-    
+
     return true;
   }
 
@@ -225,7 +230,7 @@ class OptimizedBackendService {
   Map<String, String> getOptimizedPagination({int page = 1}) {
     // Reduce page size on mobile data
     final pageSize = _networkService.isOnMobile ? 10 : 20;
-    
+
     return {
       'page': page.toString(),
       'limit': pageSize.toString(),

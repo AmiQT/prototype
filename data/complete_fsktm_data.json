@@ -1,0 +1,39 @@
+{
+  "faculty_info": {
+    "name": "Fakulti Sains Komputer dan Teknologi Maklumat",
+    "name_en": "Faculty of Computer Science and Information Technology",
+    "acronym": "FSKTM",
+    "university": "Universiti Tun Hussein Onn Malaysia (UTHM)",
+    "total_staff": 0,
+    "website": "https://community.uthm.edu.my/offices/info/28",
+    "last_updated": "2025-09-07",
+    "data_source": "AUTHENTIC - Scraped from UTHM Community Website (Complete Collection)"
+  },
+  "departments": [
+    {
+      "name": "Jabatan Kejuruteraan Perisian",
+      "name_en": "Software Engineering Department"
+    },
+    {
+      "name": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "name_en": "Information Security and Web Technology Department"
+    },
+    {
+      "name": "Jabatan Multimedia",
+      "name_en": "Multimedia Department"
+    },
+    {
+      "name": "Bahagian ICT",
+      "name_en": "ICT Division"
+    },
+    {
+      "name": "Bahagian Pentadbiran",
+      "name_en": "Administration Division"
+    },
+    {
+      "name": "Pejabat Am",
+      "name_en": "General Office"
+    }
+  ],
+  "staff": []
+}

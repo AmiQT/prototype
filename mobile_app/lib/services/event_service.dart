@@ -6,12 +6,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/event_model.dart';
 import 'auto_notification_service.dart';
 import '../config/supabase_config.dart';
+import '../config/backend_config.dart';
 
 class EventService {
   static const String baseUrl =
-      'https://prototype-348e.onrender.com'; // Render backend
-
-  static int _backendFailureCount = 0;
+      BackendConfig.baseUrl; // Use stable cloud backend
 
   // Get Supabase auth token for authentication
   static Future<String?> _getAuthToken() async {
@@ -28,21 +27,34 @@ class EventService {
   }
 
   Future<List<EventModel>> getAllEvents() async {
+    final stopwatch = Stopwatch()..start();
     try {
+      // MOBILE APP OPTIMIZATION: Skip custom backend, use Supabase directly
+      debugPrint(
+          'EventService: Using Supabase directly for mobile app (no custom backend delays)');
+      final result = await _getEventsFromSupabase();
+      stopwatch.stop();
+      debugPrint(
+          'EventService: Direct Supabase completed in ${stopwatch.elapsedMilliseconds}ms');
+      return result;
+
+      /* REMOVED FOR MOBILE: Custom backend calls (causes 30s delays)
       final token = await _getAuthToken();
       if (token == null) {
         debugPrint('EventService: No auth token, trying Supabase fallback');
         return await _getEventsFromSupabase();
       }
 
+      debugPrint('EventService: Attempting backend request...');
+
       final response = await http.get(
         Uri.parse('$baseUrl/api/events'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
-          'ngrok-skip-browser-warning': 'true',
         },
-      );
+      ).timeout(
+          const Duration(seconds: 3)); // Fast timeout to prevent 30s delays
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -70,19 +82,29 @@ class EventService {
           events.add(event);
         }
 
+        stopwatch.stop();
+        debugPrint(
+            'EventService: Backend success in ${stopwatch.elapsedMilliseconds}ms');
         return events;
       } else {
         _backendFailureCount++;
-        // Only log every 10th failure to reduce spam
-        if (_backendFailureCount % 10 == 1) {
-          debugPrint(
-              'EventService: Backend failed (${response.statusCode}), trying Supabase fallback [Failure #$_backendFailureCount]');
-        }
-        return await _getEventsFromSupabase();
+        stopwatch.stop();
+        debugPrint(
+            'EventService: Backend failed (${response.statusCode}) in ${stopwatch.elapsedMilliseconds}ms, trying Supabase fallback [Failure #$_backendFailureCount]');
+
+        final fallbackStopwatch = Stopwatch()..start();
+        final result = await _getEventsFromSupabase();
+        fallbackStopwatch.stop();
+        debugPrint(
+            'EventService: Supabase fallback completed in ${fallbackStopwatch.elapsedMilliseconds}ms');
+        return result;
       }
+      */ // End of commented custom backend code
     } catch (e) {
-      debugPrint('❌ Error loading events from backend: $e');
-      return await _getEventsFromSupabase();
+      stopwatch.stop();
+      debugPrint(
+          '❌ Error loading events from Supabase in ${stopwatch.elapsedMilliseconds}ms: $e');
+      return []; // Return empty list on error
     }
   }
 
@@ -93,7 +115,8 @@ class EventService {
           .from('events')
           .select('*')
           .eq('is_active', true) // Only get active events
-          .order('created_at', ascending: false);
+          .order('created_at', ascending: false)
+          .timeout(const Duration(seconds: 5)); // Prevent hanging
 
       final events = <EventModel>[];
       for (final eventData in response) {

@@ -4,7 +4,6 @@ import '../../services/notification_preferences_service.dart';
 import '../../models/notification_model.dart';
 import '../../utils/app_theme.dart';
 import '../../widgets/settings_widgets.dart';
-import '../../l10n/generated/app_localizations.dart';
 
 class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
@@ -38,7 +37,7 @@ class _NotificationSettingsScreenState
       child: Scaffold(
         backgroundColor: AppTheme.backgroundColor,
         appBar: AppBar(
-          title: Text(AppLocalizations.of(context).notifications),
+          title: const Text('Notifications'),
           backgroundColor: AppTheme.surfaceColor,
           foregroundColor: AppTheme.textPrimaryColor,
           elevation: 0,

@@ -40,7 +40,7 @@ class _EnhancedStudentDashboardState extends State<EnhancedStudentDashboard>
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 100), // FAST: Reduced from 300ms
       vsync: this,
     );
 
@@ -144,7 +144,8 @@ class _EnhancedStudentDashboardState extends State<EnhancedStudentDashboard>
           Theme.of(context).colorScheme.surface, // Keep dark for homepage
       body: SafeArea(
         child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
+          duration:
+              const Duration(milliseconds: 100), // FAST: Reduced from 300ms
           transitionBuilder: (Widget child, Animation<double> animation) {
             return SlideTransition(
               position: Tween<Offset>(
@@ -281,7 +282,8 @@ class _EnhancedStudentDashboardState extends State<EnhancedStudentDashboard>
     return GestureDetector(
       onTap: () => _onTabTapped(index),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration:
+            const Duration(milliseconds: 50), // ULTRA FAST: Reduced from 200ms
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected

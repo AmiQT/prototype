@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/supabase_config.dart';
+import '../config/backend_config.dart';
 
 class StudentAnalyticsService {
   static const String baseUrl =
-      'https://prototype-348e.onrender.com'; // Render backend
+      BackendConfig.baseUrl; // Use stable cloud backend
 
   // Get Supabase auth token for authentication
   static Future<String?> _getAuthToken() async {

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/supabase_auth_service.dart';
 import '../../utils/app_theme.dart';
-import '../../l10n/generated/app_localizations.dart';
 import '../../screens/student/showcase/post_creation_screen.dart';
 
 class ModernHomeHeader extends StatelessWidget {
@@ -178,7 +177,7 @@ class ModernHomeHeader extends StatelessWidget {
             ),
             const SizedBox(height: AppTheme.spaceXs),
             Text(
-              AppLocalizations.of(context).readyToShowcase,
+              'Ready to showcase?',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: Colors.white.withValues(alpha: 0.9),
                   ),
@@ -196,7 +195,7 @@ class ModernHomeHeader extends StatelessWidget {
           child: _buildQuickActionButton(
             context: context,
             icon: Icons.add_rounded,
-            label: AppLocalizations.of(context).createPost,
+            label: 'Create Post',
             onTap: onCreatePost,
           ),
         ),
@@ -205,7 +204,7 @@ class ModernHomeHeader extends StatelessWidget {
           child: _buildQuickActionButton(
             context: context,
             icon: Icons.camera_alt_rounded,
-            label: AppLocalizations.of(context).shareMoment,
+            label: 'Share Moment',
             onTap: () {
               // Navigate to post creation with camera focus
               Navigator.push(
@@ -273,13 +272,12 @@ class ModernHomeHeader extends StatelessWidget {
 
   String _getTimeOfDay(BuildContext context) {
     final hour = DateTime.now().hour;
-    final l10n = AppLocalizations.of(context);
     if (hour < 12) {
-      return l10n.goodMorning;
+      return 'Good Morning';
     } else if (hour < 17) {
-      return l10n.goodAfternoon;
+      return 'Good Afternoon';
     } else {
-      return l10n.goodEvening;
+      return 'Good Evening';
     }
   }
 }

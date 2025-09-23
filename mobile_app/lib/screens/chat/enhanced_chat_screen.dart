@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 // Removed OpenRouter service; Gemini-only
 import '../../services/gemini_chat_service.dart';
+import '../../services/fsktm_data_service.dart';
 import '../../services/chat_history_service.dart';
 import '../../services/supabase_auth_service.dart';
 import '../../models/chat_models.dart';
@@ -33,7 +34,6 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
 
   bool _isLoading = false;
   bool _isTyping = false;
-  bool _useGemini = true; // Gemini only
   String? _currentConversationId;
   String? _errorMessage;
   List<File> _selectedFiles = [];
@@ -60,7 +60,6 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
       // Gemini only: verify key presence
       final hasGeminiKey = AppConfig.hasGeminiApiKey;
       debugPrint('EnhancedChatScreen: Gemini API key available: $hasGeminiKey');
-      _useGemini = true;
 
       debugPrint('EnhancedChatScreen: Chat service initialized (Gemini only)');
       debugPrint('EnhancedChatScreen: Using Gemini service');
@@ -129,13 +128,44 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
     _scrollToBottom();
 
     try {
-      // Gemini-only send
-      final aiMessage = await _geminiService.sendMessage(
-        conversationId: _currentConversationId!,
-        content: content,
-        userId: userId,
-        attachments: _selectedFiles.isNotEmpty ? _selectedFiles : null,
-      );
+      ChatMessage aiMessage;
+
+      // Intelligent routing: FSKTM vs General AI
+      if (_isFSKTMQuestion(content)) {
+        // Route to FSKTM local data + Gemini AI
+
+        // Get FSKTM context from local data
+        final fsktmContext = await FSKTMDataService.getFSKTMContextForAI();
+
+        // Create enhanced prompt with FSKTM context
+        final enhancedPrompt = '''
+You are an AI assistant for FSKTM (Fakulti Sains Komputer dan Teknologi Maklumat) UTHM. 
+Use the following information to answer questions about FSKTM staff, departments, and faculty.
+
+$fsktmContext
+
+User Question: $content
+
+Please provide a helpful response based on the FSKTM information provided above. If asked about specific staff members, include their contact details. Answer in a friendly and professional manner.
+''';
+
+        // Send enhanced prompt to Gemini
+        aiMessage = await _geminiService.sendMessage(
+          conversationId: _currentConversationId!,
+          content: enhancedPrompt,
+          userId: userId,
+          attachments: _selectedFiles.isNotEmpty ? _selectedFiles : null,
+        );
+      } else {
+        // Route to General AI (Gemini)
+
+        aiMessage = await _geminiService.sendMessage(
+          conversationId: _currentConversationId!,
+          content: content,
+          userId: userId,
+          attachments: _selectedFiles.isNotEmpty ? _selectedFiles : null,
+        );
+      }
 
       setState(() {
         _messages.add(aiMessage);
@@ -168,47 +198,15 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
     });
   }
 
+  /// Check if question is about FSKTM using local data service
+  bool _isFSKTMQuestion(String message) {
+    return FSKTMDataService.isFSKTMQuery(message);
+  }
+
   void _onFilesSelected(List<File> files) {
     setState(() {
       _selectedFiles = files;
     });
-  }
-
-  Future<void> _testGeminiApi() async {
-    if (!_geminiService.hasApiKey) {
-      _showError('Gemini API key not configured');
-      return;
-    }
-
-    setState(() => _isTyping = true);
-
-    try {
-      final testMessage = await _geminiService.sendMessage(
-        conversationId: 'test_${DateTime.now().millisecondsSinceEpoch}',
-        content:
-            'Hello! Please respond with a **bold** greeting and tell me about UTHM.',
-        userId: 'test_user',
-      );
-
-      setState(() {
-        _messages.add(testMessage);
-        _isTyping = false;
-      });
-
-      _scrollToBottom();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Gemini API test successful!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      setState(() => _isTyping = false);
-      _showError('Gemini API test failed: $e');
-    }
   }
 
   void _showError(String message) {
@@ -270,17 +268,6 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
         centerTitle: true,
         elevation: 0,
         actions: [
-          // Debug button to test Gemini API
-          if (_useGemini)
-            IconButton(
-              icon: const Icon(Icons.science),
-              tooltip: 'Test Gemini API',
-              onPressed: _testGeminiApi,
-            ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: _showDebugInfo,
-          ),
           IconButton(
             icon: const Icon(Icons.info_outline),
             onPressed: _showUsageInfo,
@@ -404,53 +391,6 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
           isUser: _messages[index].role == MessageRole.user,
         );
       },
-    );
-  }
-
-  void _showDebugInfo() async {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Chat Debug Info'),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Service Status:',
-                  style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              Text(
-                  'Using Service: ${_useGemini ? "Gemini API" : "OpenRouter"}'),
-              if (_useGemini) ...[
-                Text('Gemini Service Available: ${_geminiService.hasApiKey}'),
-                const Text('Current AI Model: gemini-2.5-flash'),
-              ],
-              Text('Error Message: ${_errorMessage ?? "None"}'),
-              const SizedBox(height: 16),
-              Text('Environment:',
-                  style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              Text('Gemini API Key Present: ${AppConfig.hasGeminiApiKey}'),
-              if (AppConfig.getGeminiApiKeyPreview() != null)
-                Text('API Key Preview: ${AppConfig.getGeminiApiKeyPreview()}'),
-              const SizedBox(height: 16),
-              Text('Available Models:',
-                  style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              const Text('• gemini-2.5-flash (Current)'),
-              const Text('• gemini-1.5-pro'),
-              const Text('• gemini-1.5-flash'),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
     );
   }
 

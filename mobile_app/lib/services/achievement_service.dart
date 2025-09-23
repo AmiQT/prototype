@@ -5,15 +5,15 @@ import 'package:flutter/foundation.dart';
 import '../models/achievement_model.dart';
 import '../utils/error_handler.dart';
 import 'auto_notification_service.dart';
-import 'auth_service_supabase_ready.dart';
+import 'supabase_auth_service.dart';
 import 'dart:io';
 import '../config/supabase_config.dart';
+import '../config/backend_config.dart';
 
 class AchievementService {
-  static const String baseUrl =
-      'https://c3168f89d034.ngrok-free.app'; // ngrok tunnel
+  static const String baseUrl = BackendConfig.baseUrl; // Use stable backend URL
 
-  final AuthService _authService = AuthService();
+  final SupabaseAuthService _authService = SupabaseAuthService();
 
   // Get Supabase auth token for authentication
   static Future<String?> _getAuthToken() async {
@@ -277,9 +277,7 @@ class AchievementService {
           .select()
           .eq('category', type.toString().split('.').last);
 
-      return response
-          .map((item) => AchievementModel.fromJson(item))
-          .toList();
+      return response.map((item) => AchievementModel.fromJson(item)).toList();
     } catch (e) {
       debugPrint('Error fetching achievements by type: $e');
       return [];
@@ -307,7 +305,6 @@ class AchievementService {
       final response = await SupabaseConfig.from('achievements')
           .select()
           .eq('is_verified', false);
-
 
       return (response as List<dynamic>)
           .map(

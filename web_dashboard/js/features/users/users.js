@@ -329,38 +329,55 @@ async function handleAddUser(form) {
             throw new Error('Please fill in all required fields');
         }
         
-        // Create user in Supabase via backend API
-        console.log('Creating user in Supabase via backend API:', userData);
+        // ✅ FIX: SUPABASE DIRECT - Create user directly in Supabase
+        console.log('✅ Creating user directly in Supabase:', userData);
         
-        const createUserPayload = {
+        const { supabase } = await import('../../config/supabase-config.js');
+        
+        // Create auth user first
+        const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
             email: userData.email,
-            name: userData.name,
             password: userData.password,
-            role: userData.role,
-            department: userData.department,
-            matrix_id: userData.matrix_id,
-            status: 'active',
-            profile_completed: false,
-            is_active: true
-        };
-
-        const response = await makeAuthenticatedRequest(
-            API_ENDPOINTS.users.create,
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(createUserPayload)
-            }
-        );
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || `Failed to create user: ${response.status}`);
+            email_confirm: true
+        });
+        
+        if (authError) throw authError;
+        
+        // Insert user data into users table
+        const { data: newUser, error: userError } = await supabase
+            .from('users')
+            .insert({
+                id: authUser.user.id,
+                email: userData.email,
+                name: userData.name,
+                role: userData.role,
+                department: userData.department,
+                student_id: userData.matrix_id,
+                is_active: true,
+                profile_completed: false,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+            
+        if (userError) throw userError;
+        
+        // Insert profile data if needed
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert({
+                user_id: authUser.user.id,
+                full_name: userData.name,
+                department: userData.department,
+                student_id: userData.matrix_id,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            });
+            
+        if (profileError) {
+            console.warn('Profile creation failed (table may not exist):', profileError);
         }
-
-        const newUser = await response.json();
         
         // Add to local cache for immediate display
         allUsersCache.push(newUser);
@@ -370,10 +387,11 @@ async function handleAddUser(form) {
         form.reset();
         await loadUsersTable(); // Refresh the table
         
-        // Show success message with credentials
+        // ✅ FIX: Use professional notification instead of alert()
         setTimeout(() => {
-            alert(`User created successfully in Supabase!\n\nEmail: ${userData.email}\nPassword: ${userData.password}\n\nPlease share these credentials with the user.`);
+            addNotification(`New user created! Email: ${userData.email} | Password: ${userData.password}`, 'success', 8000);
         }, 500);
+        
     } catch (error) {
         console.error('Error creating user:', error);
         addNotification(error.message || 'Error creating user', 'error');

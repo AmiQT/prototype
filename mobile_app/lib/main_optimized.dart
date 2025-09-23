@@ -8,7 +8,6 @@ import 'providers/settings_provider.dart';
 import 'screens/splash_screen.dart';
 import 'widgets/network_aware_image.dart';
 import 'utils/app_theme.dart';
-import 'l10n/generated/app_localizations.dart';
 import 'config/supabase_config.dart';
 
 void main() async {
@@ -49,8 +48,6 @@ class OptimizedStudentTalentApp extends StatelessWidget {
             darkTheme: AppTheme.darkTheme,
             themeMode: ThemeMode.system,
             locale: const Locale('en'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
             home: const AppWrapper(),
             debugShowCheckedModeBanner: false,
           );

@@ -1,11 +1,12 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
+// import 'package:supabase_flutter/supabase_flutter.dart'; // Unused import removed
 import '../config/supabase_config.dart';
-import 'debug_config.dart';
+// Removed debug config for production
 
 class ProfileImageCleanup {
   static Future<void> cleanupPlaceholderUrls() async {
     try {
-      DebugConfig.logInit('Starting cleanup of placeholder URLs...');
+      // DebugConfig removed - logInit('Starting cleanup of placeholder URLs...');
 
       // Get all profiles with placeholder URLs
       final response = await SupabaseConfig.client
@@ -13,13 +14,12 @@ class ProfileImageCleanup {
           .select('id, full_name, profile_image_url')
           .like('profile_image_url', '%placeholder.com%');
 
-      if (response == null || response.isEmpty) {
-        DebugConfig.logInfo('No placeholder URLs found');
+      if (response.isEmpty) {
+        // DebugConfig removed - logInfo('No placeholder URLs found');
         return;
       }
 
-      DebugConfig.logInfo(
-          'Found ${response.length} profiles with placeholder URLs');
+      debugPrint('Found ${response.length} profiles with placeholder URLs');
 
       int cleanedCount = 0;
       for (final profile in response) {
@@ -29,19 +29,18 @@ class ProfileImageCleanup {
               .from('profiles')
               .update({'profile_image_url': null}).eq('id', profile['id']);
 
-          DebugConfig.logInfo(
+          debugPrint(
               'Cleaned up profile for ${profile['full_name']} (ID: ${profile['id']})');
           cleanedCount++;
         } catch (e) {
-          DebugConfig.logWarning(
-              'Failed to clean up profile ${profile['id']}: $e');
+          debugPrint('Failed to clean up profile ${profile['id']}: $e');
         }
       }
 
-      DebugConfig.logInfo(
+      debugPrint(
           'Cleanup completed successfully. Cleaned $cleanedCount profiles.');
     } catch (e) {
-      DebugConfig.logError('Error during cleanup: $e');
+      debugPrint('Error during cleanup: $e');
     }
   }
 

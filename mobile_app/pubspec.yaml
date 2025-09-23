@@ -2,13 +2,14 @@ name: student_talent_profiling_app
 description: A talent management system for UTHM students
 version: 1.0.0+1
 
+# Use main.dart as requested
+main: lib/main.dart
+
 environment:
   sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
-    sdk: flutter
-  flutter_localizations:
     sdk: flutter
   
   # UI Components
@@ -57,13 +58,14 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0
+  flutter_lints: ^2.0.3
   mockito: ^5.4.4
   build_runner: ^2.4.9
 
 flutter:
   uses-material-design: true
-  generate: true
+  # generate: true  # Temporarily disabled to fix build issues
   assets:
     - assets/images/
     - assets/.env
+    - assets/data/

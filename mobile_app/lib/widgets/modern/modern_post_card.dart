@@ -14,6 +14,7 @@ import '../showcase/linkedin_reactions_widget.dart';
 class ModernPostCard extends StatefulWidget {
   final ShowcasePostModel post;
   final UserModel? currentUser;
+  final String? currentUserReaction; // Current user's reaction for this post
   final Function(ShowcasePostModel) onLike;
   final Function(ShowcasePostModel) onComment;
   final Function(ShowcasePostModel) onShare;
@@ -28,6 +29,7 @@ class ModernPostCard extends StatefulWidget {
     super.key,
     required this.post,
     this.currentUser,
+    this.currentUserReaction,
     required this.onLike,
     required this.onComment,
     required this.onShare,
@@ -47,14 +49,12 @@ class _ModernPostCardState extends State<ModernPostCard>
   late Animation<double> _scaleAnimation;
   bool _isLiked = false;
 
-  // Counter for reducing console spam
-  int _noMediaCount = 0;
-
   @override
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 200),
+      duration:
+          const Duration(milliseconds: 50), // ULTRA FAST: Reduced from 200ms
       vsync: this,
     );
     _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
@@ -164,17 +164,9 @@ class _ModernPostCardState extends State<ModernPostCard>
                   _buildPostHeader(),
                   if (widget.post.content.isNotEmpty) _buildPostContent(),
                   if (widget.post.hasMedia) ...[
-                    // Only log media building every 50th time to reduce console spam
-                    Builder(builder: (context) {
-                      _noMediaCount++;
-                      return _buildMediaContent();
-                    }),
+                    _buildMediaContent(),
                   ] else ...[
-                    // Only log no media every 50th card to reduce console spam
-                    Builder(builder: (context) {
-                      _noMediaCount++;
-                      return const SizedBox.shrink();
-                    }),
+                    const SizedBox.shrink(),
                   ],
                   _buildEngagementSection(),
                   _buildActionButtons(),
@@ -303,6 +295,12 @@ class _ModernPostCardState extends State<ModernPostCard>
           color: AppTheme.textSecondaryColor,
         ),
         onPressed: () {
+          debugPrint(
+              '🔘 ModernPostCard: More button tapped for post ${widget.post.id}');
+          debugPrint('🔍 Current user ID: ${widget.currentUser?.id ?? "NULL"}');
+          debugPrint('🔍 Post user ID: ${widget.post.userId}');
+          debugPrint(
+              '🔍 Is owner: ${widget.currentUser?.id == widget.post.userId}');
           _showPostOptions(context);
         },
         iconSize: 20,
@@ -688,6 +686,7 @@ class _ModernPostCardState extends State<ModernPostCard>
             CompactReactionsWidget(
               post: widget.post,
               onReaction: widget.onReaction!,
+              currentUserReaction: widget.currentUserReaction,
             ),
 
           const SizedBox(height: AppTheme.spaceSm),
@@ -771,7 +770,11 @@ class _ModernPostCardState extends State<ModernPostCard>
             icon: Icons.chat_bubble_outline_rounded,
             label: 'Comment',
             color: AppTheme.textSecondaryColor,
-            onTap: () => widget.onComment(widget.post),
+            onTap: () {
+              debugPrint(
+                  '💬 ModernPostCard: Comment button tapped for post ${widget.post.id}');
+              widget.onComment(widget.post);
+            },
           ),
           _buildActionButton(
             icon: Icons.share_rounded,

@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/supabase_config.dart';
+import '../config/backend_config.dart';
 
 class BackendService {
-  static const String baseUrl =
-      'https://c3168f89d034.ngrok-free.app'; // ngrok tunnel
+  static const String baseUrl = BackendConfig.baseUrl; // Use stable backend URL
 
   // Get Supabase auth token for authentication
   static Future<String?> _getAuthToken() async {

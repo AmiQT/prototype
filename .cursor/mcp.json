@@ -1,12 +1,5 @@
 {
     "mcpServers": {
-      "Playwright": {
-        "command": "npx",
-        "args": [
-          "@playwright/mcp@latest"
-        ],
-        "env": {}
-      },
       "Context7": {
         "url": "https://mcp.context7.com/mcp",
         "headers": {}
@@ -43,6 +36,11 @@
       "Vercel": {
         "url": "https://mcp.vercel.com",
         "headers": {}
+      },
+      "dart-mcp": {
+        "command": "cmd",
+        "args": ["/c", "mcp-server", "--force-roots-fallback"],
+        "env": {}
       }
     }
   }

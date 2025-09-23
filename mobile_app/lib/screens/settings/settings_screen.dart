@@ -5,7 +5,6 @@ import '../../models/user_model.dart';
 import '../../widgets/settings_widgets.dart';
 import '../../widgets/settings/language_selector.dart';
 import '../../widgets/settings/theme_selector.dart';
-import '../../l10n/generated/app_localizations.dart';
 
 import 'account_settings_screen.dart';
 import 'security_settings_screen.dart';
@@ -28,6 +27,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _loadUserData();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Show any pending error messages after the widget tree is built
+    if (!_isLoading && _currentUser == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text(
+                  'No user data found. Please try logging out and back in.'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
+      });
+    }
+  }
+
   Future<void> _loadUserData() async {
     try {
       final authService =
@@ -43,25 +61,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
         setState(() {
           _isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(
-                'No user data found. Please try logging out and back in.'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        // Don't show snackbar here - let didChangeDependencies handle it
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error loading user data: ${e.toString()}'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        // Show error message after the widget tree is built
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error loading user data: ${e.toString()}'),
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+          }
+        });
       }
     }
   }
@@ -255,26 +272,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
 
                   // Account Section
-                  SettingsSectionHeader(
-                    title: AppLocalizations.of(context).account,
-                    subtitle: AppLocalizations.of(context).manageYourAccount,
+                  const SettingsSectionHeader(
+                    title: 'Account',
+                    subtitle: 'Manage your account',
                   ),
                   SettingsCard(
                     child: Column(
                       children: [
                         SettingsItem(
                           icon: Icons.person,
-                          title:
-                              AppLocalizations.of(context).accountInformation,
-                          subtitle: AppLocalizations.of(context)
-                              .updatePersonalDetails,
+                          title: 'Account Information',
+                          subtitle: 'Update personal details',
                           onTap: _navigateToAccountSettings,
                         ),
                         SettingsItem(
                           icon: Icons.security,
-                          title: AppLocalizations.of(context).security,
-                          subtitle:
-                              AppLocalizations.of(context).passwordAndSecurity,
+                          title: 'Security',
+                          subtitle: 'Password and security',
                           onTap: _navigateToSecuritySettings,
                           showDivider: false,
                         ),
@@ -283,10 +297,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
 
                   // Preferences Section
-                  SettingsSectionHeader(
-                    title: AppLocalizations.of(context).preferences,
-                    subtitle:
-                        AppLocalizations.of(context).customizeYourExperience,
+                  const SettingsSectionHeader(
+                    title: 'Preferences',
+                    subtitle: 'Customize your experience',
                   ),
 
                   // Theme Selector
@@ -297,9 +310,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       children: [
                         SettingsItem(
                           icon: Icons.notifications,
-                          title: AppLocalizations.of(context).notifications,
-                          subtitle: AppLocalizations.of(context)
-                              .manageNotificationPreferences,
+                          title: 'Notifications',
+                          subtitle: 'Manage notification preferences',
                           onTap: _navigateToNotificationSettings,
                         ),
                         const LanguageSelector(),
@@ -308,18 +320,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
 
                   // Support Section
-                  SettingsSectionHeader(
-                    title: AppLocalizations.of(context).support,
-                    subtitle:
-                        AppLocalizations.of(context).getHelpAndInformation,
+                  const SettingsSectionHeader(
+                    title: 'Support',
+                    subtitle: 'Get help and information',
                   ),
                   SettingsCard(
                     child: Column(
                       children: [
                         SettingsItem(
                           icon: Icons.help,
-                          title: AppLocalizations.of(context).helpSupport,
-                          subtitle: AppLocalizations.of(context).getHelpWithApp,
+                          title: 'Help & Support',
+                          subtitle: 'Get help with app',
                           onTap: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -330,16 +341,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                         SettingsItem(
                           icon: Icons.info,
-                          title: AppLocalizations.of(context).about,
-                          subtitle: AppLocalizations.of(context)
-                              .appVersionAndInformation,
+                          title: 'About',
+                          subtitle: 'App version and information',
                           onTap: _showAboutDialog,
                         ),
                         SettingsItem(
                           icon: Icons.privacy_tip,
-                          title: AppLocalizations.of(context).privacyPolicy,
-                          subtitle:
-                              AppLocalizations.of(context).readPrivacyPolicy,
+                          title: 'Privacy Policy',
+                          subtitle: 'Read privacy policy',
                           onTap: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -355,7 +364,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   // Sign Out
                   const SizedBox(height: 16),
                   SettingsActionButton(
-                    text: AppLocalizations.of(context).logout,
+                    text: 'Logout',
                     icon: Icons.logout,
                     onPressed: _handleSignOut,
                     isDestructive: true,

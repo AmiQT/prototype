@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../utils/app_theme.dart';
-import '../../l10n/generated/app_localizations.dart';
 
 class InterestsSelector extends StatefulWidget {
   final List<String> selectedInterests;
@@ -17,58 +16,148 @@ class InterestsSelector extends StatefulWidget {
 }
 
 class _InterestsSelectorState extends State<InterestsSelector> {
-  final TextEditingController _customInterestController = TextEditingController();
+  final TextEditingController _customInterestController =
+      TextEditingController();
   late List<String> _selectedInterests;
 
   // Predefined interests categories
   static const Map<String, List<String>> _interestCategories = {
     'Technology': [
-      'Artificial Intelligence', 'Machine Learning', 'Blockchain', 'IoT',
-      'Cybersecurity', 'Cloud Computing', 'Mobile Development', 'Web Development',
-      'Game Development', 'Robotics', 'Virtual Reality', 'Augmented Reality',
-      'Data Science', 'Software Engineering', 'DevOps'
+      'Artificial Intelligence',
+      'Machine Learning',
+      'Blockchain',
+      'IoT',
+      'Cybersecurity',
+      'Cloud Computing',
+      'Mobile Development',
+      'Web Development',
+      'Game Development',
+      'Robotics',
+      'Virtual Reality',
+      'Augmented Reality',
+      'Data Science',
+      'Software Engineering',
+      'DevOps'
     ],
     'Creative Arts': [
-      'Photography', 'Digital Art', 'Graphic Design', 'Music Production',
-      'Video Editing', 'Animation', 'Creative Writing', 'Painting',
-      'Drawing', 'Sculpture', 'Fashion Design', 'Interior Design',
-      'Film Making', 'Theater', 'Dance'
+      'Photography',
+      'Digital Art',
+      'Graphic Design',
+      'Music Production',
+      'Video Editing',
+      'Animation',
+      'Creative Writing',
+      'Painting',
+      'Drawing',
+      'Sculpture',
+      'Fashion Design',
+      'Interior Design',
+      'Film Making',
+      'Theater',
+      'Dance'
     ],
     'Sports & Fitness': [
-      'Football', 'Basketball', 'Badminton', 'Tennis', 'Swimming',
-      'Running', 'Cycling', 'Gym', 'Yoga', 'Martial Arts',
-      'Rock Climbing', 'Hiking', 'Volleyball', 'Table Tennis',
-      'Fitness Training', 'CrossFit'
+      'Football',
+      'Basketball',
+      'Badminton',
+      'Tennis',
+      'Swimming',
+      'Running',
+      'Cycling',
+      'Gym',
+      'Yoga',
+      'Martial Arts',
+      'Rock Climbing',
+      'Hiking',
+      'Volleyball',
+      'Table Tennis',
+      'Fitness Training',
+      'CrossFit'
     ],
     'Academic & Research': [
-      'Research', 'Academic Writing', 'Mathematics', 'Physics',
-      'Chemistry', 'Biology', 'Psychology', 'Philosophy',
-      'History', 'Literature', 'Economics', 'Political Science',
-      'Sociology', 'Anthropology', 'Environmental Science'
+      'Research',
+      'Academic Writing',
+      'Mathematics',
+      'Physics',
+      'Chemistry',
+      'Biology',
+      'Psychology',
+      'Philosophy',
+      'History',
+      'Literature',
+      'Economics',
+      'Political Science',
+      'Sociology',
+      'Anthropology',
+      'Environmental Science'
     ],
     'Business & Entrepreneurship': [
-      'Entrepreneurship', 'Startup', 'Business Development', 'Marketing',
-      'Sales', 'Finance', 'Investment', 'E-commerce', 'Digital Marketing',
-      'Social Media Marketing', 'Brand Management', 'Project Management',
-      'Leadership', 'Innovation', 'Strategy'
+      'Entrepreneurship',
+      'Startup',
+      'Business Development',
+      'Marketing',
+      'Sales',
+      'Finance',
+      'Investment',
+      'E-commerce',
+      'Digital Marketing',
+      'Social Media Marketing',
+      'Brand Management',
+      'Project Management',
+      'Leadership',
+      'Innovation',
+      'Strategy'
     ],
     'Social & Community': [
-      'Volunteering', 'Community Service', 'Social Work', 'Teaching',
-      'Mentoring', 'Public Speaking', 'Debate', 'Student Organizations',
-      'Cultural Activities', 'Environmental Conservation', 'Charity Work',
-      'Event Organization', 'Networking', 'Social Impact'
+      'Volunteering',
+      'Community Service',
+      'Social Work',
+      'Teaching',
+      'Mentoring',
+      'Public Speaking',
+      'Debate',
+      'Student Organizations',
+      'Cultural Activities',
+      'Environmental Conservation',
+      'Charity Work',
+      'Event Organization',
+      'Networking',
+      'Social Impact'
     ],
     'Hobbies & Lifestyle': [
-      'Reading', 'Cooking', 'Baking', 'Gardening', 'Travel',
-      'Languages', 'Board Games', 'Video Games', 'Collecting',
-      'DIY Projects', 'Crafts', 'Knitting', 'Woodworking',
-      'Astronomy', 'Nature', 'Pets'
+      'Reading',
+      'Cooking',
+      'Baking',
+      'Gardening',
+      'Travel',
+      'Languages',
+      'Board Games',
+      'Video Games',
+      'Collecting',
+      'DIY Projects',
+      'Crafts',
+      'Knitting',
+      'Woodworking',
+      'Astronomy',
+      'Nature',
+      'Pets'
     ],
     'Entertainment': [
-      'Movies', 'TV Series', 'Anime', 'K-Pop', 'Music',
-      'Concerts', 'Festivals', 'Stand-up Comedy', 'Podcasts',
-      'YouTube', 'Streaming', 'Gaming', 'Esports',
-      'Social Media', 'Memes'
+      'Movies',
+      'TV Series',
+      'Anime',
+      'K-Pop',
+      'Music',
+      'Concerts',
+      'Festivals',
+      'Stand-up Comedy',
+      'Podcasts',
+      'YouTube',
+      'Streaming',
+      'Gaming',
+      'Esports',
+      'Social Media',
+      'Memes'
     ]
   };
 
@@ -86,8 +175,6 @@ class _InterestsSelectorState extends State<InterestsSelector> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceMd),
       decoration: BoxDecoration(
@@ -115,60 +202,63 @@ class _InterestsSelectorState extends State<InterestsSelector> {
               ),
               const SizedBox(width: AppTheme.spaceSm),
               Text(
-                l10n.interests,
+                'Interests',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.secondaryColor,
-                ),
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.secondaryColor,
+                    ),
               ),
             ],
           ),
-          
+
           const SizedBox(height: AppTheme.spaceSm),
-          
+
           Text(
-            l10n.selectYourInterests,
+            'Select Your Interests',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppTheme.grayColor,
-            ),
+                  color: AppTheme.grayColor,
+                ),
           ),
-          
+
           const SizedBox(height: AppTheme.spaceMd),
-          
+
           // Selected Interests Display
           if (_selectedInterests.isNotEmpty) ...[
             Text(
-              '${l10n.selectedInterests} (${_selectedInterests.length})',
+              'Selected Interests (${_selectedInterests.length})',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
             const SizedBox(height: AppTheme.spaceSm),
             Wrap(
               spacing: AppTheme.spaceXs,
               runSpacing: AppTheme.spaceXs,
-              children: _selectedInterests.map((interest) => _buildSelectedInterestChip(interest)).toList(),
+              children: _selectedInterests
+                  .map((interest) => _buildSelectedInterestChip(interest))
+                  .toList(),
             ),
             const SizedBox(height: AppTheme.spaceMd),
           ],
-          
+
           // Add Custom Interest
           _buildAddCustomInterestSection(),
-          
+
           const SizedBox(height: AppTheme.spaceMd),
-          
+
           // Interest Categories
           Text(
-            l10n.interestCategories,
+            'Interest Categories',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+                  fontWeight: FontWeight.w600,
+                ),
           ),
-          
+
           const SizedBox(height: AppTheme.spaceSm),
-          
+
           // Categories List
-          ..._interestCategories.entries.map((category) => _buildInterestCategory(category.key, category.value)),
+          ..._interestCategories.entries.map((category) =>
+              _buildInterestCategory(category.key, category.value)),
         ],
       ),
     );
@@ -211,10 +301,11 @@ class _InterestsSelectorState extends State<InterestsSelector> {
           Expanded(
             child: TextField(
               controller: _customInterestController,
-              decoration: InputDecoration(
-                hintText: AppLocalizations.of(context).addCustomInterest,
+              decoration: const InputDecoration(
+                hintText: 'Add custom interest',
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceSm),
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: AppTheme.spaceSm),
               ),
               onSubmitted: _addCustomInterest,
             ),
@@ -236,9 +327,9 @@ class _InterestsSelectorState extends State<InterestsSelector> {
       title: Text(
         categoryName,
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w600,
-          color: AppTheme.secondaryColor,
-        ),
+              fontWeight: FontWeight.w600,
+              color: AppTheme.secondaryColor,
+            ),
       ),
       leading: Icon(
         _getCategoryIcon(categoryName),
@@ -250,7 +341,9 @@ class _InterestsSelectorState extends State<InterestsSelector> {
           child: Wrap(
             spacing: AppTheme.spaceXs,
             runSpacing: AppTheme.spaceXs,
-            children: interests.map((interest) => _buildInterestChip(interest)).toList(),
+            children: interests
+                .map((interest) => _buildInterestChip(interest))
+                .toList(),
           ),
         ),
         const SizedBox(height: AppTheme.spaceSm),
@@ -260,7 +353,7 @@ class _InterestsSelectorState extends State<InterestsSelector> {
 
   Widget _buildInterestChip(String interest) {
     final isSelected = _selectedInterests.contains(interest);
-    
+
     return FilterChip(
       label: Text(
         interest,
@@ -316,7 +409,8 @@ class _InterestsSelectorState extends State<InterestsSelector> {
 
   void _addCustomInterest(String interest) {
     final trimmedInterest = interest.trim();
-    if (trimmedInterest.isNotEmpty && !_selectedInterests.contains(trimmedInterest)) {
+    if (trimmedInterest.isNotEmpty &&
+        !_selectedInterests.contains(trimmedInterest)) {
       setState(() {
         _selectedInterests.add(trimmedInterest);
         _customInterestController.clear();

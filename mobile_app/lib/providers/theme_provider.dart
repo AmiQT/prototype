@@ -12,8 +12,11 @@ class ThemeProvider extends ChangeNotifier {
   bool get isDarkMode => _isDarkMode;
   bool get isSystemTheme => _isSystemTheme;
 
+  bool _isInitialized = false;
+
   ThemeProvider() {
-    _loadThemeMode();
+    // Delay theme loading slightly to prevent interference with app initialization
+    Future.microtask(() => _loadThemeMode());
   }
 
   Future<void> _loadThemeMode() async {
@@ -45,6 +48,9 @@ class ThemeProvider extends ChangeNotifier {
         _isSystemTheme = true;
         _updateSystemTheme();
       }
+
+      _isInitialized = true;
+      // Only notify listeners after initialization is complete
       notifyListeners();
     } catch (e) {
       debugPrint('Error loading theme mode: $e');
@@ -52,6 +58,7 @@ class ThemeProvider extends ChangeNotifier {
       _themeMode = ThemeMode.system;
       _isSystemTheme = true;
       _updateSystemTheme();
+      _isInitialized = true;
     }
   }
 
@@ -62,7 +69,7 @@ class ThemeProvider extends ChangeNotifier {
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
-    if (_themeMode == mode) return;
+    if (_themeMode == mode || !_isInitialized) return;
 
     _themeMode = mode;
 

@@ -5,7 +5,6 @@ import '../../../services/event_service.dart';
 import '../../../services/supabase_auth_service.dart';
 import '../../../utils/app_theme.dart';
 import '../../../widgets/modern/modern_event_card.dart';
-import '../../../l10n/generated/app_localizations.dart';
 import 'modern_event_detail_screen.dart';
 
 class FavoriteEventsScreen extends StatefulWidget {
@@ -89,9 +88,7 @@ class _FavoriteEventsScreenState extends State<FavoriteEventsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              isFavorite
-                  ? AppLocalizations.of(context).removedFromFavorites
-                  : AppLocalizations.of(context).addedToFavorites,
+              isFavorite ? 'Removed from favorites' : 'Added to favorites',
             ),
             backgroundColor: AppTheme.successColor,
           ),
@@ -101,8 +98,7 @@ class _FavoriteEventsScreenState extends State<FavoriteEventsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)
-                .errorUpdatingFavorites(e.toString())),
+            content: Text('Error updating favorites: ${e.toString()}'),
             backgroundColor: AppTheme.errorColor,
           ),
         );
@@ -135,9 +131,9 @@ class _FavoriteEventsScreenState extends State<FavoriteEventsScreen> {
       appBar: AppBar(
         backgroundColor: AppTheme.primaryColor,
         foregroundColor: Colors.white,
-        title: Text(
-          AppLocalizations.of(context).favoriteEvents,
-          style: const TextStyle(
+        title: const Text(
+          'Favorite Events',
+          style: TextStyle(
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -171,7 +167,7 @@ class _FavoriteEventsScreenState extends State<FavoriteEventsScreen> {
             ),
             const SizedBox(height: AppTheme.spaceLg),
             Text(
-              AppLocalizations.of(context).pleaseLoginToViewFavorites,
+              'Please login to view favorites',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: Colors.grey[600],
                   ),
@@ -188,7 +184,7 @@ class _FavoriteEventsScreenState extends State<FavoriteEventsScreen> {
                   vertical: AppTheme.spaceMd,
                 ),
               ),
-              child: Text(AppLocalizations.of(context).goBack),
+              child: const Text('Go Back'),
             ),
           ],
         ),
@@ -210,7 +206,7 @@ class _FavoriteEventsScreenState extends State<FavoriteEventsScreen> {
             ),
             const SizedBox(height: AppTheme.spaceLg),
             Text(
-              AppLocalizations.of(context).noFavoriteEvents,
+              'No favorite events',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: Colors.grey[600],
                     fontWeight: FontWeight.bold,

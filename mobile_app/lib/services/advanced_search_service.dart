@@ -2,10 +2,11 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:http/http.dart' as http;
 import '../config/supabase_config.dart';
+import '../config/backend_config.dart';
 
 class AdvancedSearchService {
   static const String baseUrl =
-      'https://prototype-348e.onrender.com'; // Render backend
+      BackendConfig.baseUrl; // Use stable cloud backend
 
   // Get Supabase auth token for authentication
   static Future<String?> _getAuthToken() async {
@@ -217,22 +218,24 @@ class AdvancedSearchService {
 
       // Filter results in memory if needed (simple approach)
       List<Map<String, dynamic>> filteredResults = List.from(results);
-      
+
       if (query != null && query.isNotEmpty) {
         filteredResults = filteredResults.where((profile) {
-          final fullName = (profile['full_name'] ?? '').toString().toLowerCase();
+          final fullName =
+              (profile['full_name'] ?? '').toString().toLowerCase();
           final bio = (profile['bio'] ?? '').toString().toLowerCase();
           final dept = (profile['department'] ?? '').toString().toLowerCase();
           final searchQuery = query.toLowerCase();
-          return fullName.contains(searchQuery) || 
-                 bio.contains(searchQuery) || 
-                 dept.contains(searchQuery);
+          return fullName.contains(searchQuery) ||
+              bio.contains(searchQuery) ||
+              dept.contains(searchQuery);
         }).toList();
       }
-      
+
       if (department != null && department.isNotEmpty) {
         filteredResults = filteredResults.where((profile) {
-          final profileDept = (profile['department'] ?? '').toString().toLowerCase();
+          final profileDept =
+              (profile['department'] ?? '').toString().toLowerCase();
           return profileDept.contains(department.toLowerCase());
         }).toList();
       }

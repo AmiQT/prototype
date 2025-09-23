@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/supabase_auth_service.dart';
 import '../../utils/app_theme.dart';
-import '../../l10n/generated/app_localizations.dart';
 
 class ModernEventHeader extends StatefulWidget {
   final VoidCallback? onSearchTap;
@@ -53,7 +52,7 @@ class _ModernEventHeaderState extends State<ModernEventHeader> {
     return Container(
       decoration: const BoxDecoration(
         gradient: AppTheme.primaryGradient,
-        borderRadius: const BorderRadius.only(
+        borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(AppTheme.radiusXl),
           bottomRight: Radius.circular(AppTheme.radiusXl),
         ),
@@ -210,7 +209,7 @@ class _ModernEventHeaderState extends State<ModernEventHeader> {
                   ),
             ),
             Text(
-              AppLocalizations.of(context).discoverEvents,
+              'Discover Events',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.white.withValues(alpha: 0.9),
                   ),
@@ -235,7 +234,7 @@ class _ModernEventHeaderState extends State<ModernEventHeader> {
         controller: _searchController,
         style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
-          hintText: AppLocalizations.of(context).searchEvents,
+          hintText: 'Search events',
           hintStyle: TextStyle(
             color: Colors.white.withValues(alpha: 0.7),
           ),
@@ -276,7 +275,7 @@ class _ModernEventHeaderState extends State<ModernEventHeader> {
           child: _buildQuickActionButton(
             context: context,
             icon: Icons.filter_list_rounded,
-            label: AppLocalizations.of(context).filterEvents,
+            label: 'Filter Events',
             onTap: widget.onFilterTap,
           ),
         ),
@@ -285,7 +284,7 @@ class _ModernEventHeaderState extends State<ModernEventHeader> {
           child: _buildQuickActionButton(
             context: context,
             icon: Icons.favorite_rounded,
-            label: AppLocalizations.of(context).favorites,
+            label: 'Favorites',
             onTap: widget.onFavoritesTap,
             badge: widget.favoriteCount,
           ),
@@ -369,13 +368,12 @@ class _ModernEventHeaderState extends State<ModernEventHeader> {
 
   String _getTimeOfDay() {
     final hour = DateTime.now().hour;
-    final l10n = AppLocalizations.of(context);
     if (hour < 12) {
-      return l10n.goodMorning;
+      return 'Good Morning';
     } else if (hour < 17) {
-      return l10n.goodAfternoon;
+      return 'Good Afternoon';
     } else {
-      return l10n.goodEvening;
+      return 'Good Evening';
     }
   }
 }

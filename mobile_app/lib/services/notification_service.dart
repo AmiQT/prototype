@@ -4,16 +4,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/notification_model.dart';
 import 'notification_preferences_service.dart';
 import '../config/supabase_config.dart';
+import '../config/backend_config.dart';
 
 /// Service for managing in-app notifications
 class NotificationService {
-  static const String baseUrl =
-      'https://c3168f89d034.ngrok-free.app'; // ngrok tunnel
+  static const String baseUrl = BackendConfig.baseUrl; // Use stable backend URL
   static const String _notificationsKey = 'app_notifications';
   static const String _unreadCountKey = 'unread_notifications_count';
   static const int _maxStoredNotifications = 100;
-
-
 
   final List<AppNotification> _notifications = [];
   final List<Function(List<AppNotification>)> _listeners = [];
@@ -65,8 +63,6 @@ class NotificationService {
     debugPrint(
         'NotificationService: Supabase does not support real-time listeners for collections.');
   }
-
-
 
   /// Create a notification (saves both locally and to Firestore)
   Future<void> createNotification({

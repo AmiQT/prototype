@@ -4,9 +4,12 @@
  */
 
 const BACKEND_CONFIG = {
-  // COMMENTED OUT: Custom backend - Using Supabase direct calls only
-  // baseUrl: window.location.origin,
-  baseUrl: null, // Disabled for Supabase-only approach
+  // ✅ ARCHITECTURE: Custom backend ONLY for data mining & analytics
+  // All CRUD operations use Supabase direct calls
+  baseUrl: null, // Disabled for regular operations
+  
+  // Data mining endpoints (if backend is deployed for analytics)
+  dataMiningUrl: null, // Will be set when data mining features are needed
   
   // API Endpoints
   endpoints: {
@@ -109,48 +112,11 @@ async function getAuthHeaders() {
   };
 }
 
-// COMMENTED OUT: Backend connection test - Using Supabase only
-// async function testBackendConnection() {
-//   try {
-//     const response = await fetch(`${BACKEND_CONFIG.baseUrl}/health`, {
-//       method: 'GET',
-//       headers: BACKEND_CONFIG.cors.headers,
-//       timeout: BACKEND_CONFIG.timeout
-//     });
-//     return response.ok;
-//   } catch (error) {
-//     console.warn('Backend connection test failed, using fallback:', error.message);
-//     return false;
-//   }
-// }
-
 // Fallback function for Supabase-only approach
 async function testBackendConnection() {
   console.warn('Custom backend disabled - using Supabase only');
   return false; // Always return false since no backend
 }
-
-// COMMENTED OUT: Custom backend requests - Using Supabase direct calls only
-// async function makeAuthenticatedRequest(endpoint, options = {}) {
-//   try {
-//     const url = getApiUrl(endpoint);
-//     const headers = await getAuthHeaders();
-//     
-//     const response = await fetch(url, {
-//       ...options,
-//       headers: { ...headers, ...options.headers }
-//     });
-//     
-//     if (!response.ok) {
-//       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-//     }
-//     
-//     return await response.json();
-//   } catch (error) {
-//     console.error('Authenticated request failed:', error);
-//     throw error;
-//   }
-// }
 
 // Fallback function for Supabase-only approach
 async function makeAuthenticatedRequest(endpoint, options = {}) {

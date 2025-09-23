@@ -500,8 +500,9 @@ class _ModernEventCardState extends State<ModernEventCard>
   bool _isValidImageUrl(String url) {
     if (url.isEmpty) return false;
     if (url.startsWith('data:')) return false;
-    if (url.contains('via.placeholder.com'))
+    if (url.contains('via.placeholder.com')) {
       return false; // Block problematic placeholder
+    }
     try {
       final uri = Uri.parse(url);
       return uri.hasScheme && (uri.scheme == 'http' || uri.scheme == 'https');

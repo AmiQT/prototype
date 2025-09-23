@@ -10,8 +10,7 @@ import '../../../widgets/modern/modern_post_card.dart';
 
 import '../../../utils/app_theme.dart';
 import '../../../widgets/showcase/share_widget.dart';
-import '../../../widgets/animations/loading_animations.dart';
-import '../../../utils/animation_system.dart';
+// Using native Flutter widgets for competition simplicity
 import 'post_creation_screen.dart';
 import 'post_detail_screen.dart';
 import '../../profile/user_profile_screen.dart';
@@ -52,14 +51,40 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
   PostCategory? _selectedCategory;
   UserModel? _currentUser;
 
-  // Pagination
-  static const int _postsPerPage = 10;
+  // Track current user reactions for each post (LinkedIn-style)
+  Map<String, String?> _userReactions = {};
 
-  // Stream subscription
+  // Pagination - OPTIMIZED for faster initial load
+  static const int _postsPerPage =
+      6; // Reduced from 10 for faster homepage loading
+
+  // Stream subscription with lifecycle management
   StreamSubscription<List<ShowcasePostModel>>? _postsSubscription;
+  bool _isSubscriptionActive = false; // Prevent multiple subscriptions
+
+  /// Batch state updates to reduce setState calls and improve performance
+  void _updateFeedState({
+    List<ShowcasePostModel>? posts,
+    bool? isLoading,
+    bool? hasMore,
+    String? error,
+    bool? clearPosts = false,
+    PostCategory? selectedCategory,
+  }) {
+    if (!mounted) return;
+
+    setState(() {
+      if (clearPosts == true) _posts.clear();
+      if (posts != null) _posts = posts;
+      if (isLoading != null) _isLoading = isLoading;
+      if (hasMore != null) _hasMore = hasMore;
+      if (error != null) _error = error;
+      if (selectedCategory != null) _selectedCategory = selectedCategory;
+    });
+  }
 
   // Loading progress
-  double _loadingProgress = 0.0;
+  // Removed unused _loadingProgress field
 
   @override
   bool get wantKeepAlive => true;
@@ -68,49 +93,55 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
   void initState() {
     super.initState();
     _selectedCategory = widget.filterCategory;
-    _loadCurrentUser();
     _setupScrollListener();
 
-    // Show loading state immediately for better UX during hot restart
-    setState(() {
-      _isLoading = true;
+    // Show loading state initially for better UX
+    _updateFeedState(isLoading: true);
+
+    // Initialize with proper auth loading
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeWithAuth();
     });
+  }
 
-    // Preload common data for faster access
-    _preloadData();
+  Future<void> _initializeWithAuth() async {
+    // Load current user with retry mechanism
+    await _loadCurrentUserWithRetry();
 
-    // Only setup real-time subscription if enabled
+    // FIXED: Start real-time subscription immediately for instant data
     if (_enableRealTimeUpdates) {
       _setupRealTimeSubscription();
     } else {
-      // Load initial posts without real-time updates
-      _loadInitialPosts();
+      _smartRefresh();
     }
   }
 
-  /// Preload data for faster access
-  Future<void> _preloadData() async {
-    try {
-      // Preload common data in background
-      await _showcaseService.preloadCommonData();
-    } catch (e) {
-      debugPrint('ShowcaseFeedScreen: Error preloading data: $e');
-    }
-  }
+  // REMOVED: Unused methods _initializeDataLoading and _preloadData to eliminate duplicate API calls
 
-  /// Setup real-time subscription for posts (ultra-fast)
+  /// Setup real-time subscription with smart management
   void _setupRealTimeSubscription() {
-    try {
-      // Show loading state immediately for better UX during hot restart
-      setState(() {
-        _isLoading = true;
-        _posts.clear();
-      });
+    // Prevent multiple subscription creation
+    if (_isSubscriptionActive) {
+      debugPrint(
+          'ShowcaseFeedScreen: Subscription already active, skipping...');
+      return;
+    }
 
-      // Setup ultra-fast real-time subscription
+    debugPrint(
+        'ShowcaseFeedScreen: Setting up smart real-time subscription...');
+
+    try {
+      // Cancel any existing subscription first to prevent memory leaks
+      _postsSubscription?.cancel();
+      _isSubscriptionActive = true;
+
+      // FIXED: Don't show loading state immediately - let subscription handle it
+      // _updateFeedState(isLoading: true, clearPosts: true); // REMOVED
+
+      // Setup ULTRA-FAST real-time subscription - OPTIMIZED for 5-second refresh
       _postsSubscription = _showcaseService
           .getShowcasePostsRealtimeStream(
-        limit: _postsPerPage,
+        limit: 6, // Slightly larger batch for better content variety
         category: _selectedCategory,
       )
           .listen(
@@ -127,91 +158,164 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
           }
 
           if (mounted) {
-            setState(() {
-              _posts = posts;
-              _isLoading = false;
-              _hasMore = posts.length >= _postsPerPage;
-              _error = null;
-            });
+            // SMART UPDATE: Only rebuild UI if data actually changed
+            final hasChanges = _posts.length != posts.length ||
+                _posts.asMap().entries.any((entry) {
+                  final index = entry.key;
+                  final oldPost = entry.value;
+                  final newPost = index < posts.length ? posts[index] : null;
 
-            // Only log feed update every 20th time
-            if (_updateCount % 20 == 1) {
+                  return newPost == null ||
+                      oldPost.id != newPost.id ||
+                      oldPost.likes.length != newPost.likes.length ||
+                      oldPost.comments.length != newPost.comments.length ||
+                      oldPost.reactions != newPost.reactions;
+                });
+
+            if (hasChanges || _posts.isEmpty) {
               debugPrint(
-                  'ShowcaseFeedScreen: Feed updated with ${posts.length} posts [Update #$_updateCount]');
+                  'ShowcaseFeedScreen: 🔄 Real-time changes detected - updating UI');
+              setState(() {
+                _posts = posts;
+                _isLoading = false; // Force loading state to false
+                _hasMore = posts.length >= _postsPerPage;
+                _error = null;
+              });
+
+              // Only log feed update every 20th time
+              if (_updateCount % 20 == 1) {
+                debugPrint(
+                    'ShowcaseFeedScreen: Feed updated with ${posts.length} posts [Update #$_updateCount] - Loading dismissed');
+              }
+            } else {
+              debugPrint(
+                  'ShowcaseFeedScreen: No real-time changes detected - UI stays the same');
             }
           }
         },
         onError: (error) {
           debugPrint(
               'ShowcaseFeedScreen: Ultra-fast real-time subscription error: $error');
+          _isSubscriptionActive = false; // Reset flag on error
           if (mounted) {
-            setState(() {
-              _error = error.toString();
-              _isLoading = false;
-            });
+            _updateFeedState(
+              error: error.toString(),
+              isLoading: false,
+            );
           }
-          // Fallback to manual loading
-          _loadInitialPosts();
+        },
+        onDone: () {
+          _isSubscriptionActive = false; // Reset flag when subscription ends
+          debugPrint('ShowcaseFeedScreen: Real-time subscription ended');
+          // Smart fallback - only if no posts loaded
+          if (_posts.isEmpty && mounted) {
+            _smartRefresh(); // Remove await from onDone callback
+          }
         },
       );
     } catch (e) {
-      debugPrint(
-          'ShowcaseFeedScreen: Error setting up ultra-fast subscription: $e');
-      // Fallback to manual loading
-      _loadInitialPosts();
+      _isSubscriptionActive = false; // Reset flag on exception
+      debugPrint('ShowcaseFeedScreen: Error setting up subscription: $e');
+      // Smart fallback - only if no posts loaded and mounted
+      if (_posts.isEmpty && mounted) {
+        _smartRefresh(); // Remove await from catch block
+      }
     }
   }
 
-  /// Refresh feed manually (called from external sources)
+  /// Smart manual refresh to prevent redundant calls
   void refreshFeed() {
-    debugPrint('ShowcaseFeedScreen: Manual refresh requested');
-    debugPrint(
-        'ShowcaseFeedScreen: _enableRealTimeUpdates: $_enableRealTimeUpdates');
-    debugPrint(
-        'ShowcaseFeedScreen: Current posts count before refresh: ${_posts.length}');
+    debugPrint('ShowcaseFeedScreen: Smart manual refresh requested');
 
     if (_enableRealTimeUpdates) {
-      debugPrint('ShowcaseFeedScreen: Setting up real-time subscription...');
+      // Real-time mode - setup subscription (handles internal checks)
       _setupRealTimeSubscription();
     } else {
-      debugPrint('ShowcaseFeedScreen: Loading initial posts...');
-      // Force refresh by clearing current posts and loading fresh data
-      setState(() {
-        _posts.clear();
-        _isLoading = true;
-        _error = null;
-        _hasMore = true; // Reset pagination
-      });
-      _loadInitialPosts();
+      // Manual mode - use smart refresh
+      _smartRefresh(clearPosts: true); // Remove await from void method
     }
   }
 
-  /// Refresh feed and show loading indicator (ultra-fast)
+  /// Smart refresh with priority system
   Future<void> _refreshFeedWithLoading() async {
-    debugPrint('ShowcaseFeedScreen: Ultra-fast refresh with loading indicator');
+    debugPrint('ShowcaseFeedScreen: Smart refresh initiated');
 
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
+    _updateFeedState(
+      isLoading: true,
+      error: null,
+    );
 
-    // Wait a bit for real-time update (reduced wait time)
-    await Future.delayed(
-        const Duration(milliseconds: 200)); // Reduced from 500ms to 200ms
-
-    // Always force refresh to get latest posts
-    await _loadInitialPosts();
+    // Smart refresh - use existing subscription if active, otherwise load directly
+    if (_enableRealTimeUpdates && _isSubscriptionActive) {
+      // Real-time subscription is active - just wait for natural update
+      await Future.delayed(const Duration(milliseconds: 100));
+    } else {
+      // Load directly without redundant calls
+      await _loadInitialPosts();
+    }
   }
 
-  /// Update category filter and refresh feed
-  void _updateCategoryFilter(PostCategory? category) {
-    setState(() {
-      _selectedCategory = category;
-    });
-    if (_enableRealTimeUpdates) {
-      _setupRealTimeSubscription();
+  /// Smart priority loading system - replaces redundant methods
+  Future<void> _smartRefresh({bool clearPosts = false}) async {
+    debugPrint(
+        'ShowcaseFeedScreen: Smart refresh initiated (clear: $clearPosts)');
+
+    if (clearPosts) {
+      _updateFeedState(
+        clearPosts: true,
+        isLoading: true,
+        error: null,
+        hasMore: true,
+      );
     } else {
-      _loadInitialPosts();
+      _updateFeedState(isLoading: true, error: null);
+    }
+
+    try {
+      // Priority 1: Use real-time subscription if enabled and active
+      if (_enableRealTimeUpdates) {
+        if (!_isSubscriptionActive) {
+          _setupRealTimeSubscription();
+        }
+        // Let subscription handle the data loading
+        return;
+      }
+
+      // Priority 2: Direct API call for manual mode
+      final posts = await _showcaseService
+          .getShowcasePosts(
+            limit: _postsPerPage,
+            category: _selectedCategory,
+          )
+          .timeout(const Duration(seconds: 10)); // Reasonable timeout
+
+      if (mounted) {
+        _updateFeedState(
+          posts: posts,
+          isLoading: false,
+          hasMore: posts.length >= _postsPerPage,
+        );
+      }
+    } catch (e) {
+      debugPrint('ShowcaseFeedScreen: Smart refresh error: $e');
+      if (mounted) {
+        _updateFeedState(
+          error: e.toString(),
+          isLoading: false,
+        );
+      }
+    }
+  }
+
+  /// Update category filter with smart refresh
+  void _updateCategoryFilter(PostCategory? category) {
+    _updateFeedState(selectedCategory: category);
+
+    // Smart refresh - avoid redundant calls
+    if (_enableRealTimeUpdates) {
+      _setupRealTimeSubscription(); // This handles subscription reset internally
+    } else {
+      _smartRefresh(); // Remove await
     }
   }
 
@@ -228,8 +332,9 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
     });
 
     try {
-      // Cancel existing subscription temporarily
-      _postsSubscription?.cancel();
+      // Cancel existing subscription to prevent memory leaks
+      await _postsSubscription?.cancel();
+      _isSubscriptionActive = false;
 
       // Load posts directly from backend using the ultra-optimized method with ultra-fast timeout
       final posts = await _showcaseService
@@ -340,13 +445,43 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
   void dispose() {
     _scrollController.dispose();
     _postsSubscription?.cancel();
+    _postsSubscription = null;
+    _isSubscriptionActive = false; // Reset subscription flag
     super.dispose();
   }
 
-  void _loadCurrentUser() {
+  // REMOVED: _loadCurrentUser - replaced with _loadCurrentUserWithRetry
+
+  Future<void> _loadCurrentUserWithRetry() async {
     final authService =
         Provider.of<SupabaseAuthService>(context, listen: false);
-    _currentUser = authService.currentUser;
+
+    // Try up to 3 times with delay
+    for (int i = 0; i < 3; i++) {
+      _currentUser = authService.currentUser;
+      debugPrint(
+          '🔄 ShowcaseFeedScreen: Retry $i - Current user: ${_currentUser?.uid ?? "NULL"}');
+
+      if (_currentUser != null) {
+        debugPrint('✅ ShowcaseFeedScreen: Current user loaded successfully');
+        break;
+      }
+
+      // Wait and try again
+      await Future.delayed(Duration(milliseconds: 500 * (i + 1)));
+
+      // Force reload auth service
+      try {
+        await authService.initialize();
+      } catch (e) {
+        debugPrint('⚠️ ShowcaseFeedScreen: Auth service init error: $e');
+      }
+    }
+
+    if (_currentUser == null) {
+      debugPrint(
+          '❌ ShowcaseFeedScreen: Failed to load current user after retries');
+    }
   }
 
   void _setupScrollListener() {
@@ -360,24 +495,54 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
     });
   }
 
+  /// Load current user reactions for a list of posts (LinkedIn-style)
+  Future<void> _loadUserReactions(List<ShowcasePostModel> posts) async {
+    if (_currentUser == null) return;
+
+    try {
+      // Load user reactions for all posts in parallel for better performance
+      final reactionFutures = posts.map((post) async {
+        try {
+          final reaction = await _showcaseService.getUserReaction(post.id);
+          return MapEntry(post.id, reaction);
+        } catch (e) {
+          debugPrint('Error loading reaction for post ${post.id}: $e');
+          return MapEntry(post.id, null);
+        }
+      });
+
+      final reactions = await Future.wait(reactionFutures);
+
+      // Update user reactions map
+      for (final entry in reactions) {
+        _userReactions[entry.key] = entry.value;
+      }
+
+      debugPrint(
+          'ShowcaseFeedScreen: Loaded ${reactions.length} user reactions');
+    } catch (e) {
+      debugPrint('ShowcaseFeedScreen: Error loading user reactions: $e');
+    }
+  }
+
   Future<void> _loadInitialPosts() async {
     if (_isLoading) return;
 
-    setState(() {
-      _isLoading = true;
-      _error = null;
-      _posts.clear();
-      _hasMore = true;
-      _loadingProgress = 0.0; // Reset progress
-    });
+    _updateFeedState(
+      isLoading: true,
+      error: null,
+      clearPosts: true,
+      hasMore: true,
+      // Reset progress removed
+    );
 
     try {
+      // Cancel and reset subscription state
       _postsSubscription?.cancel();
+      _isSubscriptionActive = false;
 
       // Update progress to show loading started
-      setState(() {
-        _loadingProgress = 0.2; // 20% - loading started
-      });
+      // Progress tracking removed for simplicity
 
       // Use ultra-optimized method with service-level timeout for homepage
       final posts = await _showcaseService
@@ -388,11 +553,12 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
           .timeout(const Duration(
               seconds: 15)); // Add reasonable timeout for better UX
 
+      // Load current user reactions for these posts
+      await _loadUserReactions(posts);
+
       // Update progress to show data loaded
       if (mounted) {
-        setState(() {
-          _loadingProgress = 0.8; // 80% - data loaded
-        });
+        // Progress tracking removed for simplicity
       }
 
       if (mounted) {
@@ -400,7 +566,7 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
           _posts = posts;
           _isLoading = false;
           _hasMore = posts.length >= _postsPerPage;
-          _loadingProgress = 1.0; // 100% - complete
+          // Progress tracking removed
         });
       }
     } catch (e) {
@@ -408,7 +574,7 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
         setState(() {
           _error = e.toString();
           _isLoading = false;
-          _loadingProgress = 0.0; // Reset on error
+          // Progress tracking removed
         });
       }
     }
@@ -417,7 +583,7 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
   Future<void> _loadMorePosts() async {
     if (_isLoading || !_hasMore) return;
 
-    setState(() => _isLoading = true);
+    _updateFeedState(isLoading: true);
 
     try {
       // For now, just reload all posts since backend doesn't support pagination yet
@@ -430,19 +596,25 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
       final newPosts =
           allPosts.skip(_posts.length).take(_postsPerPage).toList();
 
+      // Load user reactions for new posts
+      await _loadUserReactions(newPosts);
+
       if (mounted) {
-        setState(() {
-          _posts.addAll(newPosts);
-          _isLoading = false;
-          _hasMore = newPosts.length >= _postsPerPage;
-        });
+        // Add new posts to existing posts
+        final updatedPosts = List<ShowcasePostModel>.from(_posts)
+          ..addAll(newPosts);
+        _updateFeedState(
+          posts: updatedPosts,
+          isLoading: false,
+          hasMore: newPosts.length >= _postsPerPage,
+        );
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _error = e.toString();
-          _isLoading = false;
-        });
+        _updateFeedState(
+          error: e.toString(),
+          isLoading: false,
+        );
       }
     }
   }
@@ -495,7 +667,8 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
       return _buildErrorState();
     }
 
-    if (_isLoading && _posts.isEmpty) {
+    // RESTORED: Loading state for better UX (now that data loads properly)
+    if (_posts.isEmpty && _isLoading) {
       return _buildLoadingState();
     }
 
@@ -518,19 +691,18 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
             delegate: SliverChildBuilderDelegate(
               (context, index) {
                 if (index < _posts.length) {
-                  return AnimationPresets.staggeredSlideIn(
-                    index: index,
-                    child: ModernPostCard(
-                      post: _posts[index],
-                      currentUser: _currentUser,
-                      onLike: _handleLike,
-                      onComment: _handleComment,
-                      onShare: _handleShare,
-                      onUserTap: _handleUserTap,
-                      onPostTap: _handlePostTap,
-                      onReaction: _handleReaction, // LinkedIn-style reactions
-                      onPostDeleted: _handlePostDeleted,
-                    ),
+                  return ModernPostCard(
+                    post: _posts[index],
+                    currentUser: _currentUser,
+                    currentUserReaction: _userReactions[
+                        _posts[index].id], // Pass current user reaction
+                    onLike: _handleLike,
+                    onComment: _handleComment,
+                    onShare: _handleShare,
+                    onUserTap: _handleUserTap,
+                    onPostTap: _handlePostTap,
+                    onReaction: _handleReaction,
+                    onPostDeleted: _handlePostDeleted,
                   );
                 } else if (_hasMore) {
                   return _buildLoadingIndicator();
@@ -574,13 +746,13 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
     return CustomScrollView(
       physics: const NeverScrollableScrollPhysics(),
       slivers: [
-        // Header loading (ultra-fast)
+        // Loading animation (now optimized with fast data loading)
         SliverToBoxAdapter(
           child: Container(
             padding: const EdgeInsets.all(AppTheme.spaceLg),
             child: Column(
               children: [
-                // Loading animation with ultra-fast UX
+                // Fast loading animation
                 Container(
                   padding: const EdgeInsets.all(AppTheme.spaceLg),
                   decoration: BoxDecoration(
@@ -596,20 +768,15 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
                   ),
                   child: Column(
                     children: [
-                      LoadingAnimations.pulsingDots(
+                      const CircularProgressIndicator(
                         color: AppTheme.primaryColor,
                       ),
                       const SizedBox(height: AppTheme.spaceMd),
-                      AnimationPresets.fadeIn(
-                        delay: const Duration(
-                            milliseconds: 150), // Reduced from 300ms to 150ms
-                        child: Text(
-                          'Loading content at lightning speed...', // Updated text
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    color: AppTheme.textSecondaryColor,
-                                  ),
-                        ),
+                      Text(
+                        'Loading your showcase...', // Updated text
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              color: AppTheme.textSecondaryColor,
+                            ),
                       ),
                     ],
                   ),
@@ -620,19 +787,13 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
           ),
         ),
 
-        // Skeleton loading for posts (ultra-fast)
+        // Minimal skeleton loading
         SliverList(
           delegate: SliverChildBuilderDelegate(
             (context, index) {
-              return AnimationPresets.staggeredSlideIn(
-                index: index,
-                staggerDelay: const Duration(
-                    milliseconds: 50), // Reduced from 100ms to 50ms
-                child: _buildPostSkeleton(),
-              );
+              return _buildPostSkeleton();
             },
-            childCount:
-                2, // Reduced from 3 to 2 skeleton posts for faster loading
+            childCount: 2, // Keep minimal for fast loading
           ),
         ),
       ],
@@ -761,41 +922,27 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            AnimationPresets.shake(
-              child: const Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.red,
-              ),
+            const Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.red,
             ),
             const SizedBox(height: 16),
-            AnimationPresets.fadeIn(
-              delay: const Duration(milliseconds: 200),
-              child: const Text(
-                'Failed to load posts',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+            const Text(
+              'Failed to load posts',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            AnimationPresets.fadeIn(
-              delay: const Duration(milliseconds: 400),
-              child: Text(
-                _error ?? 'Unknown error occurred',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant),
-              ),
+            Text(
+              _error ?? 'Unknown error occurred',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 16),
-            AnimationPresets.fadeIn(
-              delay: const Duration(milliseconds: 600),
-              child: AnimationPresets.scaleOnPress(
-                onPressed: _loadInitialPosts,
-                child: ElevatedButton(
-                  onPressed: null, // Disabled, handled by scaleOnPress
-                  child: const Text('Retry'),
-                ),
-              ),
+            ElevatedButton(
+              onPressed: _loadInitialPosts,
+              child: const Text('Retry'),
             ),
           ],
         ),
@@ -811,94 +958,76 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            AnimationPresets.fadeIn(
-              delay: const Duration(milliseconds: 200),
-              child: AnimationPresets.bounceIn(
-                child: Container(
-                  padding: const EdgeInsets.all(AppTheme.space2xl),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                  ),
-                  child: Icon(
-                    Icons.auto_awesome_rounded,
-                    size: 64,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
+            Container(
+              padding: const EdgeInsets.all(AppTheme.space2xl),
+              decoration: BoxDecoration(
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+              ),
+              child: Icon(
+                Icons.auto_awesome_rounded,
+                size: 64,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
             const SizedBox(height: AppTheme.spaceLg),
-            AnimationPresets.slideIn(
-              delay: const Duration(milliseconds: 400),
-              begin: const Offset(0, 30),
-              child: Text(
-                'Ready to Shine?',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: null, // Use theme default
-                    ),
-              ),
+            Text(
+              'Ready to Shine?',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: null, // Use theme default
+                  ),
             ),
             const SizedBox(height: AppTheme.spaceSm),
-            AnimationPresets.slideIn(
-              delay: const Duration(milliseconds: 600),
-              begin: const Offset(0, 30),
-              child: Text(
-                'Share your talents, achievements, and connect with the UTHM community!',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: null, // Use theme default
-                      height: 1.5,
-                    ),
-              ),
+            Text(
+              'Share your talents, achievements, and connect with the UTHM community!',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: null, // Use theme default
+                    height: 1.5,
+                  ),
             ),
             const SizedBox(height: AppTheme.spaceLg),
-            AnimationPresets.slideIn(
-              delay: const Duration(milliseconds: 800),
-              begin: const Offset(0, 30),
-              child: AnimationPresets.scaleOnPress(
-                onPressed: () {
-                  debugPrint(
-                      'ShowcaseFeedScreen: Post creation button pressed');
-                  _navigateToPostCreation();
-                },
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: AppTheme.primaryGradient,
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.3),
-                        blurRadius: 15,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: ElevatedButton.icon(
-                    onPressed: null, // Disabled, handled by scaleOnPress
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppTheme.spaceLg,
-                        vertical: AppTheme.spaceMd,
-                      ),
+            GestureDetector(
+              onTap: () {
+                debugPrint('ShowcaseFeedScreen: Post creation button pressed');
+                _navigateToPostCreation();
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: AppTheme.primaryGradient,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
                     ),
-                    icon: Icon(Icons.add_rounded,
-                        color: Theme.of(context).colorScheme.onPrimary),
-                    label: Text(
-                      'Create Your First Post',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  ],
+                ),
+                child: ElevatedButton.icon(
+                  onPressed: null, // Disabled, handled by scaleOnPress
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spaceLg,
+                      vertical: AppTheme.spaceMd,
+                    ),
+                  ),
+                  icon: Icon(Icons.add_rounded,
+                      color: Theme.of(context).colorScheme.onPrimary),
+                  label: Text(
+                    'Create Your First Post',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -906,10 +1035,7 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
             ),
             const SizedBox(height: AppTheme.spaceLg),
             // Debug section
-            AnimationPresets.fadeIn(
-              delay: const Duration(milliseconds: 1000),
-              child: _buildDebugSection(),
-            ),
+            _buildDebugSection(),
           ],
         ),
       ),
@@ -922,7 +1048,7 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
       child: Center(
         child: Column(
           children: [
-            LoadingAnimations.pulsingDots(
+            const CircularProgressIndicator(
               color: AppTheme.primaryColor,
             ),
             const SizedBox(height: 8),
@@ -940,40 +1066,51 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
 
   // Navigation and interaction methods
 
-  void _handleLike(ShowcasePostModel post) async {
+  Future<void> _handleLike(ShowcasePostModel post) async {
     if (_currentUser == null) return;
 
     // Add haptic feedback
     HapticFeedback.lightImpact();
 
+    // Prevent multiple rapid clicks
+    final postIndex = _posts.indexWhere((p) => p.id == post.id);
+    if (postIndex == -1) return;
+
+    final isCurrentlyLiked = post.isLikedBy(_currentUser!.uid);
+
     try {
-      // Optimistic update
-      final updatedPost = post.copyWith(
-        likes: post.isLikedBy(_currentUser!.uid)
-            ? post.likes.where((id) => id != _currentUser!.uid).toList()
-            : [...post.likes, _currentUser!.uid],
-      );
+      // Optimistic update with better state management
+      final updatedLikes = isCurrentlyLiked
+          ? post.likes.where((id) => id != _currentUser!.uid).toList()
+          : [...post.likes, _currentUser!.uid];
 
-      setState(() {
-        final index = _posts.indexWhere((p) => p.id == post.id);
-        if (index != -1) {
-          _posts[index] = updatedPost;
-        }
-      });
+      final optimisticPost = post.copyWith(likes: updatedLikes);
 
-      // Real like/unlike
+      // Update UI immediately with batch update system
+      final updatedPosts = List<ShowcasePostModel>.from(_posts);
+      updatedPosts[postIndex] = optimisticPost;
+      _updateFeedState(posts: updatedPosts);
+
+      // Single API call - no unnecessary refresh needed
       await _showcaseService.toggleLike(post.id, _currentUser!.uid);
 
-      // Refresh the post to ensure UI is in sync with database
-      await _refreshSpecificPost(post.id);
+      // ✅ FIX: Refresh with actual database state after API success
+      final freshPost = await _showcaseService.getPostById(post.id);
+      if (freshPost != null && mounted) {
+        final updatedPosts = List<ShowcasePostModel>.from(_posts);
+        updatedPosts[postIndex] = freshPost; // Update with real DB data
+        _updateFeedState(posts: updatedPosts);
+        debugPrint('Feed like UI refreshed with fresh database data');
+      }
+
+      // Success - optimistic update was correct, no additional operations needed
+      debugPrint(
+          'Like toggle successful for post ${post.id} (${isCurrentlyLiked ? 'unliked' : 'liked'})');
     } catch (e) {
-      // Revert optimistic update on error
-      setState(() {
-        final index = _posts.indexWhere((p) => p.id == post.id);
-        if (index != -1) {
-          _posts[index] = post;
-        }
-      });
+      // Only revert on actual API errors
+      final revertedPosts = List<ShowcasePostModel>.from(_posts);
+      revertedPosts[postIndex] = post; // Revert to original state
+      _updateFeedState(posts: revertedPosts);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -984,21 +1121,95 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
   }
 
   Future<void> _handleReaction(ReactionType reactionType, String postId) async {
-    if (_currentUser == null) return;
+    debugPrint(
+        '🎯 _handleReaction called: ${reactionType.name} for post $postId');
+    debugPrint('🔍 Current user: ${_currentUser?.uid ?? "NULL"}');
+
+    if (_currentUser == null) {
+      debugPrint('❌ _handleReaction: Current user is null, aborting');
+      return;
+    }
+
+    // Find the post to update
+    final postIndex = _posts.indexWhere((p) => p.id == postId);
+    if (postIndex == -1) return;
+
+    final originalPost = _posts[postIndex];
+    final previousUserReaction =
+        _userReactions[postId]; // Track previous reaction
 
     try {
       // Add haptic feedback
       HapticFeedback.lightImpact();
 
-      // Add reaction to the post
+      // Check if user is clicking on their current reaction (remove it)
+      if (previousUserReaction == reactionType.name) {
+        // User is removing their reaction
+        _userReactions[postId] = null;
+
+        // Decrement reaction count
+        final updatedReactions = Map<String, int>.from(originalPost.reactions);
+        final currentCount = updatedReactions[reactionType.name] ?? 0;
+        if (currentCount > 0) {
+          updatedReactions[reactionType.name] = currentCount - 1;
+          if (updatedReactions[reactionType.name] == 0) {
+            updatedReactions.remove(reactionType.name);
+          }
+        }
+
+        final optimisticPost =
+            originalPost.copyWith(reactions: updatedReactions);
+        final updatedPosts = List<ShowcasePostModel>.from(_posts);
+        updatedPosts[postIndex] = optimisticPost;
+        _updateFeedState(posts: updatedPosts);
+
+        // API call to remove reaction
+        await _showcaseService.removeReaction(postId, reactionType.name);
+
+        debugPrint('Reaction ${reactionType.name} removed from post $postId');
+        return;
+      }
+
+      // User is adding/changing reaction
+      _userReactions[postId] = reactionType.name;
+
+      // Optimistic reaction update (count-based system)
+      final updatedReactions = Map<String, int>.from(originalPost.reactions);
+
+      // If user had a previous reaction, decrement it
+      if (previousUserReaction != null) {
+        final previousCount = updatedReactions[previousUserReaction] ?? 0;
+        if (previousCount > 0) {
+          updatedReactions[previousUserReaction] = previousCount - 1;
+          if (updatedReactions[previousUserReaction] == 0) {
+            updatedReactions.remove(previousUserReaction);
+          }
+        }
+      }
+
+      // Increment new reaction count
+      final currentCount = updatedReactions[reactionType.name] ?? 0;
+      updatedReactions[reactionType.name] = currentCount + 1;
+
+      final optimisticPost = originalPost.copyWith(reactions: updatedReactions);
+
+      // Update UI immediately with batch update
+      final updatedPosts = List<ShowcasePostModel>.from(_posts);
+      updatedPosts[postIndex] = optimisticPost;
+      _updateFeedState(posts: updatedPosts);
+
+      // API call - no unnecessary refresh needed
       await _showcaseService.addReaction(postId, reactionType.name);
 
-      // Refresh the post to ensure UI is in sync with database
-      await _refreshSpecificPost(postId);
-
       debugPrint(
-          'ShowcaseFeedScreen: Added ${reactionType.name} reaction to post $postId');
+          'Reaction ${reactionType.name} added successfully to post $postId');
     } catch (e) {
+      // Revert optimistic updates on error
+      _userReactions[postId] = previousUserReaction; // Revert user reaction
+      final revertedPosts = List<ShowcasePostModel>.from(_posts);
+      revertedPosts[postIndex] = originalPost;
+      _updateFeedState(posts: revertedPosts);
+
       debugPrint('ShowcaseFeedScreen: Error adding reaction: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1009,6 +1220,9 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
   }
 
   void _handleComment(ShowcasePostModel post) {
+    debugPrint('💬 _handleComment called for post: ${post.id}');
+    debugPrint('🔍 Current user: ${_currentUser?.uid ?? "NULL"}');
+
     // Navigate to post detail screen for commenting
     Navigator.push(
       context,
@@ -1039,9 +1253,11 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
   }
 
   void _handlePostDeleted() {
+    debugPrint('🗑️ _handlePostDeleted called');
+    debugPrint('🔍 Current user: ${_currentUser?.uid ?? "NULL"}');
     debugPrint('ShowcaseFeedScreen: Post deleted, refreshing feed...');
     // Refresh the feed to remove the deleted post
-    _loadInitialPosts();
+    _smartRefresh(clearPosts: true);
   }
 
   void _handleUserTap(ShowcasePostModel post) {

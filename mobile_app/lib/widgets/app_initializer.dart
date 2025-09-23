@@ -1,14 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+// import 'package:provider/provider.dart'; // Unused import removed
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/app_config.dart';
 import '../config/supabase_config.dart';
-import '../services/profile_service.dart';
+// import '../services/profile_service.dart'; // Unused import removed
 import '../services/gemini_chat_service.dart';
 import '../services/chat_history_service.dart';
 import '../screens/splash_screen.dart';
-import '../utils/debug_config.dart';
+// Removed debug config for production
 import '../utils/profile_image_cleanup.dart';
 
 /// Complete app initializer with all functionality
@@ -20,8 +20,6 @@ class AppInitializer extends StatefulWidget {
 }
 
 class _AppInitializerState extends State<AppInitializer> {
-  bool _initialized = false;
-
   @override
   void initState() {
     super.initState();
@@ -34,75 +32,64 @@ class _AppInitializerState extends State<AppInitializer> {
       if (kDebugMode) {
         try {
           // Check if Supabase is already initialized
-          final client = Supabase.instance.client;
-          DebugConfig.logInit('Supabase already initialized');
+          Supabase.instance.client;
+          debugPrint('Supabase already initialized');
         } catch (e) {
-          DebugConfig.logInit('Initializing Supabase in debug mode...');
+          debugPrint('Initializing Supabase in debug mode...');
           await SupabaseConfig.initialize();
-          DebugConfig.logInit('Supabase initialized successfully');
+          debugPrint('Supabase initialized successfully');
         }
       }
 
       // Initialize app configuration
       if (kDebugMode) {
-        DebugConfig.logInit('Starting background initialization...');
+        debugPrint('Starting background initialization...');
       }
 
       await AppConfig.initialize();
 
       if (kDebugMode) {
-        DebugConfig.logInit('App configuration initialized');
-        DebugConfig.logInit(
-            'OpenRouter API key configured: ${AppConfig.hasApiKey}');
-        DebugConfig.logInit(
-            'Gemini API key configured: ${AppConfig.hasGeminiApiKey}');
+        debugPrint('App configuration initialized');
+        debugPrint('OpenRouter API key configured: ${AppConfig.hasApiKey}');
+        debugPrint('Gemini API key configured: ${AppConfig.hasGeminiApiKey}');
       }
 
       // Run cleanup operations in background (optional)
       if (kDebugMode) {
-        DebugConfig.logInit('Initializing Gemini chat service...');
+        debugPrint('Initializing Gemini chat service...');
       }
 
       // Initialize Gemini chat service - check if it has initialize method
       try {
-        final geminiService = GeminiChatService(ChatHistoryService());
+        GeminiChatService(ChatHistoryService());
         // Only call initialize if the method exists
         if (kDebugMode) {
-          DebugConfig.logInit('Gemini chat service initialized successfully');
+          debugPrint('Gemini chat service initialized successfully');
         }
       } catch (e) {
         if (kDebugMode) {
-          DebugConfig.logWarning(
-              'Gemini chat service initialization skipped: $e');
+          debugPrint('Gemini chat service initialization skipped: $e');
         }
       }
 
-      // Run profile image cleanup in background
+      // Run profile image cleanup in TRUE background (non-blocking)
       if (kDebugMode) {
-        DebugConfig.logInit('Running profile image cleanup...');
+        debugPrint('Running profile image cleanup...');
       }
 
-      try {
-        await ProfileImageCleanup.cleanupPlaceholderUrls();
-      } catch (e) {
+      // Fire-and-forget cleanup - don't block UI with await
+      ProfileImageCleanup.cleanupPlaceholderUrls().catchError((e) {
         if (kDebugMode) {
-          DebugConfig.logWarning('Error during placeholder cleanup: $e');
+          debugPrint('Error during placeholder cleanup: $e');
         }
-      }
+      });
 
       if (kDebugMode) {
-        DebugConfig.logInit('Background initialization completed');
-      }
-
-      // Check if widget is still mounted before calling setState
-      if (mounted) {
-        setState(() {
-          _initialized = true;
-        });
+        debugPrint('Background initialization completed');
       }
     } catch (e) {
       if (kDebugMode) {
-        DebugConfig.logError('Error during background initialization: $e');
+        debugPrint('Error during background initialization: $e');
       }
     }
   }

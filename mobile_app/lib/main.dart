@@ -1,6 +1,4 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'services/supabase_auth_service.dart';
 import 'config/supabase_config.dart';
@@ -9,33 +7,30 @@ import 'services/achievement_service.dart';
 import 'services/showcase_service.dart';
 import 'services/search_service.dart';
 import 'services/notification_service.dart';
+import 'services/notification_preferences_service.dart';
 import 'services/language_service.dart';
-import 'l10n/generated/app_localizations.dart';
 import 'utils/app_theme.dart';
-import 'utils/debug_config.dart';
+// Removed debug config for production
 import 'providers/theme_provider.dart';
 import 'widgets/app_initializer.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/student/student_dashboard.dart';
 import 'screens/auth/profile_setup_screen.dart';
 
-// Override debugPrint for complete silence
-void _silentDebugPrint(String? message, {int? wrapWidth}) {
-  // Do nothing - complete silence
-}
-
+// Disable debug logging for cleaner testing
 void main() async {
-  // Override debugPrint globally
-  debugPrint = _silentDebugPrint;
+  // Disable debug prints for clean console output
+  debugPrint = (String? message, {int? wrapWidth}) {};
 
   WidgetsFlutterBinding.ensureInitialized();
 
   // Always initialize Supabase to prevent initialization errors
   try {
     await SupabaseConfig.initialize();
-    // Skip success logging for clean terminal
+    debugPrint('✅ Supabase initialized successfully');
   } catch (e) {
-    DebugConfig.logCritical('Failed to initialize Supabase: $e');
+    debugPrint('❌ Failed to initialize Supabase: $e');
+    // Debug logging removed for production
   }
 
   runApp(const MyApp());
@@ -67,29 +62,28 @@ class MyApp extends StatelessWidget {
         Provider<NotificationService>(
           create: (_) => NotificationService(),
         ),
-        ChangeNotifierProvider<LanguageService>(
-          create: (_) => LanguageService(),
-        ),
         ChangeNotifierProvider<ThemeProvider>(
           create: (_) => ThemeProvider(),
         ),
+        ChangeNotifierProvider<LanguageService>(
+          create: (_) => LanguageService(),
+        ),
+        ChangeNotifierProvider<NotificationPreferencesService>(
+          create: (_) => NotificationPreferencesService(),
+        ),
       ],
-      child: Consumer2<LanguageService, ThemeProvider>(
-        builder: (context, languageService, themeProvider, child) {
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
           return MaterialApp(
+            key: const ValueKey(
+                'main_app'), // Add key for better state management
             title: 'Student Talent Profiling App',
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: themeProvider.materialThemeMode,
             debugShowCheckedModeBanner: false,
-            locale: languageService.currentLocale,
-            localizationsDelegates: const [
-              AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: LanguageService.supportedLocales,
+            locale: const Locale('en'), // Fixed locale
+            supportedLocales: const [Locale('en')], // Fixed supported locales
             home: const AppInitializer(),
             routes: {
               '/login': (context) => const LoginScreen(),
@@ -98,7 +92,7 @@ class MyApp extends StatelessWidget {
             },
             onUnknownRoute: (settings) {
               // Fallback for unknown routes
-              DebugConfig.logWarning('Unknown route: ${settings.name}');
+              debugPrint('Unknown route: ${settings.name}');
               return MaterialPageRoute(
                 builder: (context) => const LoginScreen(),
               );

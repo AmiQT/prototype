@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/experience_model.dart';
 import '../../utils/app_theme.dart';
-import '../../l10n/generated/app_localizations.dart';
 import '../modern/modern_text_field.dart';
 import '../modern/modern_button.dart';
 
@@ -30,8 +29,6 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceMd),
       decoration: BoxDecoration(
@@ -62,7 +59,7 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
                   ),
                   const SizedBox(width: AppTheme.spaceSm),
                   Text(
-                    l10n.experience,
+                    'Experience',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: AppTheme.primaryColor,
@@ -77,7 +74,7 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
                   color: AppTheme.primaryColor,
                   size: 28,
                 ),
-                tooltip: l10n.addExperience,
+                tooltip: 'Add Experience',
               ),
             ],
           ),
@@ -85,7 +82,7 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
           const SizedBox(height: AppTheme.spaceSm),
 
           Text(
-            l10n.addYourWorkExperience,
+            'Add Your Work Experience',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppTheme.grayColor,
                 ),
@@ -127,7 +124,7 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
           ),
           const SizedBox(height: AppTheme.spaceSm),
           Text(
-            AppLocalizations.of(context).noExperienceAdded,
+            'No experience added',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: AppTheme.grayColor,
                   fontWeight: FontWeight.w500,
@@ -135,7 +132,7 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
           ),
           const SizedBox(height: AppTheme.spaceXs),
           Text(
-            AppLocalizations.of(context).tapAddToStartAdding,
+            'Tap + to start adding',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppTheme.grayColor,
                 ),
@@ -179,7 +176,7 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
                       color: AppTheme.primaryColor,
                       size: 20,
                     ),
-                    tooltip: AppLocalizations.of(context).edit,
+                    tooltip: 'Edit',
                   ),
                   IconButton(
                     onPressed: () => _deleteExperience(index),
@@ -188,7 +185,7 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
                       color: AppTheme.errorColor,
                       size: 20,
                     ),
-                    tooltip: AppLocalizations.of(context).delete,
+                    tooltip: 'Delete',
                   ),
                 ],
               ),
@@ -278,13 +275,12 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context).deleteExperience),
-        content:
-            Text(AppLocalizations.of(context).deleteExperienceConfirmation),
+        title: const Text('Delete Experience'),
+        content: const Text('Are you sure you want to delete this experience?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context).cancel),
+            child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () {
@@ -294,9 +290,9 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
               widget.onExperiencesChanged(_experiences);
               Navigator.pop(context);
             },
-            child: Text(
-              AppLocalizations.of(context).delete,
-              style: const TextStyle(color: AppTheme.errorColor),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: AppTheme.errorColor),
             ),
           ),
         ],
@@ -323,9 +319,7 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: Text(
-            experience == null
-                ? AppLocalizations.of(context).addExperience
-                : AppLocalizations.of(context).editExperience,
+            experience == null ? 'Add Experience' : 'Edit Experience',
           ),
           content: SingleChildScrollView(
             child: Column(
@@ -333,11 +327,11 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
               children: [
                 ModernTextField(
                   controller: titleController,
-                  label: AppLocalizations.of(context).jobTitle,
+                  label: 'Job Title',
                   icon: Icons.work,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return AppLocalizations.of(context).pleaseEnterJobTitle;
+                      return 'Please enter job title';
                     }
                     return null;
                   },
@@ -347,7 +341,7 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
 
                 ModernTextField(
                   controller: companyController,
-                  label: AppLocalizations.of(context).company,
+                  label: 'Company',
                   icon: Icons.business,
                 ),
 
@@ -355,7 +349,7 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
 
                 ModernTextField(
                   controller: locationController,
-                  label: AppLocalizations.of(context).location,
+                  label: 'Location',
                   icon: Icons.location_on,
                 ),
 
@@ -368,7 +362,7 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
                   Text('End Date: ${endDate!.month}/${endDate!.year}'),
 
                 CheckboxListTile(
-                  title: Text(AppLocalizations.of(context).currentlyWorking),
+                  title: const Text('Currently Working'),
                   value: isCurrentJob,
                   onChanged: (value) {
                     setDialogState(() {
@@ -386,7 +380,7 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
 
                 ModernTextField(
                   controller: descriptionController,
-                  label: AppLocalizations.of(context).description,
+                  label: 'Description',
                   icon: Icons.description,
                   maxLines: 3,
                 ),
@@ -396,10 +390,10 @@ class _ExperienceEditorState extends State<ExperienceEditor> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(AppLocalizations.of(context).cancel),
+              child: const Text('Cancel'),
             ),
             ModernButton(
-              text: AppLocalizations.of(context).save,
+              text: 'Save',
               onPressed: () {
                 if (titleController.text.trim().isNotEmpty) {
                   final newExperience = ExperienceModel(

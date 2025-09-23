@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../utils/debug_config.dart';
+// Removed debug config for production
 
 class AppConfig {
   // API Keys (loaded from environment)
@@ -42,15 +42,29 @@ class AppConfig {
       _openRouterApiKey = dotenv.env['OPENROUTER_API_KEY'];
       _geminiApiKey = dotenv.env['GEMINI_API_KEY'];
 
+      // Check if API keys are placeholder values and treat as missing
+      if (_openRouterApiKey == 'your_openrouter_api_key_here') {
+        _openRouterApiKey = null;
+      }
+      if (_geminiApiKey == 'your_gemini_api_key_here') {
+        _geminiApiKey = null;
+      }
+
       if (kDebugMode) {
-        DebugConfig.logInit('Environment variables loaded');
-        DebugConfig.logInit('OpenRouter API key present: $hasApiKey');
-        DebugConfig.logInit('Gemini API key present: $hasGeminiApiKey');
+        debugPrint('Environment variables loaded');
+        debugPrint('OpenRouter API key present: $hasApiKey');
+        debugPrint('Gemini API key present: $hasGeminiApiKey');
+        if (!hasGeminiApiKey) {
+          debugPrint(
+              '⚠️ Gemini API key not configured - chatbot features will be disabled');
+        }
       }
     } catch (e) {
       if (kDebugMode) {
-        DebugConfig.logError('Error loading environment variables: $e');
-        DebugConfig.logWarning('Continuing without API keys...');
+        debugPrint('Error loading environment variables: $e');
+        debugPrint('Continuing without API keys...');
+        debugPrint(
+            '⚠️ API keys not available - some features will be disabled');
       }
       // Set default values if loading fails
       _openRouterApiKey = null;
@@ -90,8 +104,8 @@ class AppConfig {
   // App Settings
   static const String appName = 'Student Talent Profiling App';
   static const String appVersion = '1.0.0';
-  static const int apiTimeoutSeconds = 30;
-  static const int maxRetryAttempts = 3;
+  static const int apiTimeoutSeconds = 60; // Increased for Samsung devices
+  static const int maxRetryAttempts = 5; // More retries for network issues
 
   // Development Settings
   static const bool enableDebugLogging = kDebugMode;

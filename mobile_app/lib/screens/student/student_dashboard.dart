@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../l10n/generated/app_localizations.dart';
 
 import 'profile/student_profile_screen.dart';
 import 'showcase/showcase_screen.dart';
@@ -26,18 +25,16 @@ class _StudentDashboardState extends State<StudentDashboard> {
   ];
 
   List<BottomNavigationBarItem> _getNavItems(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     return [
-      BottomNavigationBarItem(icon: const Icon(Icons.home), label: l10n.home),
-      BottomNavigationBarItem(
-          icon: const Icon(Icons.search), label: l10n.discover),
+      const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+      const BottomNavigationBarItem(
+          icon: Icon(Icons.search), label: 'Discover'),
       const BottomNavigationBarItem(
           icon: Icon(Icons.auto_awesome),
           label: 'AI Chat'), // Sparkling star icon ⭐
-      BottomNavigationBarItem(
-          icon: const Icon(Icons.event_available), label: l10n.eventProgram),
-      BottomNavigationBarItem(
-          icon: const Icon(Icons.person), label: l10n.profile),
+      const BottomNavigationBarItem(
+          icon: Icon(Icons.event_available), label: 'Events'),
+      const BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
     ];
   }
 
@@ -52,8 +49,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
   Future<void> _loadUserData() async {
     try {
       // Basic initialization - specific data loading handled by individual screens
-      await Future.delayed(
-          const Duration(milliseconds: 500)); // Simulate loading
+      // Removed artificial delay for faster dashboard loading
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

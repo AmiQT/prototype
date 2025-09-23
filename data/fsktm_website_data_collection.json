@@ -1,0 +1,263 @@
+{
+  "data_source": "https://fsktm.uthm.edu.my/",
+  "scraping_method": "MCP Playwright Browser Automation",
+  "last_updated": "2024-12-19",
+  "collection_progress": {
+    "main_page": "COMPLETED",
+    "vision_mission": "COMPLETED",
+    "background": "COMPLETED", 
+    "research_publication": "COMPLETED",
+    "deans_foreword": "PENDING",
+    "programmes": "PENDING", 
+    "news_events": "PENDING",
+    "student_life": "PENDING"
+  },
+
+  "main_page_data": {
+    "faculty_overview": {
+      "tagline": "Discover the computing course for you",
+      "description": "The Faculty of Computer Science and Information Technology (FSKTM) is committed to developing innovative, critical-thinking, and ethically-minded graduates. Our distinctive approach seamlessly integrates robust academic rigor with practical, industry-relevant skills, including a strong emphasis on Technical and Vocational Education and Training (TVET) principles. Through a curriculum that deeply integrates robust digital knowledge, problem-solving abilities, and cutting-edge technical expertise with essential soft skills, FSKTM students are empowered to design the future. This unique advantage ensures our graduates are highly adaptable, capable of leading digital transformation, and fully prepared to excel in and meet the dynamic demands of the global technology landscape.",
+      "call_to_action": "Come and join us now!",
+      "hashtags": ["#UTHMJohor", "#GTU2030", "#UTHMproducesprofessionals", "#PDTI"]
+    },
+
+    "facts_and_figures": {
+      "students": "1,692",
+      "academicians": "82",
+      "programs": "10",
+      "additional_info": [
+        "UTHM Produces Professionals",
+        "PDTI Logo", 
+        "QS Ranked"
+      ]
+    },
+
+    "academic_programmes": {
+      "undergraduate": [
+        {
+          "code": "MQA/FA0249",
+          "title": "Bachelor of Computer Science (Information Security) With Honours",
+          "url": "https://study.uthm.edu.my/en/programmes-and-courses/list-of-bachelor-degree?view=article&id=185:bachelor-of-computer-science-information-security-with-honours&catid=10"
+        },
+        {
+          "code": "MQA/FA0250",
+          "title": "Bachelor of Computer Science (Multimedia Computing) With Honours",
+          "url": "https://study.uthm.edu.my/en/programmes-and-courses/list-of-bachelor-degree?view=article&id=166:bachelor-of-computer-science-multimedia-computing-with-honours&catid=10"
+        },
+        {
+          "code": "MQA/FA0251",
+          "title": "Bachelor of Computer Science (Software Engineering) With Honours",
+          "url": "https://study.uthm.edu.my/en/programmes-and-courses/list-of-bachelor-degree?view=article&id=89:bachelor-of-computer-science-software-engineering&catid=10"
+        },
+        {
+          "code": "MQA/FA0248",
+          "title": "Bachelor of Computer Science (Web Technology) With Honours",
+          "url": "https://study.uthm.edu.my/en/programmes-and-courses/list-of-bachelor-degree?view=article&id=196:bachelor-of-computer-science-web-technology-with-honours&catid=10"
+        },
+        {
+          "code": "MQA/FA10044",
+          "title": "Bachelor of Information Technology With Honours",
+          "url": "https://study.uthm.edu.my/en/programmes-and-courses/list-of-bachelor-degree?view=article&id=77:bachelor-of-information-technology-with-honours&catid=10"
+        }
+      ],
+      "postgraduate": [
+        {
+          "title": "Master of Information Technology by Coursework",
+          "url": "https://study.uthm.edu.my/en/programmes-and-courses/list-of-master-degree?view=article&id=214:master-of-information-technology-by-coursework&catid=11"
+        },
+        {
+          "title": "Master of Computer Science (Software Engineering) by Mixed Mode",
+          "url": "https://study.uthm.edu.my/en/programmes-and-courses/list-of-master-degree?view=article&id=112:master-of-computer-science-software-engineering&catid=11"
+        },
+        {
+          "title": "Master of Computer Science (Information Security) by Mixed Mode",
+          "url": "https://study.uthm.edu.my/en/programmes-and-courses/list-of-master-degree?view=article&id=113:master-of-computer-science-information-security&catid=11"
+        },
+        {
+          "title": "Master of Information Technology by Research",
+          "url": "https://study.uthm.edu.my/en/programmes-and-courses/list-of-master-degree?view=article&id=111:master-of-information-technology&catid=11"
+        },
+        {
+          "title": "Doctor of Philosophy in Information Technology",
+          "url": "https://study.uthm.edu.my/en/programmes-and-courses/list-of-philosophy-degree-phd?view=article&id=88:doctor-of-philosophy-in-information-technology&catid=12"
+        }
+      ]
+    },
+
+    "recent_highlights": [
+      {
+        "title": "FSKTM UTHM Anjur Program Khidmat Masyarakat Antarabangsa: \"Wackopicko – Web Application Penetration Testing\" di Bali, Indonesia",
+        "url": "https://fsktm.uthm.edu.my/?p=1082"
+      },
+      {
+        "title": "CISCO Certified Network Associate (CCNA) – Introduction To Networking (ITNv7) Bootcamp",
+        "url": "https://fsktm.uthm.edu.my/?p=1111"
+      },
+      {
+        "title": "Program Tautan Ilmu Fakulti Sains Komputer dan Teknologi Maklumat, UTHM Dan Pejabat Pendidikan Daerah (PPD) Kluang",
+        "url": "https://fsktm.uthm.edu.my/?p=1103"
+      }
+    ],
+
+    "announcements": [
+      {
+        "title": "The 7th International Conference on Soft Computing and Data Mining (SCDM 2026)",
+        "url": "https://fsktm.uthm.edu.my/?p=250"
+      },
+      {
+        "title": "International Conference on Artificial Intelligence and Autonomous Systems (ICAIAS 2025)",
+        "url": "https://fsktm.uthm.edu.my/?p=1"
+      }
+    ],
+
+    "contact_info": {
+      "address": "86400 Parit Raja, Batu Pahat, Johor, Malaysia",
+      "phone": "+607 453 3606",
+      "email": "fsktm@uthm.edu.my",
+      "feedback_portal": "https://wecare.uthm.edu.my/"
+    },
+
+    "social_media": [
+      {
+        "platform": "Facebook",
+        "url": "https://www.facebook.com/share/15wM6GVWty/?mibextid=wwXIfr"
+      },
+      {
+        "platform": "Instagram", 
+        "url": "https://www.instagram.com/fsktm_uthm?igsh=bjBnNW0xMDlrd3Fz"
+      },
+      {
+        "platform": "TikTok",
+        "url": "https://www.tiktok.com/@fsktm_uthm?_t=ZS-8z3Szm6Ok66&_r=1"
+      }
+    ],
+
+    "external_links": [
+      {
+        "name": "Ministry of Higher Education",
+        "url": "https://www.mohe.gov.my/en"
+      },
+      {
+        "name": "Universiti Tun Hussein Onn Malaysia",
+        "url": "https://www.uthm.edu.my/en/"
+      },
+      {
+        "name": "Malaysian Qualification Agency",
+        "url": "https://www2.mqa.gov.my/"
+      },
+      {
+        "name": "Malaysia Digital Economy Corporation (MDEC)",
+        "url": "https://mdec.my/"
+      },
+      {
+        "name": "MDEC Premier Digital Tech Institutions",
+        "url": "https://mdec.my/pdti"
+      }
+    ]
+  },
+
+  "vision_mission_data": {
+    "url": "https://fsktm.uthm.edu.my/?page_id=753",
+    "vision": "To be a global technical university in sustainable technology and transportation.",
+    "mission": "Provide technical solution for industry and community based on tauhidic paradigm.",
+    "education_philosophy": "UTHM education and training, founded on the tauhidic paradigm, strive to produce competent, professional and entrepreneurial graduates, driven by advanced technologies for global development.",
+    "direction": "UTHM as a Global Technopreneur University 2030 (#GTU2030)."
+  },
+
+  "background_data": {
+    "url": "https://fsktm.uthm.edu.my/?page_id=542",
+    "establishment_history": [
+      "September 2000: The faculty began as the Department of Information Technology and Multimedia (JTMM), part of the Faculty of Engineering Technology at Kolej Universiti Tun Hussein Onn (KUiTTHO).",
+      "May 2004: JTMM was elevated to the Faculty of Information Technology and Multimedia (FTMM), operating at the Parit Raja City Campus in Batu Pahat, Johor.",
+      "August 24, 2010: The faculty was rebranded to its current name, the Faculty of Computer Science and Information Technology (FSKTM)."
+    ],
+    "current_departments": [
+      "Department of Software Engineering",
+      "Department of Multimedia", 
+      "Department of Information Security and Web Technology",
+      "Department of Post-Graduate"
+    ],
+    "faculty_goal": "The faculty's goal is to provide programmes and conduct research that support the vision and mission of the university and meet the needs of the nation. It aims to produce skilled professionals in various fields of computer science and information technology to serve both local and international industries.",
+    "detailed_programmes": {
+      "bachelor": [
+        "Bachelor of Computer Science (Information Technology) with Honours",
+        "Bachelor of Computer Science (Multimedia Computing) with Honours",
+        "Bachelor of Computer Science (Software Engineering) with Honours",
+        "Bachelor of Computer Science (Web Technology) with Honours",
+        "Bachelor of Information Technology with Honours"
+      ],
+      "postgraduate": [
+        "Master of Information Technology by Coursework",
+        "Master of Computer Science (Software Engineering) by Mixed-Mode",
+        "Master of Computer Science (Information Security) by Mixed-Mode",
+        "Master of Information Technology by Research",
+        "Doctor of Philosophy in Information Technology"
+      ]
+    }
+  },
+
+  "research_publication_data": {
+    "research_centers": {
+      "url": "https://fsktm.uthm.edu.my/?page_id=528",
+      "total_centers": 3,
+      "centers": [
+        {
+          "name": "Artificial Intelligence And Data Mining Centre",
+          "acronym": "AIMC",
+          "url": "https://fsktm.uthm.edu.my/?page_id=643"
+        },
+        {
+          "name": "Center of Intelligent and Autonomous Systems",
+          "acronym": "CIAS",
+          "url": "https://fsktm.uthm.edu.my/?page_id=644"
+        },
+        {
+          "name": "Centre For Cybersecurity And Data Intelligence",
+          "acronym": "CCDI",
+          "url": "https://fsktm.uthm.edu.my/?page_id=645"
+        }
+      ]
+    },
+    "focus_groups": {
+      "url": "https://fsktm.uthm.edu.my/?page_id=529",
+      "total_groups": 6,
+      "groups": [
+        {
+          "name": "Software Engineering Research Group",
+          "acronym": "SERG"
+        },
+        {
+          "name": "Information Security Interest Group",
+          "acronym": "ISIG"
+        },
+        {
+          "name": "Web Science and Technology",
+          "acronym": "WeST"
+        },
+        {
+          "name": "Smart Multimedia & Cyber-Reality",
+          "acronym": "SMC"
+        },
+        {
+          "name": "Applied Information System",
+          "acronym": "AiS"
+        },
+        {
+          "name": "Software Testing Research Group",
+          "acronym": "SWAT"
+        }
+      ]
+    },
+    "research_expertise_areas": [
+      "Artificial Intelligence",
+      "Data Mining",
+      "Autonomous Systems", 
+      "Cybersecurity",
+      "Software Engineering",
+      "Information Security",
+      "Web Technology",
+      "Multimedia Computing",
+      "Software Testing"
+    ]
+  }
+}

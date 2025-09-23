@@ -1,14 +1,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'debug_config.dart';
+// Removed debug config for production
 
 class ErrorHandler {
   static void handleError(dynamic error, StackTrace? stackTrace) {
     if (kDebugMode) {
-      DebugConfig.logError('Error: $error');
+      debugPrint('ErrorHandler: $error');
       if (stackTrace != null) {
-        DebugConfig.logError('StackTrace: $stackTrace');
+        debugPrint('StackTrace: $stackTrace');
       }
     }
 
@@ -26,45 +26,45 @@ class ErrorHandler {
 
   static void _handleAuthError(AuthException error) {
     if (kDebugMode) {
-      DebugConfig.logError('Auth Error: ${error.message}');
+      debugPrint('Auth Error: ${error.message}');
     }
 
     switch (error.statusCode) {
       case '400':
-        DebugConfig.logWarning('Bad request - check your input data');
+        if (kDebugMode) debugPrint('Bad request - check your input data');
         break;
       case '401':
-        DebugConfig.logWarning('Unauthorized - please sign in again');
+        if (kDebugMode) debugPrint('Unauthorized - please sign in again');
         break;
       case '403':
-        DebugConfig.logWarning('Forbidden - insufficient permissions');
+        if (kDebugMode) debugPrint('Forbidden - insufficient permissions');
         break;
       case '422':
-        DebugConfig.logWarning('Validation error - check your data format');
+        if (kDebugMode) debugPrint('Validation error - check your data format');
         break;
       default:
-        DebugConfig.logWarning('Authentication error occurred');
+        if (kDebugMode) debugPrint('Authentication error occurred');
     }
   }
 
   static void _handleDatabaseError(PostgrestException error) {
     if (kDebugMode) {
-      DebugConfig.logError('Database Error: ${error.message}');
-      DebugConfig.logError('Details: ${error.details}');
-      DebugConfig.logError('Hint: ${error.hint}');
+      debugPrint('Database Error: ${error.message}');
+      debugPrint('Details: ${error.details}');
+      debugPrint('Hint: ${error.hint}');
     }
   }
 
   static void _handleStorageError(StorageException error) {
     if (kDebugMode) {
-      DebugConfig.logError('Storage Error: ${error.message}');
-      DebugConfig.logError('Status Code: ${error.statusCode}');
+      debugPrint('Storage Error: ${error.message}');
+      debugPrint('Status Code: ${error.statusCode}');
     }
   }
 
   static void _handleGenericError(dynamic error) {
     if (kDebugMode) {
-      DebugConfig.logError('Generic Error: $error');
+      debugPrint('Generic Error: $error');
     }
   }
 

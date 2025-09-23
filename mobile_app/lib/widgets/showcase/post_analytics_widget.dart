@@ -40,13 +40,13 @@ class PostAnalyticsWidget extends StatelessWidget {
   Widget _buildHeader() {
     return Row(
       children: [
-        Icon(
+        const Icon(
           Icons.analytics_outlined,
           size: 20,
           color: AppTheme.primaryColor,
         ),
         const SizedBox(width: 8),
-        Text(
+        const Text(
           'Post Analytics',
           style: TextStyle(
             fontSize: 16,
@@ -214,7 +214,7 @@ class PostAnalyticsWidget extends StatelessWidget {
               ),
               child: Text(
                 '#$tag',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 12,
                   color: AppTheme.primaryColor,
                 ),

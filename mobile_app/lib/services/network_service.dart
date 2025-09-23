@@ -10,11 +10,11 @@ class NetworkService {
 
   final Connectivity _connectivity = Connectivity();
   StreamSubscription<ConnectivityResult>? _connectivitySubscription;
-  
+
   // Network state
   bool _isConnected = true;
   ConnectivityResult _connectionType = ConnectivityResult.wifi;
-  
+
   // Getters
   bool get isConnected => _isConnected;
   bool get isOnWifi => _connectionType == ConnectivityResult.wifi;
@@ -26,19 +26,19 @@ class NetworkService {
     // Check initial connectivity
     _connectionType = await _connectivity.checkConnectivity();
     _isConnected = _connectionType != ConnectivityResult.none;
-    
+
     // Listen for connectivity changes
     _connectivitySubscription = _connectivity.onConnectivityChanged.listen(
       (ConnectivityResult result) {
         _connectionType = result;
         _isConnected = result != ConnectivityResult.none;
         debugPrint('📶 Network changed: $result');
-        
+
         // Notify app about network changes
         _notifyNetworkChange(result);
       },
     );
-    
+
     debugPrint('📶 Network initialized: $_connectionType');
   }
 
@@ -66,9 +66,9 @@ class NetworkService {
   // Get appropriate timeout based on connection
   Duration getTimeoutDuration() {
     if (isOnMobile) {
-      return const Duration(seconds: 30); // Longer timeout for mobile
+      return const Duration(seconds: 10); // Optimized mobile timeout
     }
-    return const Duration(seconds: 15); // Standard timeout for WiFi
+    return const Duration(seconds: 8); // Faster timeout for WiFi
   }
 
   // Get appropriate image quality based on connection
@@ -105,13 +105,14 @@ class OptimizedHttpClient {
     bool enableCompression = true,
   }) async {
     final optimizedHeaders = _getOptimizedHeaders(headers, enableCompression);
-    
+
     try {
       final response = await _client
           .get(url, headers: optimizedHeaders)
           .timeout(_networkService.getTimeoutDuration());
-      
-      debugPrint('📡 GET ${url.path}: ${response.statusCode} (${response.contentLength ?? 0} bytes)');
+
+      debugPrint(
+          '📡 GET ${url.path}: ${response.statusCode} (${response.contentLength ?? 0} bytes)');
       return response;
     } catch (e) {
       debugPrint('❌ GET ${url.path} failed: $e');
@@ -127,12 +128,12 @@ class OptimizedHttpClient {
     bool enableCompression = true,
   }) async {
     final optimizedHeaders = _getOptimizedHeaders(headers, enableCompression);
-    
+
     try {
       final response = await _client
           .post(url, headers: optimizedHeaders, body: body)
           .timeout(_networkService.getTimeoutDuration());
-      
+
       debugPrint('📡 POST ${url.path}: ${response.statusCode}');
       return response;
     } catch (e) {
@@ -149,12 +150,12 @@ class OptimizedHttpClient {
     bool enableCompression = true,
   }) async {
     final optimizedHeaders = _getOptimizedHeaders(headers, enableCompression);
-    
+
     try {
       final response = await _client
           .put(url, headers: optimizedHeaders, body: body)
           .timeout(_networkService.getTimeoutDuration());
-      
+
       debugPrint('📡 PUT ${url.path}: ${response.statusCode}');
       return response;
     } catch (e) {
@@ -171,7 +172,6 @@ class OptimizedHttpClient {
     final optimizedHeaders = <String, String>{
       'Content-Type': 'application/json',
       'User-Agent': 'StudentTalentApp/1.0',
-      'ngrok-skip-browser-warning': 'true', // Bypass ngrok warning
     };
 
     // Add compression headers for mobile data
@@ -205,13 +205,15 @@ class DataUsageTracker {
   // Track download
   void trackDownload(int bytes) {
     _sessionBytesDownloaded += bytes;
-    debugPrint('📊 Downloaded: ${_formatBytes(bytes)} (Session: ${_formatBytes(_sessionBytesDownloaded)})');
+    debugPrint(
+        '📊 Downloaded: ${_formatBytes(bytes)} (Session: ${_formatBytes(_sessionBytesDownloaded)})');
   }
 
   // Track upload
   void trackUpload(int bytes) {
     _sessionBytesUploaded += bytes;
-    debugPrint('📊 Uploaded: ${_formatBytes(bytes)} (Session: ${_formatBytes(_sessionBytesUploaded)})');
+    debugPrint(
+        '📊 Uploaded: ${_formatBytes(bytes)} (Session: ${_formatBytes(_sessionBytesUploaded)})');
   }
 
   // Get session usage
@@ -233,13 +235,16 @@ class DataUsageTracker {
   String _formatBytes(int bytes) {
     if (bytes < 1024) return '${bytes}B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)}KB';
-    if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)}MB';
+    if (bytes < 1024 * 1024 * 1024) {
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)}MB';
+    }
     return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)}GB';
   }
 
   // Check if data usage is high
   bool isHighDataUsage() {
     const highUsageThreshold = 50 * 1024 * 1024; // 50MB per session
-    return (_sessionBytesDownloaded + _sessionBytesUploaded) > highUsageThreshold;
+    return (_sessionBytesDownloaded + _sessionBytesUploaded) >
+        highUsageThreshold;
   }
 }

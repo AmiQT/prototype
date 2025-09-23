@@ -20,20 +20,12 @@ class GeminiChatService extends ChangeNotifier {
 
   bool get isTyping => _isTyping;
   bool get hasApiKey {
-    final hasKey = AppConfig.hasGeminiApiKey;
-    if (kDebugMode) {
-      debugPrint('GeminiChatService: hasApiKey = $hasKey');
-    }
-    return hasKey;
+    return AppConfig.hasGeminiApiKey;
   }
 
   /// Get API key from secure configuration
   String? get _apiKey {
-    final key = AppConfig.getGeminiApiKey();
-    if (kDebugMode) {
-      debugPrint('GeminiChatService: API key available = ${key != null}');
-    }
-    return key;
+    return AppConfig.getGeminiApiKey();
   }
 
   /// Send message with optional file attachments

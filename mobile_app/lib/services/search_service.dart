@@ -12,10 +12,10 @@ import '../services/supabase_auth_service.dart';
 import 'search_analytics_service.dart';
 import 'search_cache_service.dart';
 import '../config/supabase_config.dart';
+import '../config/backend_config.dart';
 
 class SearchService {
-  static const String baseUrl =
-      'https://c3168f89d034.ngrok-free.app'; // ngrok tunnel
+  static const String baseUrl = BackendConfig.baseUrl; // Use stable backend URL
 
   final ProfileService _profileService = ProfileService();
   final SupabaseAuthService _authService = SupabaseAuthService();
@@ -86,8 +86,8 @@ class SearchService {
       }
       debugPrint('SearchService: User authenticated as: ${currentUser.id}');
 
-      // Wait a moment for auth state to propagate to Firestore
-      await Future.delayed(const Duration(milliseconds: 100));
+      // Minimal delay for auth state propagation
+      await Future.delayed(const Duration(milliseconds: 50));
 
       // Get all profiles directly (optimized - single query)
       debugPrint(

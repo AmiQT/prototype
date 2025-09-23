@@ -32,11 +32,13 @@ class _LinkedInReactionsWidgetState extends State<LinkedInReactionsWidget>
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 100), // FAST: Reduced from 200ms
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
+    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(
+          parent: _animationController,
+          curve: Curves.easeOut), // FAST: Removed slow elasticOut
     );
   }
 
@@ -127,6 +129,8 @@ class _LinkedInReactionsWidgetState extends State<LinkedInReactionsWidget>
 
     return GestureDetector(
       onTap: () {
+        debugPrint(
+            '🎯 LinkedInReactionsWidget: ${type.name} tapped for post ${widget.post.id}');
         widget.onReaction(type, widget.post.id);
         _animationController.forward().then((_) {
           _animationController.reverse();
@@ -162,8 +166,8 @@ class _LinkedInReactionsWidgetState extends State<LinkedInReactionsWidget>
                     type.emoji,
                     style: TextStyle(
                       fontSize: 16,
-                      color: isUserReacted || isActive 
-                          ? AppTheme.primaryColor 
+                      color: isUserReacted || isActive
+                          ? AppTheme.primaryColor
                           : Colors.grey[600],
                     ),
                   ),
@@ -173,10 +177,11 @@ class _LinkedInReactionsWidgetState extends State<LinkedInReactionsWidget>
                       '$count',
                       style: TextStyle(
                         fontSize: 12,
-                        color: isUserReacted || isActive 
-                            ? AppTheme.primaryColor 
+                        color: isUserReacted || isActive
+                            ? AppTheme.primaryColor
                             : Colors.grey[600],
-                        fontWeight: isUserReacted ? FontWeight.bold : FontWeight.w500,
+                        fontWeight:
+                            isUserReacted ? FontWeight.bold : FontWeight.w500,
                       ),
                     ),
                   ],
@@ -205,9 +210,17 @@ class CompactReactionsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint(
+        '🔍 CompactReactionsWidget build: post ${post.id}, totalReactions: ${post.totalReactions}');
+
     if (post.totalReactions == 0) {
+      debugPrint(
+          '🔍 CompactReactionsWidget: Using simple like button for post ${post.id}');
       return _buildSimpleLikeButton();
     }
+
+    debugPrint(
+        '🔍 CompactReactionsWidget: Using reaction buttons for post ${post.id}');
 
     return Row(
       children: [
@@ -224,9 +237,13 @@ class CompactReactionsWidget extends StatelessWidget {
               orElse: () => ReactionType.like,
             );
             final isUserReacted = currentUserReaction == type.name;
-            
+
             return GestureDetector(
-              onTap: () => onReaction(type, post.id),
+              onTap: () {
+                debugPrint(
+                    '🎯 CompactReactionsWidget: ${type.name} tapped for post ${post.id}');
+                onReaction(type, post.id);
+              },
               child: Container(
                 margin: const EdgeInsets.only(right: 8),
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -243,7 +260,8 @@ class CompactReactionsWidget extends StatelessWidget {
                   '${type.emoji}${entry.value}',
                   style: TextStyle(
                     fontSize: 12,
-                    fontWeight: isUserReacted ? FontWeight.bold : FontWeight.normal,
+                    fontWeight:
+                        isUserReacted ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
               ),
@@ -265,8 +283,16 @@ class CompactReactionsWidget extends StatelessWidget {
   }
 
   Widget _buildSimpleLikeButton() {
+    debugPrint(
+        '🔧 CompactReactionsWidget: Building simple like button for post ${post.id}');
     return GestureDetector(
-      onTap: () => onReaction(ReactionType.like, post.id),
+      onTap: () {
+        debugPrint(
+            '🎯 CompactReactionsWidget: Simple like tapped for post ${post.id}');
+        debugPrint('🔧 CompactReactionsWidget: Calling onReaction callback...');
+        onReaction(ReactionType.like, post.id);
+        debugPrint('🔧 CompactReactionsWidget: onReaction callback completed');
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(

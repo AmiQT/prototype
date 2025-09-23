@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/language_service.dart';
 import '../../utils/app_theme.dart';
-import '../../l10n/generated/app_localizations.dart';
 
 class LanguageSelector extends StatelessWidget {
   const LanguageSelector({super.key});
@@ -25,7 +24,7 @@ class LanguageSelector extends StatelessWidget {
             ),
           ),
           title: Text(
-            AppLocalizations.of(context).language,
+            'Language',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -52,9 +51,9 @@ class LanguageSelector extends StatelessWidget {
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: Text(
-            AppLocalizations.of(context).selectLanguage,
-            style: const TextStyle(
+          title: const Text(
+            'Select Language',
+            style: TextStyle(
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -98,9 +97,9 @@ class LanguageSelector extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text(
-                AppLocalizations.of(context).cancel,
-                style: const TextStyle(
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
                   color: Colors.grey,
                 ),
               ),
@@ -120,25 +119,25 @@ class LanguageSelector extends StatelessWidget {
       // Show success message
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Language changed to ${LanguageService.getLanguageDisplayName(languageCode)}',
+          SnackBar(
+            content: Text(
+              'Language changed to ${LanguageService.getLanguageDisplayName(languageCode)}',
+            ),
+            backgroundColor: AppTheme.successColor,
+            duration: const Duration(seconds: 2),
           ),
-          backgroundColor: AppTheme.successColor,
-          duration: const Duration(seconds: 2),
-        ),
-      );
+        );
       }
     }).catchError((error) {
       // Show error message
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error changing language: $error'),
-          backgroundColor: AppTheme.errorColor,
-          duration: const Duration(seconds: 3),
-        ),
-      );
+          SnackBar(
+            content: Text('Error changing language: $error'),
+            backgroundColor: AppTheme.errorColor,
+            duration: const Duration(seconds: 3),
+          ),
+        );
       }
     });
   }
@@ -154,7 +153,7 @@ class CompactLanguageSelector extends StatelessWidget {
       builder: (context, languageService, child) {
         return PopupMenuButton<String>(
           icon: const Icon(Icons.language_rounded),
-          tooltip: AppLocalizations.of(context).language,
+          tooltip: 'Language',
           onSelected: (languageCode) {
             languageService.changeLanguage(languageCode);
           },

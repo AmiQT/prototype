@@ -2,10 +2,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
 import '../models/user_model.dart';
 import '../config/supabase_config.dart';
+import '../config/backend_config.dart';
 
 class SettingsService {
-  static const String baseUrl =
-      'https://c3168f89d034.ngrok-free.app'; // ngrok tunnel
+  static const String baseUrl = BackendConfig.baseUrl; // Use stable backend URL
 
   // Get Supabase auth token for authentication
 

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/project_model.dart';
 import '../../utils/app_theme.dart';
-import '../../l10n/generated/app_localizations.dart';
 import '../modern/modern_text_field.dart';
 import '../modern/modern_button.dart';
 
@@ -30,8 +29,6 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceMd),
       decoration: BoxDecoration(
@@ -62,7 +59,7 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
                   ),
                   const SizedBox(width: AppTheme.spaceSm),
                   Text(
-                    l10n.projects,
+                    'Projects',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: AppTheme.secondaryColor,
@@ -77,7 +74,7 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
                   color: AppTheme.secondaryColor,
                   size: 28,
                 ),
-                tooltip: l10n.addProject,
+                tooltip: 'Add Project',
               ),
             ],
           ),
@@ -85,7 +82,7 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
           const SizedBox(height: AppTheme.spaceSm),
 
           Text(
-            l10n.showcaseYourProjects,
+            'Showcase Your Projects',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppTheme.grayColor,
                 ),
@@ -127,7 +124,7 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
           ),
           const SizedBox(height: AppTheme.spaceSm),
           Text(
-            AppLocalizations.of(context).noProjectsAdded,
+            'No projects added',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: AppTheme.grayColor,
                   fontWeight: FontWeight.w500,
@@ -135,7 +132,7 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
           ),
           const SizedBox(height: AppTheme.spaceXs),
           Text(
-            AppLocalizations.of(context).tapAddToStartAdding,
+            'Tap + to start adding',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppTheme.grayColor,
                 ),
@@ -179,7 +176,7 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
                       color: AppTheme.secondaryColor,
                       size: 20,
                     ),
-                    tooltip: AppLocalizations.of(context).edit,
+                    tooltip: 'Edit',
                   ),
                   IconButton(
                     onPressed: () => _deleteProject(index),
@@ -188,7 +185,7 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
                       color: AppTheme.errorColor,
                       size: 20,
                     ),
-                    tooltip: AppLocalizations.of(context).delete,
+                    tooltip: 'Delete',
                   ),
                 ],
               ),
@@ -235,7 +232,8 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
                         backgroundColor:
                             AppTheme.secondaryColor.withValues(alpha: 0.1),
                         side: BorderSide(
-                            color: AppTheme.secondaryColor.withValues(alpha: 0.3)),
+                            color:
+                                AppTheme.secondaryColor.withValues(alpha: 0.3)),
                       ))
                   .toList(),
             ),
@@ -287,12 +285,12 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context).deleteProject),
-        content: Text(AppLocalizations.of(context).deleteProjectConfirmation),
+        title: const Text('Delete Project'),
+        content: const Text('Are you sure you want to delete this project?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context).cancel),
+            child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () {
@@ -302,9 +300,9 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
               widget.onProjectsChanged(_projects);
               Navigator.pop(context);
             },
-            child: Text(
-              AppLocalizations.of(context).delete,
-              style: const TextStyle(color: AppTheme.errorColor),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: AppTheme.errorColor),
             ),
           ),
         ],
@@ -331,9 +329,7 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           title: Text(
-            project == null
-                ? AppLocalizations.of(context).addProject
-                : AppLocalizations.of(context).editProject,
+            project == null ? 'Add Project' : 'Edit Project',
           ),
           content: SingleChildScrollView(
             child: Column(
@@ -341,12 +337,11 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
               children: [
                 ModernTextField(
                   controller: titleController,
-                  label: AppLocalizations.of(context).projectTitle,
+                  label: 'Project Title',
                   icon: Icons.folder,
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return AppLocalizations.of(context)
-                          .pleaseEnterProjectTitle;
+                      return 'Please enter project title';
                     }
                     return null;
                   },
@@ -356,7 +351,7 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
 
                 ModernTextField(
                   controller: descriptionController,
-                  label: AppLocalizations.of(context).description,
+                  label: 'Description',
                   icon: Icons.description,
                   maxLines: 3,
                 ),
@@ -365,7 +360,7 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
 
                 ModernTextField(
                   controller: technologiesController,
-                  label: AppLocalizations.of(context).technologies,
+                  label: 'Technologies',
                   icon: Icons.code,
                   hintText: 'e.g., Flutter, Firebase, Node.js',
                 ),
@@ -374,7 +369,7 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
 
                 ModernTextField(
                   controller: urlController,
-                  label: AppLocalizations.of(context).projectUrl,
+                  label: 'Project URL',
                   icon: Icons.link,
                   hintText: 'https://github.com/username/project',
                 ),
@@ -388,7 +383,7 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
                   Text('End Date: ${endDate!.month}/${endDate!.year}'),
 
                 CheckboxListTile(
-                  title: Text(AppLocalizations.of(context).ongoingProject),
+                  title: const Text('Ongoing Project'),
                   value: isOngoing,
                   onChanged: (value) {
                     setDialogState(() {
@@ -407,10 +402,10 @@ class _ProjectsEditorState extends State<ProjectsEditor> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(AppLocalizations.of(context).cancel),
+              child: const Text('Cancel'),
             ),
             ModernButton(
-              text: AppLocalizations.of(context).save,
+              text: 'Save',
               onPressed: () {
                 if (titleController.text.trim().isNotEmpty) {
                   final technologies = technologiesController.text

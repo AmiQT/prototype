@@ -1,7 +1,7 @@
 // Supabase showcase models
 // import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import '../utils/debug_config.dart';
+// Removed debug config for production
 
 /// Enum for different types of showcase posts
 enum PostType {
@@ -507,14 +507,7 @@ class ShowcasePostModel {
 
     // Debug logging for profile image
     if (kDebugMode) {
-      DebugConfig.logShowcase(
-          'ShowcasePostModel.fromJson - Post ID: ${json['id']}');
-      DebugConfig.logShowcase('  - profiles data: $profiles');
-      DebugConfig.logShowcase(
-          '  - user_profile_image: ${json['user_profile_image']}');
-      DebugConfig.logShowcase(
-          '  - userProfileImage: ${json['userProfileImage']}');
-      DebugConfig.logShowcase('  - Final userProfileImage: $userProfileImage');
+      // Debug logging removed for production
     }
 
     // Parse reactions from JSONB

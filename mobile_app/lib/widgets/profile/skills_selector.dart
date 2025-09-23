@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../utils/app_theme.dart';
-import '../../l10n/generated/app_localizations.dart';
 
 class SkillsSelector extends StatefulWidget {
   final List<String> selectedSkills;
@@ -23,36 +22,101 @@ class _SkillsSelectorState extends State<SkillsSelector> {
   // Predefined skills categories
   static const Map<String, List<String>> _skillCategories = {
     'Programming': [
-      'Flutter', 'Dart', 'Java', 'Python', 'JavaScript', 'TypeScript',
-      'C++', 'C#', 'Swift', 'Kotlin', 'React', 'Vue.js', 'Angular',
-      'Node.js', 'PHP', 'Ruby', 'Go', 'Rust', 'HTML', 'CSS'
+      'Flutter',
+      'Dart',
+      'Java',
+      'Python',
+      'JavaScript',
+      'TypeScript',
+      'C++',
+      'C#',
+      'Swift',
+      'Kotlin',
+      'React',
+      'Vue.js',
+      'Angular',
+      'Node.js',
+      'PHP',
+      'Ruby',
+      'Go',
+      'Rust',
+      'HTML',
+      'CSS'
     ],
     'Design': [
-      'UI/UX Design', 'Graphic Design', 'Adobe Photoshop', 'Adobe Illustrator',
-      'Figma', 'Sketch', 'Adobe XD', 'Canva', 'InDesign', 'After Effects',
-      'Blender', '3D Modeling', 'Animation', 'Video Editing'
+      'UI/UX Design',
+      'Graphic Design',
+      'Adobe Photoshop',
+      'Adobe Illustrator',
+      'Figma',
+      'Sketch',
+      'Adobe XD',
+      'Canva',
+      'InDesign',
+      'After Effects',
+      'Blender',
+      '3D Modeling',
+      'Animation',
+      'Video Editing'
     ],
     'Data & Analytics': [
-      'Data Analysis', 'Machine Learning', 'Data Science', 'SQL',
-      'Power BI', 'Tableau', 'Excel', 'R', 'MATLAB', 'Statistics',
-      'Big Data', 'Data Visualization', 'Business Intelligence'
+      'Data Analysis',
+      'Machine Learning',
+      'Data Science',
+      'SQL',
+      'Power BI',
+      'Tableau',
+      'Excel',
+      'R',
+      'MATLAB',
+      'Statistics',
+      'Big Data',
+      'Data Visualization',
+      'Business Intelligence'
     ],
     'Business': [
-      'Project Management', 'Leadership', 'Communication', 'Teamwork',
-      'Problem Solving', 'Critical Thinking', 'Public Speaking',
-      'Presentation', 'Marketing', 'Sales', 'Customer Service',
-      'Strategic Planning', 'Business Analysis'
+      'Project Management',
+      'Leadership',
+      'Communication',
+      'Teamwork',
+      'Problem Solving',
+      'Critical Thinking',
+      'Public Speaking',
+      'Presentation',
+      'Marketing',
+      'Sales',
+      'Customer Service',
+      'Strategic Planning',
+      'Business Analysis'
     ],
     'Technical': [
-      'Database Management', 'Cloud Computing', 'AWS', 'Azure',
-      'Google Cloud', 'DevOps', 'Docker', 'Kubernetes', 'Git',
-      'Linux', 'Windows Server', 'Network Administration',
-      'Cybersecurity', 'System Administration'
+      'Database Management',
+      'Cloud Computing',
+      'AWS',
+      'Azure',
+      'Google Cloud',
+      'DevOps',
+      'Docker',
+      'Kubernetes',
+      'Git',
+      'Linux',
+      'Windows Server',
+      'Network Administration',
+      'Cybersecurity',
+      'System Administration'
     ],
     'Creative': [
-      'Writing', 'Content Creation', 'Photography', 'Music Production',
-      'Creative Writing', 'Copywriting', 'Social Media', 'Blogging',
-      'Storytelling', 'Brand Development', 'Creative Direction'
+      'Writing',
+      'Content Creation',
+      'Photography',
+      'Music Production',
+      'Creative Writing',
+      'Copywriting',
+      'Social Media',
+      'Blogging',
+      'Storytelling',
+      'Brand Development',
+      'Creative Direction'
     ]
   };
 
@@ -70,8 +134,6 @@ class _SkillsSelectorState extends State<SkillsSelector> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceMd),
       decoration: BoxDecoration(
@@ -99,60 +161,63 @@ class _SkillsSelectorState extends State<SkillsSelector> {
               ),
               const SizedBox(width: AppTheme.spaceSm),
               Text(
-                l10n.skills,
+                'Skills',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.primaryColor,
-                ),
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.primaryColor,
+                    ),
               ),
             ],
           ),
-          
+
           const SizedBox(height: AppTheme.spaceSm),
-          
+
           Text(
-            l10n.selectYourSkills,
+            'Select Your Skills',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppTheme.grayColor,
-            ),
+                  color: AppTheme.grayColor,
+                ),
           ),
-          
+
           const SizedBox(height: AppTheme.spaceMd),
-          
+
           // Selected Skills Display
           if (_selectedSkills.isNotEmpty) ...[
             Text(
-              '${l10n.selectedSkills} (${_selectedSkills.length})',
+              'Selected Skills (${_selectedSkills.length})',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
             const SizedBox(height: AppTheme.spaceSm),
             Wrap(
               spacing: AppTheme.spaceXs,
               runSpacing: AppTheme.spaceXs,
-              children: _selectedSkills.map((skill) => _buildSelectedSkillChip(skill)).toList(),
+              children: _selectedSkills
+                  .map((skill) => _buildSelectedSkillChip(skill))
+                  .toList(),
             ),
             const SizedBox(height: AppTheme.spaceMd),
           ],
-          
+
           // Add Custom Skill
           _buildAddCustomSkillSection(),
-          
+
           const SizedBox(height: AppTheme.spaceMd),
-          
+
           // Skill Categories
           Text(
-            l10n.skillCategories,
+            'Skill Categories',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+                  fontWeight: FontWeight.w600,
+                ),
           ),
-          
+
           const SizedBox(height: AppTheme.spaceSm),
-          
+
           // Categories List
-          ..._skillCategories.entries.map((category) => _buildSkillCategory(category.key, category.value)),
+          ..._skillCategories.entries.map(
+              (category) => _buildSkillCategory(category.key, category.value)),
         ],
       ),
     );
@@ -195,10 +260,11 @@ class _SkillsSelectorState extends State<SkillsSelector> {
           Expanded(
             child: TextField(
               controller: _customSkillController,
-              decoration: InputDecoration(
-                hintText: AppLocalizations.of(context).addCustomSkill,
+              decoration: const InputDecoration(
+                hintText: 'Add custom skill',
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceSm),
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: AppTheme.spaceSm),
               ),
               onSubmitted: _addCustomSkill,
             ),
@@ -220,9 +286,9 @@ class _SkillsSelectorState extends State<SkillsSelector> {
       title: Text(
         categoryName,
         style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w600,
-          color: AppTheme.primaryColor,
-        ),
+              fontWeight: FontWeight.w600,
+              color: AppTheme.primaryColor,
+            ),
       ),
       leading: Icon(
         _getCategoryIcon(categoryName),
@@ -244,7 +310,7 @@ class _SkillsSelectorState extends State<SkillsSelector> {
 
   Widget _buildSkillChip(String skill) {
     final isSelected = _selectedSkills.contains(skill);
-    
+
     return FilterChip(
       label: Text(
         skill,

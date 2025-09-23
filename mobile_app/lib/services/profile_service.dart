@@ -1,16 +1,16 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+// Removed unused imports: dart:convert, http (using Supabase directly)
 import 'package:flutter/foundation.dart';
 import '../models/profile_model.dart';
 import '../models/academic_info_model.dart';
 import '../models/experience_model.dart';
 import '../models/project_model.dart';
 import '../config/supabase_config.dart';
+import '../config/backend_config.dart';
 import '../utils/profile_image_cleanup.dart';
 
 class ProfileService {
   static const String baseUrl =
-      'https://prototype-348e.onrender.com'; // Render backend
+      BackendConfig.baseUrl; // Use stable cloud backend
 
   // Get Supabase auth token for authentication
   static Future<String?> _getAuthToken() async {
@@ -49,6 +49,11 @@ class ProfileService {
         throw Exception('User not authenticated');
       }
 
+      // MOBILE APP OPTIMIZATION: Skip custom backend, use Supabase directly
+      debugPrint(
+          'ProfileService: Using Supabase directly for mobile app (no custom backend delays)');
+
+      /* REMOVED FOR MOBILE: Custom backend calls (causes 30s delays)
       // Try to save to backend first
       try {
         final response = await http.post(
@@ -70,13 +75,9 @@ class ProfileService {
       } catch (e) {
         debugPrint(
             'ProfileService: Backend save failed, using Supabase fallback: $e');
+      */
 
-        // Fallback: Save to Supabase
-        await _saveProfileToSupabase(profile);
-        return;
-      }
-
-      // Also save to Supabase for redundancy
+      // Save to Supabase directly (no backend delays)
       await _saveProfileToSupabase(profile);
     } catch (e) {
       debugPrint('ProfileService: Error saving profile: $e');
@@ -156,6 +157,12 @@ class ProfileService {
         throw Exception('User not authenticated');
       }
 
+      // MOBILE APP OPTIMIZATION: Skip custom backend, use Supabase directly
+      debugPrint(
+          'ProfileService: Getting profile from Supabase directly for mobile app');
+      return await _getProfileFromSupabase(userId);
+
+      /* REMOVED FOR MOBILE: Custom backend calls (causes 30s delays)
       // Try to get from backend first
       try {
         final response = await http.get(
@@ -179,6 +186,7 @@ class ProfileService {
         // Fallback: Get from Supabase
         return await _getProfileFromSupabase(userId);
       }
+      */
     } catch (e) {
       debugPrint('ProfileService: Error getting profile: $e');
       return null;

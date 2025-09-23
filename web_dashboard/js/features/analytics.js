@@ -315,14 +315,8 @@ async function loadOverviewStats() {
         AnalyticsLogger.info('Loading overview stats...');
         const startTime = performance.now();
 
-        // Try backend first (no Firestore rules headaches!)
-        const isBackendConnected = await testBackendConnection();
-        if (isBackendConnected) {
-            await loadOverviewStatsFromBackend();
-        } else {
-            // Only use Supabase as fallback
-            await loadOverviewStatsFromSupabase();
-        }
+        // ✅ DIRECT: Load from Supabase only - backend reserved for data mining
+        await loadOverviewStatsFromSupabase();
 
         const totalTime = performance.now() - startTime;
         AnalyticsLogger.info('Overview stats loaded', {
@@ -698,14 +692,9 @@ async function setupAnalytics() {
 
         const startTime = performance.now();
 
-        // COMPLETELY BYPASS FIRESTORE - Use backend only!
-        const isBackendConnected = await testBackendConnection();
-        if (isBackendConnected) {
-            await setupAnalyticsFromBackend();
-        } else {
-            // If no backend, just use empty data - NO FIRESTORE!
-            await setupAnalyticsWithEmptyData();
-        }
+        // ✅ SIMPLIFIED: Direct Supabase approach only
+        // Custom backend reserved for future data mining features
+        await setupAnalyticsWithSupabase();
 
         const setupTime = performance.now() - startTime;
         AnalyticsLogger.info(`Analytics setup completed in ${setupTime.toFixed(2)}ms`);
@@ -770,16 +759,15 @@ async function setupAnalyticsFromBackend() {
         }
     } catch (error) {
         console.error('Backend analytics setup failed:', error);
-        setupAnalyticsWithEmptyData();
+        setupAnalyticsWithSupabase();
     }
 }
 
-// Fallback with empty data (NO FIRESTORE!)
-async function setupAnalyticsWithEmptyData() {
-    console.log('📊 Setting up analytics with empty data - NO FIRESTORE RULES NEEDED!');
+// ✅ SIMPLIFIED: Load analytics data directly from Supabase
+async function setupAnalyticsWithSupabase() {
+    console.log('📊 Loading analytics data from Supabase - Clean approach');
     
     try {
-        // Try to load data from Supabase first
         const { supabase } = await import('../config/supabase-config.js');
         
         // Fetch data from Supabase
@@ -801,15 +789,15 @@ async function setupAnalyticsWithEmptyData() {
             currentData.lastUpdated = new Date().toISOString();
         }
         
-        console.log(`✅ Loaded ${users.length} users, ${profiles.length} profiles, and ${events.length} events from Supabase`);
+        console.log(`✅ Analytics loaded: ${users.length} users, ${profiles.length} profiles, ${events.length} events`);
         
         // Render charts with real data
         await renderAnalyticsCharts(users, profiles, events);
         
     } catch (error) {
-        console.warn('⚠️ Error loading data from Supabase, using empty charts:', error.message);
+        console.warn('⚠️ Error loading analytics from Supabase:', error.message);
         
-        // Store empty data
+        // Store empty data as fallback
         if (currentData) {
             currentData.users = [];
             currentData.events = [];

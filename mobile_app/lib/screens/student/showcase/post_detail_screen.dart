@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -32,12 +33,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   UserModel? _currentUser;
   bool _isLoading = false;
   String? _error;
+  StreamSubscription<ShowcasePostModel?>? _postSubscription;
 
   @override
   void initState() {
     super.initState();
     _loadCurrentUser();
     _loadPost();
+    _startRealTimeUpdates();
 
     // Increment view count
     if (widget.postId.isNotEmpty) {
@@ -47,6 +50,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
   @override
   void dispose() {
+    _postSubscription?.cancel();
     _scrollController.dispose();
     super.dispose();
   }
@@ -55,6 +59,54 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     final authService =
         Provider.of<SupabaseAuthService>(context, listen: false);
     _currentUser = authService.currentUser;
+  }
+
+  void _startRealTimeUpdates() {
+    // ULTRA-FAST REAL-TIME: Every 2 seconds for true social media experience
+    _postSubscription =
+        Stream.periodic(const Duration(seconds: 2), (count) async {
+      if (!mounted) return null;
+
+      try {
+        // Only log every 10th refresh to reduce spam
+        if (count % 10 == 0) {
+          debugPrint(
+              'PostDetailScreen: ⚡ Ultra-fast refresh #$count for post ${widget.postId}');
+        }
+
+        // Get latest post data with faster timeout
+        final post = await _showcaseService.getPostById(widget.postId);
+        if (post == null) return null;
+
+        // Get latest comments with batch-optimized loading
+        final comments = await _showcaseService.getPostComments(widget.postId);
+        final updatedPost = post.copyWith(comments: comments);
+
+        // SMART UPDATE: Only rebuild if data actually changed
+        if (_post != null &&
+            (_post!.likes.length != updatedPost.likes.length ||
+                _post!.comments.length != updatedPost.comments.length ||
+                _post!.reactions != updatedPost.reactions ||
+                _post!.content != updatedPost.content)) {
+          if (count % 10 == 0) {
+            debugPrint(
+                'PostDetailScreen: 🔄 Changes detected - likes:${updatedPost.likes.length}, comments:${updatedPost.comments.length}');
+          }
+          if (mounted) {
+            setState(() {
+              _post = updatedPost;
+            });
+          }
+        }
+
+        return updatedPost;
+      } catch (e) {
+        debugPrint('PostDetailScreen: ❌ Refresh error: $e');
+        return _post;
+      }
+    }).asyncMap((event) async => await event).listen((post) {
+      // Stream listener for real-time updates
+    });
   }
 
   Future<void> _loadPost() async {
@@ -71,14 +123,27 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     });
 
     try {
+      debugPrint('PostDetailScreen: 🔄 Loading post ${widget.postId}...');
+
       // Get post from Supabase using the new method
       final post = await _showcaseService.getPostById(widget.postId);
 
       if (post != null) {
+        debugPrint('PostDetailScreen: 📄 Post loaded, now loading comments...');
+
+        // Load comments from separate table for proper architecture
+        final comments = await _showcaseService.getPostComments(widget.postId);
+
+        debugPrint(
+            'PostDetailScreen: 💬 Loaded ${comments.length} comments for post');
+
         setState(() {
-          _post = post;
+          _post = post.copyWith(comments: comments);
           _isLoading = false;
         });
+
+        debugPrint(
+            'PostDetailScreen: ✅ Initial load complete - Post with ${comments.length} comments');
       } else {
         setState(() {
           _error = 'Post not found';
@@ -86,6 +151,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         });
       }
     } catch (e) {
+      debugPrint('PostDetailScreen: ❌ Load error: $e');
       setState(() {
         _error = 'Failed to load post: $e';
         _isLoading = false;
@@ -240,7 +306,35 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   Stream<ShowcasePostModel?> _getPostStream() {
-    return _showcaseService.showcaseCollection.doc(widget.postId).snapshots();
+    // FIXED: Real-time stream for post updates including comments and reactions
+    return Stream.periodic(const Duration(seconds: 5), (count) async {
+      try {
+        debugPrint(
+            'PostDetailScreen: 🔄 Real-time refresh #$count for post ${widget.postId}');
+
+        // Get latest post data
+        final post = await _showcaseService.getPostById(widget.postId);
+        if (post == null) return null;
+
+        // Get latest comments
+        final comments = await _showcaseService.getPostComments(widget.postId);
+        final updatedPost = post.copyWith(comments: comments);
+
+        // Update state if mounted
+        if (mounted) {
+          setState(() {
+            _post = updatedPost;
+          });
+        }
+
+        debugPrint(
+            'PostDetailScreen: ✅ Real-time update complete - ${comments.length} comments, ${post.likes.length} likes');
+        return updatedPost;
+      } catch (e) {
+        debugPrint('PostDetailScreen: ❌ Real-time update error: $e');
+        return _post; // Return current post on error
+      }
+    }).asyncMap((event) async => await event);
   }
 
   Future<void> _handleLike(ShowcasePostModel post) async {
@@ -249,27 +343,40 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     // Add haptic feedback
     HapticFeedback.lightImpact();
 
-    try {
-      // Optimistic update
-      final updatedPost = post.copyWith(
-        likes: post.isLikedBy(_currentUser!.uid)
-            ? post.likes.where((id) => id != _currentUser!.uid).toList()
-            : [...post.likes, _currentUser!.uid],
-      );
+    final isCurrentlyLiked = post.isLikedBy(_currentUser!.uid);
 
+    try {
+      // Optimistic update with better state management
+      final updatedLikes = isCurrentlyLiked
+          ? post.likes.where((id) => id != _currentUser!.uid).toList()
+          : [...post.likes, _currentUser!.uid];
+
+      final optimisticPost = post.copyWith(likes: updatedLikes);
+
+      // Update UI immediately
       setState(() {
-        _post = updatedPost;
+        _post = optimisticPost;
       });
 
-      // Real like/unlike
+      // Single API call - no unnecessary refresh needed
       await _showcaseService.toggleLike(post.id, _currentUser!.uid);
 
-      // Force refresh the post data to ensure UI is in sync
-      await _loadPost();
+      // ✅ FIX: Refresh with actual database state after API success
+      final freshPost = await _showcaseService.getPostById(post.id);
+      if (freshPost != null && mounted) {
+        setState(() {
+          _post = freshPost; // Update with real DB data
+        });
+        debugPrint('Like UI refreshed with fresh database data');
+      }
+
+      // Success - optimistic update was correct
+      debugPrint(
+          'Like toggle successful for post ${post.id} (${isCurrentlyLiked ? 'unliked' : 'liked'})');
     } catch (e) {
-      // Revert optimistic update on error
+      // Only revert on actual API errors
       setState(() {
-        _post = post;
+        _post = post; // Revert to original state
       });
 
       if (mounted) {
@@ -304,20 +411,29 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       // Add haptic feedback
       HapticFeedback.lightImpact();
 
-      // Add reaction to the post
-      await _showcaseService.addReaction(postId, reactionType.name);
+      // Optimistic reaction update (count-based system)
+      final updatedReactions = Map<String, int>.from(_post!.reactions);
+      final currentCount = updatedReactions[reactionType.name] ?? 0;
 
-      // Refresh the post data to show the new reaction immediately
-      await _loadPost();
+      // Increment reaction count optimistically
+      updatedReactions[reactionType.name] = currentCount + 1;
 
-      // Also trigger a stream refresh to ensure UI updates
+      final optimisticPost = _post!.copyWith(reactions: updatedReactions);
+
+      // Update UI immediately
       setState(() {
-        // This will trigger a rebuild with the updated post data
+        _post = optimisticPost;
       });
 
+      // API call - no unnecessary refresh needed
+      await _showcaseService.addReaction(postId, reactionType.name);
+
       debugPrint(
-          'PostDetailScreen: Added ${reactionType.name} reaction to post $postId');
+          'Reaction ${reactionType.name} added successfully to post $postId');
     } catch (e) {
+      // Revert optimistic update on error by reloading the post
+      await _loadPost();
+
       debugPrint('PostDetailScreen: Error adding reaction: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -341,20 +457,49 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     if (_currentUser == null || _post == null) return;
 
     try {
-      await _showcaseService.addComment(
-        _post!.id,
-        _currentUser!.uid,
-        content,
+      debugPrint('PostDetailScreen: 💬 Adding comment to post ${_post!.id}...');
+
+      // Use separate table comment system for proper architecture
+      // ✅ FIX: Ensure proper user name with fallback
+      final userName = _currentUser!.name.isNotEmpty
+          ? _currentUser!.name
+          : _currentUser!.email.split('@')[0];
+
+      final commentId = await _showcaseService.addCommentExtended(
+        postId: _post!.id,
+        userId: _currentUser!.uid,
+        userName: userName,
+        userProfileImage: null, // UserModel doesn't have profile image field
+        content: content,
+        parentCommentId: parentCommentId,
+        mentions: [], // Add mention support if needed
       );
 
-      // Refresh the post data to show the new comment immediately
-      await _loadPost();
+      debugPrint('PostDetailScreen: ✅ Comment added successfully: $commentId');
 
-      // Also trigger a stream refresh to ensure UI updates
-      setState(() {
-        // This will trigger a rebuild with the updated post data
-      });
+      // IMMEDIATE REFRESH: Load updated comments right away
+      final comments = await _showcaseService.getPostComments(_post!.id);
+      debugPrint(
+          'PostDetailScreen: 🔄 Refreshed comments: ${comments.length} total');
+
+      if (mounted) {
+        setState(() {
+          _post = _post!.copyWith(comments: comments);
+        });
+      }
+
+      // Show success feedback
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Comment added successfully!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
     } catch (e) {
+      debugPrint('PostDetailScreen: ❌ Failed to add comment: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to add comment: $e')),

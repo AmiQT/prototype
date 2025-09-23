@@ -11,7 +11,6 @@ import '../../models/experience_model.dart';
 import '../../models/project_model.dart';
 import '../../services/profile_service.dart';
 import '../../utils/app_theme.dart';
-import '../../l10n/generated/app_localizations.dart';
 import '../../widgets/modern/modern_text_field.dart';
 import '../../widgets/modern/modern_button.dart';
 import '../../widgets/profile/skills_selector.dart';
@@ -153,13 +152,12 @@ class _ComprehensiveEditProfileScreenState
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(l10n.editProfile),
+        title: const Text('Edit Profile'),
         backgroundColor: theme.appBarTheme.backgroundColor,
         foregroundColor: theme.appBarTheme.foregroundColor,
         elevation: 0,
@@ -168,11 +166,11 @@ class _ComprehensiveEditProfileScreenState
           indicatorColor: Colors.white,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
-          tabs: [
-            Tab(icon: const Icon(Icons.person), text: l10n.basic),
-            Tab(icon: const Icon(Icons.school), text: l10n.academic),
-            Tab(icon: const Icon(Icons.star), text: l10n.skillsAndInterests),
-            Tab(icon: const Icon(Icons.work), text: l10n.experience),
+          tabs: const [
+            Tab(icon: Icon(Icons.person), text: 'Basic'),
+            Tab(icon: Icon(Icons.school), text: 'Academic'),
+            Tab(icon: Icon(Icons.star), text: 'Skills & Interests'),
+            Tab(icon: Icon(Icons.work), text: 'Experience'),
           ],
         ),
       ),
@@ -207,7 +205,7 @@ class _ComprehensiveEditProfileScreenState
 
           // Basic Information
           Text(
-            AppLocalizations.of(context).basicInformation,
+            'Basic Information',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).brightness == Brightness.dark
@@ -220,7 +218,7 @@ class _ComprehensiveEditProfileScreenState
 
           // Full Name Label
           Text(
-            AppLocalizations.of(context).fullName,
+            'Full Name',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: Theme.of(context).brightness == Brightness.dark
@@ -231,11 +229,11 @@ class _ComprehensiveEditProfileScreenState
           const SizedBox(height: AppTheme.spaceXs),
           ModernTextField(
             controller: _fullNameController,
-            label: AppLocalizations.of(context).fullName,
+            label: 'Full Name',
             icon: Icons.person,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return AppLocalizations.of(context).pleaseEnterFullName;
+                return 'Please enter full name';
               }
               return null;
             },
@@ -245,7 +243,7 @@ class _ComprehensiveEditProfileScreenState
 
           // Headline Label
           Text(
-            AppLocalizations.of(context).headline,
+            'Headline',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: Theme.of(context).brightness == Brightness.dark
@@ -256,7 +254,7 @@ class _ComprehensiveEditProfileScreenState
           const SizedBox(height: AppTheme.spaceXs),
           ModernTextField(
             controller: _headlineController,
-            label: AppLocalizations.of(context).headline,
+            label: 'Headline',
             icon: Icons.title,
             hintText: 'e.g., Computer Science Student',
           ),
@@ -265,7 +263,7 @@ class _ComprehensiveEditProfileScreenState
 
           // Phone Number Label
           Text(
-            AppLocalizations.of(context).phoneNumber,
+            'Phone Number',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: Theme.of(context).brightness == Brightness.dark
@@ -276,7 +274,7 @@ class _ComprehensiveEditProfileScreenState
           const SizedBox(height: AppTheme.spaceXs),
           ModernTextField(
             controller: _phoneController,
-            label: AppLocalizations.of(context).phoneNumber,
+            label: 'Phone Number',
             icon: Icons.phone,
             keyboardType: TextInputType.phone,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -286,7 +284,7 @@ class _ComprehensiveEditProfileScreenState
 
           // Address Label
           Text(
-            AppLocalizations.of(context).address,
+            'Address',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: Theme.of(context).brightness == Brightness.dark
@@ -297,7 +295,7 @@ class _ComprehensiveEditProfileScreenState
           const SizedBox(height: AppTheme.spaceXs),
           ModernTextField(
             controller: _addressController,
-            label: AppLocalizations.of(context).address,
+            label: 'Address',
             icon: Icons.location_on,
             maxLines: 2,
           ),
@@ -306,7 +304,7 @@ class _ComprehensiveEditProfileScreenState
 
           // Bio Label
           Text(
-            AppLocalizations.of(context).bio,
+            'Bio',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: Theme.of(context).brightness == Brightness.dark
@@ -317,10 +315,10 @@ class _ComprehensiveEditProfileScreenState
           const SizedBox(height: AppTheme.spaceXs),
           ModernTextField(
             controller: _bioController,
-            label: AppLocalizations.of(context).bio,
+            label: 'Bio',
             icon: Icons.description,
             maxLines: 4,
-            hintText: AppLocalizations.of(context).tellUsAboutYourself,
+            hintText: 'Tell us about yourself',
           ),
         ],
       ),
@@ -391,7 +389,7 @@ class _ComprehensiveEditProfileScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppLocalizations.of(context).academicInformation,
+            'Academic Information',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).brightness == Brightness.dark
@@ -404,11 +402,11 @@ class _ComprehensiveEditProfileScreenState
 
           ModernTextField(
             controller: _studentIdController,
-            label: AppLocalizations.of(context).studentId,
+            label: 'Student ID',
             icon: Icons.badge,
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return AppLocalizations.of(context).pleaseEnterStudentId;
+                return 'Please enter student ID';
               }
               return null;
             },
@@ -418,7 +416,7 @@ class _ComprehensiveEditProfileScreenState
 
           ModernTextField(
             controller: _programController,
-            label: AppLocalizations.of(context).program,
+            label: 'Program',
             icon: Icons.school,
           ),
 
@@ -426,7 +424,7 @@ class _ComprehensiveEditProfileScreenState
 
           ModernTextField(
             controller: _departmentController,
-            label: AppLocalizations.of(context).department,
+            label: 'Department',
             icon: Icons.business,
           ),
 
@@ -434,7 +432,7 @@ class _ComprehensiveEditProfileScreenState
 
           ModernTextField(
             controller: _facultyController,
-            label: AppLocalizations.of(context).faculty,
+            label: 'Faculty',
             icon: Icons.account_balance,
           ),
 
@@ -461,7 +459,7 @@ class _ComprehensiveEditProfileScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  AppLocalizations.of(context).currentSemester,
+                  'Current Semester',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: Theme.of(context).brightness == Brightness.dark
@@ -497,7 +495,7 @@ class _ComprehensiveEditProfileScreenState
 
           ModernTextField(
             controller: _cgpaController,
-            label: AppLocalizations.of(context).cgpa,
+            label: 'CGPA',
             icon: Icons.grade,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
@@ -589,7 +587,7 @@ class _ComprehensiveEditProfileScreenState
       ),
       child: SafeArea(
         child: ModernButton(
-          text: AppLocalizations.of(context).saveProfile,
+          text: 'Save Profile',
           onPressed: _isLoading ? null : _saveProfile,
           isLoading: _isLoading,
           icon: Icons.save,
@@ -627,9 +625,8 @@ class _ComprehensiveEditProfileScreenState
 
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                    AppLocalizations.of(context).imageSelectedSuccessfully),
+              const SnackBar(
+                content: Text('Image selected successfully'),
                 backgroundColor: AppTheme.successColor,
               ),
             );
@@ -656,8 +653,8 @@ class _ComprehensiveEditProfileScreenState
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).errorSelectingImage),
+          const SnackBar(
+            content: Text('Error selecting image'),
             backgroundColor: AppTheme.errorColor,
           ),
         );
@@ -719,9 +716,8 @@ class _ComprehensiveEditProfileScreenState
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content:
-                Text(AppLocalizations.of(context).profileUpdatedSuccessfully),
+          const SnackBar(
+            content: Text('Profile updated successfully'),
             backgroundColor: AppTheme.successColor,
           ),
         );
@@ -732,8 +728,7 @@ class _ComprehensiveEditProfileScreenState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-                '${AppLocalizations.of(context).errorUpdatingProfile}: $e'),
+            content: Text('Error updating profile: $e'),
             backgroundColor: AppTheme.errorColor,
           ),
         );

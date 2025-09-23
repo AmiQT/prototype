@@ -1,6 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
-import '../utils/debug_config.dart';
+// Removed debug config for production
 
 class SupabaseConfig {
   // Supabase configuration
@@ -17,14 +17,13 @@ class SupabaseConfig {
       );
 
       if (kDebugMode) {
-        DebugConfig.logInit('Supabase initialized successfully');
-        DebugConfig.logInit('Supabase URL: $supabaseUrl');
-        DebugConfig.logInit(
-            'Supabase Anon Key: ${supabaseAnonKey.substring(0, 20)}...');
+        debugPrint('Supabase initialized successfully');
+        debugPrint('Supabase URL: $supabaseUrl');
+        debugPrint('Supabase Anon Key: ${supabaseAnonKey.substring(0, 20)}...');
       }
     } catch (e) {
       if (kDebugMode) {
-        DebugConfig.logError('Failed to initialize Supabase: $e');
+        debugPrint('Failed to initialize Supabase: $e');
       }
       rethrow;
     }

@@ -1,13 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../services/supabase_auth_service.dart';
-import '../models/user_model.dart';
 import '../config/supabase_config.dart';
-import 'auth/comprehensive_profile_setup_screen.dart';
-import 'auth/login_screen.dart';
-import 'student/enhanced_student_dashboard.dart';
-import 'lecturer/lecturer_dashboard.dart';
-import '../../utils/debug_config.dart';
+// import 'auth/login_screen.dart'; // Unused import removed
+// Removed debug config for production
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -27,7 +21,8 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(seconds: 2),
+      duration:
+          const Duration(milliseconds: 200), // ULTRA FAST: Reduced to 0.2s
       vsync: this,
     );
 
@@ -36,15 +31,15 @@ class _SplashScreenState extends State<SplashScreen>
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _animationController,
-      curve: Curves.easeIn,
+      curve: Curves.easeOut, // FAST: Changed from easeIn
     ));
 
     _scaleAnimation = Tween<double>(
-      begin: 0.5,
+      begin: 0.8, // MINIMAL: Start closer to final size
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _animationController,
-      curve: Curves.elasticOut,
+      curve: Curves.easeOut, // FAST: Removed slow elasticOut
     ));
 
     _animationController.forward();
@@ -62,31 +57,29 @@ class _SplashScreenState extends State<SplashScreen>
     try {
       // Check if user is authenticated with Supabase
       final supabaseUser = SupabaseConfig.auth.currentUser;
-      DebugConfig.logAuth('Supabase user check: ${supabaseUser?.id}');
+      debugPrint('Supabase user check: ${supabaseUser?.id}');
 
       if (supabaseUser != null) {
         // User is authenticated, check if profile is complete
-        DebugConfig.logAuth(
-            'User authenticated, checking profile completion...');
+        debugPrint('User authenticated, checking profile completion...');
 
         // Use a simpler profile check for now
         final hasProfile = await _checkProfileExists(supabaseUser.id);
 
         if (hasProfile) {
-          DebugConfig.logAuth('Profile complete, navigating to dashboard');
+          debugPrint('Profile complete, navigating to dashboard');
           _navigateToDashboard(supabaseUser.id);
         } else {
-          DebugConfig.logAuth(
-              'Profile incomplete, navigating to profile setup');
+          debugPrint('Profile incomplete, navigating to profile setup');
           _navigateToProfileSetup(supabaseUser.id);
         }
       } else {
         // For now, just go to login if no Supabase user
-        DebugConfig.logAuth('No authenticated user, going to login');
+        debugPrint('No authenticated user, going to login');
         _navigateToLogin();
       }
     } catch (e) {
-      DebugConfig.logError('Error during auth check: $e');
+      debugPrint('Error during auth check: $e');
       _navigateToLogin();
     }
   }
@@ -103,75 +96,38 @@ class _SplashScreenState extends State<SplashScreen>
 
       return response.isNotEmpty;
     } catch (e) {
-      DebugConfig.logWarning('Error checking profile: $e');
+      debugPrint('Error checking profile: $e');
       return false;
-    }
-  }
-
-  void _navigateBasedOnRole(UserModel user) async {
-    // Check if user has completed their profile
-    final authService =
-        Provider.of<SupabaseAuthService>(context, listen: false);
-
-    // Ensure user has valid uid
-    if (user.uid.isEmpty) {
-      debugPrint('SplashScreen: User uid is empty, going to login');
-      _navigateToLogin();
-      return;
-    }
-
-    final hasCompletedProfile = await authService.hasCompletedProfile(user.uid);
-
-    if (!hasCompletedProfile) {
-      // Redirect to profile setup if profile is not complete
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => const ComprehensiveProfileSetupScreen(),
-          ),
-        );
-      }
-      return;
-    }
-
-    // Profile is complete, navigate to appropriate dashboard
-    Widget targetScreen;
-
-    switch (user.role) {
-      case UserRole.student:
-        targetScreen = const EnhancedStudentDashboard();
-        break;
-      case UserRole.lecturer:
-        targetScreen = const LecturerDashboard();
-        break;
-      case UserRole.admin:
-        // Admin uses same interface as students
-        targetScreen = const EnhancedStudentDashboard();
-        break;
-    }
-
-    if (mounted) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => targetScreen),
-      );
     }
   }
 
   void _navigateToDashboard(String userId) {
     if (mounted) {
-      Navigator.of(context).pushReplacementNamed('/dashboard');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed('/dashboard');
+        }
+      });
     }
   }
 
   void _navigateToProfileSetup(String userId) {
     if (mounted) {
-      Navigator.of(context).pushReplacementNamed('/profile-setup');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed('/profile-setup');
+        }
+      });
     }
   }
 
   void _navigateToLogin() {
     if (mounted) {
-      Navigator.of(context).pushReplacementNamed('/login');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed('/login');
+        }
+      });
     }
   }
 

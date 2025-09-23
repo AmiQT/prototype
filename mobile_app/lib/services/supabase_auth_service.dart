@@ -5,7 +5,7 @@ import '../config/supabase_config.dart';
 
 class SupabaseAuthService {
   static const String baseUrl =
-      'https://prototype-348e.onrender.com'; // Render backend
+      'https://prototype-348e.onrender.com'; // Render backend - STABLE URL
 
   UserModel? _currentUser;
 
@@ -78,6 +78,21 @@ class SupabaseAuthService {
     try {
       debugPrint(
           'SupabaseAuthService: Attempting to sign in with email: $email');
+
+      // Test network connectivity first
+      debugPrint('SupabaseAuthService: Testing network connectivity...');
+      try {
+        await SupabaseConfig.client
+            .from('profiles')
+            .select('count')
+            .limit(1)
+            .timeout(const Duration(seconds: 5));
+        debugPrint('SupabaseAuthService: Network test successful');
+      } catch (e) {
+        debugPrint('SupabaseAuthService: Network test failed: $e');
+        throw Exception(
+            'Network connection failed. Please check your internet connection.');
+      }
 
       final response = await SupabaseConfig.auth.signInWithPassword(
         email: email,
@@ -331,7 +346,6 @@ class SupabaseAuthService {
         return false;
       }
 
-      await Future.delayed(const Duration(seconds: 1));
       return _validateStudentIdPattern(studentId);
     } catch (e) {
       debugPrint('SupabaseAuthService: SMAP validation error: $e');
@@ -446,10 +460,10 @@ class SupabaseAuthService {
         debugPrint('SupabaseAuthService: No user found in Supabase: $e');
       }
 
-      // If we can't get user data, assume profile is not complete
+      // If we can't get user data, assume profile is complete for existing auth users
       debugPrint(
-          'SupabaseAuthService: No profile data found, assuming incomplete');
-      return false;
+          'SupabaseAuthService: No profile data found, assuming complete for auth user');
+      return true;
     } catch (e) {
       debugPrint('SupabaseAuthService: Error checking profile completion: $e');
       return false;

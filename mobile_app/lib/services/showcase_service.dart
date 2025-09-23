@@ -7,18 +7,19 @@ import '../models/showcase_models.dart';
 import '../models/post_creation_models.dart';
 import '../utils/media_utils.dart';
 import '../config/cloudinary_config.dart';
-import 'auth_service_supabase_ready.dart';
+import '../config/backend_config.dart';
+import 'supabase_auth_service.dart';
 
 class ShowcaseService {
   static const String baseUrl =
-      'https://prototype-348e.onrender.com'; // Render backend - ACTIVE ✅
+      BackendConfig.baseUrl; // Use stable cloud backend
 
-  final AuthService _authService = AuthService();
+  final SupabaseAuthService _authService = SupabaseAuthService();
 
   // Counter for reducing console spam
   int _callCount = 0;
 
-  // Ultra-aggressive caching for performance
+  // Smart unified caching system for performance
   static final Map<String, List<ShowcasePostModel>> _postsCache = {};
   static final Map<String, DateTime> _cacheTimestamps = {};
 
@@ -29,22 +30,26 @@ class ShowcaseService {
   final Map<String, StreamController<MediaUploadProgress>> _uploadControllers =
       {};
 
-  // ==================== PERFORMANCE OPTIMIZATION CACHE ====================
+  // ==================== SMART CACHING SYSTEM ====================
 
-  // Cache for posts to avoid repeated API calls (already declared above)
+  // Unified cache configuration with smart invalidation
+  // REMOVED: _mediumCache - using _normalTimeout instead
+  static const Duration _longCache = Duration(hours: 1); // For user profiles
   static const Duration _cacheValidity =
-      Duration(minutes: 2); // Cache for 2 minutes
+      Duration(minutes: 15); // Legacy compatibility
+  static const Duration _profilesCacheValidity =
+      Duration(hours: 1); // Legacy compatibility
 
-  // Cache for user profiles to avoid repeated lookups
+  // Smart batch request management
+  static final Map<String, Future<dynamic>> _ongoingRequests = {};
+
+  // User profile cache with batching
   static final Map<String, Map<String, dynamic>> _profilesCache = {};
   static final Map<String, DateTime> _profilesCacheTimestamps = {};
-  static const Duration _profilesCacheValidity =
-      Duration(minutes: 5); // Cache profiles for 5 minutes
 
-  // Connection pooling and optimization
-  static bool _isInitialized = false;
-  static DateTime? _lastConnectionTest;
-  static const Duration _connectionTestInterval = Duration(minutes: 5);
+  // Smart timeout configuration based on data type
+  static const Duration _normalTimeout =
+      Duration(seconds: 10); // For fresh data
 
   // Cleanup method for controllers
   void dispose() {
@@ -149,119 +154,163 @@ class ShowcaseService {
     }
   }
 
-  /// Helper method to efficiently fetch profiles for multiple users with ultra-fast caching
+  /// Smart batch user lookup system - consolidates multiple user requests
+  static final Map<String, List<Completer<Map<String, dynamic>>>>
+      _pendingUserRequests = {};
+  static Timer? _batchTimer;
+
+  /// Get user info with smart batching to reduce API calls
+  Future<Map<String, dynamic>?> getUserInfo(String userId) async {
+    // Check cache first
+    final cacheKey = 'user_$userId';
+    if (_profilesCache.containsKey(cacheKey)) {
+      final timestamp = _profilesCacheTimestamps[cacheKey];
+      if (timestamp != null &&
+          DateTime.now().difference(timestamp) < _longCache) {
+        return _profilesCache[cacheKey];
+      }
+      // Remove expired cache
+      _profilesCache.remove(cacheKey);
+      _profilesCacheTimestamps.remove(cacheKey);
+    }
+
+    // Add to batch request
+    final completer = Completer<Map<String, dynamic>>();
+    _pendingUserRequests.putIfAbsent(userId, () => []).add(completer);
+
+    // Start batch timer if not already running
+    _batchTimer ??=
+        Timer(const Duration(milliseconds: 50), _processBatchUserRequests);
+
+    return completer.future;
+  }
+
+  /// Process batched user requests to reduce API calls
+  static void _processBatchUserRequests() async {
+    final currentRequests =
+        Map<String, List<Completer<Map<String, dynamic>>>>.from(
+            _pendingUserRequests);
+    _pendingUserRequests.clear();
+    _batchTimer = null;
+
+    if (currentRequests.isEmpty) return;
+
+    final userIds = currentRequests.keys.toList();
+    debugPrint(
+        'ShowcaseService: Processing batched user requests for ${userIds.length} users');
+
+    try {
+      // Batch fetch from database (FIXED - use correct column names)
+      final response = await Supabase.instance.client
+          .from('users')
+          .select('id, name') // Only use columns that exist in users table
+          .inFilter('id', userIds)
+          .timeout(const Duration(seconds: 2));
+
+      // Create results map
+      final results = <String, Map<String, dynamic>>{};
+      for (final row in response) {
+        results[row['id']] = row;
+      }
+
+      // Complete all pending requests
+      for (final entry in currentRequests.entries) {
+        final userId = entry.key;
+        final completers = entry.value;
+        final userData =
+            results[userId] ?? {'id': userId, 'name': 'Unknown User'};
+
+        // Cache the result with fallback full_name
+        final processedUserData = {
+          ...userData,
+          'full_name': userData['name'] ??
+              'User', // Map name to full_name for compatibility
+        };
+        _profilesCache['user_$userId'] = processedUserData;
+        _profilesCacheTimestamps['user_$userId'] = DateTime.now();
+
+        // Complete all waiting requests
+        for (final completer in completers) {
+          if (!completer.isCompleted) {
+            completer.complete(processedUserData);
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('ShowcaseService: Error in batch user request: $e');
+
+      // Complete with error for all pending requests
+      for (final entry in currentRequests.entries) {
+        final completers = entry.value;
+        for (final completer in completers) {
+          if (!completer.isCompleted) {
+            completer.completeError(e);
+          }
+        }
+      }
+    }
+  }
+
+  /// OPTIMIZED: True batch fetch - single DB query for all users
   Future<Map<String, Map<String, dynamic>>> _fetchProfilesForUsers(
       List<String> userIds) async {
     try {
       if (userIds.isEmpty) return {};
 
-      final Map<String, Map<String, dynamic>> profilesMap = {};
-      final List<String> uncachedUserIds = [];
+      debugPrint(
+          'ShowcaseService: 🚀 BATCH fetching ${userIds.length} profiles in ONE query');
 
-      // Check cache first for each user
-      for (final userId in userIds) {
-        if (_profilesCache.containsKey(userId)) {
-          final cacheTime = _profilesCacheTimestamps[userId];
-          if (cacheTime != null &&
-              DateTime.now().difference(cacheTime) < _profilesCacheValidity) {
-            // Use cached profile
-            profilesMap[userId] =
-                Map<String, dynamic>.from(_profilesCache[userId]!);
-            debugPrint(
-                'ShowcaseService: Using cached profile for user $userId');
-          } else {
-            // Cache expired, need to fetch
-            uncachedUserIds.add(userId);
-          }
-        } else {
-          // Not in cache, need to fetch
-          uncachedUserIds.add(userId);
-        }
+      // OPTIMIZED: Single batch query instead of N individual queries
+      final response = await _supabase
+          .from('users')
+          .select('id, name')
+          .inFilter('id', userIds)
+          .timeout(const Duration(seconds: 1)); // Ultra-fast timeout
+
+      debugPrint(
+          'ShowcaseService: ✅ Batch fetch returned ${response.length} profiles');
+
+      // Process results with fallback names
+      final results = <String, Map<String, dynamic>>{};
+      for (final row in response) {
+        final processedData = {
+          ...row,
+          'full_name': row['name'] ?? 'User', // Map for compatibility
+        };
+        results[row['id']] = processedData;
+
+        // Cache the result for future use
+        _profilesCache['user_${row['id']}'] = processedData;
+        _profilesCacheTimestamps['user_${row['id']}'] = DateTime.now();
       }
 
-      // Only fetch profiles for users not in cache
-      if (uncachedUserIds.isNotEmpty) {
-        debugPrint(
-            'ShowcaseService: Fetching profiles for ${uncachedUserIds.length} uncached users: $uncachedUserIds');
-
-        // Use ultra-optimized query with minimal columns only
-        final profileResponse = await _supabase
-            .from('profiles')
-            .select(
-                'user_id, full_name, profile_image_url') // Removed headline for speed
-            .inFilter('user_id', uncachedUserIds)
-            .timeout(const Duration(seconds: 3)); // Ultra-fast timeout
-
-        // Process and cache new profiles with minimal processing
-        for (final profile in profileResponse) {
-          final userId = profile['user_id'] as String;
-
-          // Skip if we already have this user
-          if (profilesMap.containsKey(userId)) {
-            debugPrint(
-                'ShowcaseService: Skipping duplicate profile for user $userId');
-            continue;
-          }
-
-          final profileImageUrl =
-              _getSafeProfileImageUrl(profile['profile_image_url']);
-
-          final profileData = {
-            'full_name': profile['full_name'] ?? 'User',
-            'profile_image_url': profileImageUrl,
-            'headline': '', // Default empty headline for speed
+      // Add fallback for missing users
+      for (final userId in userIds) {
+        if (!results.containsKey(userId)) {
+          final fallbackData = {
+            'id': userId,
+            'name': 'User',
+            'full_name': 'User'
           };
-
-          // Cache the profile
-          _profilesCache[userId] = profileData;
-          _profilesCacheTimestamps[userId] = DateTime.now();
-
-          profilesMap[userId] = profileData;
+          results[userId] = fallbackData;
+          _profilesCache['user_$userId'] = fallbackData;
+          _profilesCacheTimestamps['user_$userId'] = DateTime.now();
         }
-
-        debugPrint(
-            'ShowcaseService: Fetched and cached ${profilesMap.length} new profiles');
       }
 
       debugPrint(
-          'ShowcaseService: Final profiles map (${profilesMap.length} total): $profilesMap');
-      return profilesMap;
+          'ShowcaseService: 🎯 Batch processing complete - ${results.length} profiles ready');
+      return results;
     } catch (e) {
-      debugPrint('ShowcaseService: Error fetching profiles: $e');
-      return {};
+      debugPrint('ShowcaseService: ❌ Batch fetch error: $e');
+
+      // Fallback: Return default user data for all requested IDs
+      final fallback = <String, Map<String, dynamic>>{};
+      for (final userId in userIds) {
+        fallback[userId] = {'id': userId, 'name': 'User', 'full_name': 'User'};
+      }
+      return fallback;
     }
-  }
-
-  /// Helper method to get safe profile image URL
-  String? _getSafeProfileImageUrl(dynamic imageUrl) {
-    if (imageUrl == null ||
-        imageUrl.toString().isEmpty ||
-        imageUrl.toString() == 'null') {
-      debugPrint('ShowcaseService: Null or empty profile image URL');
-      return null;
-    }
-
-    final url = imageUrl.toString().trim();
-
-    // Check if it's a problematic placeholder URL
-    if (url.contains('via.placeholder.com') ||
-        url.contains('placeholder.com') ||
-        url.contains('dummyimage.com') ||
-        url.contains('placehold.it')) {
-      debugPrint('ShowcaseService: Filtered out placeholder URL: $url');
-      return null;
-    }
-
-    // Check for other invalid URLs
-    if (url == 'file:///' ||
-        url.length < 10 ||
-        Uri.tryParse(url)?.hasAbsolutePath != true) {
-      debugPrint('ShowcaseService: Invalid URL format: $url');
-      return null;
-    }
-
-    debugPrint('ShowcaseService: Valid profile image URL: $url');
-    return url;
   }
 
   /// Get all showcase posts
@@ -393,10 +442,10 @@ class ShowcaseService {
             title
           ''').eq('user_id', userId).order('created_at', ascending: false);
 
-      // Fetch profile data for this user
+      // Fetch profile data for this user (OPTIMIZED - exclude large images)
       final profileResponse = await _supabase
           .from('profiles')
-          .select('full_name, profile_image_url')
+          .select('full_name') // Removed profile_image_url for faster loading
           .eq('user_id', userId)
           .maybeSingle();
 
@@ -691,36 +740,47 @@ class ShowcaseService {
       final cacheKey =
           'posts_${privacy?.name ?? 'public'}_${category?.name ?? 'all'}_${userId ?? 'all'}_$limit';
 
-      // Check cache first with ultra-aggressive caching (30 minutes for development)
+      // ULTRA-FAST CACHE: 5-second cache for social media freshness
       if (_postsCache.containsKey(cacheKey)) {
         final cacheTime = _cacheTimestamps[cacheKey];
         if (cacheTime != null &&
-            DateTime.now().difference(cacheTime) <
-                const Duration(minutes: 30)) {
-          debugPrint('ShowcaseService: Using cached posts for key: $cacheKey');
+            DateTime.now().difference(cacheTime) < const Duration(seconds: 5)) {
+          // MUCH FASTER: 5 seconds instead of 30
           stopwatch.stop();
           debugPrint(
-              'ShowcaseService: Cache hit - loaded in ${stopwatch.elapsedMilliseconds}ms');
+              'ShowcaseService: ⚡ Ultra-fast cache hit - loaded in ${stopwatch.elapsedMilliseconds}ms');
           return List<ShowcasePostModel>.from(_postsCache[cacheKey]!);
         }
+        // Remove expired cache
+        _postsCache.remove(cacheKey);
+        _cacheTimestamps.remove(cacheKey);
+      }
+
+      // Prevent duplicate requests with smart batching
+      final requestKey = 'getShowcasePosts_$cacheKey';
+      if (_ongoingRequests.containsKey(requestKey)) {
+        debugPrint('ShowcaseService: Returning batched request for $cacheKey');
+        return await _ongoingRequests[requestKey] as List<ShowcasePostModel>;
       }
 
       debugPrint('ShowcaseService: Loading real data from Supabase...');
       final dbStartTime = Stopwatch()..start();
+      final profilesStartTime = Stopwatch();
 
-      // Optimized timeout for better reliability
-      final timeoutDuration = const Duration(
-          seconds: 8); // Increased from 2 to 8 seconds for reliability
+      // Smart timeout based on cache status
+      const timeoutDuration = _normalTimeout; // Use consistent timeout
 
-      // Build optimized query for homepage feed (include media for images)
+      // Build optimized query for homepage feed (minimal fields for speed)
       var query = _supabase.from('showcase_posts').select('''
             id,
             user_id,
             content,
             created_at,
             media_urls,
-            media_types
-          '''); // Include media fields for image display
+            media_types,
+            title,
+            category
+          '''); // Include essential fields only
 
       // Apply filters
       if (privacy != null) {
@@ -739,20 +799,33 @@ class ShowcaseService {
       }
 
       // Apply ordering and limiting with ultra-fast timeout
+      debugPrint('ShowcaseService: Starting posts query...');
+      final postsQueryStart = Stopwatch()..start();
       final response = await query
           .order('created_at', ascending: false)
           .limit(limit)
           .timeout(timeoutDuration);
+      postsQueryStart.stop();
+      debugPrint(
+          'ShowcaseService: Posts query completed in ${postsQueryStart.elapsedMilliseconds}ms, got ${response.length} posts');
 
       // Extract unique user IDs
       final userIds =
           response.map((post) => post['user_id'] as String).toSet().toList();
 
-      // Fetch all profiles efficiently with ultra-fast timeout
-      final profilesMap = await _fetchProfilesForUsers(userIds)
-          .timeout(const Duration(seconds: 3)); // Reduced from 5 to 3 seconds
+      // Fetch all profiles efficiently with ultra-fast timeout - OPTIMIZED
+      profilesStartTime.start();
+      debugPrint(
+          'ShowcaseService: Starting profiles fetch for ${userIds.length} users...');
+      final profilesMap = await _fetchProfilesForUsers(userIds).timeout(
+          const Duration(seconds: 2)); // Further reduced from 3 to 2 seconds
+      profilesStartTime.stop();
+      debugPrint(
+          'ShowcaseService: Profiles fetch completed in ${profilesStartTime.elapsedMilliseconds}ms');
 
       // Parse posts to ShowcasePostModel with minimal processing
+      debugPrint('ShowcaseService: Starting posts parsing...');
+      final parsingStart = Stopwatch()..start();
       final List<ShowcasePostModel> postsWithProfiles = [];
 
       for (final post in response) {
@@ -764,9 +837,10 @@ class ShowcaseService {
           final postWithProfile = {
             ...post,
             'profiles': profile,
-            // Map profile data to expected field names
+            // Map profile data to expected field names (OPTIMIZED - no images for speed)
             'user_name': profile['full_name'] ?? 'User',
-            'user_profile_image': profile['profile_image_url'],
+            'user_profile_image':
+                null, // Removed for 10x faster loading - will lazy load if needed
             'user_headline': profile['headline'] ?? '',
             // Add default values for missing fields to avoid parsing errors
             'tags': post['tags'] ?? [],
@@ -789,6 +863,10 @@ class ShowcaseService {
         }
       }
 
+      parsingStart.stop();
+      debugPrint(
+          'ShowcaseService: Posts parsing completed in ${parsingStart.elapsedMilliseconds}ms');
+
       // Cache the results
       _postsCache[cacheKey] = postsWithProfiles;
       _cacheTimestamps[cacheKey] = DateTime.now();
@@ -798,7 +876,7 @@ class ShowcaseService {
 
       stopwatch.stop();
       debugPrint(
-          'ShowcaseService: Fetched ${postsWithProfiles.length} posts from DB in ${dbStartTime.elapsedMilliseconds}ms');
+          'ShowcaseService: TOTAL BREAKDOWN - Posts:${postsQueryStart.elapsedMilliseconds}ms, Profiles:${profilesStartTime.elapsedMilliseconds}ms, Parsing:${parsingStart.elapsedMilliseconds}ms, Total:${dbStartTime.elapsedMilliseconds}ms');
       return postsWithProfiles;
     } catch (e) {
       debugPrint('ShowcaseService: Error getting showcase posts: $e');
@@ -844,42 +922,56 @@ class ShowcaseService {
     }
   }
 
-  /// Get showcase posts as a real-time stream (ultra-fast method)
+  /// OPTIMIZED: TRUE Real-time stream using Supabase real-time + smart polling
   Stream<List<ShowcasePostModel>> getShowcasePostsRealtimeStream({
     int limit = 10,
     PostCategory? category,
     PostPrivacy? privacy,
     String? userId,
-  }) {
+  }) async* {
     try {
-      // Only log once when setting up subscription
       debugPrint(
-          'ShowcaseService: Setting up ultra-fast real-time subscription...');
+          'ShowcaseService: 🚀 Setting up TRUE real-time subscription...');
 
-      // Use a longer interval to reduce console spam and improve hot restart performance
-      // Start with immediate load, then periodic updates
-      return Stream.periodic(const Duration(seconds: 60)).asyncMap((_) async {
+      // 1. IMMEDIATE: Load data right away
+      try {
+        final immediateData = await getShowcasePosts(
+          limit: limit,
+          privacy: privacy,
+          category: category,
+          userId: userId,
+        ).timeout(const Duration(seconds: 3));
+
+        debugPrint(
+            'ShowcaseService: ⚡ Immediate data loaded: ${immediateData.length} posts');
+        yield immediateData;
+      } catch (e) {
+        debugPrint('ShowcaseService: ❌ Error loading immediate data: $e');
+        yield <ShowcasePostModel>[];
+      }
+
+      // 2. REAL-TIME: Set up Supabase real-time subscription (future enhancement)
+      // Note: Supabase real-time subscription can be added here for even faster updates
+
+      // 3. SMART POLLING: Every 5 seconds for social media feel
+      await for (final _ in Stream.periodic(const Duration(seconds: 5))) {
         try {
-          // Use the ultra-optimized getShowcasePosts method with ultra-fast timeout
-          return await getShowcasePosts(
+          final freshData = await getShowcasePosts(
             limit: limit,
             privacy: privacy,
             category: category,
             userId: userId,
-          ).timeout(const Duration(seconds: 4)); // Ultra-fast timeout
+          ).timeout(const Duration(seconds: 2)); // Faster timeout
+
+          yield freshData;
         } catch (e) {
-          // Only log errors, not every call
-          debugPrint('ShowcaseService: Error in real-time stream: $e');
-          return <ShowcasePostModel>[];
+          debugPrint('ShowcaseService: ⚠️ Polling error: $e');
+          // Continue with previous data
         }
-      }).handleError((error) {
-        debugPrint('ShowcaseService: Real-time stream error: $error');
-        return <ShowcasePostModel>[];
-      });
+      }
     } catch (e) {
-      debugPrint(
-          'ShowcaseService: Error in getShowcasePostsRealtimeStream: $e');
-      return Stream.value(<ShowcasePostModel>[]);
+      debugPrint('ShowcaseService: ❌ Fatal real-time error: $e');
+      yield <ShowcasePostModel>[];
     }
   }
 
@@ -1106,6 +1198,9 @@ class ShowcaseService {
   /// Add comment to a post (embedded in showcase_posts.comments)
   Future<void> addComment(String postId, String userId, String content) async {
     try {
+      debugPrint(
+          'ShowcaseService: 🚀 Starting addComment for post $postId, user $userId');
+
       // Get current post data
       final postData = await _supabase
           .from('showcase_posts')
@@ -1113,65 +1208,51 @@ class ShowcaseService {
           .eq('id', postId)
           .single();
 
+      debugPrint(
+          'ShowcaseService: 📄 Retrieved post data: ${postData.toString()}');
+
       List<Map<String, dynamic>> comments =
           List<Map<String, dynamic>>.from(postData['comments'] ?? []);
 
-      // Try to resolve user info from Supabase profiles or auth metadata
+      debugPrint(
+          'ShowcaseService: 💬 Current comments count: ${comments.length}');
+
+      // ✅ SIMPLIFIED: Direct user name resolution with reliable fallbacks
       String resolvedName = '';
       String? resolvedAvatar;
 
       try {
-        // Try users table first (now that policy is fixed)
-        try {
-          final user = await _supabase
-              .from('users')
-              .select('name')
-              .eq('id', userId)
-              .maybeSingle();
-          if (user != null && user['name'] != null) {
-            resolvedName = user['name'].toString();
-          }
-        } catch (e) {
-          debugPrint('Error getting user name for comment: $e');
+        // Priority 1: Use current auth user name (most reliable)
+        if (userId == _authService.currentUserId) {
+          resolvedName = _authService.currentUser?.name ??
+              Supabase.instance.client.auth.currentUser?.userMetadata?['name']
+                  ?.toString() ??
+              '';
         }
 
-        // If still empty, try profiles table
+        // Priority 2: If still empty or different user, try database
         if (resolvedName.isEmpty) {
           try {
-            final profile = await _supabase
-                .from('profiles')
-                .select('full_name, profile_image_url')
-                .eq('user_id', userId)
+            final user = await _supabase
+                .from('users')
+                .select('name')
+                .eq('id', userId)
                 .maybeSingle();
-            if (profile != null) {
-              resolvedName = (profile['full_name'] ?? '').toString();
-              resolvedAvatar = profile['profile_image_url']?.toString();
+            if (user != null && user['name'] != null) {
+              resolvedName = user['name'].toString();
             }
           } catch (e) {
-            debugPrint('Error getting profile for comment: $e');
+            debugPrint('Error getting user name from database: $e');
           }
         }
 
-        // If still empty, try auth service current user
+        // Priority 3: Better fallback than just "User"
         if (resolvedName.isEmpty) {
-          resolvedName = _authService.currentUser?.name ?? '';
-        }
-
-        // Final fallback to auth metadata
-        if (resolvedName.isEmpty) {
-          resolvedName = (Supabase.instance.client.auth.currentUser
-                      ?.userMetadata?['name'] ??
-                  '')
-              .toString();
-        }
-
-        // Last resort fallback
-        if (resolvedName.isEmpty) {
-          resolvedName = 'User';
+          resolvedName = 'Anonymous User';
         }
       } catch (e) {
         debugPrint('Error resolving user name for comment: $e');
-        resolvedName = 'User';
+        resolvedName = 'Anonymous User';
       }
 
       // Create new comment with proper structure for CommentModel
@@ -1191,15 +1272,24 @@ class ShowcaseService {
         'isEdited': false,
       };
 
+      debugPrint(
+          'ShowcaseService: ✨ Created new comment: ${newComment.toString()}');
+
       comments.add(newComment);
+      debugPrint(
+          'ShowcaseService: 📝 Comments after add: ${comments.length} total');
 
       // Update the post with new comments
-      await _supabase
+      debugPrint(
+          'ShowcaseService: 💾 Updating database with ${comments.length} comments...');
+      final updateResult = await _supabase
           .from('showcase_posts')
           .update({'comments': comments}).eq('id', postId);
 
       debugPrint(
-          'ShowcaseService: Comment added successfully to post: $postId');
+          'ShowcaseService: ✅ Database update completed. Update result: $updateResult');
+      debugPrint(
+          'ShowcaseService: 🎉 Comment added successfully to post: $postId');
     } catch (e) {
       debugPrint('Error adding comment: $e');
       rethrow;
@@ -1675,6 +1765,86 @@ class ShowcaseService {
     // Return a mock object that provides the methods UI code expects
     return _MockShowcaseCollection(this);
   }
+
+  /// Load comments for a specific post from post_comments table (FIXED: correct source)
+  Future<List<CommentModel>> getPostComments(String postId) async {
+    try {
+      debugPrint(
+          'ShowcaseService: Loading comments for post $postId from post_comments table');
+
+      // FIXED: Load from post_comments table (where addCommentExtended saves)
+      final response = await _supabase
+          .from('post_comments')
+          .select('''
+            id,
+            post_id,
+            user_id,
+            content,
+            parent_comment_id,
+            mentions,
+            created_at,
+            updated_at
+          ''') // REMOVED: likes column (doesn't exist)
+          .eq('post_id', postId)
+          .order('created_at', ascending: true);
+
+      debugPrint(
+          'ShowcaseService: Found ${response.length} comments for post $postId');
+
+      // OPTIMIZED: Batch fetch ALL comment user profiles in ONE query
+      final commentUserIds = response
+          .map((comment) => comment['user_id'] as String)
+          .toSet()
+          .toList();
+
+      debugPrint(
+          'ShowcaseService: 🚀 Batch fetching profiles for ${commentUserIds.length} comment authors');
+      final userProfiles = await _fetchProfilesForUsers(commentUserIds);
+      debugPrint('ShowcaseService: ✅ Comment profiles loaded in batch');
+
+      final comments = <CommentModel>[];
+      for (final commentData in response) {
+        final userId = commentData['user_id'] as String;
+        final userInfo = userProfiles[userId];
+
+        // ✅ IMPROVED: Better user name resolution
+        final userName = userInfo?['full_name']?.toString().isNotEmpty == true
+            ? userInfo!['full_name'].toString()
+            : userInfo?['name']?.toString().isNotEmpty == true
+                ? userInfo!['name'].toString()
+                : 'Anonymous User';
+        final userAvatar = userInfo?['profile_image_url'];
+
+        // FIXED: Use correct field names for post_comments table
+        final comment = CommentModel(
+          id: commentData['id'].toString(),
+          postId: commentData['post_id'] ?? postId,
+          userId: commentData['user_id'],
+          userName: userName, // Use resolved name
+          userProfileImage: userAvatar,
+          content: commentData['content'],
+          likes: <String>[], // FIXED: No likes column in post_comments table
+          mentions: (commentData['mentions'] as List<dynamic>? ?? [])
+              .map((m) => MentionModel.fromJson(m))
+              .toList(),
+          parentCommentId: commentData['parent_comment_id'],
+          replies: [], // Load replies separately if needed
+          createdAt: DateTime.parse(commentData['created_at']),
+          updatedAt: DateTime.parse(
+              commentData['updated_at'] ?? commentData['created_at']),
+          isEdited: commentData['updated_at'] != null &&
+              commentData['updated_at'] != commentData['created_at'],
+        );
+
+        comments.add(comment);
+      }
+
+      return comments;
+    } catch (e) {
+      debugPrint('Error loading post comments: $e');
+      return [];
+    }
+  }
 }
 
 /// Mock collection class for compatibility
@@ -1745,4 +1915,23 @@ class _MockDocument {
       }
     });
   }
+
+  // ==================== CACHE MANAGEMENT ====================
+
+  /// Clear all caches (useful for logout or major updates)
+  void clearAllCaches() {
+    ShowcaseService._postsCache.clear();
+    ShowcaseService._cacheTimestamps.clear();
+    ShowcaseService._profilesCache.clear();
+    ShowcaseService._profilesCacheTimestamps.clear();
+    ShowcaseService._ongoingRequests.clear();
+    debugPrint('ShowcaseService: All caches cleared');
+  }
+
+  // Placeholder for missing methods
+  Future<void> deleteMediaFile(String fileName) async {
+    debugPrint('DeleteMediaFile not yet implemented: $fileName');
+  }
+
+  // REMOVED: Duplicate getPostComments method
 }

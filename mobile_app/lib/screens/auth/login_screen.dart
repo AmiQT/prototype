@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/supabase_auth_service.dart';
 import '../../models/user_model.dart';
 import '../../utils/error_handler.dart';
+// Removed auth debug helper for production
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_text_field.dart';
 import '../student/student_dashboard.dart';
@@ -40,11 +42,17 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _isLoading = true;
       });
+
+      // Debug authentication status before login
+      debugPrint('🔐 Authentication attempt started');
+
       try {
         final authService =
             Provider.of<SupabaseAuthService>(context, listen: false);
         final email = _emailController.text.trim();
         final password = _passwordController.text.trim();
+
+        debugPrint('🔐 Attempting login for email: $email');
 
         // Validate input
         if (email.isEmpty || password.isEmpty) {
@@ -54,6 +62,8 @@ class _LoginScreenState extends State<LoginScreen> {
         // Sign in with Supabase
         final user =
             await authService.signInWithEmailAndPassword(email, password);
+
+        debugPrint('✅ Login successful for user: ${user.id}');
 
         if (!mounted) return;
 
@@ -75,22 +85,16 @@ class _LoginScreenState extends State<LoginScreen> {
           _navigateToDashboard(user.role);
         }
       } on AuthException catch (e) {
+        if (kDebugMode) debugPrint('Auth error during login: ${e.message}');
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(ErrorHandler.getUserFriendlyMessage(e)),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-          );
+          final userMessage = ErrorHandler.getUserFriendlyMessage(e);
+          ErrorHandler.showErrorSnackBar(context, userMessage);
         }
       } catch (e) {
+        if (kDebugMode) debugPrint('Login error: $e');
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(ErrorHandler.getUserFriendlyMessage(e)),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-          );
+          ErrorHandler.showErrorSnackBar(
+              context, 'Login failed. Please try again.');
         }
       } finally {
         if (mounted) {
