@@ -146,33 +146,21 @@
         </div>
     </div>
 
-    <!-- Supabase SDK temporarily disabled -->
-    <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
 
+    <script type="module">
+        import { SUPABASE_CONFIG, supabase as sharedSupabase } from './js/config/supabase-config.js';
 
-    <script>
-        // Supabase configuration
-        const supabaseUrl = 'https://xibffemtpboiecpeynon.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpYmZmZW10cGJvaWVjcGV5bm9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1ODkzOTYsImV4cCI6MjA3MTE2NTM5Nn0.mwQndhu5_uX26T-qTEOCiLya74DUD6Iw8vV3ffuA5mM';
-        
-        // Initialize Supabase client
-        let supabaseClient;
-        if (window.supabase && window.supabase.createClient) {
-            supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-            console.log('Supabase client initialized for login');
+        const supabaseClient = sharedSupabase;
+
+        if (!supabaseClient) {
+            console.error('Supabase client failed to initialize');
         } else {
-            console.error('Supabase not available');
+            console.log('Supabase client initialized for login');
         }
 
         // Enhanced UI interactions
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeEnhancedUI();
-            setupFormAnimations();
-        });
-
-        function initializeEnhancedUI() {
+        async function initializeEnhancedUI() {
             // Floating label animations
             const inputs = document.querySelectorAll('.input-container input');
             inputs.forEach(input => {
@@ -203,15 +191,15 @@
             // Password toggle functionality
             const passwordToggle = document.getElementById('password-toggle');
             const passwordInput = document.getElementById('password');
-            
+
             passwordToggle.addEventListener('click', function() {
                 const type = passwordInput.type === 'password' ? 'text' : 'password';
                 passwordInput.type = type;
-                
+
                 const icon = this.querySelector('i');
                 icon.classList.toggle('fa-eye');
                 icon.classList.toggle('fa-eye-slash');
-                
+
                 this.classList.toggle('active');
             });
 
@@ -233,6 +221,24 @@
                     createRipple(e, this);
                 }
             });
+        }
+
+        async function bootstrapAuthGuard() {
+            try {
+                const { data, error } = await supabaseClient.auth.getSession();
+                if (error) {
+                    console.warn('Supabase session read error:', error.message);
+                }
+
+                if (data?.session?.user) {
+                    console.log('Session found, redirecting to dashboard');
+                    window.location.href = '/index.html';
+                    return true;
+                }
+            } catch (error) {
+                console.error('Failed to check session:', error);
+            }
+            return false;
         }
 
         function setupFormAnimations() {
@@ -296,132 +302,79 @@
             }
         }
 
+        document.addEventListener('DOMContentLoaded', async () => {
+            initializeEnhancedUI();
+            setupFormAnimations();
+            const redirected = await bootstrapAuthGuard();
+            if (!redirected) {
+                console.log('No active session, ready for login');
+            }
+        });
+
         // Enhanced login form submission
-        document.getElementById('login-form').addEventListener('submit', function(e) {
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const loginBtn = document.getElementById('login-btn');
             const btnContent = loginBtn.querySelector('.btn-content');
             const loading = document.getElementById('loading');
 
-            // Hide any previous messages
-            document.querySelectorAll('.message').forEach(msg => {
-                msg.classList.remove('show');
-            });
+            document.querySelectorAll('.message').forEach(msg => msg.classList.remove('show'));
 
-            // Show loading state
             loginBtn.disabled = true;
             loginBtn.classList.add('loading');
             btnContent.style.opacity = '0';
             loading.style.display = 'flex';
 
-            // Supabase authentication temporarily disabled
-            // supabase.auth.signInWithPassword({
-            //     email: email,
-            //     password: password
-            // })
-            // .then((response) => {
-            //     if (response.data.user) {
-            //         localStorage.setItem('isLoggedIn', 'true');
-                    
-            //         // Show success state
-            //         loginBtn.classList.remove('loading');
-            //         loginBtn.classList.add('success');
-            //         loading.style.display = 'none';
-            //         btnContent.style.opacity = '1';
-            //         document.getElementById('login-btn-text').textContent = 'Success!';
-                    
-            //         showMessage('success', 'Login successful! Redirecting to dashboard...');
-                    
-            //         setTimeout(() => {
-            //             window.location.href = 'index.html';
-            //         }, 1500);
-            //     } else {
-            //         throw new Error('Invalid email or password.');
-            //     }
-            // })
-            // .catch((error) => {
-            //     let errorText = 'Invalid email or password.';
-            //     if (error.code === 'PGRST116') { // Supabase error code for invalid credentials
-            //         errorText = 'Invalid email or password. Please check your credentials.';
-            //     } else if (error.message.includes('Access denied')) {
-            //         errorText = 'Access denied. You do not have admin privileges.';
-            //     } else if (error.code === 'PGRST116') { // Supabase error code for invalid credentials
-            //         errorText = 'Invalid email or password. Please check your credentials.';
-            //     }
-                
-            //     // Reset button state
-            //     loginBtn.disabled = false;
-            //     loginBtn.classList.remove('loading');
-            //     loading.style.display = 'none';
-            //     btnContent.style.opacity = '1';
-            //     document.getElementById('login-btn-text').textContent = 'Sign In';
-                
-            //     // Show error with shake animation
-            //     loginBtn.classList.add('shake');
-            //     setTimeout(() => loginBtn.classList.remove('shake'), 500);
-                
-            //     showMessage('error', errorText);
-            // });
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email,
+                    password
+                });
 
-            // Supabase authentication
-            if (supabaseClient) {
-                supabaseClient.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                }).then(({ data, error }) => {
-                    if (error) {
-                        throw error;
-                    }
-                    
-                    // Success
-                    localStorage.setItem('isLoggedIn', 'true');
-                    localStorage.setItem('userEmail', email);
-                    loginBtn.classList.remove('loading');
-                    loginBtn.classList.add('success');
-                    loading.style.display = 'none';
-                    btnContent.style.opacity = '1';
-                    document.getElementById('login-btn-text').textContent = 'Success!';
-                    showMessage('success', 'Login successful! Redirecting to dashboard...');
-                    setTimeout(() => {
-                        window.location.href = 'index.html';
-                    }, 1500);
-                }).catch((error) => {
-                    console.error('Login error:', error);
-                    
-                    let errorText = 'Login failed. Please try again.';
-                    if (error.message.includes('Invalid login credentials')) {
-                        errorText = 'Invalid email or password. Please check your credentials.';
-                    } else if (error.message.includes('Email not confirmed')) {
-                        errorText = 'Please verify your email address before logging in.';
-                    } else if (error.message.includes('Too many requests')) {
-                        errorText = 'Too many login attempts. Please wait a moment and try again.';
-                    }
-                    
-                    // Reset button state
+                if (error) {
+                    showMessage('error', error.message || 'Invalid credentials');
                     loginBtn.disabled = false;
                     loginBtn.classList.remove('loading');
-                    loading.style.display = 'none';
                     btnContent.style.opacity = '1';
-                    document.getElementById('login-btn-text').textContent = 'Sign In';
-                    
-                    // Show error with shake animation
-                    loginBtn.classList.add('shake');
-                    setTimeout(() => loginBtn.classList.remove('shake'), 500);
-                    
-                    showMessage('error', errorText);
-                });
-            } else {
-                // Fallback for when Supabase is not available
-                console.warn('Supabase not available, using fallback login');
+                    loading.style.display = 'none';
+                    return;
+                }
+
+                const { data: profileData, error: profileError } = await supabaseClient
+                    .from('users')
+                    .select('role')
+                    .eq('email', email)
+                    .single();
+
+                if (profileError) {
+                    console.warn('Failed to fetch user profile:', profileError.message);
+                }
+
+                const role = profileData?.role ?? data?.user?.user_metadata?.role;
+                if (role && !['admin', 'manager'].includes(role)) {
+                    await supabaseClient.auth.signOut();
+                    showMessage('error', 'Access restricted to admin users only');
+                    loginBtn.disabled = false;
+                    loginBtn.classList.remove('loading');
+                    btnContent.style.opacity = '1';
+                    loading.style.display = 'none';
+                    return;
+                }
+
+                showMessage('success', 'Login successful! Redirecting...');
+                setTimeout(() => {
+                    window.location.href = '/index.html';
+                }, 500);
+            } catch (error) {
+                console.error('Login failed:', error);
+                showMessage('error', 'Unexpected error occurred. Please try again.');
                 loginBtn.disabled = false;
                 loginBtn.classList.remove('loading');
-                loading.style.display = 'none';
                 btnContent.style.opacity = '1';
-                document.getElementById('login-btn-text').textContent = 'Sign In';
-                showMessage('error', 'Authentication service not available. Please try again later.');
+                loading.style.display = 'none';
             }
         });
 

@@ -1,1 +1,10 @@
-# Empty file to make app a Python package
+# Application package init
+
+__all__ = [
+    "ai_assistant",
+    "auth",
+    "database",
+    "models",
+    "routers",
+    "services",
+]

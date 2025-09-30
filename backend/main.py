@@ -1,16 +1,26 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 import os
 from dotenv import load_dotenv
 import cloudinary
 import logging
 # Firebase removed - using Supabase only
 
+# Import database dependency first (before function definitions)
+from app.database import get_db
+
 # Load environment variables
 load_dotenv()
 
-# Configure logging first
-logging.basicConfig(level=logging.INFO)
+# Configure logging first with detailed format
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),  # Console output
+    ]
+)
 logger = logging.getLogger(__name__)
 
 # Firebase initialization removed - using Supabase only
@@ -23,9 +33,21 @@ app = FastAPI(
 )
 
 # CORS middleware - Cloud-friendly configuration
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "*").split(",")
-if allowed_origins == ["*"]:
-    allowed_origins = ["*"]  # Keep wildcard for development
+raw_origins = os.getenv("ALLOWED_ORIGINS", "http://127.0.0.1:3000,http://localhost:3000,http://127.0.0.1:8080,http://localhost:8080").split(",")
+allowed_origins = [origin.strip() for origin in raw_origins if origin.strip()]
+
+# FastAPI tak benarkan wildcard bila credentials=True, so fallback ke senarai default
+if not allowed_origins or allowed_origins == ["*"]:
+    allowed_origins = [
+        "http://127.0.0.1:3000",
+        "http://localhost:3000",
+        "https://127.0.0.1:3000",
+        "https://localhost:3000",
+        "http://127.0.0.1:8080",
+        "http://localhost:8080",
+        "https://127.0.0.1:8080",
+        "https://localhost:8080",
+    ]
 
 app.add_middleware(
     CORSMiddleware,
@@ -37,13 +59,20 @@ app.add_middleware(
 
 # Initialize Cloudinary
 try:
-    cloudinary.config(
-        cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME", "demo"),
-        api_key=os.getenv("CLOUDINARY_API_KEY", "demo"),
-        api_secret=os.getenv("CLOUDINARY_API_SECRET", "demo"),
-        secure=True
-    )
-    logger.info("Cloudinary initialized successfully")
+    cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME")
+    api_key = os.getenv("CLOUDINARY_API_KEY")
+    api_secret = os.getenv("CLOUDINARY_API_SECRET")
+    
+    if cloud_name and api_key and api_secret:
+        cloudinary.config(
+            cloud_name=cloud_name,
+            api_key=api_key,
+            api_secret=api_secret,
+            secure=True
+        )
+        logger.info("Cloudinary initialized successfully")
+    else:
+        logger.warning("⚠️ Cloudinary credentials not set. Media upload will be disabled.")
 except Exception as e:
     logger.warning(f"Cloudinary initialization failed: {e}")
 
@@ -57,18 +86,32 @@ async def root():
     }
 
 @app.get("/health")
-async def health_check():
+async def health_check(db: Session = Depends(get_db)):
     """Health check endpoint for monitoring"""
     try:
+        # Test database connection
+        from sqlalchemy import text
+        result = db.execute(text("SELECT 1")).scalar()
+        db_status = "connected" if result == 1 else "error"
+        
         return {
-            "status": "healthy",
+            "status": "healthy" if db_status == "connected" else "degraded",
             "services": {
                 "api": "running",
+                "database": db_status,
                 "cloudinary": "configured" if os.getenv("CLOUDINARY_CLOUD_NAME", "demo") != "demo" else "demo_mode"
             }
         }
     except Exception as e:
-        raise HTTPException(status_code=503, detail=f"Service unhealthy: {str(e)}")
+        return {
+            "status": "error",
+            "services": {
+                "api": "running",
+                "database": f"error: {str(e)[:50]}",
+                "cloudinary": "configured" if os.getenv("CLOUDINARY_CLOUD_NAME", "demo") != "demo" else "demo_mode"
+            },
+            "error": str(e)
+        }
 
 # Simple media router for testing
 from fastapi import UploadFile, File
@@ -98,7 +141,20 @@ async def test_upload(file: UploadFile = File(...)):
         raise HTTPException(500, f"Upload test failed: {str(e)}")
 
 # Include API routers
-from app.routers import auth, users, sync, search, search_simple, student_analytics, media, profiles_supabase, events, test_endpoints, showcase
+from app.routers import (
+    ai_assistant,
+    auth,
+    events,
+    media,
+    profiles_supabase,
+    search,
+    search_simple,
+    showcase,
+    student_analytics,
+    sync,
+    test_endpoints,
+    users,
+)
 
 app.include_router(auth.router)
 app.include_router(users.router)
@@ -111,6 +167,7 @@ app.include_router(search_simple.router)  # Simplified search for testing
 app.include_router(student_analytics.router)  # Student-focused analytics
 app.include_router(media.router, prefix="/api/media")  # Media upload and management
 app.include_router(showcase.router)  # Showcase posts management
+app.include_router(ai_assistant.router)
 
 # Additional routers will be added as we build them
 # from app.routers import media, analytics, sync

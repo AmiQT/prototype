@@ -60,6 +60,10 @@
                     <h1 id="page-title">Dashboard Overview</h1>
                 </div>
                 <div class="header-right">
+                    <div id="ai-assistant-indicator" class="ai-indicator" title="AI Assistant">
+                        <i class="fas fa-robot"></i>
+                        <span class="status">Offline</span>
+                    </div>
                     <button class="btn btn-primary" onclick="logout()">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </button>
@@ -68,6 +72,42 @@
             
             <!-- Content Wrapper -->
             <div class="content-wrapper">
+                <!-- AI Assistant Panel -->
+                <section id="ai-assistant" class="ai-panel">
+                    <div class="ai-panel-header">
+                        <div>
+                            <h3><i class="fas fa-robot"></i> AI Assistant</h3>
+                            <p class="ai-panel-subtitle">Tanya arahan natural language untuk automate kerja admin</p>
+                        </div>
+                        <div class="ai-panel-controls">
+                            <button id="ai-clear-history" class="btn btn-light">
+                                <i class="fas fa-broom"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="ai-messages" class="ai-messages">
+                        <div class="ai-message ai-message-system">
+                            <div class="ai-message-avatar"><i class="fas fa-robot"></i></div>
+                            <div class="ai-message-content">
+                                <p>Hi! Saya AI assistant kampus. Type arahan macam “Create 20 students untuk intake 2025” atau “Generate laporan prestasi semester”.</p>
+                                <small>AI masih menggunakan pseudo-intelligence (RM0 mode). Integrasi OpenRouter akan load automatik bila enabled.</small>
+                            </div>
+                        </div>
+                    </div>
+                    <form id="ai-command-form" class="ai-command-form">
+                        <div class="ai-input-wrapper">
+                            <textarea id="ai-command-input" rows="2" placeholder="Contoh: Generate laporan statistik fakulti & email ke semua HOD..."></textarea>
+                            <button type="submit" class="btn btn-primary" id="ai-send-btn">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                        <div class="ai-input-meta">
+                            <span id="ai-status">Pseudo AI ready</span>
+                            <span id="ai-rate-limit">OpenRouter quota: 0 / 50</span>
+                        </div>
+                    </form>
+                </section>
+
                 <!-- Overview Section -->
                 <section id="overview" class="content-section active">
                     <div class="section-header">
@@ -331,6 +371,58 @@
                 </section>
             </div>
         </main>
+    </div>
+    
+    <!-- Floating AI Chat -->
+    <div class="floating-ai-wrapper">
+        <!-- Floating Button -->
+        <button id="floating-ai-button" class="floating-ai-button pulse" title="AI Assistant">
+            <i class="fas fa-robot"></i>
+            <!-- <span class="notification-badge">!</span> -->
+        </button>
+        
+        <!-- Floating Chat Modal -->
+        <div id="floating-ai-modal" class="floating-ai-modal">
+            <div class="floating-ai-modal-header">
+                <h3>
+                    <i class="fas fa-robot"></i>
+                    AI Assistant
+                    <div class="status-indicator"></div>
+                </h3>
+                <button id="floating-ai-close" class="floating-ai-modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div id="floating-ai-messages" class="floating-ai-messages">
+                <div class="floating-ai-message">
+                    <div class="floating-ai-message-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="floating-ai-message-content">
+                        Hi! 👋 Saya AI assistant kampus. Tanya apa-apa untuk automate kerja admin!
+                    </div>
+                </div>
+            </div>
+            
+            <form id="floating-ai-form" class="floating-ai-input-form">
+                <div class="floating-ai-input-wrapper">
+                    <textarea 
+                        id="floating-ai-input" 
+                        class="floating-ai-input" 
+                        placeholder="Tanya AI assistant..."
+                        rows="1"
+                    ></textarea>
+                    <button type="submit" id="floating-ai-send" class="floating-ai-send-btn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="floating-ai-status">
+                    <span id="floating-ai-status">Siap untuk membantu! ✨</span>
+                    <span id="floating-ai-quota">Quota: 0/50</span>
+                </div>
+            </form>
+        </div>
     </div>
     
     <!-- Modals will be loaded dynamically via component-loader.js -->

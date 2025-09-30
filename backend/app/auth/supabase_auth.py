@@ -10,9 +10,14 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Supabase JWT settings
-SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "your-supabase-jwt-secret")
-SUPABASE_URL = os.getenv("SUPABASE_URL", "https://xibffemtpboiecpeynon.supabase.co")
+# Supabase JWT settings - MUST be set via environment variables
+SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+
+if not SUPABASE_JWT_SECRET:
+    logger.warning("⚠️ SUPABASE_JWT_SECRET not set! Authentication will fail.")
+if not SUPABASE_URL:
+    logger.warning("⚠️ SUPABASE_URL not set! Please configure environment variables.")
 
 security = HTTPBearer()
 
@@ -26,7 +31,13 @@ async def verify_supabase_token(credentials: HTTPAuthorizationCredentials = Depe
         # Verify JWT signature using Supabase JWT secret
         try:
             # Decode with proper signature verification
-            payload = jwt.decode(token, SUPABASE_JWT_SECRET, algorithms=["HS256"])
+            payload = jwt.decode(
+                token,
+                SUPABASE_JWT_SECRET,
+                algorithms=["HS256"],
+                audience=None,
+                options={"verify_aud": False},
+            )
             
             # Extract user info from token
             user_info = {

@@ -1,7 +1,7 @@
 """
-Profile model - matches Firebase profiles collection
+Profile model - matches Supabase profiles table schema exactly
 """
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey, JSON
+from sqlalchemy import Column, String, Text, DateTime, ForeignKey, JSON, Boolean, ARRAY
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -9,40 +9,31 @@ from app.database import Base
 class Profile(Base):
     __tablename__ = "profiles"
     
-    # Primary fields
+    # Primary fields (match database exactly)
     id = Column(String, primary_key=True)
-    userId = Column(String, ForeignKey("users.id"), nullable=False)
+    user_id = Column(String, ForeignKey("users.id"), nullable=True)
     
-    # Personal information
-    fullName = Column(String, nullable=False)
+    # Personal information (match database column names exactly)
+    full_name = Column(String, nullable=True)  # snake_case
     bio = Column(Text, nullable=True)
-    phone = Column(String, nullable=True)
-    profileImageUrl = Column(String, nullable=True)
+    phone_number = Column(String, nullable=True)  # snake_case
+    address = Column(Text, nullable=True)
+    headline = Column(String, nullable=True)
+    profile_image_url = Column(Text, nullable=True)  # snake_case
     
-    # Academic information
-    studentId = Column(String, nullable=True)
-    department = Column(String, nullable=True)
-    faculty = Column(String, nullable=True)
-    yearOfStudy = Column(String, nullable=True)
-    cgpa = Column(String, nullable=True)
+    # Academic & experience info (stored as JSONB)
+    academic_info = Column(JSON, nullable=True)  # Contains student info, department, etc
+    skills = Column(ARRAY(String), nullable=True)  # Array of skills
+    interests = Column(ARRAY(String), nullable=True)  # Array of interests
+    experiences = Column(JSON, nullable=True)  # JSONB
+    projects = Column(JSON, nullable=True)  # JSONB
     
-    # Skills and interests (stored as JSON arrays)
-    skills = Column(JSON, nullable=True)  # ["Python", "JavaScript", "React"]
-    interests = Column(JSON, nullable=True)  # ["Web Development", "AI", "Mobile Apps"]
-    languages = Column(JSON, nullable=True)  # [{"name": "English", "level": "Native"}]
+    # Profile completion status
+    is_profile_complete = Column(Boolean, nullable=True, default=False)
     
-    # Experience and projects (stored as JSON)
-    experiences = Column(JSON, nullable=True)
-    projects = Column(JSON, nullable=True)
-    
-    # Social links
-    linkedinUrl = Column(String, nullable=True)
-    githubUrl = Column(String, nullable=True)
-    portfolioUrl = Column(String, nullable=True)
-    
-    # Timestamps
-    createdAt = Column(DateTime(timezone=True), server_default=func.now())
-    updatedAt = Column(DateTime(timezone=True), onupdate=func.now())
+    # Timestamps (snake_case)
+    created_at = Column(DateTime(timezone=True), nullable=True, server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), nullable=True, onupdate=func.now())
     
     # Relationships
     user = relationship("User", backref="profile")

@@ -4,9 +4,9 @@
  */
 
 const BACKEND_CONFIG = {
-  // ✅ ARCHITECTURE: Custom backend ONLY for data mining & analytics
-  // All CRUD operations use Supabase direct calls
-  baseUrl: null, // Disabled for regular operations
+  // ✅ ARCHITECTURE: Custom backend for advanced features
+  // CRUD primarily via Supabase; backend optional but supported
+  baseUrl: window.BACKEND_URL || null,
   
   // Data mining endpoints (if backend is deployed for analytics)
   dataMiningUrl: null, // Will be set when data mining features are needed
@@ -36,6 +36,10 @@ const BACKEND_CONFIG = {
     profiles: '/api/profiles',
     showcase: '/api/showcase',
     sync: '/api/sync',
+    ai: {
+      command: '/api/ai/command',
+      history: '/api/ai/history'
+    },
     system: {
       status: '/health',
       health: '/health'
@@ -114,14 +118,94 @@ async function getAuthHeaders() {
 
 // Fallback function for Supabase-only approach
 async function testBackendConnection() {
-  console.warn('Custom backend disabled - using Supabase only');
-  return false; // Always return false since no backend
+  if (!BACKEND_CONFIG.baseUrl) {
+    console.warn('Backend baseUrl not configured.');
+    return false;
+  }
+
+  try {
+    const response = await fetch(`${BACKEND_CONFIG.baseUrl}${API_ENDPOINTS.system.status}`, {
+      method: 'GET',
+      headers: await getAuthHeaders(),
+      credentials: 'include',
+      signal: AbortSignal.timeout?.(BACKEND_CONFIG.timeout) ?? undefined
+    });
+
+    if (!response.ok) {
+      console.warn(`Backend status check failed: ${response.status}`);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.warn('Backend status check error:', error.message);
+    return false;
+  }
 }
 
-// Fallback function for Supabase-only approach
 async function makeAuthenticatedRequest(endpoint, options = {}) {
-  console.warn('Custom backend disabled - using Supabase direct calls');
-  throw new Error('Custom backend disabled - use Supabase direct calls instead');
+  if (!BACKEND_CONFIG.baseUrl) {
+    console.warn('Backend baseUrl not configured. Request aborted.');
+    throw new Error('Backend baseUrl not configured');
+  }
+
+  const url = endpoint.startsWith('http') ? endpoint : `${BACKEND_CONFIG.baseUrl}${endpoint}`;
+
+  const headers = await getAuthHeaders();
+
+  const method = (options.method || 'GET').toUpperCase();
+  let body = options.body;
+  if (body && typeof body === 'object' && !(body instanceof FormData)) {
+    body = JSON.stringify(body);
+  }
+
+  const requestOptions = {
+    method,
+    credentials: 'include',
+    headers: {
+      ...headers,
+      ...(options.headers || {})
+    },
+    body,
+    ...options,
+    method // ensure method stays correct after spread
+  };
+
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timeoutId = controller ? setTimeout(() => controller.abort(), BACKEND_CONFIG.timeout) : null;
+
+  if (controller && !requestOptions.signal) {
+    requestOptions.signal = controller.signal;
+  }
+
+  try {
+    const response = await fetch(url, requestOptions);
+    const contentType = response.headers.get('content-type') || '';
+
+    if (!response.ok) {
+      let errorPayload = null;
+      if (contentType.includes('application/json')) {
+        errorPayload = await response.json().catch(() => null);
+      } else {
+        errorPayload = await response.text().catch(() => null);
+      }
+      const errorMessage = typeof errorPayload === 'string' ? errorPayload : JSON.stringify(errorPayload);
+      throw new Error(`Request failed (${response.status}): ${errorMessage}`);
+    }
+
+    if (response.status === 204 || method === 'HEAD') {
+      return null;
+    }
+
+    if (contentType.includes('application/json')) {
+      return await response.json();
+    }
+    return await response.text();
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
 }
 
 // Export configuration for ES6 modules

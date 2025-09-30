@@ -1,0 +1,463 @@
+/* Floating AI Chat Button & Modal */
+.floating-ai-button {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    border-radius: 50%;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.floating-ai-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4);
+}
+
+.floating-ai-button:active {
+    transform: translateY(0);
+}
+
+.floating-ai-button.pulse {
+    animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+    0% {
+        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+    }
+    50% {
+        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.6);
+    }
+    100% {
+        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+    }
+}
+
+.floating-ai-button .notification-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 18px;
+    height: 18px;
+    background: #ff4757;
+    border: 2px solid white;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: bounce-in 0.5s ease-out;
+}
+
+@keyframes bounce-in {
+    0% {
+        transform: scale(0);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Floating Chat Modal */
+.floating-ai-modal {
+    position: fixed;
+    bottom: 100px;
+    right: 24px;
+    width: 380px;
+    height: 500px;
+    background: var(--surface-card);
+    background-color: #ffffff; /* Force solid white background */
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(20px) scale(0.95);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid var(--border-subtle);
+    overflow: hidden;
+}
+
+.floating-ai-modal.show {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Ensure solid backgrounds for all modal components */
+.floating-ai-modal * {
+    background-color: inherit;
+}
+
+.floating-ai-modal .floating-ai-messages,
+.floating-ai-modal .floating-ai-input-form,
+.floating-ai-modal .floating-ai-input,
+.floating-ai-modal .floating-ai-message-content,
+.floating-ai-modal .floating-ai-typing {
+    background-color: #ffffff !important;
+}
+
+/* Force send button visibility */
+.floating-ai-modal .floating-ai-send-btn {
+    background-color: #667eea !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+}
+
+/* Debug: Add border to make button more visible during testing */
+.floating-ai-send-btn {
+    border: 2px solid #4c51bf !important;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
+}
+
+.floating-ai-modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 16px 16px 0 0;
+}
+
+.floating-ai-modal-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.floating-ai-modal-header .status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #2ed573;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.floating-ai-modal-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.floating-ai-modal-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.floating-ai-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: var(--surface-ground);
+    background-color: #ffffff; /* Force solid white background */
+}
+
+.floating-ai-messages::-webkit-scrollbar {
+    width: 4px;
+}
+
+.floating-ai-messages::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.floating-ai-messages::-webkit-scrollbar-thumb {
+    background: var(--border-subtle);
+    border-radius: 2px;
+}
+
+.floating-ai-message {
+    display: flex;
+    gap: 8px;
+    animation: slide-in 0.3s ease-out;
+}
+
+@keyframes slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.floating-ai-message-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.floating-ai-message-user .floating-ai-message-avatar {
+    background: var(--primary-500);
+    order: 2;
+}
+
+.floating-ai-message-content {
+    background: #ffffff; /* Force solid white background */
+    border-radius: 12px;
+    padding: 12px 16px;
+    max-width: 260px;
+    line-height: 1.6;
+    font-size: 14px;
+    border: 1px solid var(--border-subtle);
+    opacity: 1; /* Ensure full opacity */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.floating-ai-message-user .floating-ai-message-content {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    margin-left: auto;
+    border-color: #667eea !important;
+}
+
+/* Ensure user text is visible - all child elements */
+.floating-ai-message-user .floating-ai-message-content *,
+.floating-ai-message-user .floating-ai-message-content div,
+.floating-ai-message-user .floating-ai-message-content p,
+.floating-ai-message-user .floating-ai-message-content span {
+    color: white !important;
+    background: transparent !important;
+}
+
+/* Markdown formatting styles for AI messages */
+.floating-ai-message-content strong {
+    font-weight: 600;
+    color: #1e40af;
+}
+
+.floating-ai-message-content em {
+    font-style: italic;
+    color: #4338ca;
+}
+
+.floating-ai-message-content code {
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Courier New', Consolas, monospace;
+    font-size: 0.9em;
+    color: #dc2626;
+    border: 1px solid #e5e7eb;
+}
+
+.floating-ai-message-content a {
+    color: #2563eb;
+    text-decoration: none;
+    border-bottom: 1px solid #93c5fd;
+    transition: all 0.2s;
+}
+
+.floating-ai-message-content a:hover {
+    color: #1d4ed8;
+    border-bottom-color: #1d4ed8;
+}
+
+/* User messages should have white text for bold/links */
+.floating-ai-message-user .floating-ai-message-content strong {
+    color: white;
+    font-weight: 700;
+}
+
+.floating-ai-message-user .floating-ai-message-content a {
+    color: white;
+    border-bottom-color: rgba(255, 255, 255, 0.5);
+}
+
+.floating-ai-message-user .floating-ai-message-content a:hover {
+    border-bottom-color: white;
+}
+
+.floating-ai-input-form {
+    border-top: 1px solid var(--border-subtle);
+    padding: 16px;
+    background: var(--surface-card);
+    background-color: #ffffff; /* Force solid white background */
+    border-radius: 0 0 16px 16px;
+}
+
+.floating-ai-input-wrapper {
+    display: flex !important; /* Force display */
+    gap: 8px;
+    align-items: flex-end;
+    width: 100%;
+}
+
+.floating-ai-input {
+    flex: 1;
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+    padding: 10px 16px;
+    font-size: 14px;
+    resize: none;
+    outline: none;
+    transition: border-color 0.2s;
+    background: var(--surface-ground);
+    background-color: #ffffff; /* Force solid white background */
+    min-height: 20px;
+    max-height: 80px;
+}
+
+.floating-ai-input:focus {
+    border-color: var(--primary-500);
+}
+
+.floating-ai-send-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: var(--primary-500);
+    background-color: #667eea; /* Fallback solid color */
+    color: white;
+    cursor: pointer;
+    display: flex !important; /* Force display */
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    font-size: 14px;
+    z-index: 10;
+}
+
+.floating-ai-send-btn:hover {
+    background: var(--primary-600);
+    background-color: #5a67d8; /* Fallback hover color */
+    transform: scale(1.05);
+}
+
+.floating-ai-send-btn:disabled {
+    background: var(--surface-muted);
+    background-color: #e2e8f0; /* Fallback disabled color */
+    cursor: not-allowed;
+    transform: none;
+    color: #a0aec0;
+}
+
+.floating-ai-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.floating-ai-typing {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    background: #ffffff; /* Force solid white background */
+    border-radius: 12px;
+    border: 1px solid var(--border-subtle);
+    margin-bottom: 8px;
+    opacity: 1; /* Ensure full opacity */
+}
+
+.floating-ai-typing-dots {
+    display: flex;
+    gap: 2px;
+}
+
+.floating-ai-typing-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    animation: typing-bounce 1.4s infinite ease-in-out;
+}
+
+.floating-ai-typing-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.floating-ai-typing-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typing-bounce {
+    0%, 80%, 100% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .floating-ai-modal {
+        width: calc(100vw - 32px);
+        height: 70vh;
+        right: 16px;
+        left: 16px;
+        bottom: 90px;
+    }
+    
+    .floating-ai-button {
+        bottom: 16px;
+        right: 16px;
+        width: 56px;
+        height: 56px;
+        font-size: 20px;
+    }
+}
+
+/* Hide original AI panel when floating is active */
+.floating-ai-active .ai-panel {
+    display: none;
+}

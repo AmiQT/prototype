@@ -9,46 +9,19 @@ from app.database import Base
 class Event(Base):
     __tablename__ = "events"
     
-    # Primary fields
+    # Primary fields (match database exactly)
     id = Column(String, primary_key=True)
-    created_by = Column(String, ForeignKey("users.id"), nullable=False)
-    
-    # Event details
     title = Column(String, nullable=False)
     description = Column(Text, nullable=True)
-    category = Column(String, nullable=True)  # "workshop", "seminar", "competition", etc.
-    
-    # Event scheduling
-    start_date = Column(DateTime(timezone=True), nullable=False)
-    end_date = Column(DateTime(timezone=True), nullable=True)
+    event_date = Column(DateTime(timezone=True), nullable=True)  # Match DB column name
     location = Column(String, nullable=True)
-    venue = Column(String, nullable=True)
-    
-    # Event metadata
-    max_participants = Column(Integer, nullable=True)
-    current_participants = Column(Integer, default=0)
-    registration_deadline = Column(DateTime(timezone=True), nullable=True)
-    
-    # Requirements and details
-    requirements = Column(JSON, nullable=True)  # Array of requirements
-    skills_gained = Column(JSON, nullable=True)  # Array of skills participants will gain
-    target_audience = Column(JSON, nullable=True)  # Array of target audience
-    
-    # Media
-    image_url = Column(String, nullable=True)
-    banner_url = Column(String, nullable=True)
-    
-    # Status
-    is_active = Column(Boolean, default=True)
-    is_featured = Column(Boolean, default=False)
-    registration_open = Column(Boolean, default=True)
-    
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    organizer_id = Column(String, ForeignKey("users.id"), nullable=True)  # Match DB column name
+    is_active = Column(Boolean, nullable=True, default=True)
+    created_at = Column(DateTime(timezone=True), nullable=True, server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), nullable=True, onupdate=func.now())
     
     # Relationships
-    creator = relationship("User", backref="created_events")
+    organizer = relationship("User", backref="organized_events")
     
     def __repr__(self):
         return f"<Event(id={self.id}, title={self.title}, date={self.start_date})>"

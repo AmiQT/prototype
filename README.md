@@ -1,6 +1,21 @@
-# Student Talent Profiling App - Prototype
+# 🎓 Student Talent Profiling App - Prototype
 
 Projek ini adalah aplikasi Student Talent Profiling yang terdiri daripada tiga komponen utama: backend, mobile app, dan web dashboard.
+
+## ⚠️ SECURITY NOTICE - READ FIRST!
+
+**This repository does NOT contain sensitive credentials.** Before using:
+
+1. 📖 Read [SECURITY.md](SECURITY.md) - Security best practices
+2. 🚀 Read [SETUP.md](SETUP.md) - Complete setup instructions  
+3. ✅ Read [PRE-COMMIT-CHECKLIST.md](PRE-COMMIT-CHECKLIST.md) - Before committing
+
+**You MUST configure your own:**
+- ✅ Supabase credentials (`.env.example` → `.env`)
+- ✅ API keys (OpenRouter, Cloudinary)
+- ✅ Database credentials
+
+**NEVER commit `.env` files or hardcode secrets!** 🔒
 
 ## 📁 Struktur Projek
 
@@ -19,10 +34,8 @@ Prototype/
 
 ## 🏗️ Hybrid Backend Architecture
 
-Projek ini menggunakan **architecture hybrid** yang menggabungkan kekuatan Supabase dengan fleksibiliti custom FastAPI:
-
 ```
-Frontend Apps → FastAPI (Custom Logic) → Supabase (Auth + DB)
+Supabase Auth + PostgreSQL ←→ FastAPI + SQLAlchemy ←→ Mobile App + Web Dashboard
      ↓              ↓                        ↓
   Mobile App    Business Logic           PostgreSQL
   Web Dashboard  Search Engine           Authentication
@@ -103,19 +116,39 @@ Dokumentasi lengkap tersedia di folder `docs/`:
 
 **⚡ PRIORITY**: Showcase Module Fixes untuk Mobile App
 
-### 🎯 **What We're Working On (Sept 2025)**
-- **📱 Mobile App Showcase Features**: Fixing critical user experience issues
-- **🔧 Database Consistency**: Standardizing like/comment systems  
-- **🚀 Performance**: Improving app responsiveness and reliability
-- **📊 Timeline**: 6-week implementation plan
+### 📱 Mobile App Showcase Features
+- **Current Issue**: Fixing critical user experience issues
+- **🎯 Focus**: `mobile_app/lib/pages/showcase_page.dart` & `mobile_app/lib/services/showcase_services.dart`
+- **Issue**: Image loading, like functionality, navigation, UI consistency
+- **Status**: **BLOCKED** by critical mobile app issues
 
-### 📖 **Key Documents**
+### 🔧 Backend AI Assistant Enhancement
+- **Enhancement**: Advanced AI with agentic capabilities
+- **Focus**: Natural conversation, context awareness, varied responses
+- **Status**: **IN PROGRESS** - Successfully implemented agentic features
+
+## 📚 Learning Resources
+
+### 📖 Complete Guides
 - **[🎯 Current Focus Summary](docs/CURRENT_FOCUS_SUMMARY_by_claude.md)** - What we're doing right now
 - **[Showcase Strategy Plan](docs/SHOWCASE_MODULE_PRACTICAL_STRATEGY_by_claude.md)** - Complete implementation roadmap
+- **[Firebase to Supabase Migration Guide](docs/FIREBASE_SUPABASE_MIGRATION_GUIDE.md)** - Complete migration documentation
+- **[Azure DevOps & Railway Integration Guide](docs/AZURE_DEVOPS_RAILWAY_INTEGRATION.md)** - Complete deployment strategy
+- **[UPGRADE AGENTIC AI FEATURES](docs/UPGRADE_AGENTIC_AI_FEATURES.md)** - Complete agentic AI upgrade documentation
 
----
+### 🤖 Enhanced AI Assistant Features
+**Latest Upgrade: Agentic AI System with Conversation Memory & Response Variation**
 
-## 🛠️ Development Setup
+The AI assistant has been upgraded with advanced agentic capabilities:
+- **Conversation Memory System** - Remembers previous interactions and context
+- **Response Variation System** - Eliminates robotic, template-like responses  
+- **Template Management System** - Flexible template system for diverse responses
+- **Context Awareness** - Maintains conversation flow and history
+- **Natural Language Processing** - Enhanced intent recognition and context analysis
+- **Personalized Malaysian Gen Z Tone** - Using expressions like "Wah bestnya!", "Tqvm!", "Sure lah!"
+- **Conversation Management API** - Endpoints to manage chat history
+
+## 🛠️ Setup Instructions
 
 ### Backend (Hybrid Setup)
 1. **Supabase Setup**: Configure Supabase project & database
@@ -131,12 +164,12 @@ Dokumentasi lengkap tersedia di folder `docs/`:
 - Mobile App: `docs/mobile_app/README.md`  
 - Web Dashboard: `docs/web_dashboard/README.md`
 
-## 📝 File Konfigurasi
+## File Konfigurasi
 
 - `Prototype.code-workspace` - VS Code workspace settings
 - `remove_firebase_dependencies.yaml` - Firebase cleanup script
 
-## 🎯 Tujuan Projek
+## Tujuan Projek
 
 Aplikasi ini bertujuan untuk:
 - Membantu pelajar mengenal pasti bakat dan minat mereka

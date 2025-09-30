@@ -1,39 +1,39 @@
 """
-User model - matches Firebase users collection
+User model - matches Supabase public.users table schema exactly
 """
-from sqlalchemy import Column, String, Boolean, DateTime, Enum
+from sqlalchemy import Column, String, Boolean, DateTime
 from sqlalchemy.sql import func
 from app.database import Base
 import enum
 
 class UserRole(enum.Enum):
     student = "student"
-    lecturer = "lecturer"
+    lecturer = "lecturer" 
     admin = "admin"
+    staff = "staff"  # Added staff role based on database
 
 class User(Base):
     __tablename__ = "users"
     
-    # Primary fields
-    id = Column(String, primary_key=True)  # Firebase UID
-    uid = Column(String, unique=True, nullable=False)  # Firebase UID (duplicate for compatibility)
+    # Primary fields (match database exactly)
+    id = Column(String, primary_key=True)  # UUID from Supabase
     email = Column(String, unique=True, nullable=False)
-    name = Column(String, nullable=False)
-    role = Column(Enum(UserRole, name='user_role', create_type=True), nullable=False, default=UserRole.student)
-    
-    # Optional fields
-    student_id = Column(String, nullable=True)  # For students
-    staff_id = Column(String, nullable=True)    # For lecturers/staff
+    name = Column(String, nullable=False)  
+    role = Column(String, nullable=False, default='student')  # Use String instead of Enum for compatibility
     department = Column(String, nullable=True)
     
-    # Status fields
-    is_active = Column(Boolean, default=True)
-    profile_completed = Column(Boolean, default=False)
+    # Optional identifier fields  
+    student_id = Column(String, nullable=True)
+    staff_id = Column(String, nullable=True)
     
-    # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    # Status fields
+    is_active = Column(Boolean, nullable=True, default=True)
+    profile_completed = Column(Boolean, nullable=True, default=False)
+    
+    # Timestamps (match database exactly)
+    created_at = Column(DateTime(timezone=True), nullable=True, server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), nullable=True, onupdate=func.now())
     last_login_at = Column(DateTime(timezone=True), nullable=True)
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     def __repr__(self):
         return f"<User(id={self.id}, email={self.email}, role={self.role})>"

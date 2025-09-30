@@ -17,8 +17,15 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL environment variable is not set")
 
-# SQLAlchemy setup
-engine = create_engine(DATABASE_URL)
+# SQLAlchemy setup with transaction pooler configuration
+engine = create_engine(
+    DATABASE_URL,
+    pool_size=5,
+    max_overflow=10,
+    pool_pre_ping=True,  # Important for transaction pooler
+    pool_recycle=3600,   # Recycle connections every hour
+    connect_args={"sslmode": "require"}
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 

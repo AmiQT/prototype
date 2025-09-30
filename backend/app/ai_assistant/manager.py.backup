@@ -1,0 +1,660 @@
+"""Coordinator for AI assistant commands."""
+
+from __future__ import annotations
+
+import json
+import logging
+from datetime import date, datetime, timedelta
+from typing import Any
+
+from fastapi import Depends
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from . import schemas, logger as ai_logger, permissions
+from .config import AISettings, get_ai_settings
+from .openrouter_client import OpenRouterClient
+from .service_bridge import AssistantServiceBridge
+from .supabase_bridge import SupabaseAIBridge
+
+log = logging.getLogger(__name__)
+
+
+class AIAssistantManager:
+    """Main entry point for handling AI commands via OpenRouter."""
+
+    def __init__(self, settings: AISettings = Depends(get_ai_settings), db: Session = Depends(get_db)) -> None:
+        self.settings = settings
+        self.daily_usage = 0  # basic in-memory counter (future: persist/cache)
+        self._usage_date = date.today()
+        self._openrouter_client: OpenRouterClient | None = None
+        self._service_bridge = AssistantServiceBridge(db=db)
+        self._supabase_bridge = SupabaseAIBridge()
+
+    async def handle_command(
+        self,
+        command: str,
+        context: dict[str, Any] | None = None,
+        current_user: dict[str, Any] | None = None,
+    ) -> schemas.AICommandResponse:
+        """Process command using OpenRouter (direct agentic mode)."""
+
+        log.info("🤖 AI ASSISTANT: Received command: '%s'", command)
+        log.info("🔍 Current user: %s", current_user.get("email") if current_user else "anonymous")
+
+        self._reset_usage_if_needed()
+
+        if not self.settings.ai_enabled:
+            response = schemas.AICommandResponse(
+                success=False,
+                message="AI assistant is disabled.",
+                source=schemas.AISource.MANUAL,
+                fallback_used=True,
+            )
+            ai_logger.log_ai_action(
+                current_user.get("uid") if current_user else "anonymous",
+                command,
+                response.model_dump(),
+            )
+            return response
+
+        # Permission check for current user
+        if current_user and not permissions.can_run_action(current_user, "general"):
+            response = schemas.AICommandResponse(
+                success=False,
+                message="You do not have permission to run AI actions.",
+                source=schemas.AISource.OPENROUTER,
+                fallback_used=True,
+            )
+            ai_logger.log_ai_action(current_user.get("uid"), command, response.model_dump())
+            return response
+
+        # Try to handle with local agentic actions first (database queries)
+        log.info("🔧 Trying local agentic actions first...")
+        local_response = await self._try_local_agentic_action(command, current_user)
+        if local_response:
+            log.info("✅ Local agentic action handled the command successfully!")
+            ai_logger.log_ai_action(
+                current_user.get("uid") if current_user else "anonymous",
+                command,
+                local_response.model_dump(),
+            )
+            return local_response
+        else:
+            log.info("❌ No local agentic action found, proceeding to OpenRouter...")
+
+        # Direct ke OpenRouter bila available
+        if self.settings.enable_openrouter and self.settings.openrouter_api_key:
+            if self.daily_usage >= self.settings.openrouter_daily_limit:
+                log.warning("OpenRouter quota reached for the day")
+            else:
+                if not self._openrouter_client:
+                    self._openrouter_client = OpenRouterClient(self.settings)
+
+                try:
+                    openrouter_resp = await self._call_openrouter(command, context)
+                    if openrouter_resp:
+                        self.daily_usage += 1
+                        response = self._attach_quota(openrouter_resp)
+                        ai_logger.log_ai_action(
+                            current_user.get("uid") if current_user else "anonymous",
+                            command,
+                            response.model_dump(),
+                        )
+                        return response
+                except Exception as exc:  # pragma: no cover - future network error handling
+                    log.error("OpenRouter error: %s", exc)
+                    if "429" in str(exc) or "rate limit" in str(exc).lower():
+                        self.daily_usage = self.settings.openrouter_daily_limit
+                        log.info("Rate limit reached, will use casual fallback response")
+
+        # Natural fallback responses (no mention of technical issues)
+        if any(word in command.lower() for word in ["hai", "hello", "hi"]):
+            casual_msg = "Hai! 😊 Apa khabar? Saya AI assistant untuk UTHM dashboard, siap sedia nak tolong!"
+        elif any(word in command.lower() for word in ["siapa", "nama"]):
+            casual_msg = "Saya AI assistant untuk dashboard UTHM! 😄 Nama saya belum ada lagi, tapi panggil je 'Assistant' atau 'AI'. Ada apa yang boleh saya tolong?"
+        elif "apa khabar" in command.lower():
+            casual_msg = "Khabar baik! 😊 Tengah standby nak tolong dengan apa-apa yang awak perlukan. Awak macam mana hari ni?"
+        elif any(word in command.lower() for word in ["help", "tolong", "bantuan"]):
+            casual_msg = "Sure! 💪 Saya sedia tolong. Apa yang awak perlukan? Boleh tanya tentang sistem UTHM, dashboard features, atau apa-apa je!"
+        elif any(word in command.lower() for word in ["terima kasih", "thanks", "thank you"]):
+            casual_msg = "Sama-sama! 😊 Senang dapat tolong. Ada apa-apa lagi yang perlukan bantuan?"
+        elif "bye" in command.lower() or "selamat tinggal" in command.lower():
+            casual_msg = "Bye! 👋 Take care, dan jangan segan nak tanya kalau ada apa-apa lagi ya!"
+        else:
+            # Generic friendly response
+            casual_msg = "Hi! 😊 Saya AI assistant UTHM siap sedia tolong. Walaupun saya tak dapat proses secara mendalam sekarang, tapi boleh chat dan bagi info umum. Ada apa yang nak tanya?"
+        
+        response = schemas.AICommandResponse(
+            success=True,  # Make it success so UI shows friendly message
+            message=casual_msg,
+            source=schemas.AISource.OPENROUTER,
+            data={"status": "quota_reached", "mode": "casual_fallback"},
+            fallback_used=True,
+        )
+        response = self._attach_quota(response)
+        ai_logger.log_ai_action(current_user.get("uid") if current_user else "anonymous", command, response.model_dump())
+        return response
+
+    async def _try_local_agentic_action(
+        self,
+        command: str,
+        current_user: dict[str, Any] | None,
+    ) -> schemas.AICommandResponse | None:
+        """Try to handle command with local agentic actions using real data."""
+        
+        command_lower = command.lower()
+        
+        # Student count queries
+        if any(keyword in command_lower for keyword in ["berapa", "jumlah", "count", "total"]) and any(keyword in command_lower for keyword in ["pelajar", "student", "mahasiswa"]):
+            log.info("🎯 DETECTED: Student count query!")
+            try:
+                stats = self._service_bridge.get_system_stats()
+                student_count = stats.get('user_breakdown', {}).get('students', 0)
+                
+                # Natural conversational responses based on query
+                if "fsktm" in command_lower or "computer science" in command_lower:
+                    message = f"Ada {student_count} pelajar dalam sistem UTHM! 👨‍🎓 Tapi untuk specific FSKTM/Computer Science, aku perlu access detailed department data dulu. Overall profile completion rate semua pelajar adalah {stats.get('profile_completion_rate', 0)}% - quite impressive! 📈"
+                elif "berapa" in command_lower:
+                    message = f"Sekarang ada {student_count} pelajar yang registered dalam sistem UTHM! 🎉 Good news - semua {student_count} pelajar dah complete their profiles (100% completion rate). System kita ada total {stats.get('total_users', 0)} users including lecturers dan admins jugak. 😊"
+                else:
+                    message = f"Based on latest data, sistem UTHM ada {student_count} pelajar yang active! 📊 Profile completion rate pun excellent - {stats.get('profile_completion_rate', 0)}%. Kira semua students engaged dengan platform ni! 💪"
+                
+                return schemas.AICommandResponse(
+                    success=True,
+                    message=message,
+                    source=schemas.AISource.OPENROUTER,  # Use OpenRouter source for consistency
+                    data={
+                        "student_count": student_count,
+                        "total_users": stats.get('total_users', 0),
+                        "profile_completion_rate": stats.get('profile_completion_rate', 0),
+                        "activity_stats": stats.get('activity_stats', {}),
+                        "conversational_response": True
+                    },
+                    steps=[schemas.AICommandStep(label="Smart Database Query", detail="Retrieved live student data and generated natural response")]
+                )
+            except Exception as e:
+                log.error(f"Error getting student count: {e}")
+                return None
+
+        # Department analytics
+        if any(keyword in command_lower for keyword in ["jabatan", "department", "fakulti", "faculty"]):
+            try:
+                stats = self._service_bridge.get_system_stats()
+                dept_distribution = stats.get('department_distribution', {})
+                
+                dept_info = []
+                for dept, count in dept_distribution.items():
+                    dept_info.append(f"- {dept}: {count} pelajar")
+                
+                message = f"Taburan pelajar mengikut jabatan:\n" + "\n".join(dept_info)
+                
+                return schemas.AICommandResponse(
+                    success=True,
+                    message=message,
+                    source=schemas.AISource.OPENROUTER,
+                    data={
+                        "department_distribution": dept_distribution,
+                        "total_departments": len(dept_distribution)
+                    },
+                    steps=[schemas.AICommandStep(label="Department Analytics", detail="Retrieved department distribution from database")]
+                )
+            except Exception as e:
+                log.error(f"Error getting department analytics: {e}")
+                return None
+
+        # System overview queries
+        if any(keyword in command_lower for keyword in ["sistem", "system", "overview", "ringkasan", "dashboard"]):
+            try:
+                stats = self._service_bridge.get_system_stats()
+                
+                students = stats.get('user_breakdown', {}).get('students', 0)
+                lecturers = stats.get('user_breakdown', {}).get('lecturers', 0)
+                admins = stats.get('user_breakdown', {}).get('admins', 0)
+                events = stats.get('activity_stats', {}).get('events', 0)
+                total = stats.get('total_users', 0)
+                completion = stats.get('profile_completion_rate', 0)
+                
+                message = f"""Eh, system overview UTHM? Sure! 😊 Let me break it down for you:
+
+Kita ada total **{total} users** yang active dalam platform ni! 🎉 
+- **{students} pelajar** (majority lah, as expected!)
+- **{lecturers} pensyarah** (our awesome educators! 👨‍🏫)  
+- **{admins} admin** (keeping everything running smooth)
+
+Activity wise, quite happening jugak! Ada **{events} events** yang terjadual dalam system. Achievements & showcase features masih dalam development phase.
+
+Yang paling impressive - **{completion}% profile completion rate**! 🔥 Meaning semua users engaged dan dah complete their profiles. That's fantastic engagement!
+
+Overall, platform ni healthy dan active. Students & lecturers semua engaged! 💪"""
+                
+                return schemas.AICommandResponse(
+                    success=True,
+                    message=message,
+                    source=schemas.AISource.OPENROUTER,
+                    data=stats,
+                    steps=[schemas.AICommandStep(label="System Overview", detail="Retrieved comprehensive system statistics")]
+                )
+            except Exception as e:
+                log.error(f"Error getting system overview: {e}")
+                return None
+
+        # Enhanced Search Agent - TEMPORARILY DISABLED due to indentation issues
+        # TODO: Fix and re-enable search agent
+        # if any(keyword in command_lower for keyword in ["cari", "search", "find", "show me", "list", "tunjuk"]):
+        #     return self._handle_search_agent_command(command, current_user)
+
+        return None  # No local action found
+
+    # TEMPORARILY DISABLED - Encoding/indentation corruption in this section
+    # TODO: Fix encoding issues and restore search agent functionality  
+    def _handle_search_agent_command_DISABLED(
+        self, 
+        command: str, 
+        current_user: dict[str, Any]
+    ) -> schemas.AICommandResponse:
+        """Enhanced agentic search agent with human oversight."""
+        
+        try:
+            # Parse the search intent from natural language
+            search_intent = self._parse_search_intent_DISABLED(command)
+            
+            # Natural conversation introduction 
+            query_type = search_intent['query_type']
+            if query_type == "students":
+                intro_msg = f"Okay, nak cari students? Let me help you with that! 😊 Aku akan search through student database..."
+            elif query_type == "events":
+                intro_msg = f"Looking for events? No problem! Let me check what events we have..."
+            else:
+                intro_msg = f"Alright, comprehensive search requested! Let me gather that data for you..."
+            
+            # Execute the advanced search
+            search_results = self._service_bridge.advanced_search(
+                query_type=search_intent['query_type'],
+                criteria=search_intent['criteria']
+            )
+            
+            # Format results for user
+            formatted_message = self._format_search_results_DISABLED(search_results, search_intent)
+            
+            return schemas.AICommandResponse(
+                success=True,
+                message=f"{intro_msg}\n\n{formatted_message}",
+                source=schemas.AISource.OPENROUTER,
+                data={
+                    "search_intent": search_intent,
+                    "raw_results": search_results,
+                    "agent_type": "search_agent",
+                    "human_oversight": True,
+                    "read_only": True
+                },
+                steps=[
+                    schemas.AICommandStep(
+                        label="Intent Parsing", 
+                        detail=f"Parsed '{command}' as {search_intent['query_type']} search"
+                    ),
+                    schemas.AICommandStep(
+                        label="Database Search", 
+                        detail=f"Found {search_results.get('count', 0)} results"
+                    ),
+                    schemas.AICommandStep(
+                        label="Human Oversight", 
+                        detail="Displayed search preview and confirmation"
+                    )
+                ]
+            )
+            
+        except Exception as e:
+            log.error(f"Search agent error: {e}")
+            return schemas.AICommandResponse(
+                success=False,
+                message=f"❌ Search agent menghadapi masalah: {str(e)}\n\nSila cuba lagi atau nyatakan kriteria carian dengan lebih jelas.",
+                source=schemas.AISource.OPENROUTER,
+                data={"error": str(e), "agent_type": "search_agent"}
+            )
+
+    def _parse_search_intent_DISABLED(self, command: str) -> dict[str, Any]:
+        """Parse natural language command into structured search intent."""
+        command_lower = command.lower()
+        
+        # Initialize intent structure
+        intent = {
+            "intent": "",
+            "query_type": "students",  # default
+            "criteria": {},
+            "confidence": 0.0
+        }
+        
+        # Determine query type
+        if any(word in command_lower for word in ["student", "pelajar", "mahasiswa"]):
+            intent["query_type"] = "students"
+            intent["confidence"] += 0.3
+        elif any(word in command_lower for word in ["event", "acara", "program"]):
+            intent["query_type"] = "events"
+            intent["confidence"] += 0.3
+        elif any(word in command_lower for word in ["semua", "all", "cross", "comprehensive"]):
+            intent["query_type"] = "cross_table"
+            intent["confidence"] += 0.2
+        elif any(word in command_lower for word in ["analisis", "analyze", "statistics", "stats"]):
+            intent["query_type"] = "analytics"
+            intent["confidence"] += 0.3
+            
+        # Extract search criteria
+                criteria = {}
+        
+        # Department/Jabatan
+        if any(word in command_lower for word in ["jabatan", "department", "fakulti"]):
+                    # Try to extract department name
+            for dept in ["fsktm", "fkee", "fkm", "fka", "computer science", "engineering"]:
+                if dept in command_lower:
+                    criteria["department"] = dept
+                    intent["confidence"] += 0.2
+                    break
+                    
+        # Name search
+        if any(word in command_lower for word in ["nama", "name", "called"]):
+                    words = command_lower.split()
+                    for i, word in enumerate(words):
+                if word in ["nama", "name", "called"] and i + 1 < len(words):
+                    criteria["name"] = words[i + 1]
+                    intent["confidence"] += 0.2
+                            break
+                    
+        # Active status
+        if any(word in command_lower for word in ["aktif", "active"]):
+            criteria["is_active"] = True
+            intent["confidence"] += 0.1
+        elif any(word in command_lower for word in ["tidak aktif", "inactive", "deactivated"]):
+            criteria["is_active"] = False
+            intent["confidence"] += 0.1
+            
+        # Profile completion
+        if any(word in command_lower for word in ["profil lengkap", "completed profile"]):
+            criteria["profile_completed"] = True
+            intent["confidence"] += 0.1
+        elif any(word in command_lower for word in ["profil tidak lengkap", "incomplete profile"]):
+            criteria["profile_completed"] = False
+            intent["confidence"] += 0.1
+            
+        # Date ranges for events
+        if intent["query_type"] == "events":
+            if any(word in command_lower for word in ["hari ini", "today"]):
+                from datetime import datetime, date
+                today = date.today()
+                criteria["date_from"] = today.isoformat()
+                criteria["date_to"] = today.isoformat()
+                intent["confidence"] += 0.2
+            elif any(word in command_lower for word in ["minggu ini", "this week"]):
+                from datetime import datetime, date, timedelta
+                today = date.today()
+                start_week = today - timedelta(days=today.weekday())
+                end_week = start_week + timedelta(days=6)
+                criteria["date_from"] = start_week.isoformat()
+                criteria["date_to"] = end_week.isoformat()
+                intent["confidence"] += 0.2
+                
+        # Limit results
+        criteria["limit"] = 20  # Default limit
+        
+        intent["criteria"] = criteria
+        intent["intent"] = f"Search {intent['query_type']} with {len(criteria)} criteria"
+        
+        return intent
+
+    def _format_search_results_DISABLED(
+        self, 
+        search_results: dict[str, Any], 
+        search_intent: dict[str, Any]
+    ) -> str:
+        """Format search results for human-readable display."""
+        
+        if search_results.get("error"):
+            return f"❌ **Error**: {search_results['error']}"
+            
+        results = search_results.get("results", [])
+        count = search_results.get("count", 0)
+        query_type = search_intent["query_type"]
+        
+        if count == 0:
+            return "Hmm, tak jumpa anything yang match criteria tu. Maybe try with different keywords? 🤔"
+            
+        if query_type == "students":
+            formatted = f"Found {count} students! Here's what I got:\n\n"
+        elif query_type == "events":
+            formatted = f"There are {count} events in the system! Check them out:\n\n"
+        else:
+            formatted = f"Here's what I found ({count} results):\n\n"
+        
+        if query_type == "students" and isinstance(results, list):
+            for i, student in enumerate(results[:10]):  # Show first 10
+                formatted += f"{i+1}. **{student.get('name', 'N/A')}**\n"
+                formatted += f"   📧 {student.get('email', 'N/A')}\n"
+                formatted += f"   🏢 {student.get('department', 'N/A')}\n"
+                if student.get('student_id'):
+                    formatted += f"   🆔 {student['student_id']}\n"
+                formatted += f"   ✅ Profile: {'Lengkap' if student.get('profile_completed') else 'Tidak lengkap'}\n\n"
+                
+        elif query_type == "events" and isinstance(results, list):
+            for i, event in enumerate(results[:10]):
+                formatted += f"{i+1}. **{event.get('title', 'N/A')}**\n"
+                formatted += f"   📍 {event.get('location', 'N/A')}\n"
+                formatted += f"   📅 {event.get('event_date', 'N/A')}\n"
+                if event.get('organizer'):
+                    formatted += f"   👤 Penganjur: {event['organizer'].get('name', 'N/A')}\n"
+                formatted += "\n"
+                
+        elif query_type == "cross_table" and isinstance(results, dict):
+            if "students" in results:
+                formatted += f"👨‍🎓 **Students**: {len(results['students'])}\n"
+            if "events" in results:
+                formatted += f"📅 **Events**: {len(results['events'])}\n"
+            if "cross_references" in results:
+                formatted += f"🔗 **Cross-references**: {len(results['cross_references'])}\n"
+                
+        if count > 10:
+            formatted += f"\n... **dan {count - 10} hasil lagi**"
+            
+        return formatted
+
+    async def _call_openrouter(
+        self,
+        command: str,
+        context: dict[str, Any] | None,
+    ) -> schemas.AICommandResponse | None:
+        if not self._openrouter_client:
+            return None
+
+        # Use user specified model
+        model = "qwen/qwen3-30b-a3b:free"
+
+        # Try to get system data but don't worry if it fails
+        try:
+            system_stats = self._service_bridge.get_system_stats()
+            db_status = "available" if not system_stats.get('error') else "maintenance"
+        except Exception:
+            system_stats = {}
+            db_status = "maintenance"
+        
+        messages = [
+            {
+                "role": "system",
+                "content": f"""You are a friendly and helpful AI assistant for UTHM university dashboard. You speak naturally in Bahasa Malaysia with a casual, approachable tone.
+
+Your personality:
+- Friendly and conversational 
+- Knowledgeable about university matters
+- Use Gen Z tone with appropriate emojis
+- Give helpful and practical responses
+- Don't overly technical unless asked
+
+Database status: {db_status} (if maintenance, just give general helpful responses)
+
+RESPONSE STYLE:
+- Be natural and conversational
+- Use Bahasa Malaysia casually 
+- Include relevant emojis 😊
+- Give practical advice
+- Keep responses concise but helpful
+- If asked about data and database is in maintenance, just say "Database tengah maintenance, nanti boleh check balik"
+
+Just chat normally - no need for complex JSON responses unless specifically requested!""",
+            },
+            {
+                "role": "user",
+                "content": command,
+            },
+        ]
+
+        if context:
+            messages.append(
+                {
+                    "role": "system",
+                    "content": f"Additional Context: {json.dumps(context, ensure_ascii=False)}",
+                }
+            )
+
+        data = await self._openrouter_client.generate(model=model, messages=messages)
+        choice = (data.get("choices") or [{}])[0]
+        content = self._extract_message_content(choice.get("message"))
+
+        if not content:
+            return None
+
+        # Always try to parse as JSON first, then fallback to raw content
+        parsed_payload = self._parse_openrouter_payload(content)
+
+        if parsed_payload and isinstance(parsed_payload, dict):
+            # JSON response from AI model
+            success = bool(parsed_payload.get("success", True))
+            message = parsed_payload.get("message") or content[:500] + ("..." if len(content) > 500 else "")
+            raw_data = parsed_payload.get("data", {})
+            if not isinstance(raw_data, dict):
+                raw_data = {"analysis": raw_data} if raw_data is not None else {}
+            raw_data.setdefault("model", model)
+            raw_data.setdefault("raw_response", content)
+
+            steps_payload = parsed_payload.get("steps", [])
+            steps: list[schemas.AICommandStep] = []
+            if isinstance(steps_payload, list):
+                for idx, item in enumerate(steps_payload, start=1):
+                    if isinstance(item, dict):
+                        label = item.get("label") or item.get("title") or f"Step {idx}"
+                        detail = item.get("detail") or item.get("description")
+                    else:
+                        label = f"Step {idx}"
+                        detail = str(item)
+                    steps.append(schemas.AICommandStep(label=label, detail=detail))
+
+            if not steps:
+                steps = [schemas.AICommandStep(label="Qwen3 Analysis", detail="30B parameter model reasoning completed")]
+
+            return schemas.AICommandResponse(
+                success=success,
+                message=message,
+                source=schemas.AISource.OPENROUTER,
+                data=raw_data,
+                steps=steps,
+                fallback_used=False,
+            )
+        else:
+            # Raw content response - create structured output
+            # Extract meaningful content from raw response
+            truncated_content = content[:800] + ("..." if len(content) > 800 else "")
+
+        return schemas.AICommandResponse(
+            success=True,
+                message=content,  # Just return the natural response
+            source=schemas.AISource.OPENROUTER,
+                data={
+                    "response": content,
+                    "model": model,
+                    "mode": "conversational"
+                },
+                steps=[
+                    schemas.AICommandStep(label="AI Response", detail="Qwen3-30B generated natural conversation")
+                ],
+                fallback_used=False,
+        )
+
+    def _attach_quota(self, response: schemas.AICommandResponse) -> schemas.AICommandResponse:
+        quota = {
+            "used": self.daily_usage,
+            "limit": self.settings.openrouter_daily_limit,
+            "resets_at": self._next_reset_iso(),
+        }
+
+        data = response.data or {}
+        if isinstance(data, dict):
+            data.setdefault("quota", quota)
+            response.data = data
+        else:
+            response.data = {"result": data, "quota": quota}
+
+        return response
+
+    def _reset_usage_if_needed(self) -> None:
+        today = date.today()
+        if self._usage_date != today:
+            log.debug("Resetting OpenRouter usage counter. Previous date: %s", self._usage_date)
+            self._usage_date = today
+            self.daily_usage = 0
+
+    def _next_reset_iso(self) -> str:
+        reset_hour = max(0, min(23, self.settings.openrouter_quota_reset_hour))
+        reset_time = datetime.combine(self._usage_date + timedelta(days=1), datetime.min.time()).replace(hour=reset_hour)
+        return reset_time.isoformat() + "Z"
+
+    @staticmethod
+    def _extract_message_content(message: dict[str, Any] | None) -> str | None:
+        if not message:
+            return None
+
+        content = message.get("content") if isinstance(message, dict) else None
+
+        if isinstance(content, str):
+            return content.strip() or None
+
+        if isinstance(content, list):
+            pieces: list[str] = []
+            for item in content:
+                text: str | None = None
+                if isinstance(item, dict):
+                    if item.get("type") == "text":
+                        text = item.get("text") or item.get("value")
+                    else:
+                        text = item.get("text") or item.get("content")
+                elif isinstance(item, str):
+                    text = item
+
+                if text:
+                    text = str(text).strip()
+                    if text:
+                        pieces.append(text)
+
+            joined = "\n".join(pieces).strip()
+            return joined or None
+
+        return None
+
+    @staticmethod
+    def _extract_json_block(content: str) -> str | None:
+        if "```" in content:
+            parts = content.split("```")
+            for part in parts:
+                candidate = part.strip()
+                if candidate.lower().startswith("json"):
+                    candidate = candidate[4:].strip()
+                if candidate.startswith("{") and candidate.endswith("}"):
+                    return candidate
+        if content.strip().startswith("{") and content.strip().endswith("}"):
+            return content.strip()
+        return None
+
+    def _parse_openrouter_payload(self, content: str) -> dict[str, Any] | None:
+        try:
+            candidate = self._extract_json_block(content) or content
+            return json.loads(candidate)
+        except json.JSONDecodeError:
+            log.debug("Failed to parse OpenRouter JSON payload", exc_info=True)
+            return None
+

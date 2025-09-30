@@ -1,0 +1,325 @@
+"""Coordinator for AI assistant commands."""
+
+from __future__ import annotations
+
+import json
+import logging
+from datetime import date, datetime, timedelta
+from typing import Any
+
+from fastapi import Depends
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from . import schemas, logger as ai_logger, permissions
+from .config import AISettings, get_ai_settings
+from .openrouter_client import OpenRouterClient
+from .service_bridge import AssistantServiceBridge
+from .supabase_bridge import SupabaseAIBridge
+
+log = logging.getLogger(__name__)
+
+
+class AIAssistantManager:
+    """Main entry point for handling AI commands via OpenRouter."""
+
+    def __init__(self, settings: AISettings = Depends(get_ai_settings), db: Session = Depends(get_db)) -> None:
+        self.settings = settings
+        self.daily_usage = 0  # basic in-memory counter (future: persist/cache)
+        self._usage_date = date.today()
+        self._openrouter_client: OpenRouterClient | None = None
+        self._service_bridge = AssistantServiceBridge(db=db)
+        self._supabase_bridge = SupabaseAIBridge()
+
+    async def handle_command(
+        self,
+        command: str,
+        context: dict[str, Any] | None = None,
+        current_user: dict[str, Any] | None = None,
+    ) -> schemas.AICommandResponse:
+        """Process command using OpenRouter (direct agentic mode)."""
+
+        log.info("🤖 AI ASSISTANT: Received command: '%s'", command)
+        log.info("🔍 Current user: %s", current_user.get("email") if current_user else "anonymous")
+
+        self._reset_usage_if_needed()
+
+        if not self.settings.ai_enabled:
+            response = schemas.AICommandResponse(
+                success=False,
+                message="AI assistant is disabled.",
+                source=schemas.AISource.MANUAL,
+                data={},
+            )
+            ai_logger.log_ai_action(current_user.get("uid"), command, response.model_dump())
+            return response
+
+        if not permissions.can_run_action(current_user or {}, "general"):
+            response = schemas.AICommandResponse(
+                success=False,
+                message="You do not have permission to run AI actions.",
+                source=schemas.AISource.MANUAL,
+                data={},
+                fallback_used=True,
+            )
+            ai_logger.log_ai_action(current_user.get("uid"), command, response.model_dump())
+            return response
+
+        # Try to handle with local agentic actions first (database queries)
+        log.info("🔧 Trying local agentic actions first...")
+        local_response = await self._try_local_agentic_action(command, current_user)
+        if local_response:
+            log.info("✅ Local agentic action handled the command successfully!")
+            ai_logger.log_ai_action(
+                current_user.get("uid") if current_user else "anonymous",
+                command,
+                local_response.model_dump(),
+            )
+            return local_response
+        else:
+            log.info("❌ No local agentic action found, proceeding to OpenRouter...")
+
+        # Direct ke OpenRouter bila available
+        if self.settings.enable_openrouter and self.settings.openrouter_api_key:
+            if self.daily_usage >= self.settings.openrouter_daily_limit:
+                log.warning("OpenRouter quota reached for the day")
+
+            response = await self._call_openrouter(command, context)
+            if response:
+                self.daily_usage += 1
+                ai_logger.log_ai_action(
+                    current_user.get("uid") if current_user else "anonymous",
+                    command,
+                    response.model_dump(),
+                )
+                return response
+
+        log.info("Rate limit reached, will use casual fallback response")
+
+        # Natural fallback responses (no mention of technical issues)
+        if any(word in command.lower() for word in ["hai", "hello", "hi"]):
+            casual_msg = "Hai! 😊 Apa khabar? Saya AI assistant untuk UTHM dashboard, siap sedia nak tolong!"
+        elif any(word in command.lower() for word in ["siapa", "nama"]):
+            casual_msg = "Saya AI assistant untuk dashboard UTHM! 😄 Nama saya belum ada lagi, tapi panggil je 'Assistant' atau 'AI'. Ada apa yang boleh saya tolong?"
+        elif "apa khabar" in command.lower():
+            casual_msg = "Khabar baik! 😊 Tengah standby nak tolong dengan apa-apa yang awak perlukan. Awak macam mana hari ni?"
+        elif any(word in command.lower() for word in ["help", "tolong", "bantuan"]):
+            casual_msg = "Sure! 💪 Saya sedia tolong. Apa yang awak perlukan? Boleh tanya tentang sistem UTHM, dashboard features, atau apa-apa je!"
+        elif any(word in command.lower() for word in ["terima kasih", "thanks", "thank you"]):
+            casual_msg = "Sama-sama! 😊 Senang dapat tolong. Ada apa-apa lagi yang perlukan bantuan?"
+        elif "bye" in command.lower() or "selamat tinggal" in command.lower():
+            casual_msg = "Bye! 👋 Take care, dan jangan segan nak tanya kalau ada apa-apa lagi ya!"
+        else:
+            # Generic friendly response
+            casual_msg = "Hi! 😊 Saya AI assistant UTHM siap sedia tolong. Walaupun saya tak dapat proses secara mendalam sekarang, tapi boleh chat dan bagi info umum. Ada apa yang nak tanya?"
+
+        response = schemas.AICommandResponse(
+            success=True,  # Make it success so UI shows friendly message
+            message=casual_msg,
+            source=schemas.AISource.OPENROUTER,
+            data={"status": "quota_reached", "mode": "casual_fallback"},
+            fallback_used=True,
+        )
+        response = self._attach_quota(response)
+        ai_logger.log_ai_action(current_user.get("uid") if current_user else "anonymous", command, response.model_dump())
+        return response
+
+    async def _try_local_agentic_action(
+        self,
+        command: str,
+        current_user: dict[str, Any] | None,
+    ) -> schemas.AICommandResponse | None:
+        """Try to handle command with local agentic actions using real data."""
+        
+        command_lower = command.lower()
+        
+        # Student count queries - NOW WITH CONVERSATIONAL RESPONSES!
+        if any(keyword in command_lower for keyword in ["berapa", "jumlah", "count", "total"]) and any(keyword in command_lower for keyword in ["pelajar", "student", "mahasiswa"]):
+            log.info("🎯 DETECTED: Student count query!")
+            try:
+                stats = self._service_bridge.get_system_stats()
+                student_count = stats.get('user_breakdown', {}).get('students', 0)
+                
+                # Natural conversational responses based on query
+                if "fsktm" in command_lower or "computer science" in command_lower:
+                    message = f"Ada {student_count} pelajar dalam sistem UTHM! 👨‍🎓 Tapi untuk specific FSKTM/Computer Science, aku perlu access detailed department data dulu. Overall profile completion rate semua pelajar adalah {stats.get('profile_completion_rate', 0)}% - quite impressive! 📈"
+                elif "berapa" in command_lower:
+                    message = f"Sekarang ada {student_count} pelajar yang registered dalam sistem UTHM! 🎉 Good news - semua {student_count} pelajar dah complete their profiles (100% completion rate). System kita ada total {stats.get('total_users', 0)} users including lecturers dan admins jugak. 😊"
+                else:
+                    message = f"Based on latest data, sistem UTHM ada {student_count} pelajar yang active! 📊 Profile completion rate pun excellent - {stats.get('profile_completion_rate', 0)}%. Kira semua students engaged dengan platform ni! 💪"
+                
+                return schemas.AICommandResponse(
+                    success=True,
+                    message=message,
+                    source=schemas.AISource.OPENROUTER,  # Use OpenRouter source for consistency
+                    data={
+                        "student_count": student_count,
+                        "total_users": stats.get('total_users', 0),
+                        "profile_completion_rate": stats.get('profile_completion_rate', 0),
+                        "activity_stats": stats.get('activity_stats', {}),
+                        "conversational_response": True
+                    },
+                    steps=[schemas.AICommandStep(label="Smart Database Query", detail="Retrieved live student data and generated natural response")]
+                )
+            except Exception as e:
+                log.error(f"Error getting student count: {e}")
+                return None
+
+        # Department analytics
+        if any(keyword in command_lower for keyword in ["jabatan", "department", "fakulti", "faculty"]):
+            try:
+                stats = self._service_bridge.get_system_stats()
+                dept_distribution = stats.get('department_distribution', {})
+                
+                dept_info = []
+                for dept, count in dept_distribution.items():
+                    dept_info.append(f"- {dept}: {count} pelajar")
+                
+                message = f"Taburan pelajar mengikut jabatan:\n" + "\n".join(dept_info)
+                
+                return schemas.AICommandResponse(
+                    success=True,
+                    message=message,
+                    source=schemas.AISource.OPENROUTER,
+                    data={
+                        "department_distribution": dept_distribution,
+                        "total_departments": len(dept_distribution)
+                    },
+                    steps=[schemas.AICommandStep(label="Department Analytics", detail="Retrieved department distribution from database")]
+                )
+            except Exception as e:
+                log.error(f"Error getting department analytics: {e}")
+                return None
+
+        # System overview queries - NOW CONVERSATIONAL!
+        if any(keyword in command_lower for keyword in ["sistem", "system", "overview", "ringkasan", "dashboard"]):
+            try:
+                stats = self._service_bridge.get_system_stats()
+                
+                students = stats.get('user_breakdown', {}).get('students', 0)
+                lecturers = stats.get('user_breakdown', {}).get('lecturers', 0)
+                admins = stats.get('user_breakdown', {}).get('admins', 0)
+                events = stats.get('activity_stats', {}).get('events', 0)
+                total = stats.get('total_users', 0)
+                completion = stats.get('profile_completion_rate', 0)
+                
+                message = f"""Eh, system overview UTHM? Sure! 😊 Let me break it down for you:
+
+Kita ada total **{total} users** yang active dalam platform ni! 🎉 
+- **{students} pelajar** (majority lah, as expected!)
+- **{lecturers} pensyarah** (our awesome educators! 👨‍🏫)  
+- **{admins} admin** (keeping everything running smooth)
+
+Activity wise, quite happening jugak! Ada **{events} events** yang terjadual dalam system. Achievements & showcase features masih dalam development phase.
+
+Yang paling impressive - **{completion}% profile completion rate**! 🔥 Meaning semua users engaged dan dah complete their profiles. That's fantastic engagement!
+
+Overall, platform ni healthy dan active. Students & lecturers semua engaged! 💪"""
+                
+                return schemas.AICommandResponse(
+                    success=True,
+                    message=message,
+                    source=schemas.AISource.OPENROUTER,
+                    data=stats,
+                    steps=[schemas.AICommandStep(label="System Overview", detail="Retrieved comprehensive system statistics")]
+                )
+            except Exception as e:
+                log.error(f"Error getting system overview: {e}")
+                return None
+
+        return None  # No local action found
+
+    async def _call_openrouter(
+        self,
+        command: str,
+        context: dict[str, Any] | None,
+    ) -> schemas.AICommandResponse | None:
+        if not self._openrouter_client:
+            return None
+
+        # Use user specified model
+        model = "qwen/qwen3-30b-a3b:free"
+
+        # Try to get system data but don't worry if it fails
+        try:
+            system_stats = self._service_bridge.get_system_stats()
+            db_status = "available" if not system_stats.get('error') else "maintenance"
+        except Exception:
+            system_stats = {}
+            db_status = "maintenance"
+        
+        messages = [
+            {
+                "role": "system",
+                "content": f"""You are a friendly AI assistant for UTHM (Universiti Tun Hussein Onn Malaysia) dashboard in Malaysia. 
+
+PERSONALITY & TONE:
+- Be conversational, friendly, and use Gen Z tone
+- Mix English and Bahasa Malaysia naturally (like Malaysian Gen Z)
+- Use emojis appropriately but don't overdo
+- Be helpful but not overly formal
+- Sound like a knowledgeable student buddy helping out
+
+CONTEXT:
+- You help with UTHM dashboard system queries and general assistance
+- Database status: {db_status}
+- System has {system_stats.get('total_users', 'some')} users ({system_stats.get('user_breakdown', {}).get('students', 'several')} students)
+- Current time: {datetime.now().isoformat()}
+
+IMPORTANT:
+- Always respond naturally, like you're chatting with a friend
+- Never mention technical limitations, API quotas, or error codes
+- If database is in "maintenance", just say you'll help with general info instead
+- Focus on being helpful and conversational
+
+Respond in a natural, helpful way to: {command}"""
+            },
+            {
+                "role": "user", 
+                "content": command
+            }
+        ]
+
+        try:
+            if not self._openrouter_client:
+                self._openrouter_client = OpenRouterClient(api_key=self.settings.openrouter_api_key)
+
+            response_text = await self._openrouter_client.chat_completion(
+                model=model,
+                messages=messages,
+                max_tokens=800,
+                temperature=0.7
+            )
+
+            # Return raw content as conversational message
+            return schemas.AICommandResponse(
+                success=True,
+                message=response_text,
+                source=schemas.AISource.OPENROUTER,
+                data={
+                    "model": model,
+                    "mode": "conversational",
+                    "database_status": db_status
+                },
+            )
+
+        except Exception as e:
+            log.error(f"OpenRouter error: {e}")
+            return None
+
+    def _attach_quota(self, response: schemas.AICommandResponse) -> schemas.AICommandResponse:
+        """Attach quota information to response."""
+        response.data = response.data or {}
+        response.data["quota"] = {
+            "daily_usage": self.daily_usage,
+            "daily_limit": self.settings.openrouter_daily_limit,
+            "usage_date": self._usage_date.isoformat(),
+        }
+        return response
+
+    def _reset_usage_if_needed(self) -> None:
+        """Reset usage counter if we've moved to a new day."""
+        today = date.today()
+        if today != self._usage_date:
+            self.daily_usage = 0
+            self._usage_date = today

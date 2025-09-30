@@ -3,10 +3,12 @@
  * Replace Firebase with Supabase for authentication and database
  */
 
-// Supabase configuration
+// Supabase configuration - load from environment or prompt user
+// IMPORTANT: Replace these with your own Supabase credentials
+// For production, use proper environment variable management
 const SUPABASE_CONFIG = {
-  url: 'https://xibffemtpboiecpeynon.supabase.co',
-  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpYmZmZW10cGJvaWVjcGV5bm9uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1ODkzOTYsImV4cCI6MjA3MTE2NTM5Nn0.mwQndhu5_uX26T-qTEOCiLya74DUD6Iw8vV3ffuA5mM'
+  url: window.ENV?.SUPABASE_URL || 'YOUR_SUPABASE_URL_HERE',
+  anonKey: window.ENV?.SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY_HERE'
 };
 
 // Initialize Supabase client - use global supabase object from CDN
@@ -15,9 +17,14 @@ let supabaseClient;
 // Check if supabase is available globally (v2 API)
 if (typeof window !== 'undefined' && window.supabase) {
   try {
-    // For Supabase v2, the createClient is directly on window.supabase
-    supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
-    console.log('Supabase client initialized successfully');
+    if (window.__sharedSupabaseClient) {
+      supabaseClient = window.__sharedSupabaseClient;
+      console.log('Supabase client reused');
+    } else {
+      supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+      window.__sharedSupabaseClient = supabaseClient;
+      console.log('Supabase client initialized successfully');
+    }
   } catch (error) {
     console.error('Error initializing Supabase client:', error);
     supabaseClient = null;
@@ -62,6 +69,11 @@ export const auth = {
   
   getUser: async () => {
     const { data, error } = await supabaseClient.auth.getUser();
+    return { data, error };
+  },
+
+  getSession: async () => {
+    const { data, error } = await supabaseClient.auth.getSession();
     return { data, error };
   },
   
