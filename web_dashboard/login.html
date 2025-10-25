@@ -147,7 +147,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+    <script src="/js/config/env.js"></script>
     <script type="module">
         import { SUPABASE_CONFIG, supabase as sharedSupabase } from './js/config/supabase-config.js';
 
@@ -157,6 +157,11 @@
             console.error('Supabase client failed to initialize');
         } else {
             console.log('Supabase client initialized for login');
+            
+            // Test Supabase connection
+            console.log('🧪 Testing Supabase connection...');
+            console.log('Supabase URL:', supabaseClient.supabaseUrl);
+            console.log('Supabase Key (first 20 chars):', supabaseClient.supabaseKey?.substring(0, 20) + '...');
         }
 
         // Enhanced UI interactions
@@ -223,17 +228,43 @@
             });
         }
 
+        // Circuit breaker to prevent infinite redirects
+        let redirectAttempts = 0;
+        const MAX_REDIRECT_ATTEMPTS = 3;
+
         async function bootstrapAuthGuard() {
             try {
+                console.log('🔍 Checking session... (attempt:', redirectAttempts + 1, ')');
+                
+                // Prevent infinite redirects
+                if (redirectAttempts >= MAX_REDIRECT_ATTEMPTS) {
+                    console.error('🚨 Too many redirect attempts! Stopping to prevent infinite loop.');
+                    return false;
+                }
+
+                // Check if Supabase is properly configured before attempting auth
+                if (!supabaseClient || typeof supabaseClient.auth?.getSession !== 'function') {
+                    console.error('❌ Supabase client not properly initialized');
+                    return false;
+                }
+
                 const { data, error } = await supabaseClient.auth.getSession();
                 if (error) {
                     console.warn('Supabase session read error:', error.message);
                 }
 
+                console.log('📊 Session data:', data);
                 if (data?.session?.user) {
-                    console.log('Session found, redirecting to dashboard');
-                    window.location.href = '/index.html';
+                    console.log('✅ Session found, redirecting to dashboard');
+                    redirectAttempts++;
+                    
+                    // Prevent redirect loop by checking current page
+                    if (!window.location.href.includes('index.html')) {
+                        window.location.href = '/index.html';
+                    }
                     return true;
+                } else {
+                    console.log('❌ No session found, staying on login page');
                 }
             } catch (error) {
                 console.error('Failed to check session:', error);
@@ -366,7 +397,13 @@
 
                 showMessage('success', 'Login successful! Redirecting...');
                 setTimeout(() => {
-                    window.location.href = '/index.html';
+                    // Prevent redirect loop by checking current page
+                    if (!window.location.href.includes('index.html')) {
+                        window.location.href = '/index.html';
+                    } else {
+                        // If already on index page, reload it
+                        window.location.reload();
+                    }
                 }, 500);
             } catch (error) {
                 console.error('Login failed:', error);

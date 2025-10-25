@@ -11,11 +11,19 @@ const SUPABASE_CONFIG = {
   anonKey: window.ENV?.SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY_HERE'
 };
 
+// Check if Supabase is properly configured
+const isSupabaseConfigured = () => {
+  return SUPABASE_CONFIG.url && 
+         SUPABASE_CONFIG.url !== 'YOUR_SUPABASE_URL_HERE' && 
+         SUPABASE_CONFIG.anonKey && 
+         SUPABASE_CONFIG.anonKey !== 'YOUR_SUPABASE_ANON_KEY_HERE';
+};
+
 // Initialize Supabase client - use global supabase object from CDN
 let supabaseClient;
 
 // Check if supabase is available globally (v2 API)
-if (typeof window !== 'undefined' && window.supabase) {
+if (typeof window !== 'undefined' && window.supabase && isSupabaseConfigured()) {
   try {
     if (window.__sharedSupabaseClient) {
       supabaseClient = window.__sharedSupabaseClient;
@@ -31,20 +39,62 @@ if (typeof window !== 'undefined' && window.supabase) {
   }
 } else {
   // Fallback - create a mock client
-  console.warn('Supabase not loaded or createClient not available, using mock client');
+  if (!isSupabaseConfigured()) {
+    console.warn('⚠️ Supabase not configured with valid credentials. Please set SUPABASE_URL and SUPABASE_ANON_KEY.');
+  } else {
+    console.warn('Supabase not loaded or createClient not available, using mock client');
+  }
+  
   supabaseClient = {
     auth: {
-      signInWithPassword: async () => ({ data: null, error: new Error('Supabase not loaded') }),
-      signOut: async () => ({ error: new Error('Supabase not loaded') }),
-      getUser: async () => ({ data: { user: null }, error: new Error('Supabase not loaded') }),
+      signInWithPassword: async () => {
+        const error = new Error('Supabase not properly configured. Please contact administrator.');
+        error.code = 'SUPABASE_NOT_CONFIGURED';
+        return { data: null, error };
+      },
+      signOut: async () => {
+        const error = new Error('Supabase not properly configured. Please contact administrator.');
+        error.code = 'SUPABASE_NOT_CONFIGURED';
+        return { error };
+      },
+      getUser: async () => {
+        const error = new Error('Supabase not properly configured. Please contact administrator.');
+        error.code = 'SUPABASE_NOT_CONFIGURED';
+        return { data: { user: null }, error };
+      },
+      getSession: async () => {
+        const error = new Error('Supabase not properly configured. Please contact administrator.');
+        error.code = 'SUPABASE_NOT_CONFIGURED';
+        return { data: { session: null }, error };
+      },
       onAuthStateChange: () => ({ data: { subscription: null } })
     },
     from: () => ({
-      select: () => ({ data: null, error: new Error('Supabase not loaded') }),
-      insert: () => ({ data: null, error: new Error('Supabase not loaded') }),
-      update: () => ({ data: null, error: new Error('Supabase not loaded') }),
-      delete: () => ({ data: null, error: new Error('Supabase not loaded') }),
-      match: () => ({ data: null, error: new Error('Supabase not loaded') })
+      select: () => {
+        const error = new Error('Supabase not properly configured. Please contact administrator.');
+        error.code = 'SUPABASE_NOT_CONFIGURED';
+        return { data: null, error };
+      },
+      insert: () => {
+        const error = new Error('Supabase not properly configured. Please contact administrator.');
+        error.code = 'SUPABASE_NOT_CONFIGURED';
+        return { data: null, error };
+      },
+      update: () => {
+        const error = new Error('Supabase not properly configured. Please contact administrator.');
+        error.code = 'SUPABASE_NOT_CONFIGURED';
+        return { data: null, error };
+      },
+      delete: () => {
+        const error = new Error('Supabase not properly configured. Please contact administrator.');
+        error.code = 'SUPABASE_NOT_CONFIGURED';
+        return { data: null, error };
+      },
+      match: () => {
+        const error = new Error('Supabase not properly configured. Please contact administrator.');
+        error.code = 'SUPABASE_NOT_CONFIGURED';
+        return { data: null, error };
+      }
     })
   };
 }

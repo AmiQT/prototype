@@ -2,6 +2,8 @@
 Event model - matches Firebase events collection
 """
 from sqlalchemy import Column, String, Text, DateTime, Boolean, Integer, JSON, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID
+import uuid
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -10,12 +12,12 @@ class Event(Base):
     __tablename__ = "events"
     
     # Primary fields (match database exactly)
-    id = Column(String, primary_key=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title = Column(String, nullable=False)
     description = Column(Text, nullable=True)
     event_date = Column(DateTime(timezone=True), nullable=True)  # Match DB column name
     location = Column(String, nullable=True)
-    organizer_id = Column(String, ForeignKey("users.id"), nullable=True)  # Match DB column name
+    organizer_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)  # Match DB column name
     is_active = Column(Boolean, nullable=True, default=True)
     created_at = Column(DateTime(timezone=True), nullable=True, server_default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=True, onupdate=func.now())
@@ -32,9 +34,9 @@ class EventParticipation(Base):
     """
     __tablename__ = "event_participations"
     
-    id = Column(String, primary_key=True)
-    event_id = Column(String, ForeignKey("events.id"), nullable=False)
-    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    event_id = Column(UUID(as_uuid=True), ForeignKey("events.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     
     # Participation details
     registration_date = Column(DateTime(timezone=True), server_default=func.now())

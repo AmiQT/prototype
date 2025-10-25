@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 class AISource(str, Enum):
     PSEUDO = "pseudo"
-    OPENROUTER = "openrouter"
+    GEMINI = "gemini"
     MANUAL = "manual"
     ENHANCED_SUPABASE = "enhanced_supabase"
 

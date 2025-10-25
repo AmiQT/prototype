@@ -6,7 +6,6 @@ import logging
 from typing import Any
 import asyncio
 import json
-import os
 import httpx
 
 logger = logging.getLogger(__name__)
@@ -40,7 +39,8 @@ class SupabaseAIBridge:
             base_url=SUPABASE_CONFIG['url'],
             headers={
                 'Authorization': f'Bearer {SUPABASE_CONFIG["anon_key"]}',
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'apikey': SUPABASE_CONFIG['anon_key']
             },
             timeout=30.0
         )

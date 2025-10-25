@@ -2,6 +2,8 @@
 Showcase model - updated to match comprehensive SQL schema
 """
 from sqlalchemy import Column, String, Text, DateTime, Boolean, Integer, JSON, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID
+import uuid
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -10,8 +12,8 @@ class ShowcasePost(Base):
     __tablename__ = "showcase_posts"
     
     # Primary identification
-    id = Column(String(128), primary_key=True)
-    user_id = Column(String(128), nullable=False)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     
     # Post content
     title = Column(String(255), default='')
@@ -70,10 +72,10 @@ class ShowcaseComment(Base):
     __tablename__ = "showcase_post_comments"
     
     # Primary fields
-    id = Column(String(128), primary_key=True)
-    post_id = Column(String(128), ForeignKey("showcase_posts.id"), nullable=False)
-    user_id = Column(String(128), nullable=False)
-    parent_comment_id = Column(String(128), ForeignKey("showcase_post_comments.id"), nullable=True)  # For replies
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    post_id = Column(UUID(as_uuid=True), ForeignKey("showcase_posts.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    parent_comment_id = Column(UUID(as_uuid=True), ForeignKey("showcase_post_comments.id"), nullable=True)  # For replies
     
     # Comment content
     content = Column(Text, nullable=False)
@@ -106,8 +108,8 @@ class ShowcaseLike(Base):
     
     # Primary fields
     id = Column(Integer, primary_key=True, autoincrement=True)
-    post_id = Column(String(128), ForeignKey("showcase_posts.id"), nullable=False)
-    user_id = Column(String(128), nullable=False)
+    post_id = Column(UUID(as_uuid=True), ForeignKey("showcase_posts.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -123,8 +125,8 @@ class ShowcaseShare(Base):
     
     # Primary fields
     id = Column(Integer, primary_key=True, autoincrement=True)
-    post_id = Column(String(128), ForeignKey("showcase_posts.id"), nullable=False)
-    user_id = Column(String(128), nullable=False)
+    post_id = Column(UUID(as_uuid=True), ForeignKey("showcase_posts.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     shared_to = Column(String(50))  # 'timeline', 'external', etc.
     
     # Timestamps

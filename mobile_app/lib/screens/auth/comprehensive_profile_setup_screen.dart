@@ -404,7 +404,7 @@ class _ComprehensiveProfileSetupScreenState
 
               // Faculty dropdown
               DropdownButtonFormField<String>(
-                value: _selectedFaculty.isEmpty ? null : _selectedFaculty,
+                initialValue: _selectedFaculty.isEmpty ? null : _selectedFaculty,
                 decoration: const InputDecoration(
                   labelText: 'Faculty *',
                   border: OutlineInputBorder(),
@@ -451,7 +451,7 @@ class _ComprehensiveProfileSetupScreenState
               SizedBox(
                 width: double.infinity,
                 child: DropdownButtonFormField<String>(
-                  value:
+                  initialValue:
                       _selectedDepartment.isEmpty ? null : _selectedDepartment,
                   decoration: const InputDecoration(
                     labelText: 'Department *',
@@ -508,7 +508,7 @@ class _ComprehensiveProfileSetupScreenState
               SizedBox(
                 width: double.infinity,
                 child: DropdownButtonFormField<int>(
-                  value: _selectedSemester,
+                  initialValue: _selectedSemester,
                   decoration: const InputDecoration(
                     labelText: 'Current Semester *',
                     border: OutlineInputBorder(),

@@ -25,10 +25,20 @@ export class SecurityManager {
     }
     
     async init() {
-        // Monitor auth state
-        auth.onAuthStateChanged((user) => {
-            this.handleAuthStateChange(user);
-        });
+        // Monitor auth state - using Supabase method
+        if (typeof auth.onAuthStateChange === 'function') {
+            auth.onAuthStateChange((event, session) => {
+                // Convert Supabase session to match expected user object format
+                const user = session?.user ? {
+                    uid: session.user.id,
+                    email: session.user.email
+                } : null;
+                
+                this.handleAuthStateChange(user);
+            });
+        } else {
+            console.warn('Auth state change monitoring not available');
+        }
         
         // Setup session monitoring
         this.startSessionMonitoring();
@@ -45,20 +55,33 @@ export class SecurityManager {
     
     async loadUserPermissions(user) {
         try {
-            const userDoc = await db.collection('users').doc(user.uid).get();
-            if (userDoc.exists) {
-                const userData = userDoc.data();
-                this.currentUser = {
-                    uid: user.uid,
-                    email: user.email,
-                    role: userData.role,
-                    department: userData.department,
-                    permissions: this.securityConfig.analyticsPermissions[userData.role] || []
-                };
+            // Use Supabase instead of Firebase
+            const { data: userData, error } = await db.from('users').select('role, department').eq('id', user.uid).single();
+            
+            if (error) {
+                console.error('Error loading user data:', error);
+                // Try with email as fallback since user ID might differ in Supabase
+                const { data: userDataByEmail, error: errorByEmail } = await db.from('users').select('role, department').eq('email', user.email).single();
                 
-                this.permissions.set(user.uid, this.currentUser.permissions);
-                // User permissions loaded (logging suppressed)
+                if (errorByEmail || !userDataByEmail) {
+                    console.error('Error loading user data by email:', errorByEmail);
+                    this.currentUser = null;
+                    return;
+                }
+                
+                userData = userDataByEmail;
             }
+
+            this.currentUser = {
+                uid: user.uid,
+                email: user.email,
+                role: userData.role,
+                department: userData.department,
+                permissions: this.securityConfig.analyticsPermissions[userData.role] || []
+            };
+            
+            this.permissions.set(user.uid, this.currentUser.permissions);
+            // User permissions loaded (logging suppressed)
         } catch (error) {
             console.error('Error loading user permissions:', error);
             this.currentUser = null;

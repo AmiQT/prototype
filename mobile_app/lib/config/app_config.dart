@@ -38,17 +38,23 @@ class AppConfig {
       // Load environment variables
       await dotenv.load(fileName: "assets/.env");
 
-      // Load API keys from environment
-      _openRouterApiKey = dotenv.env['OPENROUTER_API_KEY'];
-      _geminiApiKey = dotenv.env['GEMINI_API_KEY'];
+      // Load API keys from environment file (trim to avoid stray whitespace)
+      final envOpenRouterKey =
+          dotenv.env['OPENROUTER_API_KEY']?.trim() ?? dotenv.env['openrouter_api_key']?.trim();
+      final envGeminiKey =
+          dotenv.env['GEMINI_API_KEY']?.trim() ?? dotenv.env['gemini_api_key']?.trim();
 
-      // Check if API keys are placeholder values and treat as missing
-      if (_openRouterApiKey == 'your_openrouter_api_key_here') {
-        _openRouterApiKey = null;
-      }
-      if (_geminiApiKey == 'your_gemini_api_key_here') {
-        _geminiApiKey = null;
-      }
+      // Also support --dart-define values for CI / release builds
+      const String defineOpenRouterKey =
+          String.fromEnvironment('OPENROUTER_API_KEY', defaultValue: '');
+      const String defineGeminiKey =
+          String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
+
+      // Pick first non-empty source for each key
+      _openRouterApiKey = _sanitizeApiKey(envOpenRouterKey) ??
+          _sanitizeApiKey(defineOpenRouterKey.isNotEmpty ? defineOpenRouterKey : null);
+      _geminiApiKey = _sanitizeApiKey(envGeminiKey) ??
+          _sanitizeApiKey(defineGeminiKey.isNotEmpty ? defineGeminiKey : null);
 
       if (kDebugMode) {
         debugPrint('Environment variables loaded');
@@ -70,6 +76,18 @@ class AppConfig {
       _openRouterApiKey = null;
       _geminiApiKey = null;
     }
+  }
+
+  /// Treat placeholder or empty strings as missing keys.
+  static String? _sanitizeApiKey(String? value) {
+    if (value == null) return null;
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return null;
+    if (trimmed == 'your_openrouter_api_key_here' ||
+        trimmed == 'your_gemini_api_key_here') {
+      return null;
+    }
+    return trimmed;
   }
   // Cloud Development Configuration
   // Update these URLs after deploying your backend and web dashboard

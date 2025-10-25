@@ -14,8 +14,8 @@ from app.database import get_db
 from app.models.user import User
 from app.models.profile import Profile
 from app.models.achievement import Achievement
-from app.models.event import Event
-# from app.models.showcase import ShowcasePost  # Skip - schema mismatch
+from app.models.event import Event, EventParticipation
+from app.models.showcase import ShowcasePost
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class AssistantServiceBridge:
         for user in query:
             results.append(
                 {
-                    "id": user.id,
+                    "id": str(user.id),  # Convert UUID to string
                     "name": user.name,
                     "email": user.email,
                     "role": user.role.value,
@@ -166,7 +166,7 @@ class AssistantServiceBridge:
                 achievement_count = 0  # TODO: Fix when Achievement model is confirmed
                 
                 results.append({
-                    "id": user.id,
+                    "id": str(user.id),  # Convert UUID to string
                     "name": user.name,
                     "email": user.email,
                     "department": user.department,
@@ -184,6 +184,196 @@ class AssistantServiceBridge:
         except Exception as e:
             logger.error(f"Error searching students: {e}")
             return []
+    
+    def _search_users_advanced(self, criteria: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Advanced search for all users (students, staff, admin)."""
+        try:
+            query = self.db.query(User)
+            
+            # Apply filters
+            if criteria.get("role"):
+                query = query.filter(User.role == criteria["role"])
+            if criteria.get("department"):
+                query = query.filter(User.department.ilike(f"%{criteria['department']}%"))
+            if criteria.get("name"):
+                query = query.filter(User.name.ilike(f"%{criteria['name']}%"))
+            if criteria.get("email"):
+                query = query.filter(User.email.ilike(f"%{criteria['email']}%"))
+            if criteria.get("is_active") is not None:
+                query = query.filter(User.is_active == criteria["is_active"])
+            if criteria.get("profile_completed") is not None:
+                query = query.filter(User.profile_completed == criteria["profile_completed"])
+            
+            # Apply limit
+            limit = criteria.get("limit", 20)
+            if criteria.get("random"):
+                # Get random users
+                total_count = query.count()
+                if total_count > 0:
+                    offset = random.randint(0, max(0, total_count - limit))
+                    users = query.offset(offset).limit(limit).all()
+                else:
+                    users = []
+            else:
+                users = query.limit(limit).all()
+            
+            # Convert to dict format
+            results = []
+            for user in users:
+                results.append({
+                    "id": str(user.id),
+                    "email": user.email,
+                    "name": user.name,
+                    "role": user.role,
+                    "department": user.department,
+                    "student_id": user.student_id,
+                    "staff_id": user.staff_id,
+                    "is_active": user.is_active,
+                    "profile_completed": user.profile_completed,
+                    "created_at": user.created_at.isoformat() if user.created_at else None,
+                    "last_login_at": user.last_login_at.isoformat() if user.last_login_at else None
+                })
+            
+            return results
+            
+        except Exception as e:
+            logger.error(f"Error searching users: {e}", exc_info=True)
+            return []
+    
+    def _search_profiles_advanced(self, criteria: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Advanced search for user profiles."""
+        try:
+            query = self.db.query(Profile)
+            
+            # Apply filters
+            if criteria.get("full_name"):
+                query = query.filter(Profile.full_name.ilike(f"%{criteria['full_name']}%"))
+            if criteria.get("department"):
+                # Search in academic_info JSON
+                query = query.filter(Profile.academic_info.op('->>')('department').ilike(f"%{criteria['department']}%"))
+            if criteria.get("faculty"):
+                query = query.filter(Profile.academic_info.op('->>')('faculty').ilike(f"%{criteria['faculty']}%"))
+            if criteria.get("is_profile_complete") is not None:
+                query = query.filter(Profile.is_profile_complete == criteria["is_profile_complete"])
+            if criteria.get("has_skills"):
+                query = query.filter(Profile.skills.isnot(None))
+            if criteria.get("has_experiences"):
+                query = query.filter(Profile.experiences.isnot(None))
+            
+            # Apply limit
+            limit = criteria.get("limit", 20)
+            if criteria.get("random"):
+                total_count = query.count()
+                if total_count > 0:
+                    offset = random.randint(0, max(0, total_count - limit))
+                    profiles = query.offset(offset).limit(limit).all()
+                else:
+                    profiles = []
+            else:
+                profiles = query.limit(limit).all()
+            
+            # Convert to dict format
+            results = []
+            for profile in profiles:
+                results.append({
+                    "id": str(profile.id),
+                    "user_id": str(profile.user_id),
+                    "full_name": profile.full_name,
+                    "bio": profile.bio,
+                    "phone_number": profile.phone_number,
+                    "address": profile.address,
+                    "headline": profile.headline,
+                    "profile_image_url": profile.profile_image_url,
+                    "academic_info": profile.academic_info,
+                    "skills": profile.skills,
+                    "interests": profile.interests,
+                    "experiences": profile.experiences,
+                    "projects": profile.projects,
+                    "is_profile_complete": profile.is_profile_complete,
+                    "created_at": profile.created_at.isoformat() if profile.created_at else None
+                })
+            
+            return results
+            
+        except Exception as e:
+            logger.error(f"Error searching profiles: {e}", exc_info=True)
+            return []
+    
+    def _search_showcase_posts_advanced(self, criteria: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Advanced search for showcase posts."""
+        try:
+            query = self.db.query(ShowcasePost)
+            
+            # Apply filters if any
+            if criteria.get("user_id"):
+                query = query.filter(ShowcasePost.user_id == criteria["user_id"])
+            if criteria.get("limit"):
+                query = query.limit(criteria["limit"])
+
+            posts = query.all()
+            
+            results = []
+            for post in posts:
+                results.append({
+                    "post_id": str(post.id),
+                    "user_id": str(post.user_id),
+                    "title": post.title,
+                    "content": post.content,
+                    "media_url": post.media_url,
+                    "created_at": post.created_at.isoformat() if post.created_at else None,
+                })
+            return results
+            
+        except Exception as e:
+            logger.error(f"Error searching showcase posts: {e}", exc_info=True)
+            # If table does not exist, return empty list
+            if "does not exist" in str(e):
+                logger.warning("ShowcasePost table likely does not exist.")
+                return []
+            raise e
+    
+    def _search_achievements_advanced(self, criteria: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Advanced search for achievements."""
+        try:
+            # For now, return empty results since achievements table might not exist
+            logger.info("Achievements search requested - returning empty results (table may not exist)")
+            return []
+            
+        except Exception as e:
+            logger.error(f"Error searching achievements: {e}", exc_info=True)
+            return []
+    
+    def _search_event_participations_advanced(self, criteria: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Advanced search for event participations."""
+        try:
+            query = self.db.query(EventParticipation)
+
+            # Apply filters if any
+            if criteria.get("user_id"):
+                query = query.filter(EventParticipation.user_id == criteria["user_id"])
+            if criteria.get("event_id"):
+                query = query.filter(EventParticipation.event_id == criteria["event_id"])
+            if criteria.get("limit"):
+                query = query.limit(criteria["limit"])
+
+            participations = query.all()
+
+            results = []
+            for p in participations:
+                results.append({
+                    "id": str(p.id),
+                    "user_id": str(p.user_id),
+                    "event_id": str(p.event_id),
+                    "created_at": p.created_at.isoformat() if p.created_at else None,
+                })
+            return results
+            
+        except Exception as e:
+            logger.error(f"Error searching event participations: {e}", exc_info=True)
+            if "does not exist" in str(e):
+                logger.warning("EventParticipation table likely does not exist.")
+                return []
+            raise e
 
     def get_department_analytics(self, department: str = None) -> dict[str, Any]:
         """Get analytics for a specific department or all departments."""
@@ -283,7 +473,7 @@ class AssistantServiceBridge:
         for student in students:
             profile = self.db.query(Profile).filter(Profile.user_id == student.id).first()
             results.append({
-                "id": student.id,
+                "id": str(student.id),  # Convert UUID to string
                 "name": student.name,
                 "email": student.email,
                 "department": student.department,
@@ -328,7 +518,7 @@ class AssistantServiceBridge:
         for event in events:
             organizer = self.db.query(User).filter(User.id == event.organizer_id).first() if event.organizer_id else None
             results.append({
-                "id": event.id,
+                "id": str(event.id),  # Convert UUID to string
                 "title": event.title,
                 "description": event.description,
                 "event_date": event.event_date.isoformat() if event.event_date else None,

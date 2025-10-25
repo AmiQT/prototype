@@ -469,7 +469,7 @@ class _ComprehensiveEditProfileScreenState
                 ),
                 const SizedBox(height: AppTheme.spaceSm),
                 DropdownButtonFormField<int>(
-                  value: _currentSemester,
+                  initialValue: _currentSemester,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     contentPadding:

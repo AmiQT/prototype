@@ -164,7 +164,7 @@ def execute_parsed_command(parsed: dict[str, Any], *, context: dict[str, Any] | 
 
     return AICommandResponse(
         success=False,
-        message="Command forwarded to OpenRouter for deeper reasoning.",
+        message="Command forwarded to Gemini for deeper reasoning.",
         source=AISource.PSEUDO,
         data={"parsed": parsed, "action": action},
         fallback_used=True,

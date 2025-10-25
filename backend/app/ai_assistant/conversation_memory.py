@@ -41,6 +41,7 @@ class ConversationMemory:
         self.max_history_days = max_history_days
         self._memory: Dict[str, List[MemoryEntry]] = {}  # session_id -> messages
         self._user_sessions: Dict[str, List[str]] = {}  # user_id -> [session_ids]
+        self._last_tool_calls: Dict[str, Dict[str, Any]] = {}  # session_id -> last tool call
         
     def add_message(self, user_id: str, session_id: str, content: str, 
                    message_type: MemoryType, metadata: Optional[Dict[str, Any]] = None,
@@ -75,6 +76,28 @@ class ConversationMemory:
         
         logger.info(f"Added message to session {session_id} for user {user_id}")
         return entry
+    
+    def add_tool_call(self, user_id: str, session_id: str, tool_name: str, 
+                     arguments: Dict[str, Any], result: Dict[str, Any], 
+                     success: bool = True) -> None:
+        """Add a tool call to the conversation memory and track as last tool call."""
+        if session_id not in self._memory:
+            self._memory[session_id] = []
+        
+        # Create tool call summary
+        result_summary = self._summarize_tool_result(result)
+        
+        # Store as last tool call for "again" context
+        self._last_tool_calls[session_id] = {
+            "tool": tool_name,
+            "arguments": arguments,
+            "result": result,
+            "result_summary": result_summary,
+            "timestamp": datetime.now().isoformat(),
+            "success": success
+        }
+        
+        logger.info(f"Added tool call to session {session_id}: {tool_name}")
     
     def add_user_message(self, user_id: str, session_id: str, content: str,
                         metadata: Optional[Dict[str, Any]] = None,
@@ -199,6 +222,97 @@ class ConversationMemory:
             self.clear_session(session_id)
         
         logger.info(f"Cleaned up {len(sessions_to_remove)} old sessions")
+    
+    def get_structured_context(self, session_id: str, limit: int = 10) -> Dict[str, Any]:
+        """Get structured conversation context for agentic AI.
+        
+        Returns a rich context object with:
+        - Recent messages
+        - Tool calls made
+        - Entities mentioned
+        - Session insights
+        """
+        if session_id not in self._memory:
+            return {
+                "messages": [],
+                "tool_calls": [],
+                "entities": {},
+                "insights": {
+                    "message_count": 0,
+                    "has_history": False
+                }
+            }
+        
+        messages = self._memory[session_id][-limit:]
+        
+        # Extract tool calls from metadata
+        tool_calls = []
+        all_entities = {}
+        
+        for msg in messages:
+            # Track tool usage
+            if msg.metadata and "tools_used" in msg.metadata:
+                for tool_use in msg.metadata["tools_used"]:
+                    tool_calls.append({
+                        "tool": tool_use["tool"],
+                        "arguments": tool_use["arguments"],
+                        "timestamp": msg.timestamp.isoformat(),
+                        "result_summary": self._summarize_tool_result(tool_use.get("result", {}))
+                    })
+            
+            # Aggregate entities
+            if msg.entities:
+                for entity_type, values in msg.entities.items():
+                    if entity_type not in all_entities:
+                        all_entities[entity_type] = []
+                    if isinstance(values, list):
+                        all_entities[entity_type].extend(values)
+                    else:
+                        all_entities[entity_type].append(values)
+        
+        # Generate insights
+        insights = {
+            "message_count": len(messages),
+            "has_history": len(messages) > 0,
+            "tool_calls_count": len(tool_calls),
+            "unique_intents": list(set(msg.intent for msg in messages if msg.intent)),
+            "session_duration_minutes": (messages[-1].timestamp - messages[0].timestamp).total_seconds() / 60 if messages else 0
+        }
+        
+        return {
+            "messages": [self._message_to_dict(msg) for msg in messages],
+            "tool_calls": tool_calls,
+            "entities": all_entities,
+            "insights": insights,
+            "last_tool_call": self._last_tool_calls.get(session_id)
+        }
+    
+    def _summarize_tool_result(self, result: Dict[str, Any]) -> str:
+        """Create a brief summary of tool result."""
+        if not result:
+            return "No result"
+        
+        if result.get("success"):
+            if "count" in result:
+                return f"Found {result['count']} items"
+            elif "students" in result:
+                return f"Found {len(result['students'])} students"
+            elif "events" in result:
+                return f"Found {len(result['events'])} events"
+            else:
+                return "Success"
+        else:
+            return f"Error: {result.get('error', 'Unknown')}"
+    
+    def _message_to_dict(self, msg: MemoryEntry) -> Dict[str, Any]:
+        """Convert MemoryEntry to dict for serialization."""
+        return {
+            "content": msg.content,
+            "type": msg.message_type.value,
+            "timestamp": msg.timestamp.isoformat(),
+            "intent": msg.intent,
+            "has_tools": bool(msg.metadata and "tools_used" in msg.metadata)
+        }
 
 
 # Global conversation memory instance

@@ -52,7 +52,7 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
   UserModel? _currentUser;
 
   // Track current user reactions for each post (LinkedIn-style)
-  Map<String, String?> _userReactions = {};
+  final Map<String, String?> _userReactions = {};
 
   // Pagination - OPTIMIZED for faster initial load
   static const int _postsPerPage =

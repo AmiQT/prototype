@@ -1,5 +1,6 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from sqlalchemy.orm import Session
 import os
 from dotenv import load_dotenv
@@ -32,29 +33,54 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Add middleware to handle OPTIONS requests before authentication
+class OptionsMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if request.method == "OPTIONS":
+            return Response(
+                status_code=200,
+                headers={
+                    "Access-Control-Allow-Origin": request.headers.get("origin", "*"),
+                    "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+                    "Access-Control-Allow-Headers": "*",
+                    "Access-Control-Allow-Credentials": "true",
+                    "Access-Control-Max-Age": "3600",
+                }
+            )
+        return await call_next(request)
+
+app.add_middleware(OptionsMiddleware)
+
 # CORS middleware - Cloud-friendly configuration
-raw_origins = os.getenv("ALLOWED_ORIGINS", "http://127.0.0.1:3000,http://localhost:3000,http://127.0.0.1:8080,http://localhost:8080").split(",")
+raw_origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
 allowed_origins = [origin.strip() for origin in raw_origins if origin.strip()]
 
-# FastAPI tak benarkan wildcard bila credentials=True, so fallback ke senarai default
+# Always ensure essential local development ports are included
+essential_origins = [
+    "http://127.0.0.1:3000",
+    "http://localhost:3000",
+    "http://127.0.0.1:8080",
+    "http://localhost:8080",
+    "https://127.0.0.1:8080",
+    "https://localhost:8080",
+]
+
+# Merge with environment origins and remove duplicates
 if not allowed_origins or allowed_origins == ["*"]:
-    allowed_origins = [
-        "http://127.0.0.1:3000",
-        "http://localhost:3000",
-        "https://127.0.0.1:3000",
-        "https://localhost:3000",
-        "http://127.0.0.1:8080",
-        "http://localhost:8080",
-        "https://127.0.0.1:8080",
-        "https://localhost:8080",
-    ]
+    allowed_origins = essential_origins
+else:
+    allowed_origins = list(set(allowed_origins + essential_origins))
+
+logger.info(f"🌐 CORS enabled for origins: {allowed_origins}")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=3600,  # Cache preflight for 1 hour
 )
 
 # Initialize Cloudinary

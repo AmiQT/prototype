@@ -66,19 +66,28 @@ class _ReportDialogState extends State<ReportDialog> {
             ),
             const SizedBox(height: 8),
             
-            ...ReportType.values.map((type) => RadioListTile<ReportType>(
-              title: Text(_getReportTypeDisplayName(type)),
-              subtitle: Text(_getReportTypeDescription(type)),
-              value: type,
+            RadioGroup<ReportType>(
               groupValue: _selectedType,
               onChanged: (value) {
+                if (value == null) return;
                 setState(() {
-                  _selectedType = value!;
+                  _selectedType = value;
                 });
               },
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-            )),
+              child: Column(
+                children: ReportType.values
+                    .map(
+                      (type) => RadioListTile<ReportType>(
+                        title: Text(_getReportTypeDisplayName(type)),
+                        subtitle: Text(_getReportTypeDescription(type)),
+                        value: type,
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
             
             const SizedBox(height: 16),
             

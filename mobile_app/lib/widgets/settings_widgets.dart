@@ -182,7 +182,7 @@ class SettingsToggleItem extends StatelessWidget {
           trailing: Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: Theme.of(context).primaryColor,
+            activeThumbColor: Theme.of(context).primaryColor,
           ),
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

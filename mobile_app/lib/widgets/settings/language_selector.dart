@@ -57,42 +57,39 @@ class LanguageSelector extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: LanguageService.supportedLocales.map((locale) {
-              final isSelected =
-                  languageService.currentLanguageCode == locale.languageCode;
-              final displayName =
-                  LanguageService.getLanguageDisplayName(locale.languageCode);
+          content: RadioGroup<String>(
+            groupValue: languageService.currentLanguageCode,
+            onChanged: (value) {
+              if (value == null) return;
+              _changeLanguage(context, languageService, value);
+              Navigator.of(dialogContext).pop();
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: LanguageService.supportedLocales.map((locale) {
+                final isSelected =
+                    languageService.currentLanguageCode == locale.languageCode;
+                final displayName = LanguageService.getLanguageDisplayName(
+                  locale.languageCode,
+                );
 
-              return ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Radio<String>(
+                return RadioListTile<String>(
                   value: locale.languageCode,
-                  groupValue: languageService.currentLanguageCode,
-                  onChanged: (value) {
-                    if (value != null) {
-                      _changeLanguage(context, languageService, value);
-                      Navigator.of(dialogContext).pop();
-                    }
-                  },
-                  activeColor: AppTheme.primaryColor,
-                ),
-                title: Text(
-                  displayName,
-                  style: TextStyle(
-                    fontWeight:
-                        isSelected ? FontWeight.w600 : FontWeight.normal,
-                    color: isSelected ? AppTheme.primaryColor : null,
+                  title: Text(
+                    displayName,
+                    style: TextStyle(
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.normal,
+                      color: isSelected ? AppTheme.primaryColor : null,
+                    ),
                   ),
-                ),
-                onTap: () {
-                  _changeLanguage(
-                      context, languageService, locale.languageCode);
-                  Navigator.of(dialogContext).pop();
-                },
-              );
-            }).toList(),
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                  activeColor: AppTheme.primaryColor,
+                  selected: isSelected,
+                );
+              }).toList(),
+            ),
           ),
           actions: [
             TextButton(

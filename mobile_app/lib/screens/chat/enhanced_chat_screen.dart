@@ -396,7 +396,8 @@ Please provide a helpful response based on the FSKTM information provided above.
 
   void _showUsageInfo() async {
     // Usage monitoring removed with Firebase removal
-    final report = {}; // Placeholder for future usage reporting
+    final Map<String, dynamic> report = {}; // Placeholder for future usage reporting
+    final suggestions = List<String>.from(report['suggestions'] ?? const []);
 
     showDialog(
       context: context,
@@ -413,15 +414,15 @@ Please provide a helpful response based on the FSKTM information provided above.
               const Text('Reads: 0 / 50,000 (0%)'),
               const Text('Writes: 0 / 20,000 (0%)'),
               const Text('Deletes: 0 / 20,000 (0%)'),
-              if (report['suggestions'].isNotEmpty) ...[
+              if (suggestions.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 Text('Optimization Tips:',
                     style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
-                ...report['suggestions'].map<Widget>(
+                ...suggestions.map<Widget>(
                   (suggestion) => Padding(
                     padding: const EdgeInsets.only(bottom: 4),
-                    child: Text('• $suggestion',
+                    child: Text('- $suggestion',
                         style: const TextStyle(fontSize: 12)),
                   ),
                 ),

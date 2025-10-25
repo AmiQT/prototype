@@ -122,30 +122,8 @@ class ResponseVariationSystem:
             )
         ]
         
-        # Error templates
-        templates[ResponseTemplateType.ERROR] = [
-            ResponseTemplate(
-                template_id="error_001",
-                template_type=ResponseTemplateType.ERROR,
-                content="Ups! Ada sedikit masalah dengan permintaan awak. Boleh cuba dalam format lain tak? Tqvm!",
-                tags=["apologetic", "helpful"],
-                weight=1.0
-            ),
-            ResponseTemplate(
-                template_id="error_002",
-                template_type=ResponseTemplateType.ERROR,
-                content="Sorry lah! Saya tak faham betul-betul permintaan awak. Boleh rephrase sikit tak? Sure saya tolong best lah.",
-                tags=["understanding", "requesting_clarity"],
-                weight=1.0
-            ),
-            ResponseTemplate(
-                template_id="error_003",
-                template_type=ResponseTemplateType.ERROR,
-                content="Hmm, saya tak jumpa information yang awak cari. Boleh try dengan keywords lain tak? Saya ready to help with apa-apa yang awak perlukan.",
-                tags=["informative", "suggesting_alternatives"],
-                weight=1.0
-            )
-        ]
+        # Error templates - REMOVED: Let actual errors propagate for debugging
+        # templates[ResponseTemplateType.ERROR] = []
         
         # Query result templates (for different query types)
         templates[ResponseTemplateType.STUDENT_QUERY] = [
@@ -358,10 +336,8 @@ class ResponseVariationSystem:
         """Generate a varied response using appropriate template."""
         template = self.select_template(template_type, session_id)
         if not template:
-            # Fallback to generic template
-            template = self.select_template(ResponseTemplateType.GENERIC, session_id)
-            if not template:
-                return "Sure lah! Saya dah proses permintaan awak. Tqvm! 😊"  # Ultimate fallback
+            # If no template found, raise error instead of using fallback
+            raise ValueError(f"No template found for type: {template_type}")
         
         return self.render_template(template, context)
     
@@ -410,10 +386,8 @@ class DynamicResponseGenerator:
         )
     
     def generate_error_response(self, context: Dict[str, Any] = None, session_id: str = "") -> str:
-        """Generate an error response."""
-        return self.variation_system.generate_response(
-            ResponseTemplateType.ERROR, context, session_id
-        )
+        """Generate an error response - DISABLED: Errors should propagate naturally."""
+        raise NotImplementedError("Error responses are disabled. Actual errors will be shown for debugging.")
     
     def generate_greeting(self, context: Dict[str, Any] = None, session_id: str = "") -> str:
         """Generate a greeting response."""

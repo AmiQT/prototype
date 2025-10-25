@@ -344,7 +344,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
                 // Department and Program
                 DropdownButtonFormField<String>(
-                  value: _selectedDepartment.isNotEmpty
+                  initialValue: _selectedDepartment.isNotEmpty
                       ? _selectedDepartment
                       : null,
                   decoration: const InputDecoration(
@@ -374,7 +374,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                 const SizedBox(height: 16),
 
                 DropdownButtonFormField<String>(
-                  value: _selectedProgram.isNotEmpty ? _selectedProgram : null,
+                  initialValue: _selectedProgram.isNotEmpty ? _selectedProgram : null,
                   decoration: const InputDecoration(
                     labelText: 'Program *',
                     border: OutlineInputBorder(),
@@ -403,7 +403,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
                 if (_currentUser?.role == UserRole.student) ...[
                   DropdownButtonFormField<int>(
-                    value: _selectedSemester,
+                    initialValue: _selectedSemester,
                     decoration: const InputDecoration(
                       labelText: 'Current Semester *',
                       border: OutlineInputBorder(),

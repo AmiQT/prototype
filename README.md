@@ -1,181 +1,140 @@
-# 🎓 Student Talent Profiling App - Prototype
+# Student Talent Profiling App - Prototype
 
-Projek ini adalah aplikasi Student Talent Profiling yang terdiri daripada tiga komponen utama: backend, mobile app, dan web dashboard.
+End-to-end platform for UTHM student talent profiling that ships a Python FastAPI backend, a Flutter mobile client, and a Supabase-powered web dashboard.
 
-## ⚠️ SECURITY NOTICE - READ FIRST!
+> **Security first:** this repository ships without secrets. Populate your own `.env` files before running any service and never commit credentials.
 
-**This repository does NOT contain sensitive credentials.** Before using:
+## Highlights
+- Unified talent profiling experience across mobile, web, and backend services.
+- Supabase authentication, PostgreSQL data layer, and Cloudinary media pipeline.
+- Agentic AI assistant with tool calling, conversation memory, and Gemini/OpenRouter integration.
+- Rich analytics dashboards, showcase management, and student achievements tracking.
+- Comprehensive docs for setup, migration, deployment, and troubleshooting.
 
-1. 📖 Read [SECURITY.md](SECURITY.md) - Security best practices
-2. 🚀 Read [SETUP.md](SETUP.md) - Complete setup instructions  
-3. ✅ Read [PRE-COMMIT-CHECKLIST.md](PRE-COMMIT-CHECKLIST.md) - Before committing
-
-**You MUST configure your own:**
-- ✅ Supabase credentials (`.env.example` → `.env`)
-- ✅ API keys (OpenRouter, Cloudinary)
-- ✅ Database credentials
-
-**NEVER commit `.env` files or hardcode secrets!** 🔒
-
-## 📁 Struktur Projek
-
+## Repository Layout
 ```
-Prototype/
-├── 📱 mobile_app/          # Flutter mobile application
-├── 🔧 backend/             # Python FastAPI backend
-├── 🌐 web_dashboard/       # Web dashboard (HTML/CSS/JS)
-├── 📊 data/                # JSON data files
-├── 🖼️ assets/              # Images, icons, and media files
-├── 🛠️ tools/               # Executable tools (acli.exe, ngrok.exe)
-├── 📝 docs/                # Documentation files
-├── ⚡ api/                 # API files
-└── 🔧 functions/           # Cloud functions
+prototype/
+|-- backend/                # FastAPI application, routers, AI assistant, Alembic scripts
+|-- mobile_app/             # Flutter app with Supabase auth, showcase, chat, analytics
+|-- web_dashboard/          # Static dashboard (HTML/CSS/JS) + Supabase integration scripts
+|-- api/                    # Lightweight Vercel serverless handler (health + test endpoints)
+|-- assets/                 # Branding assets (cover, logo, favicon)
+|-- data/                   # Sample JSON datasets for local testing
+|-- docs/                   # Deep-dive guides (architecture, AI upgrades, troubleshooting)
+|-- functions/              # Placeholder for cloud functions (ESLint config included)
+|-- .github/workflows/      # Deployment pipelines for backend and web dashboard
+|-- PRE-COMMIT-CHECKLIST.md # Manual checklist before pushing changes
+|-- SECURITY.md             # Security baseline and hardening tips
+|-- SETUP.md                # Repository-wide setup walkthrough
 ```
 
-## 🏗️ Hybrid Backend Architecture
-
+## System Architecture
 ```
-Supabase Auth + PostgreSQL ←→ FastAPI + SQLAlchemy ←→ Mobile App + Web Dashboard
-     ↓              ↓                        ↓
-  Mobile App    Business Logic           PostgreSQL
-  Web Dashboard  Search Engine           Authentication
-                 Analytics               Real-time Features
-                 Media Upload
-```
+Supabase Auth + PostgreSQL
+          |
+          v
+FastAPI backend (backend/)
+    |    \
+    |     \__ Cloudinary media services
+    |
+    +--> Flutter mobile app (mobile_app/)
+    |
+    +--> Web dashboard (web_dashboard/)
 
-### 🔄 Mengapa Hybrid?
-- **Supabase**: Instant backend, auth, real-time DB
-- **FastAPI**: Custom business logic, advanced features
-- **Best of Both Worlds**: Rapid development + Full control
-
-### 📈 Migration History
-- ✅ **Migrated from Firebase to Supabase** for better PostgreSQL support
-- ✅ **Kept FastAPI** for custom endpoints & business logic
-- ✅ **Added Cloudinary** for optimized media storage
-
-### 🔧 Technical Stack
-```
-Authentication:  Supabase Auth → JWT tokens
-Database:        Supabase PostgreSQL → SQLAlchemy ORM
-API Layer:       Custom FastAPI → RESTful endpoints
-Media:           Cloudinary → Image/Video upload
-Search:          Custom algorithms → Advanced filtering
+Agentic AI layer (backend/app/ai_assistant)
+    |- Conversation memory + templates
+    |- Tool calling (Supabase, analytics, showcase ops)
+    |- Gemini/OpenRouter client
 ```
 
-## 🚀 Komponen Utama
+## Core Components
 
-### 1. Mobile App (Flutter)
-- **Lokasi**: `mobile_app/`
-- **Platform**: Android, iOS, Web, Windows, macOS, Linux
-- **Framework**: Flutter/Dart
-- **Features**: Student profiling, talent assessment, dark mode support
+### Backend (FastAPI + Supabase)
+- Modern FastAPI project with routers for auth, profiles, events, showcase, analytics, media, and AI assistant (`backend/app/routers`).
+- SQLAlchemy ORM with Alembic migrations (`backend/migrations`) targeting Supabase PostgreSQL.
+- Supabase JWT verification (`backend/app/auth/supabase_auth.py`) and Cloudinary integration for media uploads.
+- Agentic AI assistant (`backend/app/ai_assistant/`) featuring conversation memory, response variation, tool execution, and Supabase bridging.
+- Health probes (`/` and `/health`), and test endpoints for media uploads.
+- Dependencies defined in `backend/requirements.txt`; run with Python 3.11+.
 
-### 2. Backend (Hybrid Architecture)
-- **Lokasi**: `backend/`
-- **Architecture**: **Hybrid Supabase + Custom FastAPI**
-- **Framework**: Python FastAPI
-- **Database**: Supabase PostgreSQL
-- **Authentication**: Supabase Auth dengan JWT
-- **Media Storage**: Cloudinary
-- **Features**: 
-  - 🔐 Supabase authentication & real-time database
-  - 🚀 Custom FastAPI endpoints & business logic
-  - 📱 Advanced search & analytics
-  - 🖼️ Media upload & management
-  - 🔄 Database migrations dengan Alembic
+```
+cd backend
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+python main.py
+# Server: http://localhost:8000
+```
 
-### 3. Web Dashboard
-- **Lokasi**: `web_dashboard/`
-- **Tech Stack**: HTML5, CSS3, JavaScript
-- **Features**: Admin dashboard, analytics, user management
+### Mobile App (Flutter)
+- Cross-platform Flutter client (`mobile_app/`) covering onboarding, profile setup, showcase feeds, chat, notifications, analytics, and offline caching.
+- Service layer integrates Supabase (`supabase_flutter`), media uploads, AI chat, and search optimisations (`lib/services/`).
+- Feature-rich screen modules for students, lecturers, shared views, and settings (`lib/screens/`).
+- Configuration via `assets/.env` and `lib/config/`; linting rules in `analysis_options.yaml`.
 
-## 📊 Data & Assets
+```
+cd mobile_app
+flutter pub get
+flutter run   # Choose desired device/emulator
+```
 
-### Data Files (`data/`)
-- `complete_fsktm_data.json` - Data lengkap FSKTM
-- `fsktm_comprehensive_knowledge_base.json` - Knowledge base
-- `fsktm_website_data_collection.json` - Data collection
+### Web Dashboard (Static + Supabase)
+- Static HTML dashboard (`web_dashboard/`) with modular JS architecture for analytics, user management, events, and AI assistant tools.
+- Environment generator (`npm run generate-env`) writes `js/config/env.js` from project `.env`.
+- Dev server powered by `live-server`; deployment presets via `netlify.toml` and `vercel.json`.
 
-### Assets (`assets/`)
-- `App Cover Page.png` - Cover page aplikasi
-- `uthm.png` - Logo UTHM
-- `favicon.ico` - Favicon untuk web
+```
+cd web_dashboard
+npm install
+npm run generate-env   # writes js/config/env.js
+npm run dev            # http://127.0.0.1:8080/login.html
+```
 
-### Tools (`tools/`)
-- `acli.exe` - Azure CLI tool
-- `ngrok.exe` - Tunneling tool untuk development
+### Serverless Edge API
+- `api/index.py` exposes a minimal HTTP handler for Vercel-style deployments (health checks, smoke endpoints).
 
-## 📖 Dokumentasi
+## Environment & Secrets
+Create `.env` files (see `backend/.env.example` and `web_dashboard/js/config/env.example.js`). Key variables include:
+- `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`
+- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+- `OPENROUTER_API_KEY`, `AI_OPENROUTER_ENABLED`
+- `BACKEND_URL`, `ALLOWED_ORIGINS`, `ENABLE_AI_ASSISTANT`, `ENABLE_ANALYTICS`
 
-Dokumentasi lengkap tersedia di folder `docs/`:
-- **Backend**: Setup instructions, database management
-- **Mobile App**: Implementation guides, troubleshooting
-- **Web Dashboard**: Local testing, deployment guides
+Keep `.env` files untracked and rotate credentials regularly.
 
-## 🚨 **Current Development Focus**
+## Sample Data, Assets, & Tools
+- `data/` contains curated JSON datasets (FSKTM profile information, knowledge base, website scrape) for local demos.
+- `assets/` stores the cover graphic and university branding used across surfaces.
 
-**⚡ PRIORITY**: Showcase Module Fixes untuk Mobile App
+## Documentation Hub
+- [SETUP.md](SETUP.md): high-level setup, Supabase configuration, deployment pointers.
+- [SECURITY.md](SECURITY.md): hardening checklist and secret management.
+- [PRE-COMMIT-CHECKLIST.md](PRE-COMMIT-CHECKLIST.md): manual QA list before pushing.
+- `docs/`:
+  - `backend/` (Cloudinary setup, database reset guide)
+  - `development/` (architecture, performance, debugging, agentic AI upgrade playbooks)
+  - `fixes/`, `setup/`, `status/` (historical notes, migration logs, roadmap)
+  - `UPGRADE_AGENTIC_AI_FEATURES.md` for the full AI assistant upgrade narrative
 
-### 📱 Mobile App Showcase Features
-- **Current Issue**: Fixing critical user experience issues
-- **🎯 Focus**: `mobile_app/lib/pages/showcase_page.dart` & `mobile_app/lib/services/showcase_services.dart`
-- **Issue**: Image loading, like functionality, navigation, UI consistency
-- **Status**: **BLOCKED** by critical mobile app issues
+## Deployment & Automation
+- `.github/workflows/` orchestrates backend, web, and pages deployments.
+- `backend/render.yaml` and `backend/railway.json` document infra-as-code targets.
+- `web_dashboard/netlify.toml` + `vercel.json` cover static hosting pipelines.
+- Container support via `backend/Dockerfile`.
 
-### 🔧 Backend AI Assistant Enhancement
-- **Enhancement**: Advanced AI with agentic capabilities
-- **Focus**: Natural conversation, context awareness, varied responses
-- **Status**: **IN PROGRESS** - Successfully implemented agentic features
+## Testing & Troubleshooting
+- Backend smoke scripts (`backend/test_final.py`) and health endpoints (`/health`).
+- Web dashboard ships manual JS test harnesses (`web_dashboard/js/tests/`).
+- Mobile app uses `flutter_test` and `mockito`; enable with `flutter test`.
+- Refer to `docs/development/debugging.md` and `docs/development/performance.md` for deeper diagnostics.
 
-## 📚 Learning Resources
+## Contribution Workflow
+- Follow the pre-commit checklist, run formatters/lints where applicable, and keep secrets out of version control.
+- Use feature branches and document major architecture decisions within `docs/status/` or ADR notes.
 
-### 📖 Complete Guides
-- **[🎯 Current Focus Summary](docs/CURRENT_FOCUS_SUMMARY_by_claude.md)** - What we're doing right now
-- **[Showcase Strategy Plan](docs/SHOWCASE_MODULE_PRACTICAL_STRATEGY_by_claude.md)** - Complete implementation roadmap
-- **[Firebase to Supabase Migration Guide](docs/FIREBASE_SUPABASE_MIGRATION_GUIDE.md)** - Complete migration documentation
-- **[Azure DevOps & Railway Integration Guide](docs/AZURE_DEVOPS_RAILWAY_INTEGRATION.md)** - Complete deployment strategy
-- **[UPGRADE AGENTIC AI FEATURES](docs/UPGRADE_AGENTIC_AI_FEATURES.md)** - Complete agentic AI upgrade documentation
-
-### 🤖 Enhanced AI Assistant Features
-**Latest Upgrade: Agentic AI System with Conversation Memory & Response Variation**
-
-The AI assistant has been upgraded with advanced agentic capabilities:
-- **Conversation Memory System** - Remembers previous interactions and context
-- **Response Variation System** - Eliminates robotic, template-like responses  
-- **Template Management System** - Flexible template system for diverse responses
-- **Context Awareness** - Maintains conversation flow and history
-- **Natural Language Processing** - Enhanced intent recognition and context analysis
-- **Personalized Malaysian Gen Z Tone** - Using expressions like "Wah bestnya!", "Tqvm!", "Sure lah!"
-- **Conversation Management API** - Endpoints to manage chat history
-
-## 🛠️ Setup Instructions
-
-### Backend (Hybrid Setup)
-1. **Supabase Setup**: Configure Supabase project & database
-2. **Environment Variables**: Setup JWT secrets & database URL
-3. **FastAPI**: Install dependencies & run custom server
-4. **Cloudinary**: Configure media upload credentials
-
-**Detailed guides:**
-- Backend: `docs/backend/SETUP_INSTRUCTIONS.md`
-- Hybrid Architecture: `docs/backend/HYBRID_BACKEND_ARCHITECTURE.md`
-
-### Frontend Applications  
-- Mobile App: `docs/mobile_app/README.md`  
-- Web Dashboard: `docs/web_dashboard/README.md`
-
-## File Konfigurasi
-
-- `Prototype.code-workspace` - VS Code workspace settings
-- `remove_firebase_dependencies.yaml` - Firebase cleanup script
-
-## Tujuan Projek
-
-Aplikasi ini bertujuan untuk:
-- Membantu pelajar mengenal pasti bakat dan minat mereka
-- Menyediakan platform profiling yang komprehensif
-- Memberikan insights kepada pelajar tentang kerjaya yang sesuai
+## License
+- Project artifacts currently inherit module-specific licenses (web dashboard is MIT via `package.json`). Clarify repository-wide licensing before public release.
 
 ---
 
-Untuk maklumat teknikal yang lebih terperinci, sila rujuk dokumentasi dalam folder `docs/`.
+Happy building! Open an issue or start a discussion before significant architecture changes, and keep the Supabase + FastAPI hybrid story strong.

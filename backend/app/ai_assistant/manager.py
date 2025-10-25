@@ -6,6 +6,7 @@ import json
 import logging
 from datetime import date, datetime, timedelta
 from typing import Any
+from uuid import UUID
 
 from fastapi import Depends
 from sqlalchemy.orm import Session
@@ -13,7 +14,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from . import schemas, logger as ai_logger, permissions
 from .config import AISettings, get_ai_settings
-from .openrouter_client import OpenRouterClient
+# OpenRouter removed - using Gemini only
+from .gemini_client import GeminiClient
 from .service_bridge import AssistantServiceBridge
 from .supabase_bridge import SupabaseAIBridge
 from .admin_db_assistant import AdminDatabaseAssistant
@@ -26,18 +28,42 @@ from .orchestrator import AgenticOrchestrator
 from .conversation_memory import conversation_memory
 from .response_variation import DynamicResponseGenerator, ResponseTemplateType
 from .template_manager import AdvancedResponseGenerator
+from .tools import AVAILABLE_TOOLS
+from .tool_executor import ToolExecutor
 
 log = logging.getLogger(__name__)
 
 
+def serialize_tool_result(obj: Any) -> str:
+    """Serialize tool result with proper UUID handling."""
+    def json_serializer(obj):
+        """Custom JSON serializer for UUID and other non-serializable objects."""
+        if isinstance(obj, UUID):
+            return str(obj)
+        elif isinstance(obj, datetime):
+            return obj.isoformat()
+        elif isinstance(obj, date):
+            return obj.isoformat()
+        elif hasattr(obj, '__dict__'):
+            return obj.__dict__
+        else:
+            return str(obj)
+    
+    try:
+        return json.dumps(obj, default=json_serializer, ensure_ascii=False)
+    except Exception as e:
+        log.error(f"Error serializing tool result: {e}")
+        return json.dumps({"error": "Serialization failed", "original_error": str(e)})
+
+
 class AIAssistantManager:
-    """Main entry point for handling AI commands via OpenRouter."""
+    """Main entry point for handling AI commands via Gemini API."""
 
     def __init__(self, settings: AISettings = Depends(get_ai_settings), db: Session = Depends(get_db)) -> None:
         self.settings = settings
         self.daily_usage = 0  # basic in-memory counter (future: persist/cache)
         self._usage_date = date.today()
-        self._openrouter_client: OpenRouterClient | None = None
+        self._gemini_client: GeminiClient | None = None
         self._service_bridge = AssistantServiceBridge(db=db)
         self._supabase_bridge = SupabaseAIBridge()
         self._admin_db_assistant = AdminDatabaseAssistant(db=db)
@@ -50,6 +76,7 @@ class AIAssistantManager:
         self._conversation_memory = conversation_memory
         self._dynamic_response_generator = DynamicResponseGenerator()
         self._advanced_response_generator = AdvancedResponseGenerator()
+        self._tool_executor = ToolExecutor(self._service_bridge)
 
     async def handle_command(
         self,
@@ -57,7 +84,7 @@ class AIAssistantManager:
         context: dict[str, Any] | None = None,
         current_user: dict[str, Any] | None = None,
     ) -> schemas.AICommandResponse:
-        """Process command using OpenRouter (direct agentic mode)."""
+        """Process command using Gemini API (direct agentic mode)."""
 
         log.info("🤖 AI ASSISTANT: Received command: '%s'", command)
         log.info("🔍 Current user: %s", current_user.get("email") if current_user else "anonymous")
@@ -105,78 +132,32 @@ class AIAssistantManager:
             ai_logger.log_ai_action(current_user.get("uid"), command, response.model_dump())
             return response
 
-        # Try to handle with local agentic actions first (database queries)
-        log.info("🔧 Trying local agentic actions first...")
-        local_response = await self._try_local_agentic_action(command, current_user)
-        if local_response:
-            log.info("✅ Local agentic action handled the command successfully!")
+        # 🚀 ALL COMMANDS NOW ROUTE DIRECTLY TO GEMINI (AGENTIC AI)
+        # No local processing, no templates - pure agentic behavior!
+        log.info("🤖 Routing ALL commands to Gemini for agentic processing...")
+
+        # Direct ke Gemini bila available
+        if self.settings.enable_gemini and self.settings.gemini_api_key:
+            # Ensure context has session_id for conversation memory
+            context_with_session = context.copy() if context else {}
+            context_with_session["session_id"] = session_id
             
-            # Add AI response to conversation memory
-            self._conversation_memory.add_ai_response(
-                user_id=current_user.get("uid", "anonymous") if current_user else "anonymous",
-                session_id=session_id,
-                content=local_response.message,
-                metadata=local_response.data or {},
-                intent=local_response.data.get("intent") if local_response.data else "local_action"
-            )
-            
-            ai_logger.log_ai_action(
-                current_user.get("uid") if current_user else "anonymous",
-                command,
-                local_response.model_dump(),
-            )
-            return local_response
-        else:
-            log.info("❌ No local agentic action found, proceeding to OpenRouter...")
-
-        # ADMIN DATABASE ASSISTANT - Clean implementation!
-        admin_db_response = await self._admin_db_assistant.handle_admin_query(command, current_user)
-        if admin_db_response:
-            # Add AI response to conversation memory
-            self._conversation_memory.add_ai_response(
-                user_id=current_user.get("uid", "anonymous") if current_user else "anonymous",
-                session_id=session_id,
-                content=admin_db_response.message,
-                metadata=admin_db_response.data or {},
-                intent=admin_db_response.data.get("intent") if admin_db_response.data else "admin_db_query"
-            )
-            return admin_db_response
-
-        # NEW: AGENTIC AI PROCESSING
-        agentic_response = await self._handle_agentic_command(command, context, current_user)
-        if agentic_response:
-            # Add AI response to conversation memory
-            self._conversation_memory.add_ai_response(
-                user_id=current_user.get("uid", "anonymous") if current_user else "anonymous",
-                session_id=session_id,
-                content=agentic_response.message,
-                metadata=agentic_response.data or {},
-                intent=agentic_response.data.get("intent") if agentic_response.data else "agentic_response"
-            )
-            
-            ai_logger.log_ai_action(
-                current_user.get("uid") if current_user else "anonymous",
-                command,
-                agentic_response.model_dump(),
-            )
-            return agentic_response
-
-        # Direct ke OpenRouter bila available
-        if self.settings.enable_openrouter and self.settings.openrouter_api_key:
-            if self.daily_usage >= self.settings.openrouter_daily_limit:
-                log.warning("OpenRouter quota reached for the day")
-
-            response = await self._call_openrouter(command, context)
+            response = await self._call_gemini(command, context_with_session, current_user)
             if response:
                 self.daily_usage += 1
                 
-                # Add AI response to conversation memory
+                # Add AI response to conversation memory with tool usage tracking
                 self._conversation_memory.add_ai_response(
                     user_id=current_user.get("uid", "anonymous") if current_user else "anonymous",
                     session_id=session_id,
                     content=response.message,
-                    metadata=response.data or {},
-                    intent=response.data.get("intent") if response.data else "openrouter_response"
+                    metadata={
+                        **(response.data or {}),
+                        "tools_used": response.data.get("tools_used", []) if response.data else [],
+                        "iterations": response.data.get("iterations", 0) if response.data else 0,
+                        "mode": response.data.get("mode", "conversational") if response.data else "conversational"
+                    },
+                    intent=response.data.get("intent") if response.data else "gemini_response"
                 )
                 
                 ai_logger.log_ai_action(
@@ -186,475 +167,22 @@ class AIAssistantManager:
                 )
                 return response
 
-        log.info("Rate limit reached, will use casual fallback response")
+        # If we reach here, no system could handle the request
+        raise RuntimeError("No AI system available to handle the request. Gemini API key may not be configured.")
 
-        # NEW: Agentic command handling as fallback when OpenRouter is not available
-        agentic_fallback_response = await self._handle_agentic_command(command, context, current_user, use_fallback=True)
-        if agentic_fallback_response:
-            # Add AI response to conversation memory
-            self._conversation_memory.add_ai_response(
-                user_id=current_user.get("uid", "anonymous") if current_user else "anonymous",
-                session_id=session_id,
-                content=agentic_fallback_response.message,
-                metadata=agentic_fallback_response.data or {},
-                intent=agentic_fallback_response.data.get("intent") if agentic_fallback_response.data else "agentic_fallback"
-            )
-            
-            ai_logger.log_ai_action(
-                current_user.get("uid") if current_user else "anonymous",
-                command,
-                agentic_fallback_response.model_dump(),
-            )
-            return agentic_fallback_response
-
-        # Enhanced fallback responses with greeting detection
-        command_lower = command.lower().strip()
-        
-        # Greetings
-        if any(word in command_lower for word in ["hai", "hello", "hi", "hey", "helo"]):
-            casual_msg = self._dynamic_response_generator.generate_greeting({"user_name": current_user.get("name", "Admin") if current_user else "Admin"}, session_id)
-        # Identity questions
-        elif any(word in command_lower for word in ["siapa", "nama", "who are you", "what are you"]):
-            casual_msg = "Saya AI Assistant untuk UTHM dashboard! 🤖 Saya boleh bantu awak dengan:\n\n✅ Query student data\n✅ System statistics\n✅ Event management\n✅ Analytics & reports\n\nApa yang awak nak tahu? 😊"
-        # Status check
-        elif "apa khabar" in command_lower or "how are you" in command_lower:
-            casual_msg = self._dynamic_response_generator.generate_greeting({"user_name": current_user.get("name", "Admin") if current_user else "Admin"}, session_id)
-        # Help requests
-        elif any(word in command_lower for word in ["help", "tolong", "bantuan", "assist"]):
-            casual_msg = "Sure! 💡 Saya boleh bantu dengan:\n\n**📊 Data Queries:**\n• Berapa jumlah pelajar?\n• List students\n• Show system overview\n\n**🎲 Random Selection:**\n• Pilih 1 random student\n\n**📈 Analytics:**\n• System statistics\n• Performance metrics\n\nCuba tanya je, saya akan respond! 😊"
-        # Thanks
-        elif any(word in command_lower for word in ["terima kasih", "thanks", "thank you", "tq", "tqvm"]):
-            casual_msg = "Sama-sama! 😊 Happy to help! Ada lagi yang awak nak tanya?"
-        # Goodbye
-        elif any(word in command_lower for word in ["bye", "selamat tinggal", "goodbye"]):
-            casual_msg = self._dynamic_response_generator.generate_for_intent('goodbye', session_id=session_id)
-        # UTHM knowledge questions
-        elif any(word in command_lower for word in ["uthm", "universiti", "university", "kampus"]) and any(word in command_lower for word in ["apa", "what", "tahu", "know", "pasal", "about"]):
-            casual_msg = "🎓 **UTHM (Universiti Tun Hussein Onn Malaysia)** ni adalah universiti teknikal yang terletak di Johor!\n\n✨ **Dalam sistem ni:**\n• Total **7 students** registered\n• Multiple departments (FSKTM, Engineering, etc)\n• Active talent profiling system\n\nNak tahu lebih details? Try:\n• 'Show me system overview'\n• 'List all students'\n• 'Berapa jumlah pelajar?' 😊"
-        # Generic fallback
-        else:
-            casual_msg = "Hmm, saya tak pasti apa yang awak maksudkan. 🤔\n\nCuba tanya soalan yang lebih specific macam:\n• **Berapa jumlah pelajar?**\n• **List students**\n• **System overview**\n• **Pilih random student**\n\nAtau type **'help'** untuk list commands! 😊"
-
-        response = schemas.AICommandResponse(
-            success=True,  # Make it success so UI shows friendly message
-            message=casual_msg,
-            source=schemas.AISource.OPENROUTER,
-            data={"status": "quota_reached", "mode": "casual_fallback"},
-            fallback_used=True,
-        )
-        response = self._attach_quota(response)
-        
-        # Add AI response to conversation memory
-        self._conversation_memory.add_ai_response(
-            user_id=current_user.get("uid", "anonymous") if current_user else "anonymous",
-            session_id=session_id,
-            content=casual_msg,
-            metadata=response.data or {},
-            intent="fallback_response"
-        )
-        
-        ai_logger.log_ai_action(current_user.get("uid") if current_user else "anonymous", command, response.model_dump())
-        return response
-
-    async def _handle_agentic_command(
+    # 🗑️ REMOVED: Local agentic processing (_handle_agentic_command, _execute_orchestrated_query, etc.)
+    # ALL commands now route directly to Gemini for pure agentic AI behavior!
+    
+    async def _call_gemini(
         self, 
         command: str, 
-        context: dict[str, Any] | None = None, 
-        current_user: dict[str, Any] | None = None,
-        use_fallback: bool = False
-    ) -> schemas.AICommandResponse | None:
-        """Handle command using our new agentic AI features via orchestrator."""
-        log.info(f"🤖 AGENTIC AI: Processing command: '{command}'")
-        
-        try:
-            # Use the orchestrator to process the command through all components
-            orchestration_result = await self._agentic_orchestrator.process_command(command, context)
-            
-            # If clarification is needed, return clarification message
-            if orchestration_result.get("needs_clarification"):
-                clarification_details = orchestration_result["clarification_response"]
-                clarification_message = "Wah, sorry lah! Saya perlukan sedikit maklumat tambahan untuk bantu awak:\\n\\n"
-                
-                for question in clarification_details["questions"]:
-                    clarification_message += f"❓ {question}\\n"
-                for suggestion in clarification_details["suggestions"]:
-                    clarification_message += f"💡 {suggestion}\\n\\n"
-                
-                clarification_message += "Boleh tolong bagi maklumat yang lebih spesifik tak? Tqvm!"
-                
-                return schemas.AICommandResponse(
-                    success=True,
-                    message=clarification_message,
-                    source=schemas.AISource.ENHANCED_SUPABASE,
-                    data=orchestration_result,
-                    steps=[schemas.AICommandStep(label="🔍 Clarification Needed", detail="Requesting more specific information")]
-                )
-            
-            # If we have a well-defined intent and plan, execute it
-            intent = orchestration_result["intent"]
-            entities = orchestration_result["entities"]
-            plan_steps = orchestration_result["plan_steps"]
-            confidence = orchestration_result.get("confidence", 0)
-            
-            # Skip execution if confidence is too low (likely misclassified)
-            if confidence < 0.3:
-                log.info(f"⚠️ Low confidence ({confidence}), skipping orchestrated execution")
-                return None
-            
-            # Execute queries based on intent
-            result = None
-            if intent in ["student_query", "event_query", "analytics_query"]:
-                result = await self._execute_orchestrated_query(intent, entities)
-            elif intent == "multi_intent":
-                result = await self._execute_multi_step_query(orchestration_result)
-            
-            if result:
-                # Format the result appropriately
-                formatted_message = self._format_orchestrated_result(result, intent, entities)
-                
-                return schemas.AICommandResponse(
-                    success=True,
-                    message=formatted_message,
-                    source=schemas.AISource.ENHANCED_SUPABASE,
-                    data=orchestration_result | {"query_result": result},
-                    steps=[
-                        schemas.AICommandStep(label="🚀 Agentic Processing", detail=f"Executed {len(plan_steps)}-step plan"),
-                        *[schemas.AICommandStep(label=f"Step {i+1}", detail=step["description"]) for i, step in enumerate(plan_steps)]
-                    ]
-                )
-            
-            # If no specific query was executed but we have plan steps, explain the plan
-            if len(plan_steps) > 0:
-                plan_explanation = f"Wah bestnya! 🎉 Saya faham apa awak nak buat. Berdasarkan permintaan awak '{command}', saya buat plan macam ni:\\n\\n"
-                for i, step in enumerate(plan_steps, 1):
-                    plan_explanation += f"{i}. {step['description']}\\n"
-                
-                plan_explanation += "\\nSure lah! Saya dah siapkan plan untuk proses permintaan awak. Tqvm!"
-                
-                return schemas.AICommandResponse(
-                    success=True,
-                    message=plan_explanation,
-                    source=schemas.AISource.ENHANCED_SUPABASE,
-                    data=orchestration_result,
-                    steps=[
-                        schemas.AICommandStep(label="🚀 Plan Generated", detail=f"Created {len(plan_steps)}-step plan"),
-                        *[schemas.AICommandStep(label=f"Step {i+1}", detail=step['description']) for i, step in enumerate(plan_steps)]
-                    ]
-                )
-
-        except Exception as e:
-            log.error(f"Error in agentic command processing: {e}")
-            if not use_fallback:
-                # Try to handle with basic local agentic action as final fallback
-                local_response = await self._try_local_agentic_action(command, current_user)
-                if local_response:
-                    return local_response
-
-        return None
-
-    async def _execute_orchestrated_query(
-        self,
-        intent: str,
-        entities: dict[str, Any]
-    ) -> dict[str, Any] | list | None:
-        """Execute query based on orchestrated intent and entities."""
-        try:
-            if intent == "student_query":
-                criteria = {}
-                if 'departments' in entities and entities['departments']:
-                    criteria["department"] = entities['departments'][0]
-                if 'min_cgpa' in entities:
-                    criteria["cgpa_min"] = entities['min_cgpa']
-                if 'numbers' in entities and entities['numbers']:
-                    criteria["limit"] = entities['numbers'][0]
-                else:
-                    criteria["limit"] = 10
-                
-                return self._service_bridge.search_students_by_criteria(criteria)
-            
-            elif intent == "event_query":
-                criteria = {"limit": entities.get('numbers', [10])[0] if 'numbers' in entities else 10}
-                return self._service_bridge._search_events_advanced(criteria)
-            
-            elif intent == "analytics_query":
-                return self._service_bridge._search_analytics({"type": "department_performance"})
-        
-        except Exception as e:
-            log.error(f"Error executing orchestrated query: {e}")
-            return None
-
-    async def _execute_multi_step_query(self, orchestration_result: dict) -> dict[str, Any] | None:
-        """Execute multi-step query based on orchestration result."""
-        try:
-            results = []
-            plan_steps = orchestration_result["plan_steps"]
-            entities = orchestration_result["entities"]
-            
-            for step in plan_steps:
-                step_result = await self._execute_orchestrated_query(step["task_type"], entities)
-                results.append({
-                    "step_description": step["description"],
-                    "result": step_result
-                })
-            
-            return {
-                "multi_step_results": results,
-                "summary": f"Completed {len(results)} steps in multi-step query"
-            }
-        
-        except Exception as e:
-            log.error(f"Error executing multi-step query: {e}")
-            return None
-
-    def _format_orchestrated_result(
-        self, 
-        result: dict[str, Any] | list, 
-        intent: str, 
-        entities: dict[str, Any]
-    ) -> str:
-        """Format the result from orchestrated processing into a user-friendly message."""
-        if not result:
-            return "Wah sorry lah! Saya tak jumpa maklumat yang awak cari. Boleh cuba permintaan yang lain tak?"
-        
-        # Format based on intent type
-        if intent == "student_query":
-            if isinstance(result, list) and len(result) > 0:
-                count = len(result)
-                message = f"Wah bestnya! 🎉 Saya jumpa **{count} students** mengikut permintaan awak!\\n\\n"
-                
-                for i, student in enumerate(result[:5], 1):  # Show first 5
-                    message += f"{i}. **{student.get('name', 'N/A')}\\n"
-                    message += f"   📧 Email: {student.get('email', 'N/A')}\\n"
-                    message += f"   🏢 Department: {student.get('department', 'N/A')}\\n"
-                    if student.get('cgpa'):
-                        message += f"   📊 CGPA: {student.get('cgpa')}\\n"
-                    message += "\\n"
-                
-                if len(result) > 5:
-                    message += f"... dan {len(result) - 5} lagi! Tqvm sebab tunggu. 😊"
-                
-                return message
-            else:
-                return "Hmm, sorry lah! Saya tak jumpa students yang sesuai dengan kriteria awak. Boleh cuba adjust sikit search criteria awak?"
-        
-        elif intent == "event_query":
-            if isinstance(result, list) and len(result) > 0:
-                count = len(result)
-                message = f"Jumpa **{count} events** untuk awak! Ni detailsnya: 📅\\n\\n"
-                
-                for i, event in enumerate(result[:5], 1):
-                    message += f"{i}. **{event.get('title', 'N/A')}\\n"
-                    message += f"   📅 Date: {event.get('event_date', 'N/A')}\\n"
-                    message += f"   📍 Location: {event.get('location', 'N/A')}\\n\\n"
-                
-                if len(result) > 5:
-                    message += f"... dan {len(result) - 5} events lagi! 😊"
-                
-                return message
-            else:
-                return "Hmm, sorry lah! Saya tak jumpa events yang sesuai. Boleh cuba dengan tarikh atau jenis event yang lain?"
-        
-        elif intent == "multi_intent":
-            if isinstance(result, dict) and 'multi_step_results' in result:
-                message = "Wah bestnya! 🎉 Saya dah complete kan multi-step request awak:\\n\\n"
-                
-                for i, step_result in enumerate(result['multi_step_results'], 1):
-                    message += f"Step {i}: {step_result['step_description']}\\n"
-                    if step_result['result']:
-                        count = len(step_result['result']) if isinstance(step_result['result'], list) else 1
-                        message += f"   → Jumpa {count} results\\n"
-                    else:
-                        message += "   → Tak dapat results\\n"
-                    message += "\\n"
-                
-                return message + "Semua steps dah siap! Tqvm sudi tunggu. 😊"
-        
-        # Default formatting
-        if isinstance(result, list):
-            return f"Wah bestnya! Saya jumpa {len(result)} results untuk awak. Ada {len(result)} items dalam response ni. Tqvm! 🎉"
-        elif isinstance(result, dict):
-            return f"Wah bestnya! Saya proses permintaan awak dan dapatkan results. Tqvm! 🎉"
-        else:
-            return "Wah bestnya! Saya dah proses permintaan awak. Tqvm! 🎉"
-
-    async def _try_local_agentic_action(
-        self,
-        command: str,
-        current_user: dict[str, Any] | None,
-    ) -> schemas.AICommandResponse | None:
-        """Try to handle command with local agentic actions using real data."""
-        
-        command_lower = command.lower()
-        
-        # Random student selection queries
-        if any(keyword in command_lower for keyword in ["pilih", "select", "random", "pick", "tunjuk"]) and any(keyword in command_lower for keyword in ["pelajar", "student", "nama"]):
-            log.info("🎯 DETECTED: Random student selection query!")
-            try:
-                import random
-                students = self._service_bridge.search_students_by_criteria({"limit": 100})
-                if students and len(students) > 0:
-                    selected = random.choice(students)
-                    
-                    message = f"Okay! Saya pilih secara random: **{selected['name']}** 🎲\n\n"
-                    message += f"📧 **Email:** {selected['email']}\n"
-                    if selected.get('department'):
-                        message += f"🏢 **Department:** {selected['department']}\n"
-                    if selected.get('student_id'):
-                        message += f"🎓 **Student ID:** {selected['student_id']}\n"
-                    if selected.get('cgpa'):
-                        message += f"📊 **CGPA:** {selected['cgpa']}\n"
-                    
-                    message += f"\n✨ Ni lah student yang saya pilih untuk awak! 😊"
-                    
-                    return schemas.AICommandResponse(
-                        success=True,
-                        message=message,
-                        source=schemas.AISource.OPENROUTER,
-                        data={
-                            "selected_student": selected,
-                            "total_pool": len(students),
-                            "conversational_response": True
-                        },
-                        steps=[schemas.AICommandStep(label="Random Selection", detail=f"Selected 1 from {len(students)} students")]
-                    )
-                else:
-                    return schemas.AICommandResponse(
-                        success=True,
-                        message="Hmm, tak jumpa students dalam sistem. Mungkin database masih kosong? 🤔",
-                        source=schemas.AISource.OPENROUTER,
-                        data={"error": "no_students_found"},
-                        steps=[schemas.AICommandStep(label="Query", detail="No students found in database")]
-                    )
-            except Exception as e:
-                log.error(f"Error in random student selection: {e}")
-                return None
-        
-        # Student count queries - Conversational responses (using actual data)
-        if any(keyword in command_lower for keyword in ["berapa", "jumlah", "count", "total"]) and any(keyword in command_lower for keyword in ["pelajar", "student", "mahasiswa"]):
-            log.info("🎯 DETECTED: Student count query!")
-            try:
-                stats = self._service_bridge.get_system_stats()
-                student_count = stats.get('user_breakdown', {}).get('students', 0)
-                
-                # Responses based on actual data
-                if "fsktm" in command_lower or "computer science" in command_lower:
-                    message = f"📊 Currently there are **{student_count} students** registered in the system overall.\n\n"
-                    message += f"💡 For specific FSKTM/Computer Science data, I'd recommend querying more specific information!"
-                else:
-                    message = f"📊 Based on latest data, the UTHM system has **{student_count} active students**.\n\n"
-                    message += f"👥 **Total users** (including lecturers and admins): **{stats.get('total_users', 0)}**"
-                
-                return schemas.AICommandResponse(
-                    success=True,
-                    message=message,
-                    source=schemas.AISource.OPENROUTER,
-                    data={
-                        "student_count": student_count,
-                        "total_users": stats.get('total_users', 0),
-                        "profile_completion_rate": stats.get('profile_completion_rate', 0),
-                        "activity_stats": stats.get('activity_stats', {}),
-                        "conversational_response": True
-                    },
-                    steps=[schemas.AICommandStep(label="Database Query", detail="Retrieved live student data")]
-                )
-            except Exception as e:
-                log.error(f"Error getting student count: {e}")
-                return None
-
-        # List students queries
-        if any(keyword in command_lower for keyword in ["list", "senarai", "tunjuk", "show"]) and any(keyword in command_lower for keyword in ["pelajar", "student", "students"]):
-            log.info("🎯 DETECTED: List students query!")
-            try:
-                limit = 10  # Default
-                # Extract limit from command if present
-                import re
-                numbers = re.findall(r'\d+', command)
-                if numbers:
-                    limit = min(int(numbers[0]), 50)  # Max 50
-                
-                students = self._service_bridge.search_students_by_criteria({"limit": limit})
-                if students and len(students) > 0:
-                    message = f"Wah bestnya! 🎉 Ni senarai **{len(students)} students** dalam sistem:\n\n"
-                    
-                    for i, student in enumerate(students[:limit], 1):
-                        message += f"**{i}. {student['name']}**\n"
-                        message += f"   📧 {student['email']}\n"
-                        if student.get('department'):
-                            message += f"   🏢 {student['department']}\n"
-                        if student.get('student_id'):
-                            message += f"   🎓 ID: {student['student_id']}\n"
-                        message += "\n"
-                    
-                    message += f"✨ **Total:** {len(students)} students ditunjukkan! 😊"
-                    
-                    return schemas.AICommandResponse(
-                        success=True,
-                        message=message,
-                        source=schemas.AISource.OPENROUTER,
-                        data={
-                            "students": students,
-                            "count": len(students),
-                            "conversational_response": True
-                        },
-                        steps=[schemas.AICommandStep(label="Database Query", detail=f"Retrieved {len(students)} students")]
-                    )
-                else:
-                    return schemas.AICommandResponse(
-                        success=True,
-                        message="Hmm, tak jumpa students dalam sistem. Database masih kosong ke? 🤔",
-                        source=schemas.AISource.OPENROUTER,
-                        data={"error": "no_students_found"},
-                        steps=[schemas.AICommandStep(label="Query", detail="No students found")]
-                    )
-            except Exception as e:
-                log.error(f"Error listing students: {e}")
-                return None
-        
-        # System overview queries - Using actual data!
-        if any(keyword in command_lower for keyword in ["sistem", "system", "overview", "ringkasan", "dashboard"]):
-            try:
-                stats = self._service_bridge.get_system_stats()
-                
-                students = stats.get('user_breakdown', {}).get('students', 0)
-                lecturers = stats.get('user_breakdown', {}).get('lecturers', 0)
-                admins = stats.get('user_breakdown', {}).get('admins', 0)
-                events = stats.get('activity_stats', {}).get('events', 0)
-                total = stats.get('total_users', 0)
-                completion = stats.get('profile_completion_rate', 0)
-                
-                message = f"📊 **System Overview**\n\n"
-                message += f"👥 **Total Users:** {total}\n"
-                message += f"   • **Students:** {students}\n"
-                message += f"   • **Lecturers:** {lecturers}\n" 
-                message += f"   • **Admins:** {admins}\n\n"
-                message += f"📅 **Events Scheduled:** {events}\n"
-                message += f"✅ **Profile Completion:** {completion}%\n\n"
-                message += f"✨ This shows all users are engaged with the platform!"
-                
-                return schemas.AICommandResponse(
-                    success=True,
-                    message=message,
-                    source=schemas.AISource.OPENROUTER,
-                    data=stats,
-                    steps=[schemas.AICommandStep(label="System Overview", detail="Retrieved comprehensive system statistics")]
-                )
-            except Exception as e:
-                log.error(f"Error getting system overview: {e}")
-                return None
-
-        return None  # No local action found
-
-    
-
-    async def _call_openrouter(
-        self,
-        command: str,
         context: dict[str, Any] | None,
+        current_user: dict[str, Any] | None = None,
     ) -> schemas.AICommandResponse | None:
-        if not self._openrouter_client:
-            return None
-
-        model = "qwen/qwen3-30b-a3b:free"
+        """Direct call to Gemini API with agentic tool calling."""
+        # Use Gemini only
+        use_gemini = self.settings.enable_gemini and self.settings.gemini_api_key
+        use_tools = True  # Gemini supports tools
 
         try:
             system_stats = self._service_bridge.get_system_stats()
@@ -663,80 +191,259 @@ class AIAssistantManager:
             system_stats = {}
             db_status = "maintenance"
         
+        # Build messages with conversation history
         messages = [
             {
                 "role": "system",
-                "content": f"""You are a friendly AI assistant for UTHM (Universiti Tun Hussein Onn Malaysia) dashboard in Malaysia. 
+                "content": f"""You are an agentic AI assistant for the UTHM (Universiti Tun Hussein Onn Malaysia) dashboard system.
 
-PERSONALITY & TONE:
-- Be conversational, friendly, and use Gen Z tone
-- Mix English and Bahasa Malaysia naturally (like Malaysian Gen Z, e.g., "Sure lah!", "Wah bestnya!", "Tqvm!")
-- Use emojis appropriately but don't overdo
-- Be helpful but not overly formal
-- Sound like a knowledgeable student buddy helping out
-- Be encouraging and positive, use phrases like "Wah bestnya!", "Tqvm!", "Sure lah!", "No prob!"
+CORE IDENTITY:
+- You understand and respond naturally in both Bahasa Malaysia and English
+- Code-switching (mixing languages) is normal and encouraged
+- Match the user's tone, style, and energy
+- Be helpful, friendly, and conversational
+- Understand context references like "sekalai lagi", "tadi", "sebelum", "that", "again"
+- Remember previous actions and build upon them naturally
 
-CONTEXT:
-- You help with UTHM dashboard system queries and general assistance
+SYSTEM CONTEXT:
+- UTHM dashboard: Student management, events, analytics, profiles
 - Database status: {db_status}
-- System has {system_stats.get('total_users', 'some')} users ({system_stats.get('user_breakdown', {}).get('students', 'several')} students)
-- Current time: {datetime.now().isoformat()}
+- Current users: {system_stats.get('total_users', 'N/A')} total ({system_stats.get('user_breakdown', {}).get('students', 'N/A')} students)
 
-ENHANCED CAPABILITIES:
-- You can understand and execute complex natural language queries
-- You can query real-time data from the system
-- You can provide detailed analytics and insights
-- You can search for specific users, events, or profiles
-- You can generate reports and summaries
+AGENTIC CAPABILITIES:
+- You have access to tools that let you query the database in real-time
+- When user asks for data (students, events, stats), USE THE TOOLS first to get fresh data
+- Don't make up or guess information - call tools to get accurate data
+- Combine tool results with your natural language understanding to give great responses
 
-IMPORTANT:
-- Always respond naturally, like you're chatting with a friend
-- Never mention technical limitations, API quotas, or error codes
-- If database is in "maintenance", just say you'll help with general info instead
-- Focus on being helpful and conversational
-- Use local Malaysian expressions and slang naturally
-- Be encouraging and supportive
+AVAILABLE TOOLS:
+- query_students: Search/filter students (by department, CGPA, etc.)
+- query_users: Search and filter all users (students, staff, admin) from the UTHM system
+- query_profiles: Search and filter user profiles with detailed information (skills, interests, experiences)
+- query_events: Get event information and schedules
+- query_showcase_posts: Search and filter showcase posts (projects, student work, portfolios)
+- query_achievements: Search and filter achievements and awards
+- query_event_participations: Search event participations and attendance tracking
+- get_system_stats: Get system-wide statistics and overview (with gender analysis)
+- query_analytics: Get analytics, trends, and insights (including gender/name analysis)
+- analyze_student_names: Advanced NLP analysis of student names for demographics
 
-Respond in a natural, helpful, and very human-like way to: {command}"""
-            },
-            {
-                "role": "user", 
-                "content": command
+ADVANCED ADMIN TOOLS:
+- advanced_analytics: Perform complex analytics (trends, correlations, performance metrics, engagement analysis, demographic insights, predictive analysis, comparative analysis, anomaly detection)
+- cross_entity_query: Analyze relationships between entities (user-event analysis, department performance, skill correlations, engagement patterns, activity analysis, relationship mapping)
+- intelligent_search: Semantic search with natural language understanding across all data
+- predictive_insights: Generate forecasts and predictions (trend forecasts, behavior predictions, performance predictions, engagement forecasts, growth predictions, risk assessments)
+- admin_dashboard_analytics: Generate comprehensive admin dashboards with KPIs, insights, and recommendations
+
+HOW TO RESPOND:
+1. **Understand Context**: Read the full conversation history before deciding what to do
+2. **Use Tools for Data**: If user asks for info, call appropriate tools FIRST - don't ask for clarification unless absolutely necessary
+3. **Answer Naturally**: Present tool results in a conversational, friendly way
+4. **Reference History**: When user refers to previous messages ("tadi", "sebelum", "that", "sekalai lagi", etc.), use conversation context
+5. **Be Specific**: Use actual data from tools, not made-up examples
+6. **Stay Natural**: Don't force keywords or patterns - just have a normal conversation
+7. **Context Awareness**: If user says "again" or "sekalai lagi", repeat the last action with same parameters
+8. **Proactive Help**: If tools return no results, explain why and suggest alternatives
+9. **Take Action**: Don't ask for clarification - make reasonable assumptions and take action
+10. **Be Helpful**: Always try to provide useful information even if not exactly what was asked
+
+EXAMPLES:
+User: "Pilih 1 student random" → Call query_students with random=true, limit=1
+User: "Berapa student dalam sistem?" → Call get_system_stats, present student count naturally
+User: "Show me students from Computer Science" → Call query_students with department filter
+User: "Berapa student kita pilih tadi?" → Check conversation history, count from context (no tool needed)
+User: "How many men and women?" → Call get_system_stats with include_gender_analysis=true
+User: "Gender distribution" → Call analyze_student_names with analysis_type=gender_distribution
+User: "Naming patterns" → Call analyze_student_names with analysis_type=naming_patterns
+User: "sekalai lagi" → Repeat the last tool call with same parameters
+User: "Tunjuk event" → Call query_events with upcoming_only=false to show all events
+User: "semua event" → Call query_events with upcoming_only=false
+User: "event yang akan datang" → Call query_events with upcoming_only=true
+User: "Show me all users" → Call query_users to get students, staff, admin
+User: "Find profiles with Python skills" → Call query_profiles with skills filter
+User: "Show me showcase posts" → Call query_showcase_posts to get student projects
+User: "List achievements" → Call query_achievements to get awards and recognition
+User: "Who attended event X?" → Call query_event_participations with event_id filter
+
+ADVANCED ADMIN EXAMPLES:
+User: "Show me trend analysis for user engagement" → Call advanced_analytics with analysis_type=trend_analysis
+User: "Analyze correlation between department and performance" → Call cross_entity_query with query_type=department_performance
+User: "Find all high-performing students with Python skills" → Call intelligent_search with semantic search
+User: "Predict user growth for next quarter" → Call predictive_insights with prediction_type=growth_prediction
+User: "Generate admin dashboard overview" → Call admin_dashboard_analytics with dashboard_type=overview
+User: "What are the engagement patterns for FSKTM students?" → Call cross_entity_query with query_type=engagement_patterns
+User: "Show me anomaly detection in user activity" → Call advanced_analytics with analysis_type=anomaly_detection
+User: "Predict which students might drop out" → Call predictive_insights with prediction_type=risk_assessment
+
+Current time: {datetime.now().isoformat()}"""
             }
         ]
+        
+        # Get session ID and retrieve structured context
+        session_id = context.get("session_id") if context else None
+        structured_ctx = None
+        
+        if session_id:
+            # Get structured context (messages + tool calls + insights)
+            structured_ctx = self._conversation_memory.get_structured_context(session_id, limit=10)
+            
+            log.info(f"💬 Session context: {structured_ctx['insights']['message_count']} messages, {structured_ctx['insights']['tool_calls_count']} tools used")
+            
+            # Add conversation history messages
+            for msg_dict in structured_ctx["messages"]:
+                if msg_dict["type"] == "user_message":
+                    messages.append({
+                        "role": "user",
+                        "content": msg_dict["content"]
+                    })
+                elif msg_dict["type"] == "ai_response":
+                    messages.append({
+                        "role": "assistant",
+                        "content": msg_dict["content"]
+                    })
+            
+            # If there are recent tool calls, add context about them
+            if structured_ctx["tool_calls"]:
+                recent_tools = structured_ctx["tool_calls"][-3:]  # Last 3 tool calls
+                tools_summary = "\n".join([
+                    f"- {tc['tool']}({tc['result_summary']})" 
+                    for tc in recent_tools
+                ])
+                messages[0]["content"] += f"\n\nRECENT TOOL USAGE IN THIS SESSION:\n{tools_summary}"
+                
+                # Add last tool call details for "again" context
+                if structured_ctx.get("last_tool_call"):
+                    last_tool = structured_ctx["last_tool_call"]
+                    messages[0]["content"] += f"\n\nLAST TOOL CALL (for 'again'/'sekalai lagi' context):\nTool: {last_tool['tool']}\nArguments: {last_tool.get('arguments', {})}\nResult: {last_tool['result_summary']}\n\nIMPORTANT: If user says 'sekalai lagi', 'again', or similar, repeat this exact tool call with the same arguments!"
+        
+        # Add current user message
+        messages.append({
+            "role": "user", 
+            "content": command
+        })
 
         try:
-            if not self._openrouter_client:
-                self._openrouter_client = OpenRouterClient(api_key=self.settings.openrouter_api_key)
+            # Initialize Gemini client
+            if not self._gemini_client:
+                self._gemini_client = GeminiClient(self.settings.gemini_api_key)
+            ai_client = self._gemini_client
+            ai_source = schemas.AISource.GEMINI
+            log.info("🚀 Using Gemini 2.0 Flash (FREE + Tools)")
 
-            response_text = await self._openrouter_client.chat_completion(
-                model=model,
-                messages=messages,
-                max_tokens=800,
-                temperature=0.7
-            )
-
+            # 🚀 AGENTIC LOOP: AI can call tools until it gets final answer
+            max_iterations = 5  # Prevent infinite loops
+            iteration = 0
+            tool_results_data = []
+            
+            while iteration < max_iterations:
+                iteration += 1
+                log.info(f"🔄 Agentic loop iteration {iteration}/{max_iterations}")
+                
+                response = await ai_client.chat_completion(
+                    messages=messages,
+                    max_tokens=800,
+                    temperature=0.7,
+                    tools=AVAILABLE_TOOLS if use_tools else None
+                )
+                
+                # Check if response is text or tool_calls
+                if isinstance(response, str):
+                    # Final text response - we're done!
+                    log.info(f"✅ Got final text response from Gemini")
+                    return schemas.AICommandResponse(
+                        success=True,
+                        message=response,
+                        source=ai_source,
+                        data={
+                            "model": "gemini-2.0-flash-exp",
+                            "mode": "agentic",
+                            "database_status": db_status,
+                            "iterations": iteration,
+                            "tools_used": tool_results_data
+                        },
+                    )
+                
+                # AI wants to call tools!
+                elif isinstance(response, dict) and response.get("type") == "tool_calls":
+                    log.info(f"🔧 AI requested {len(response['tool_calls'])} tool calls")
+                    
+                    # Add AI's message (with tool calls) to conversation
+                    messages.append(response["message"])
+                    
+                    # Execute each tool call
+                    for tool_call in response["tool_calls"]:
+                        tool_name = tool_call["function"]["name"]
+                        tool_args = json.loads(tool_call["function"]["arguments"])
+                        tool_id = tool_call["id"]
+                        
+                        log.info(f"⚙️ Executing tool: {tool_name} with args: {tool_args}")
+                        
+                        # Execute the tool
+                        tool_result = await self._tool_executor.execute_tool(tool_name, tool_args)
+                        
+                        log.info(f"✅ Tool {tool_name} result: {tool_result.get('success', False)}")
+                        
+                        # Track tool usage
+                        tool_results_data.append({
+                            "tool": tool_name,
+                            "arguments": tool_args,
+                            "result": tool_result
+                        })
+                        
+                        # Add tool call to conversation memory
+                        self._conversation_memory.add_tool_call(
+                            current_user.get("uid") if current_user else "anonymous",
+                            session_id,
+                            tool_name,
+                            tool_args,
+                            tool_result,
+                            success=tool_result.get("success", True)
+                        )
+                        
+                        # Add tool result to messages for next iteration
+                        messages.append({
+                            "role": "tool",
+                            "tool_call_id": tool_id,
+                            "name": tool_name,
+                            "content": serialize_tool_result(tool_result)
+                        })
+                    
+                    # Continue loop - Gemini will process tool results
+                    log.info("🔄 Tools executed, continuing agentic loop...")
+                    continue
+                
+                else:
+                    # Unexpected response format
+                    log.error(f"Unexpected response format: {response}")
+                    raise RuntimeError(f"Unexpected AI response: {response}")
+            
+            # Max iterations reached
+            log.warning(f"⚠️ Max iterations ({max_iterations}) reached")
             return schemas.AICommandResponse(
                 success=True,
-                message=response_text,
-                source=schemas.AISource.OPENROUTER,
+                message="Maaf, saya perlu terlalu banyak steps untuk selesaikan task ni. Cuba simplify request awak? 🙏",
+                source=ai_source,
                 data={
-                    "model": model,
-                    "mode": "conversational",
-                    "database_status": db_status
+                            "model": "gemini-2.0-flash-exp",
+                    "mode": "agentic",
+                    "database_status": db_status,
+                    "iterations": iteration,
+                    "tools_used": tool_results_data,
+                    "max_iterations_reached": True
                 },
             )
 
         except Exception as e:
-            log.error(f"OpenRouter error: {e}")
-            return None
+            log.error(f"Gemini error: {e}")
+            # Re-raise the exception so user can see actual errors
+            raise
 
     def _attach_quota(self, response: schemas.AICommandResponse) -> schemas.AICommandResponse:
         """Attach quota information to response."""
         response.data = response.data or {}
         response.data["quota"] = {
             "daily_usage": self.daily_usage,
-            "daily_limit": self.settings.openrouter_daily_limit,
+            "daily_limit": 1000,  # Gemini has generous limits
             "usage_date": self._usage_date.isoformat(),
         }
         return response

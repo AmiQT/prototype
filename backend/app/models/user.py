@@ -2,6 +2,8 @@
 User model - matches Supabase public.users table schema exactly
 """
 from sqlalchemy import Column, String, Boolean, DateTime
+from sqlalchemy.dialects.postgresql import UUID
+import uuid
 from sqlalchemy.sql import func
 from app.database import Base
 import enum
@@ -16,7 +18,7 @@ class User(Base):
     __tablename__ = "users"
     
     # Primary fields (match database exactly)
-    id = Column(String, primary_key=True)  # UUID from Supabase
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)  # UUID from Supabase
     email = Column(String, unique=True, nullable=False)
     name = Column(String, nullable=False)  
     role = Column(String, nullable=False, default='student')  # Use String instead of Enum for compatibility

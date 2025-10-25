@@ -533,17 +533,26 @@ class _ModernPostCardState extends State<ModernPostCard>
                 style: TextStyle(fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 16),
-              ...reportReasons.map((reason) => RadioListTile<String>(
-                    title: Text(reason),
-                    value: reason,
-                    groupValue: selectedReason,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedReason = value;
-                      });
-                    },
-                    contentPadding: EdgeInsets.zero,
-                  )),
+              RadioGroup<String>(
+                groupValue: selectedReason,
+                onChanged: (value) {
+                  if (value == null) return;
+                  setState(() {
+                    selectedReason = value;
+                  });
+                },
+                child: Column(
+                  children: reportReasons
+                      .map(
+                        (reason) => RadioListTile<String>(
+                          title: Text(reason),
+                          value: reason,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
             ],
           ),
           actions: [

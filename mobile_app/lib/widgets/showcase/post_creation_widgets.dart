@@ -249,33 +249,37 @@ class PrivacySelectorWidget extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
-          ...PostPrivacy.values.map((privacy) {
-            return Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              child: RadioListTile<PostPrivacy>(
-                value: privacy,
-                groupValue: selectedPrivacy,
-                onChanged: (value) {
-                  if (value != null) onPrivacyChanged(value);
-                },
-                title: Row(
-                  children: [
-                    Icon(_getPrivacyIcon(privacy), size: 20),
-                    const SizedBox(width: 8),
-                    Text(_getPrivacyDisplayName(privacy)),
-                  ],
-                ),
-                subtitle: Text(
-                  _getPrivacyDescription(privacy),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
+          RadioGroup<PostPrivacy>(
+            groupValue: selectedPrivacy,
+            onChanged: (value) {
+              if (value != null) onPrivacyChanged(value);
+            },
+            child: Column(
+              children: PostPrivacy.values.map((privacy) {
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: RadioListTile<PostPrivacy>(
+                    value: privacy,
+                    title: Row(
+                      children: [
+                        Icon(_getPrivacyIcon(privacy), size: 20),
+                        const SizedBox(width: 8),
+                        Text(_getPrivacyDisplayName(privacy)),
+                      ],
+                    ),
+                    subtitle: Text(
+                      _getPrivacyDescription(privacy),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    contentPadding: EdgeInsets.zero,
                   ),
-                ),
-                contentPadding: EdgeInsets.zero,
-              ),
-            );
-          }),
+                );
+              }).toList(),
+            ),
+          ),
         ],
       ),
     );

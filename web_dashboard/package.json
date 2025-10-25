@@ -4,9 +4,11 @@
   "description": "Student Talent Profiling App - Web Dashboard",
   "main": "index.html",
   "scripts": {
-    "dev": "live-server --port=3000 --open=/index.html",
+    "dev": "live-server --port=8080 --open=/login.html",
     "build": "echo 'Static build completed'",
-    "start": "live-server --port=3000 --open=/index.html"
+    "start": "live-server --port=8080 --open=/login.html",
+    "generate-env": "node scripts/generate-env-config.js",
+    "predev": "npm run generate-env"
   },
   "keywords": [
     "talent-management",
@@ -17,6 +19,7 @@
   "author": "Noor Azami",
   "license": "MIT",
   "devDependencies": {
+    "dotenv": "^16.6.1",
     "live-server": "^1.2.2"
   },
   "engines": {

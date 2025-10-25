@@ -781,7 +781,19 @@ function hideAllModals() {
 // Logout function
 async function logout() {
     if (confirm('Are you sure you want to logout?')) {
-        await auth.signOut();
+        try {
+            // Check if Supabase is properly configured before attempting sign out
+            if (auth && typeof auth.signOut === 'function') {
+                const { error } = await auth.signOut();
+                if (error && error.code === 'SUPABASE_NOT_CONFIGURED') {
+                    console.warn('Supabase not configured, clearing local session only');
+                } else if (error) {
+                    console.error('Error during logout:', error);
+                }
+            }
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
         window.location.href = 'login.html';
     }
 }
@@ -827,34 +839,64 @@ document.addEventListener('DOMContentLoaded', async () => {
     initializeTheme();
     
     try {
+        // Check if Supabase is properly configured before attempting auth
+        if (!auth || typeof auth.getSession !== 'function') {
+            console.error('❌ Supabase auth not properly initialized');
+            alert('Application not properly configured. Please contact system administrator.');
+            return;
+        }
+
         const { data, error } = await auth.getSession();
 
         if (error) {
             console.error('Supabase getSession error:', error.message);
-            window.location.href = 'login.html';
+            console.log('🔄 Redirecting to login due to error...');
+            
+            // Prevent infinite redirect loop by checking current page
+            if (!window.location.href.includes('login.html')) {
+                window.location.href = 'login.html';
+            }
             return;
         }
 
+        console.log('📊 Dashboard session data:', data);
         if (data?.session?.user) {
             console.log('✅ User is authenticated. Booting dashboard...');
             await initializeComponents();
             await bootDashboard();
         } else {
             console.log('🔒 User not authenticated, redirecting to login...');
-            window.location.href = 'login.html';
+            console.log('🔄 Redirecting to login due to no session...');
+            
+            // Prevent infinite redirect loop by checking current page
+            if (!window.location.href.includes('login.html')) {
+                window.location.href = 'login.html';
+            }
             return;
         }
 
-        // Listen for auth state changes
-        auth.onAuthStateChange((_event, session) => {
-            if (!session?.user) {
-                console.log('🔒 Session expired or user logged out, redirecting to login...');
-                window.location.href = 'login.html';
-            }
-        });
+        // Listen for auth state changes (only if not already set up)
+        if (!window.__authStateChangeListenerSetup) {
+            auth.onAuthStateChange((_event, session) => {
+                if (!session?.user) {
+                    console.log('🔒 Session expired or user logged out, redirecting to login...');
+                    
+                    // Prevent infinite redirect loop by checking current page
+                    if (!window.location.href.includes('login.html')) {
+                        window.location.href = 'login.html';
+                    }
+                }
+            });
+            
+            window.__authStateChangeListenerSetup = true;
+        }
 
     } catch (error) {
         console.error('🚨 Dashboard initialization failed:', error);
-        window.location.href = 'login.html';
+        
+        // Prevent infinite redirect loop by checking current page
+        if (!window.location.href.includes('login.html')) {
+            window.location.href = 'login.html';
+        }
     }
 });

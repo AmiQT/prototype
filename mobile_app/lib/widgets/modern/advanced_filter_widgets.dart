@@ -518,7 +518,7 @@ class _ModernToggleSwitchesState extends State<ModernToggleSwitches> {
               widget.onToggle(filter);
               setState(() {}); // Force rebuild to show updated state
             },
-            activeColor: AppTheme.primaryColor,
+            activeThumbColor: AppTheme.primaryColor,
             activeTrackColor: AppTheme.primaryColor.withValues(alpha: 0.3),
             inactiveThumbColor: AppTheme.textSecondaryColor,
             inactiveTrackColor:

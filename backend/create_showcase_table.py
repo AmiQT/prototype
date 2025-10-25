@@ -22,14 +22,14 @@ def create_showcase_tables():
         ShowcaseComment.__table__.create(bind=engine, checkfirst=True)
         ShowcaseLike.__table__.create(bind=engine, checkfirst=True)
         
-        print("✅ Showcase tables created successfully!")
+        print("Showcase tables created successfully!")
         print("Tables created:")
         print("  - showcase_posts")
         print("  - showcase_comments") 
         print("  - showcase_likes")
         
     except Exception as e:
-        print(f"❌ Error creating tables: {e}")
+        print(f"Error creating tables: {e}")
         return False
     
     return True

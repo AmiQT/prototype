@@ -574,7 +574,7 @@ class _AchievementsScreenState extends State<AchievementsScreen>
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<AchievementType>(
-                    value: _selectedType,
+                    initialValue: _selectedType,
                     decoration: const InputDecoration(
                       labelText: 'Type',
                       border: OutlineInputBorder(),

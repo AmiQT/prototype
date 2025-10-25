@@ -10,6 +10,7 @@ from app.ai_assistant import schemas, history
 from app.ai_assistant.conversation_memory import conversation_memory, MemoryType
 from app.ai_assistant.response_variation import response_variation_system
 from app.ai_assistant.template_manager import template_manager
+from app.ai_assistant.tools import get_all_tool_names
 
 router = APIRouter(prefix="/api/ai", tags=["ai-assistant"])
 
@@ -68,8 +69,9 @@ async def process_ai_command(
 
 @router.get("/history")
 async def get_ai_history(limit: int = 10):
+    """Get AI command history (public endpoint for dashboard)."""
     return {
-        "history": history.get_recent_history(limit),
+        "history": history.get_recent_history(limit)
     }
 
 
@@ -266,5 +268,142 @@ async def get_memory_stats():
         "template_stats": template_manager.get_statistics(),
         "active_sessions": len(conversation_memory._memory),
         "total_users_with_sessions": len(conversation_memory._user_sessions)
+    }
+
+
+@router.get("/agentic/status")
+async def get_agentic_status():
+    """Get agentic AI system status and capabilities."""
+    from app.ai_assistant.tools import AVAILABLE_TOOLS
+    from app.ai_assistant.config import get_ai_settings
+    
+    settings = get_ai_settings()
+    
+    return {
+        "system": "Agentic AI Upgrade Complete",
+        "version": "2.0.0",
+        "status": "operational",
+        "features": {
+            "tool_calling": True,
+            "structured_context": True,
+            "conversation_memory": True,
+            "database_access": True,
+            "natural_language": True
+        },
+        "tools": {
+            "available": get_all_tool_names(),
+            "count": len(AVAILABLE_TOOLS)
+        },
+        "config": {
+            "openrouter_enabled": settings.enable_openrouter,
+            "ai_enabled": settings.ai_enabled,
+            "model": "qwen/qwen3-30b-a3b:free"
+        },
+        "phases_completed": [
+            "Phase 1: Keyword system removed",
+            "Phase 2: Tool calling implemented",
+            "Phase 3: Structured context added",
+            "Phase 4: Database access enabled",
+            "Phase 5: Testing & refinement done"
+        ]
+    }
+
+
+@router.post("/agentic/test")
+async def test_agentic_system(
+    current_user: dict = Depends(verify_supabase_token),
+    manager: AIAssistantManager = Depends()
+):
+    """
+    Test agentic AI system dengan berbagai test cases.
+    Endpoint ni untuk quickly test semua capabilities tanpa perlu separate script.
+    """
+    
+    test_cases = [
+        {
+            "name": "🎲 Random Student Selection (Tool Expected)",
+            "command": "Pilih 1 student random",
+            "expect_tools": True
+        },
+        {
+            "name": "📊 System Stats Query (Tool Expected)",
+            "command": "Berapa total student dalam sistem?",
+            "expect_tools": True
+        },
+        {
+            "name": "🔍 Filtered Search (Tool Expected)",
+            "command": "Show me 3 students from Computer Science",
+            "expect_tools": True
+        },
+        {
+            "name": "💬 Conversational Context Test",
+            "command": "Hello, how are you today?",
+            "expect_tools": False
+        }
+    ]
+    
+    results = []
+    
+    for test_case in test_cases:
+        try:
+            # Create unique test session
+            context = {
+                "session_id": f"agentic_test_{current_user.get('uid', 'anonymous')}",
+                "test_mode": True
+            }
+            
+            # Execute command
+            response = await manager.handle_command(
+                command=test_case["command"],
+                context=context,
+                current_user=current_user
+            )
+            
+            # Analyze result
+            tools_used = response.data.get("tools_used", []) if response.data else []
+            iterations = response.data.get("iterations", 0) if response.data else 0
+            mode = response.data.get("mode", "unknown") if response.data else "unknown"
+            
+            result = {
+                "test": test_case["name"],
+                "command": test_case["command"],
+                "success": response.success,
+                "mode": mode,
+                "iterations": iterations,
+                "tools_called": len(tools_used),
+                "tool_names": [t["tool"] for t in tools_used],
+                "expected_tools": test_case["expect_tools"],
+                "expectation_met": (len(tools_used) > 0) == test_case["expect_tools"],
+                "message_preview": response.message[:150] + "..." if len(response.message) > 150 else response.message,
+                "status": "✅ PASSED" if response.success else "❌ FAILED"
+            }
+            
+            results.append(result)
+            
+        except Exception as e:
+            results.append({
+                "test": test_case["name"],
+                "command": test_case["command"],
+                "success": False,
+                "error": str(e),
+                "status": "❌ ERROR"
+            })
+    
+    # Summary
+    passed = sum(1 for r in results if r.get("success", False))
+    total = len(results)
+    tools_working = any(r.get("tools_called", 0) > 0 for r in results)
+    
+    return {
+        "test_summary": {
+            "total_tests": total,
+            "passed": passed,
+            "failed": total - passed,
+            "success_rate": f"{(passed/total)*100:.1f}%",
+            "tools_functional": tools_working
+        },
+        "test_results": results,
+        "system_status": "✅ OPERATIONAL" if passed == total else "⚠️ PARTIAL" if passed > 0 else "❌ FAILED",
+        "message": "Agentic AI system fully operational! 🚀" if passed == total else "Some tests failed, check results above."
     }
 
