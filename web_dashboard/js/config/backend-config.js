@@ -96,10 +96,17 @@ async function getAuthHeaders() {
   try {
     // Import supabase client
     const { supabase } = await import('./supabase-config.js');
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.warn('Supabase getSession error:', error);
+    }
     
     if (session?.access_token) {
       token = session.access_token;
+      console.log('✅ Got Supabase access token:', token.substring(0, 20) + '...');
+    } else {
+      console.warn('No session found. Session:', session);
     }
   } catch (error) {
     console.warn('Could not get Supabase session:', error);
@@ -108,6 +115,11 @@ async function getAuthHeaders() {
   // Fallback to localStorage token
   if (!token) {
     token = localStorage.getItem(BACKEND_CONFIG.auth.tokenKey);
+    if (token) {
+      console.log('✅ Using token from localStorage');
+    } else {
+      console.warn('❌ No token found in localStorage or Supabase session');
+    }
   }
   
   return {
@@ -152,6 +164,8 @@ async function makeAuthenticatedRequest(endpoint, options = {}) {
   const url = endpoint.startsWith('http') ? endpoint : `${BACKEND_CONFIG.baseUrl}${endpoint}`;
 
   const headers = await getAuthHeaders();
+  
+  console.log('🔐 Request Headers:', headers);
 
   const method = (options.method || 'GET').toUpperCase();
   let body = options.body;
@@ -162,14 +176,18 @@ async function makeAuthenticatedRequest(endpoint, options = {}) {
   const requestOptions = {
     method,
     credentials: 'include',
-    headers: {
+    body,
+    ...options,
+    headers: {  // ← MOVE headers AFTER ...options to prevent overwrite
       ...headers,
       ...(options.headers || {})
     },
-    body,
-    ...options,
     method // ensure method stays correct after spread
   };
+  
+  console.log(`📤 ${method} ${url}`);
+  console.log('   Final Headers:', requestOptions.headers);
+  console.log('   Body:', body);
 
   const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
   const timeoutId = controller ? setTimeout(() => controller.abort(), BACKEND_CONFIG.timeout) : null;
@@ -181,6 +199,8 @@ async function makeAuthenticatedRequest(endpoint, options = {}) {
   try {
     const response = await fetch(url, requestOptions);
     const contentType = response.headers.get('content-type') || '';
+    
+    console.log(`📥 Response Status: ${response.status}`);
 
     if (!response.ok) {
       let errorPayload = null;

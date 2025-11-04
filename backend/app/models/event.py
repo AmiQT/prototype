@@ -15,9 +15,13 @@ class Event(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title = Column(String, nullable=False)
     description = Column(Text, nullable=True)
-    event_date = Column(DateTime(timezone=True), nullable=True)  # Match DB column name
+    category = Column(String(50), nullable=True, default='general')  # NEW: Event category
+    image_url = Column(Text, nullable=True)  # NEW: Event image
+    registration_url = Column(Text, nullable=True)  # NEW: Registration link
+    max_participants = Column(Integer, nullable=True)  # NEW: Max participants (NULL = unlimited)
+    event_date = Column(DateTime(timezone=True), nullable=True)
     location = Column(String, nullable=True)
-    organizer_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)  # Match DB column name
+    organizer_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     is_active = Column(Boolean, nullable=True, default=True)
     created_at = Column(DateTime(timezone=True), nullable=True, server_default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=True, onupdate=func.now())
@@ -26,7 +30,7 @@ class Event(Base):
     organizer = relationship("User", backref="organized_events")
     
     def __repr__(self):
-        return f"<Event(id={self.id}, title={self.title}, date={self.start_date})>"
+        return f"<Event(id={self.id}, title={self.title}, category={self.category})>"
 
 class EventParticipation(Base):
     """

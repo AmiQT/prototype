@@ -8,11 +8,11 @@ import cloudinary
 import logging
 # Firebase removed - using Supabase only
 
-# Import database dependency first (before function definitions)
-from app.database import get_db
-
-# Load environment variables
+# Load environment variables FIRST before any imports that need them
 load_dotenv()
+
+# Import database dependency AFTER loading env vars
+from app.database import get_db
 
 # Configure logging first with detailed format
 logging.basicConfig(
@@ -65,17 +65,30 @@ essential_origins = [
     "https://localhost:8080",
 ]
 
+# Add wildcard for development (matches http://127.0.0.1:* and http://localhost:*)
+# Using regex_patterns for FastAPI CORS middleware
+allow_origin_regex_patterns = [
+    r"^http:\/\/(127\.0\.0\.1|localhost)(:[0-9]{1,5})?$",  # Allow localhost:any-port
+]
+
+# Add Vercel production URL
+vercel_origins = [
+    "https://student-talent-profiling-2cw1eyzuc-noor-azamis-projects.vercel.app",
+    "https://student-talent-profiling-app.vercel.app",  # If custom domain
+]
+
 # Merge with environment origins and remove duplicates
 if not allowed_origins or allowed_origins == ["*"]:
-    allowed_origins = essential_origins
+    allowed_origins = essential_origins + vercel_origins
 else:
-    allowed_origins = list(set(allowed_origins + essential_origins))
+    allowed_origins = list(set(allowed_origins + essential_origins + vercel_origins))
 
 logger.info(f"🌐 CORS enabled for origins: {allowed_origins}")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
+    allow_origin_regex=allow_origin_regex_patterns[0] if allow_origin_regex_patterns else None,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],

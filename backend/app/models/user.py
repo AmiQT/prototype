@@ -12,7 +12,6 @@ class UserRole(enum.Enum):
     student = "student"
     lecturer = "lecturer" 
     admin = "admin"
-    staff = "staff"  # Added staff role based on database
 
 class User(Base):
     __tablename__ = "users"

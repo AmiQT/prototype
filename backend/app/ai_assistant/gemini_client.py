@@ -3,8 +3,11 @@
 import json
 import logging
 import collections.abc
+import time
+import asyncio
 from typing import Any, Dict, List
 import google.generativeai as genai
+from google.api_core.exceptions import ResourceExhausted
 
 logger = logging.getLogger(__name__)
 
@@ -207,11 +210,31 @@ class GeminiClient:
             # Get last user message
             last_user_message = messages[-1]["content"] if messages else ""
             
-            # Generate response
-            response = chat.send_message(
-                last_user_message,
-                generation_config=generation_config
-            )
+            # Generate response with retry logic for rate limits
+            max_retries = 3
+            retry_delay = 2  # seconds
+            
+            for attempt in range(max_retries):
+                try:
+                    response = chat.send_message(
+                        last_user_message,
+                        generation_config=generation_config
+                    )
+                    break  # Success, exit retry loop
+                    
+                except ResourceExhausted as e:
+                    if attempt < max_retries - 1:
+                        wait_time = retry_delay * (attempt + 1)
+                        logger.warning(f"⏳ Rate limit hit (429). Retrying in {wait_time}s... (attempt {attempt + 1}/{max_retries})")
+                        await asyncio.sleep(wait_time)
+                    else:
+                        logger.error(f"❌ Rate limit exceeded after {max_retries} attempts")
+                        # Return friendly Malay error message instead of raising
+                        return "Maaf, sistem AI sedang sibuk sekarang. Terlalu banyak permintaan dalam masa yang singkat. Sila cuba lagi dalam beberapa saat. 🙏"
+                        
+                except Exception as e:
+                    # For other errors, raise immediately
+                    raise e
             
             # Check if model wants to call functions
             if response.candidates and response.candidates[0].content.parts:
@@ -252,7 +275,12 @@ class GeminiClient:
             
             return text
             
+        except ResourceExhausted as e:
+            # Handle rate limit gracefully with Malay message
+            logger.error(f"❌ Gemini rate limit: {e}")
+            return "Maaf, sistem AI mencapai had penggunaan. Sila tunggu sebentar dan cuba lagi. Terima kasih! 🙏"
+            
         except Exception as e:
             logger.error(f"Gemini API error: {e}", exc_info=True)
-            raise RuntimeError(f"Gemini API error: {str(e)}")
+            return f"Maaf, ada masalah dengan sistem AI: {str(e)}. Sila cuba lagi atau hubungi admin."
 

@@ -6,21 +6,31 @@ let allEventsCache = [];
 let refreshInterval = null;
 
 function setupEventsSection() {
+    console.log('🔧 Setting up Events Section...');
+    
     // Setup form submission handlers
     const addEventForm = document.getElementById('add-event-form');
     if (addEventForm) {
+        console.log('✅ Add Event Form found, attaching listener');
         addEventForm.addEventListener('submit', (event) => {
             event.preventDefault();
+            console.log('🔥 Add Event Form submitted via addEventListener');
             handleAddEvent(event.target);
         });
+    } else {
+        console.warn('⚠️ Add Event Form not found - will use onsubmit fallback');
     }
 
     const editEventForm = document.getElementById('edit-event-form');
     if (editEventForm) {
+        console.log('✅ Edit Event Form found, attaching listener');
         editEventForm.addEventListener('submit', (event) => {
             event.preventDefault();
+            console.log('🔥 Edit Event Form submitted via addEventListener');
             handleEditEvent(event.target);
         });
+    } else {
+        console.warn('⚠️ Edit Event Form not found - will use onsubmit fallback');
     }
 
     // Setup search functionality
@@ -106,7 +116,7 @@ async function loadEventsTable() {
         }, 30000);
     } catch (error) {
         console.error('Error loading events from backend:', error);
-        tableBody.innerHTML = '<tr><td colspan="7">Error loading events. Please check your connection.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="5">Error loading events. Please check your connection.</td></tr>';
     }
 }
 
@@ -115,35 +125,26 @@ function renderEventsTable(events) {
     if (!tableBody) return;
     
     if (events.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="7">No events found</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="5">No events found</td></tr>';
         return;
     }
     
     tableBody.innerHTML = events.map(event => `
         <tr>
-            <td>${event.title || 'N/A'}</td>
-            <td>${truncateText(event.description || 'N/A', 50)}</td>
+            <td><strong>${event.title || 'N/A'}</strong></td>
+            <td>${truncateText(event.description || 'N/A', 80)}</td>
             <td><span class="badge badge-primary">${event.category || 'General'}</span></td>
-            <td>
-                ${event.image_url ? 
-                    `<img src="${event.image_url}" alt="Event" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">` : 
-                    '<span class="text-muted">No image</span>'
+            <td style="text-align: center;">
+                ${event.max_participants ? 
+                    `<span class="badge badge-info"><i class="fas fa-users"></i> ${event.max_participants}</span>` : 
+                    '<span class="badge badge-success"><i class="fas fa-infinity"></i> Unlimited</span>'
                 }
             </td>
             <td>
-                ${event.registration_url ? 
-                    `<a href="${event.registration_url}" target="_blank" class="btn btn-sm btn-primary">Register</a>` : 
-                    '<span class="text-muted">No registration</span>'
-                }
-            </td>
-            <td>
-                <span class="text-muted">N/A</span>
-            </td>
-            <td>
-                <button class="btn btn-sm btn-secondary" onclick="showEditEventModal('${event.id}')">
+                <button class="btn btn-sm btn-secondary" onclick="showEditEventModal('${event.id}')" title="Edit Event">
                     <i class="fas fa-edit"></i>
                 </button>
-                <button class="btn btn-sm btn-danger" onclick="deleteEvent('${event.id}')">
+                <button class="btn btn-sm btn-danger" onclick="deleteEvent('${event.id}')" title="Delete Event">
                     <i class="fas fa-trash"></i>
                 </button>
             </td>
@@ -192,9 +193,19 @@ function showAddEventModal() {
         
         // Reset form
         const form = document.getElementById('add-event-form');
-        if (form) form.reset();
-        
-        console.log('✅ Add event modal opened');
+        if (form) {
+            form.reset();
+            
+            // Re-attach event listener as backup (in case modal was dynamically loaded)
+            form.onsubmit = (event) => {
+                event.preventDefault();
+                console.log('🔥 Form submitted via form.onsubmit');
+                handleAddEvent(form);
+                return false;
+            };
+            
+            console.log('✅ Add event modal opened and form handler attached');
+        }
     }
 }
 
@@ -217,6 +228,18 @@ async function showEditEventModal(eventId) {
         document.getElementById('edit-event-image').value = event.image_url || '';
         document.getElementById('edit-event-register-url').value = event.registration_url || '';
         
+        // Populate max_participants
+        const maxParticipantsInput = document.getElementById('edit-event-max-participants');
+        const unlimitedCheckbox = document.getElementById('edit-event-unlimited');
+        if (event.max_participants) {
+            maxParticipantsInput.value = event.max_participants;
+            maxParticipantsInput.disabled = false;
+            unlimitedCheckbox.checked = false;
+        } else {
+            maxParticipantsInput.value = '';
+            maxParticipantsInput.disabled = true;
+            unlimitedCheckbox.checked = true;
+        }
 
         
         // Show modal with proper class and styling (same as user modals)
@@ -237,12 +260,18 @@ async function showEditEventModal(eventId) {
 async function handleAddEvent(form) {
     try {
         const formData = new FormData(form);
+        
+        // Get max_participants - convert to number or null
+        let maxParticipants = formData.get('max_participants');
+        maxParticipants = maxParticipants && maxParticipants.trim() !== '' ? parseInt(maxParticipants) : null;
+        
         const eventData = {
             title: formData.get('title'),
             description: formData.get('description'),
             category: formData.get('category'),
             image_url: formData.get('image_url'),
             registration_url: formData.get('registration_url'),
+            max_participants: maxParticipants,  // null = unlimited
             badges: []
         };
         
@@ -252,13 +281,16 @@ async function handleAddEvent(form) {
         }
         
         // Create event via backend API
-        const response = await makeAuthenticatedRequest(API_ENDPOINTS.events, {
+        console.log('📤 Creating event:', eventData);
+        const response = await makeAuthenticatedRequest(API_ENDPOINTS.events.create, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(eventData)
         });
+        
+        console.log('✅ Event created response:', response);
         
         if (response) {
             addNotification('Event created successfully', 'success');
@@ -276,23 +308,32 @@ async function handleEditEvent(form) {
     try {
         const formData = new FormData(form);
         const eventId = formData.get('id');
+        
+        // Get max_participants - convert to number or null
+        let maxParticipants = formData.get('max_participants');
+        maxParticipants = maxParticipants && maxParticipants.trim() !== '' ? parseInt(maxParticipants) : null;
+        
         const eventData = {
             title: formData.get('title'),
             description: formData.get('description'),
             category: formData.get('category'),
             image_url: formData.get('image_url'),
             registration_url: formData.get('registration_url'),
+            max_participants: maxParticipants,  // null = unlimited
             badges: []
         };
         
         // Update event via backend API
-        const response = await makeAuthenticatedRequest(`${API_ENDPOINTS.events}/${eventId}`, {
+        console.log('📤 Updating event:', eventId, eventData);
+        const response = await makeAuthenticatedRequest(`${API_ENDPOINTS.events.update}/${eventId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(eventData)
         });
+        
+        console.log('✅ Event updated response:', response);
         
         if (response) {
             addNotification('Event updated successfully', 'success');
@@ -311,9 +352,12 @@ async function deleteEvent(eventId) {
     }
     
     try {
-        const response = await makeAuthenticatedRequest(`${API_ENDPOINTS.events}/${eventId}`, {
+        console.log('🗑️ Deleting event:', eventId);
+        const response = await makeAuthenticatedRequest(`${API_ENDPOINTS.events.delete}/${eventId}`, {
             method: 'DELETE'
         });
+        
+        console.log('✅ Event deleted response:', response);
         
         if (response) {
             addNotification('Event deleted successfully', 'success');
@@ -332,6 +376,22 @@ function cleanup() {
     }
     allEventsCache = [];
 }
+
+// Global wrapper for form onsubmit (called from HTML)
+window.handleAddEventSubmit = function(event) {
+    event.preventDefault();
+    console.log('🔥 handleAddEventSubmit called via onsubmit');
+    handleAddEvent(event.target);
+    return false; // Extra safety to prevent form submission
+};
+
+window.handleEditEventSubmit = function(event) {
+    event.preventDefault();
+    console.log('🔥 handleEditEventSubmit called via onsubmit');
+    const form = event.target;
+    handleEditEvent(form);
+    return false; // Extra safety to prevent form submission
+};
 
 // Export functions
 export {

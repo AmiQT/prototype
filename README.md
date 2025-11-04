@@ -7,7 +7,7 @@ End-to-end platform for UTHM student talent profiling that ships a Python FastAP
 ## Highlights
 - Unified talent profiling experience across mobile, web, and backend services.
 - Supabase authentication, PostgreSQL data layer, and Cloudinary media pipeline.
-- Agentic AI assistant with tool calling, conversation memory, and Gemini/OpenRouter integration.
+- **Agentic AI assistant with Bahasa Melayu as default response language** - Natural NLP for Malaysian users with tool calling, conversation memory, and Gemini integration.
 - Rich analytics dashboards, showcase management, and student achievements tracking.
 - Comprehensive docs for setup, migration, deployment, and troubleshooting.
 
@@ -53,7 +53,7 @@ Agentic AI layer (backend/app/ai_assistant)
 - Modern FastAPI project with routers for auth, profiles, events, showcase, analytics, media, and AI assistant (`backend/app/routers`).
 - SQLAlchemy ORM with Alembic migrations (`backend/migrations`) targeting Supabase PostgreSQL.
 - Supabase JWT verification (`backend/app/auth/supabase_auth.py`) and Cloudinary integration for media uploads.
-- Agentic AI assistant (`backend/app/ai_assistant/`) featuring conversation memory, response variation, tool execution, and Supabase bridging.
+- **Agentic AI assistant (`backend/app/ai_assistant/`) with Bahasa Melayu default responses** - Natural language processing for Malaysian users with conversation memory, response variation, tool execution, and Supabase bridging. See `docs/development/AI_BAHASA_MELAYU_DEFAULT.md` for details.
 - Health probes (`/` and `/health`), and test endpoints for media uploads.
 - Dependencies defined in `backend/requirements.txt`; run with Python 3.11+.
 
@@ -113,6 +113,8 @@ Keep `.env` files untracked and rotate credentials regularly.
 - `docs/`:
   - `backend/` (Cloudinary setup, database reset guide)
   - `development/` (architecture, performance, debugging, agentic AI upgrade playbooks)
+    - **`AI_BAHASA_MELAYU_DEFAULT.md`**: Complete guide for AI chatbot Bahasa Melayu implementation
+    - **`AI_MALAY_QUICK_REFERENCE.md`**: Quick reference for developers working with Malay AI responses
   - `fixes/`, `setup/`, `status/` (historical notes, migration logs, roadmap)
   - `UPGRADE_AGENTIC_AI_FEATURES.md` for the full AI assistant upgrade narrative
 

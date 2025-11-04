@@ -39,11 +39,17 @@ class AdminDatabaseAssistant:
         log.info("🔍 ADMIN DEBUG - Email: %s", current_user.get("email") if current_user else "None")
         log.info("🔍 ADMIN DEBUG - Role: %s", current_user.get("role") if current_user else "None")
         
-        # TEMPORARY: Allow all users for testing (remove later!)
+        # Production: enforce admin-only access. Do NOT allow non-admin users to run admin queries.
         if not self.is_admin_user(current_user):
             log.warning("❌ ADMIN ACCESS DENIED - User not recognized as admin")
-            log.info("🔧 TEMPORARY: Allowing access for testing...")
-            # return None  # Commented out for testing
+            # Return a structured AICommandResponse indicating permission denied
+            return schemas.AICommandResponse(
+                success=False,
+                message=("Access denied: You must be an admin to run this command. "
+                         "If you believe this is an error, contact the system administrator."),
+                source=schemas.AISource.MANUAL,
+                data={"admin_query": True, "permission": "denied"}
+            )
             
         log.info("🔐 ADMIN DATABASE QUERY: %s", command)
         

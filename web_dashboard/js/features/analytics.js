@@ -108,19 +108,31 @@ const fallbackDataFetcher = {
 };
 
 const fallbackChartManager = {
+    chartInstances: {},  // Store chart instances
     async createChart(canvasId, config) {
         try {
             const canvas = document.getElementById(canvasId);
             if (canvas) {
+                // Destroy existing chart if it exists
+                if (this.chartInstances[canvasId]) {
+                    console.log(`🗑️ Destroying existing chart: ${canvasId}`);
+                    this.chartInstances[canvasId].destroy();
+                    delete this.chartInstances[canvasId];
+                }
+                
                 const ctx = canvas.getContext('2d');
                 // Check if Chart.js is available
                 if (typeof Chart !== 'undefined') {
-                    return new Chart(ctx, config);
+                    const chart = new Chart(ctx, config);
+                    this.chartInstances[canvasId] = chart;  // Store instance
+                    return chart;
                 } else {
                     console.warn('Chart.js not available, trying to import...');
                     // Try to import Chart.js dynamically
                     const { Chart } = await import('https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js');
-                    return new Chart(ctx, config);
+                    const chart = new Chart(ctx, config);
+                    this.chartInstances[canvasId] = chart;  // Store instance
+                    return chart;
                 }
             }
             return null;

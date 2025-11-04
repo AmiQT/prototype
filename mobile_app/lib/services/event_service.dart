@@ -3,7 +3,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/event_model.dart';
+import '../models/event_registration_model.dart';
+import '../models/profile_model.dart';
 import 'auto_notification_service.dart';
 import '../config/supabase_config.dart';
 import '../config/backend_config.dart';
@@ -672,4 +675,319 @@ class EventService {
       return <EventModel>[];
     });
   }
+
+  // ==================== EVENT REGISTRATION METHODS ====================
+
+  /// Register user for event with auto-filled profile data (1-click registration)
+  Future<EventRegistrationModel?> registerForEvent({
+    required String eventId,
+    required ProfileModel userProfile,
+  }) async {
+    try {
+      print('==========================================');
+      print('🔵 EventService: REGISTER FOR EVENT CALLED');
+      print('Event ID: $eventId');
+      print('User Profile: ${userProfile.fullName}');
+      print('==========================================');
+      debugPrint('🔵 EventService: Starting registration for event $eventId');
+      
+      final userId = SupabaseConfig.auth.currentUser?.id;
+      if (userId == null) {
+        print('❌ EventService: NO AUTHENTICATED USER!');
+        debugPrint('❌ EventService: No authenticated user');
+        return null;
+      }
+
+      print('🔵 EventService: User ID: $userId');
+      debugPrint('🔵 EventService: User ID: $userId');
+
+      // Check if already registered
+      print('🔵 Step 1: Checking if already registered...');
+      debugPrint('🔵 EventService: Checking if already registered...');
+      final alreadyRegistered = await isRegisteredForEvent(eventId, userId);
+      print('🔵 Already registered? $alreadyRegistered');
+      if (alreadyRegistered) {
+        print('⚠️ User already registered, stopping');
+        debugPrint('⚠️ EventService: User already registered for event $eventId');
+        return null;
+      }
+
+      print('✅ Step 1 PASSED: User not registered yet');
+      debugPrint('🔵 EventService: User not registered yet, proceeding...');
+
+      // Get event to check capacity (OPTIONAL - skip if event doesn't have registration fields yet)
+      print('🔵 Step 2: Getting event details...');
+      final event = await getEventById(eventId);
+      if (event == null) {
+        print('⚠️ Event not found, but continuing');
+        debugPrint('⚠️ EventService: Event $eventId not found, but continuing with registration');
+        // Continue anyway - event exists in database
+      } else {
+        print('✅ Step 2 PASSED: Event found - ${event.title}');
+        debugPrint('🔵 EventService: Event found: ${event.title}');
+        
+        // Only check canRegister if event has registration fields
+        if (event.registrationOpen != null && !event.canRegister) {
+          print('❌ Cannot register - ${event.registrationStatus}');
+          debugPrint('❌ EventService: Cannot register - ${event.registrationStatus}');
+          return null;
+        }
+        print('✅ Registration is allowed');
+      }
+
+      // Auto-fill registration data from profile
+      print('🔵 Step 3: Creating registration data...');
+      debugPrint('🔵 EventService: Creating registration with auto-filled data...');
+      final registration = EventRegistrationModel(
+        eventId: eventId,
+        userId: userId,
+        registrationDate: DateTime.now(),
+        attendanceStatus: 'pending',
+        fullName: userProfile.fullName,
+        studentId: userProfile.academicInfo?.studentId ?? '',
+        phone: userProfile.phoneNumber ?? '',
+        email: SupabaseConfig.auth.currentUser?.email ?? '',
+        program: userProfile.academicInfo?.program ?? '',
+        department: userProfile.academicInfo?.department ?? '',
+        faculty: userProfile.academicInfo?.faculty ?? '',
+        relevantSkills: userProfile.skills ?? [],
+      );
+
+      print('✅ Step 3 PASSED: Registration object created');
+      print('🔵 Step 4: Preparing data for database insert...');
+      debugPrint('🔵 EventService: Registration data prepared');
+      final dataToInsert = registration.toJsonForInsert();
+      print('Data to insert: $dataToInsert');
+      debugPrint('🔵 EventService: Data to insert: $dataToInsert');
+      
+      print('🔵 Step 5: Inserting into event_participations table...');
+      debugPrint('🔵 EventService: Inserting into database...');
+
+      // Insert into database
+      final response = await SupabaseConfig.client
+          .from('event_participations')
+          .insert(dataToInsert)
+          .select()
+          .single();
+
+      print('✅✅✅ SUCCESS! Registration inserted into database!');
+      print('Response: $response');
+      debugPrint('✅ EventService: Successfully registered for event $eventId');
+      debugPrint('🔵 EventService: Response: $response');
+
+      // Update current participants count in events table (only if event has the field)
+      if (event != null && event.maxParticipants != null) {
+        print('🔵 Step 6: Updating participant count...');
+        debugPrint('🔵 EventService: Updating participant count...');
+        await _incrementParticipantCount(eventId);
+      }
+
+      // Send confirmation notification
+      print('🔵 Step 7: Sending notification...');
+      debugPrint('🔵 EventService: Sending confirmation notification...');
+      await AutoNotificationService.sendEventRegistrationConfirmation(
+        eventTitle: event?.title ?? 'Event',
+        eventDate: event?.eventDate ?? DateTime.now(),
+      );
+
+      print('✅✅✅ ALL STEPS COMPLETED SUCCESSFULLY!');
+      return EventRegistrationModel.fromJson(response);
+    } on PostgrestException catch (e) {
+      print('❌❌❌ POSTGREST EXCEPTION!');
+      print('Code: ${e.code}');
+      print('Message: ${e.message}');
+      print('Details: ${e.details}');
+      print('Hint: ${e.hint}');
+      debugPrint('❌ EventService: PostgrestException - Code: ${e.code}, Message: ${e.message}');
+      debugPrint('❌ EventService: Details: ${e.details}');
+      debugPrint('❌ EventService: Hint: ${e.hint}');
+      return null;
+    } catch (e, stackTrace) {
+      print('❌❌❌ GENERAL ERROR!');
+      print('Error: $e');
+      print('Stack trace: $stackTrace');
+      debugPrint('❌ EventService: Error registering for event: $e');
+      debugPrint('❌ EventService: Stack trace: $stackTrace');
+      return null;
+    }
+  }
+
+  /// Check if user is registered for an event
+  Future<bool> isRegisteredForEvent(String eventId, String userId) async {
+    try {
+      final response = await SupabaseConfig.client
+          .from('event_participations')
+          .select('id')
+          .eq('event_id', eventId)
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      return response != null;
+    } catch (e) {
+      debugPrint('❌ EventService: Error checking registration: $e');
+      return false;
+    }
+  }
+
+  /// Get all events the user has registered for
+  Future<List<EventRegistrationModel>> getRegisteredEvents(String userId) async {
+    try {
+      final response = await SupabaseConfig.client
+          .from('event_participations')
+          .select()
+          .eq('user_id', userId)
+          .order('registration_date', ascending: false);
+
+      return (response as List)
+          .map((json) => EventRegistrationModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      debugPrint('❌ EventService: Error fetching registered events: $e');
+      return [];
+    }
+  }
+
+  /// Get registration details for a specific event
+  Future<EventRegistrationModel?> getRegistrationDetails(
+      String eventId, String userId) async {
+    try {
+      final response = await SupabaseConfig.client
+          .from('event_participations')
+          .select()
+          .eq('event_id', eventId)
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      if (response == null) return null;
+
+      return EventRegistrationModel.fromJson(response);
+    } catch (e) {
+      debugPrint('❌ EventService: Error fetching registration details: $e');
+      return null;
+    }
+  }
+
+  /// Cancel event registration
+  Future<bool> cancelRegistration(String eventId, String userId) async {
+    try {
+      await SupabaseConfig.client
+          .from('event_participations')
+          .delete()
+          .eq('event_id', eventId)
+          .eq('user_id', userId);
+
+      debugPrint('✅ EventService: Successfully cancelled registration');
+
+      // Decrement participant count
+      await _decrementParticipantCount(eventId);
+
+      return true;
+    } catch (e) {
+      debugPrint('❌ EventService: Error cancelling registration: $e');
+      return false;
+    }
+  }
+
+  /// Submit feedback for attended event
+  Future<bool> submitEventFeedback({
+    required String eventId,
+    required String userId,
+    required double rating,
+    String? comment,
+  }) async {
+    try {
+      await SupabaseConfig.client
+          .from('event_participations')
+          .update({
+            'feedback_rating': rating,
+            'feedback_comment': comment,
+          })
+          .eq('event_id', eventId)
+          .eq('user_id', userId);
+
+      debugPrint('✅ EventService: Successfully submitted feedback');
+      return true;
+    } catch (e) {
+      debugPrint('❌ EventService: Error submitting feedback: $e');
+      return false;
+    }
+  }
+
+  /// Update attendance status (for organizers/admins)
+  Future<bool> updateAttendanceStatus({
+    required String eventId,
+    required String userId,
+    required String status, // 'confirmed', 'attended', 'cancelled'
+  }) async {
+    try {
+      await SupabaseConfig.client
+          .from('event_participations')
+          .update({'attendance_status': status})
+          .eq('event_id', eventId)
+          .eq('user_id', userId);
+
+      debugPrint('✅ EventService: Successfully updated attendance status');
+      return true;
+    } catch (e) {
+      debugPrint('❌ EventService: Error updating attendance status: $e');
+      return false;
+    }
+  }
+
+  /// Get participant count for an event
+  Future<int> getParticipantCount(String eventId) async {
+    try {
+      final response = await SupabaseConfig.client
+          .from('event_participations')
+          .select('id')
+          .eq('event_id', eventId);
+
+      return (response as List).length;
+    } catch (e) {
+      debugPrint('❌ EventService: Error getting participant count: $e');
+      return 0;
+    }
+  }
+
+  /// Helper: Increment participant count in events table
+  Future<void> _incrementParticipantCount(String eventId) async {
+    try {
+      // Get current count
+      final event = await getEventById(eventId);
+      if (event == null) return;
+
+      final newCount = (event.currentParticipants ?? 0) + 1;
+
+      await SupabaseConfig.client
+          .from('events')
+          .update({'current_participants': newCount})
+          .eq('id', eventId);
+
+      debugPrint('✅ EventService: Incremented participant count to $newCount');
+    } catch (e) {
+      debugPrint('❌ EventService: Error incrementing participant count: $e');
+    }
+  }
+
+  /// Helper: Decrement participant count in events table
+  Future<void> _decrementParticipantCount(String eventId) async {
+    try {
+      // Get current count
+      final event = await getEventById(eventId);
+      if (event == null) return;
+
+      final newCount = (event.currentParticipants ?? 1) - 1;
+      final finalCount = newCount < 0 ? 0 : newCount;
+
+      await SupabaseConfig.client
+          .from('events')
+          .update({'current_participants': finalCount})
+          .eq('id', eventId);
+
+      debugPrint('✅ EventService: Decremented participant count to $finalCount');
+    } catch (e) {
+      debugPrint('❌ EventService: Error decrementing participant count: $e');
+    }
+  }
+
 }

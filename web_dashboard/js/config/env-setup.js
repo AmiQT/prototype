@@ -3,14 +3,26 @@
  * This script sets up environment variables that can be accessed by other modules
  */
 
-// Set backend URL for local development (fallback to null if not running)
-const LOCAL_BACKEND_URL = 'http://127.0.0.1:8000';
+// Auto-detect environment based on hostname
+const isLocalhost = window.location.hostname === 'localhost' || 
+                    window.location.hostname === '127.0.0.1' ||
+                    window.location.hostname === '';
 
-window.BACKEND_URL = LOCAL_BACKEND_URL;
+// Set backend URL - auto-switch between local and production
+const LOCAL_BACKEND_URL = 'http://127.0.0.1:8000';
+const PRODUCTION_BACKEND_URL = 'https://your-backend-url.railway.app'; // ⚠️ UPDATE INI lepas deploy backend
+
+window.BACKEND_URL = isLocalhost ? LOCAL_BACKEND_URL : PRODUCTION_BACKEND_URL;
 
 // You can also set other environment variables here
-window.APP_ENV = window.APP_ENV || 'production';
+window.APP_ENV = window.APP_ENV || (isLocalhost ? 'development' : 'production');
 window.APP_VERSION = window.APP_VERSION || '1.0.0';
+
+// Log configuration in development
+if (isLocalhost) {
+  console.log('🔧 Environment:', window.APP_ENV);
+  console.log('🔗 Backend URL:', window.BACKEND_URL);
+}
 
 // ---------------------------------------------------------------------------
 // Console logging controls

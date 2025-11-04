@@ -23,32 +23,32 @@ class ClarificationSystem:
     def __init__(self):
         self.clarification_templates = {
             'missing_department': {
-                'question': "You asked about students, but didn't specify a department. Would you like to see students from all departments or a specific one?",
-                'suggestion': "Try adding a department like 'Computer Science' or 'FSKTM' to your query."
+                'question': "Awak tanya pasal pelajar, tapi tak specify jabatan. Awak nak tengok pelajar dari semua jabatan atau jabatan tertentu?",
+                'suggestion': "Cuba tambah jabatan macam 'Sains Komputer' atau 'FSKTM' dalam query awak."
             },
             'missing_limit': {
-                'question': "You asked to list students. How many would you like to see? (e.g., top 5, top 10)",
-                'suggestion': "Add a number like 'top 5' or 'first 10' to your query."
+                'question': "Awak nak list pelajar. Berapa orang awak nak tengok? (contoh: 5 orang, 10 orang pertama)",
+                'suggestion': "Tambah nombor macam 'top 5' atau '10 orang pertama' dalam query awak."
             },
             'missing_cgpa_threshold': {
-                'question': "You asked for students with high CGPA. What CGPA threshold would you like? (e.g., above 3.5, above 3.0)",
-                'suggestion': "Add a CGPA requirement like 'CGPA above 3.5' or 'with CGPA over 3.0'."
+                'question': "Awak nak pelajar dengan CGPA tinggi. CGPA berapa awak nak? (contoh: atas 3.5, lebih dari 3.0)",
+                'suggestion': "Tambah syarat CGPA macam 'CGPA atas 3.5' atau 'dengan CGPA lebih 3.0'."
             },
             'missing_date_range': {
-                'question': "You asked about events. Would you like to see upcoming events, past events, or events in a specific date range?",
-                'suggestion': "Specify a date like 'events this week' or 'events in March'."
+                'question': "Awak tanya pasal acara. Awak nak tengok acara akan datang, acara lepas, atau acara dalam tempoh tertentu?",
+                'suggestion': "Specify tarikh macam 'acara minggu ni' atau 'acara bulan Mac'."
             },
             'missing_target_audience': {
-                'question': "You want to send a message. Who should receive it - all students, specific students, or event participants?",
-                'suggestion': "Specify the target like 'to all Computer Science students' or 'to event participants'."
+                'question': "Awak nak hantar mesej. Siapa yang patut terima - semua pelajar, pelajar tertentu, atau peserta acara?",
+                'suggestion': "Specify target macam 'kepada semua pelajar Sains Komputer' atau 'kepada peserta acara'."
             },
             'vague_request': {
-                'question': "I'm not sure exactly what you need. Could you clarify your request?",
-                'suggestion': "Be more specific about what information you need or what action you want me to take."
+                'question': "Saya tak pasti apa yang awak perlukan. Boleh awak terangkan lagi?",
+                'suggestion': "Bagi lebih spesifik tentang maklumat yang awak nak atau tindakan yang awak mahu saya buat."
             },
             'ambiguous_reference': {
-                'question': "You mentioned 'them' or 'those', but I'm not sure who you're referring to. Could you clarify?",
-                'suggestion': "Be specific about who or what you're referring to."
+                'question': "Awak sebut 'mereka' atau 'itu', tapi saya tak pasti awak rujuk siapa. Boleh awak terangkan?",
+                'suggestion': "Bagi spesifik tentang siapa atau apa yang awak maksudkan."
             }
         }
         

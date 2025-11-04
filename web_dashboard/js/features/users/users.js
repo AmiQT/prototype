@@ -30,6 +30,24 @@ function setupUserFilters() {
     }
 }
 
+// Generate a random secure password
+function generatePassword() {
+    const length = 12;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    let password = "";
+    for (let i = 0; i < length; i++) {
+        password += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    const passwordInput = document.getElementById('add-user-password');
+    if (passwordInput) {
+        passwordInput.value = password;
+        addNotification('Password generated successfully', 'success');
+    }
+}
+
+// Make generatePassword available globally
+window.generatePassword = generatePassword;
+
 async function loadUsersTable() {
     const tableBody = document.querySelector('#users-table-body');
     if (!tableBody) {
@@ -156,14 +174,19 @@ function applyUserFiltersAndRender() {
 
 function renderUsersTable(users) {
     const tableBody = document.querySelector('#users-table-body');
-    if (!tableBody) return;
+    if (!tableBody) {
+        console.error('❌ Users table body element not found!');
+        return;
+    }
+    
+    console.log(`📋 Rendering ${users.length} users to table`);
     
     if (users.length === 0) {
         tableBody.innerHTML = '<tr><td colspan="6">No users found</td></tr>';
         return;
     }
-    
-    tableBody.innerHTML = users.map(user => `
+
+    const tableHTML = users.map(user => `
         <tr>
             <td>
                 <button class="btn btn-sm btn-secondary" onclick="showEditUserModal('${user.id}')">
@@ -180,6 +203,9 @@ function renderUsersTable(users) {
             <td><span class="badge badge-${getStatusBadgeClass(user.status)}">${user.status || 'active'}</span></td>
         </tr>
     `).join('');
+    
+    tableBody.innerHTML = tableHTML;
+    console.log('✅ Users table rendered successfully');
 }
 
 function getRoleBadgeClass(role) {
@@ -313,14 +339,17 @@ async function showEditUserModal(userId) {
 }
 
 async function handleAddUser(form) {
+    // Define userData outside try block so it's accessible in catch
+    let userData = null;
+    
     try {
         const formData = new FormData(form);
-        const userData = {
+        userData = {
             name: formData.get('name'),
             email: formData.get('email'),
             password: formData.get('password'),
             role: formData.get('role'),
-            department: formData.get('department'),
+            department: formData.get('course') || formData.get('department'), // Support both field names
             matrix_id: formData.get('matrixId')
         };
         
@@ -329,72 +358,61 @@ async function handleAddUser(form) {
             throw new Error('Please fill in all required fields');
         }
         
-        // ✅ FIX: SUPABASE DIRECT - Create user directly in Supabase
-        console.log('✅ Creating user directly in Supabase:', userData);
+        // ✅ FIX: Use Backend API to create user with auth
+        console.log('✅ Creating user via backend API:', userData);
         
-        const { supabase } = await import('../../config/supabase-config.js');
+        // Call backend API to create user (backend has service role access)
+        const result = await makeAuthenticatedRequest(
+            `${API_ENDPOINTS.users.create}/admin/create`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: userData.email,
+                    password: userData.password,
+                    name: userData.name,
+                    role: userData.role,
+                    department: userData.department,
+                    student_id: userData.matrix_id,
+                    is_active: true
+                })
+            }
+        );
         
-        // Create auth user first
-        const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-            email: userData.email,
-            password: userData.password,
-            email_confirm: true
-        });
+        console.log('✅ User created successfully:', result);
         
-        if (authError) throw authError;
+        // Refresh the table to show new user
+        await loadUsersTable();
         
-        // Insert user data into users table
-        const { data: newUser, error: userError } = await supabase
-            .from('users')
-            .insert({
-                id: authUser.user.id,
-                email: userData.email,
-                name: userData.name,
-                role: userData.role,
-                department: userData.department,
-                student_id: userData.matrix_id,
-                is_active: true,
-                profile_completed: false,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            })
-            .select()
-            .single();
-            
-        if (userError) throw userError;
-        
-        // Insert profile data if needed
-        const { error: profileError } = await supabase
-            .from('profiles')
-            .upsert({
-                user_id: authUser.user.id,
-                full_name: userData.name,
-                department: userData.department,
-                student_id: userData.matrix_id,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            });
-            
-        if (profileError) {
-            console.warn('Profile creation failed (table may not exist):', profileError);
-        }
-        
-        // Add to local cache for immediate display
-        allUsersCache.push(newUser);
-        
-        addNotification('User created successfully in Supabase', 'success');
+        addNotification('User created successfully!', 'success');
         closeModal('add-user-modal');
         form.reset();
-        await loadUsersTable(); // Refresh the table
         
-        // ✅ FIX: Use professional notification instead of alert()
+        // Show credentials notification
         setTimeout(() => {
             addNotification(`New user created! Email: ${userData.email} | Password: ${userData.password}`, 'success', 8000);
         }, 500);
         
     } catch (error) {
         console.error('Error creating user:', error);
-        addNotification(error.message || 'Error creating user', 'error');
+        
+        // Extract user-friendly error message
+        let errorMessage = 'Error creating user';
+        if (error.message) {
+            // Check for specific error patterns
+            const userEmail = userData?.email || 'this email';
+            if (error.message.includes('already exists')) {
+                errorMessage = `User ${userEmail} already exists. Please use a different email.`;
+            } else if (error.message.includes('already been registered')) {
+                errorMessage = `Email ${userEmail} is already registered. Please use a different email.`;
+            } else {
+                errorMessage = error.message;
+            }
+        }
+        
+        addNotification(errorMessage, 'error', 5000);
     }
 }
 
@@ -480,28 +498,25 @@ async function handleEditUser(form) {
 }
 
 async function deleteUser(userId) {
-    if (!confirm('Are you sure you want to disable this user? Their access will be revoked.')) {
+    if (!confirm('Are you sure you want to delete this user permanently? This action cannot be undone.')) {
         return;
     }
     
     try {
-        // Delete/disable user in Supabase via backend API
+        // Delete user via backend API (deletes from both Supabase Auth and database)
         console.log('Deleting user from Supabase via backend API for ID:', userId);
         
-        const response = await makeAuthenticatedRequest(
+        const result = await makeAuthenticatedRequest(
             `${API_ENDPOINTS.users.delete}/${userId}`,
             { method: 'DELETE' }
         );
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || `Failed to delete user: ${response.status}`);
-        }
+        console.log('✅ User deleted successfully:', result);
 
         // Remove from local cache
         allUsersCache = allUsersCache.filter(user => user.id !== userId);
         
-        addNotification('User has been disabled successfully in Supabase', 'success');
+        addNotification('User deleted successfully', 'success');
         await loadUsersTable(); // Refresh the table
     } catch (error) {
         console.error('Error deleting user:', error);

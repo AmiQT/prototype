@@ -146,21 +146,97 @@ class FSKTMDataService {
       context.writeln('- ${dept['name']} (${dept['name_en']})');
     }
 
-    // Add key staff (first 10 for context limits)
-    context.writeln('KEY STAFF MEMBERS (Sample):');
+    // Add ALL staff members (not just first 10) for better AI search
+    context.writeln('STAFF MEMBERS:');
     final staff = staffData['staff'] as List;
-    for (int i = 0; i < staff.length && i < 10; i++) {
-      final member = staff[i];
-      context.writeln(
-          '${member['name']} - ${member['title']} (${member['department']})');
+    for (var member in staff) {
+      context.writeln('${member['name']} - ${member['title']}');
+      context.writeln('Department: ${member['department']}');
       context.writeln('Email: ${member['email']}');
       if (member['specialization'] != null) {
         context.writeln('Expertise: ${member['specialization']}');
       }
       context.writeln('---');
     }
-    context.writeln(
-        '[Note: ${staff.length} total staff members available for search]');
+    context.writeln('[Total: ${staff.length} staff members]');
+
+    return context.toString();
+  }
+
+  /// NEW: Generate smart context dengan staff search
+  static Future<String> getFSKTMContextForAIWithQuery(String query) async {
+    final staffData = await loadStaffData();
+    final knowledgeBase = await loadKnowledgeBase();
+
+    final StringBuffer context = StringBuffer();
+
+    // Add quick answers
+    if (knowledgeBase['quick_answers'] != null) {
+      context.writeln('=== FSKTM QUICK ANSWERS ===');
+      final quickAnswers = knowledgeBase['quick_answers'];
+      quickAnswers.forEach((key, value) {
+        context.writeln('$key: $value');
+      });
+      context.writeln('');
+    }
+
+    // Add faculty identity
+    if (knowledgeBase['faculty_identity'] != null) {
+      final identity = knowledgeBase['faculty_identity'];
+      context.writeln('=== FACULTY IDENTITY ===');
+      context.writeln('Name: ${identity['official_name']['english']}');
+      context.writeln('University: ${identity['university']}');
+      context.writeln('');
+    }
+
+    // Smart staff search - detect nama dalam query
+    final staff = staffData['staff'] as List;
+    final lowerQuery = query.toLowerCase();
+    
+    // Search for staff mentioned in query
+    final relevantStaff = staff.where((member) {
+      final name = member['name'].toString().toLowerCase();
+      final nameParts = name.split(' ');
+      
+      // Check if any part of name is in query
+      return nameParts.any((part) => 
+        part.length > 2 && lowerQuery.contains(part)
+      );
+    }).toList();
+
+    // Add staff directory
+    final facultyInfo = staffData['faculty_info'];
+    context.writeln('=== STAFF DIRECTORY ===');
+    context.writeln('Total Staff: ${facultyInfo['total_staff']}');
+    
+    final departments = staffData['departments'] as List;
+    context.writeln('DEPARTMENTS:');
+    for (var dept in departments) {
+      context.writeln('- ${dept['name']} (${dept['name_en']})');
+    }
+    context.writeln('');
+
+    if (relevantStaff.isNotEmpty) {
+      // User mentioned specific staff - show them
+      context.writeln('RELEVANT STAFF MEMBERS:');
+      for (var member in relevantStaff) {
+        context.writeln('${member['name']} - ${member['title']}');
+        context.writeln('Department: ${member['department']}');
+        context.writeln('Email: ${member['email']}');
+        if (member['specialization'] != null) {
+          context.writeln('Expertise: ${member['specialization']}');
+        }
+        context.writeln('---');
+      }
+    } else {
+      // No specific staff mentioned - show summary list
+      context.writeln('STAFF MEMBERS (${staff.length} total):');
+      for (var member in staff) {
+        context.writeln('${member['name']} - ${member['title']} (${member['department']})');
+      }
+      context.writeln('');
+      context.writeln('[Note: For specific staff details, mention their name in your question]');
+    }
 
     return context.toString();
   }

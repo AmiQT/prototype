@@ -134,8 +134,8 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
       if (_isFSKTMQuestion(content)) {
         // Route to FSKTM local data + Gemini AI
 
-        // Get FSKTM context from local data
-        final fsktmContext = await FSKTMDataService.getFSKTMContextForAI();
+        // Get FSKTM context with smart search based on query
+        final fsktmContext = await FSKTMDataService.getFSKTMContextForAIWithQuery(content);
 
         // Create enhanced prompt with FSKTM context
         final enhancedPrompt = '''

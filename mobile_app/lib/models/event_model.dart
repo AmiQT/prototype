@@ -12,6 +12,18 @@ class EventModel {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  // Registration fields
+  final DateTime? eventDate;
+  final String? location;
+  final String? venue;
+  final int? maxParticipants;
+  final int? currentParticipants;
+  final DateTime? registrationDeadline;
+  final bool? registrationOpen;
+  final List<String>? requirements;
+  final List<String>? skillsGained;
+  final List<String>? targetAudience;
+
   EventModel({
     required this.id,
     required this.title,
@@ -22,23 +34,107 @@ class EventModel {
     required this.registerUrl,
     required this.createdAt,
     required this.updatedAt,
+    this.eventDate,
+    this.location,
+    this.venue,
+    this.maxParticipants,
+    this.currentParticipants,
+    this.registrationDeadline,
+    this.registrationOpen,
+    this.requirements,
+    this.skillsGained,
+    this.targetAudience,
   });
 
+  // Helper methods for registration
+  bool get canRegister {
+    if (registrationOpen == false) return false;
+    if (registrationDeadline != null &&
+        DateTime.now().isAfter(registrationDeadline!)) return false;
+    if (maxParticipants != null &&
+        currentParticipants != null &&
+        currentParticipants! >= maxParticipants!) return false;
+    return true;
+  }
+
+  int get spotsLeft {
+    if (maxParticipants == null || currentParticipants == null) return -1;
+    return maxParticipants! - currentParticipants!;
+  }
+
+  String get registrationStatus {
+    if (registrationOpen == false) return 'Registration Closed';
+    if (registrationDeadline != null &&
+        DateTime.now().isAfter(registrationDeadline!)) {
+      return 'Registration Deadline Passed';
+    }
+    if (maxParticipants != null &&
+        currentParticipants != null &&
+        currentParticipants! >= maxParticipants!) {
+      return 'Event Full';
+    }
+    return 'Registration Open';
+  }
+
   factory EventModel.fromJson(Map<String, dynamic> json, {String? documentId}) {
+    DateTime? parseDateTime(dynamic value) {
+      if (value == null) return null;
+      if (value is String) {
+        try {
+          return DateTime.parse(value);
+        } catch (e) {
+          return null;
+        }
+      }
+      if (value is int) {
+        return DateTime.fromMillisecondsSinceEpoch(value);
+      }
+      return null;
+    }
+
     return EventModel(
       id: documentId ?? json['id'] ?? '',
       title: json['title'] ?? '',
       description: json['description'] ?? '',
-      imageUrl: json['imageUrl'] ?? '',
+      imageUrl: json['imageUrl'] ?? json['image_url'] ?? '',
       category: json['category'] ?? '',
       favoriteUserIds: List<String>.from(json['favoriteUserIds'] ?? []),
-      registerUrl: json['registerUrl'] ?? '',
+      registerUrl: json['registerUrl'] ?? json['register_url'] ?? '',
       createdAt: json['createdAt'] is String
           ? DateTime.parse(json['createdAt'])
-          : DateTime.fromMillisecondsSinceEpoch(json['createdAt'] ?? 0),
+          : (json['created_at'] is String
+              ? DateTime.parse(json['created_at'])
+              : DateTime.fromMillisecondsSinceEpoch(
+                  json['createdAt'] ?? json['created_at'] ?? 0)),
       updatedAt: json['updatedAt'] is String
           ? DateTime.parse(json['updatedAt'])
-          : DateTime.fromMillisecondsSinceEpoch(json['updatedAt'] ?? 0),
+          : (json['updated_at'] is String
+              ? DateTime.parse(json['updated_at'])
+              : DateTime.fromMillisecondsSinceEpoch(
+                  json['updatedAt'] ?? json['updated_at'] ?? 0)),
+      // Registration fields
+      eventDate: parseDateTime(json['eventDate'] ?? json['event_date']),
+      location: json['location'],
+      venue: json['venue'],
+      maxParticipants: json['maxParticipants'] ?? json['max_participants'],
+      currentParticipants:
+          json['currentParticipants'] ?? json['current_participants'],
+      registrationDeadline: parseDateTime(
+          json['registrationDeadline'] ?? json['registration_deadline']),
+      registrationOpen: json['registrationOpen'] ?? json['registration_open'],
+      requirements: json['requirements'] != null
+          ? List<String>.from(json['requirements'])
+          : null,
+      skillsGained: json['skillsGained'] != null
+          ? List<String>.from(json['skillsGained'])
+          : (json['skills_gained'] != null
+              ? List<String>.from(json['skills_gained'])
+              : null),
+      targetAudience: json['targetAudience'] != null
+          ? List<String>.from(json['targetAudience'])
+          : (json['target_audience'] != null
+              ? List<String>.from(json['target_audience'])
+              : null),
     );
   }
 
@@ -53,6 +149,17 @@ class EventModel {
       'registerUrl': registerUrl,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      // Registration fields
+      'eventDate': eventDate?.toIso8601String(),
+      'location': location,
+      'venue': venue,
+      'maxParticipants': maxParticipants,
+      'currentParticipants': currentParticipants,
+      'registrationDeadline': registrationDeadline?.toIso8601String(),
+      'registrationOpen': registrationOpen,
+      'requirements': requirements,
+      'skillsGained': skillsGained,
+      'targetAudience': targetAudience,
     };
   }
 
@@ -66,6 +173,16 @@ class EventModel {
     String? registerUrl,
     DateTime? createdAt,
     DateTime? updatedAt,
+    DateTime? eventDate,
+    String? location,
+    String? venue,
+    int? maxParticipants,
+    int? currentParticipants,
+    DateTime? registrationDeadline,
+    bool? registrationOpen,
+    List<String>? requirements,
+    List<String>? skillsGained,
+    List<String>? targetAudience,
   }) {
     return EventModel(
       id: id ?? this.id,
@@ -77,6 +194,16 @@ class EventModel {
       registerUrl: registerUrl ?? this.registerUrl,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      eventDate: eventDate ?? this.eventDate,
+      location: location ?? this.location,
+      venue: venue ?? this.venue,
+      maxParticipants: maxParticipants ?? this.maxParticipants,
+      currentParticipants: currentParticipants ?? this.currentParticipants,
+      registrationDeadline: registrationDeadline ?? this.registrationDeadline,
+      registrationOpen: registrationOpen ?? this.registrationOpen,
+      requirements: requirements ?? this.requirements,
+      skillsGained: skillsGained ?? this.skillsGained,
+      targetAudience: targetAudience ?? this.targetAudience,
     );
   }
 }

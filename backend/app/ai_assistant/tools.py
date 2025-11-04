@@ -215,7 +215,7 @@ AVAILABLE_TOOLS = [
                     "role": {
                         "type": "string",
                         "description": "Filter by user role",
-                        "enum": ["student", "staff", "admin"]
+                        "enum": ["student", "lecturer", "admin"]
                     },
                     "department": {
                         "type": "string",

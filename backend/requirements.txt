@@ -18,6 +18,9 @@ cloudinary>=1.36.0
 # HTTP client
 httpx>=0.25.0
 
+# Supabase client
+supabase>=2.23.0
+
 # AI/ML APIs
 google-generativeai>=0.8.0
 

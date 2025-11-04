@@ -508,6 +508,7 @@ async function initializeApp() {
     window.showAddUserModal = showAddUserModal;
     window.showEditUserModal = showEditUserModal;
     window.deleteUser = deleteUser;
+    window.loadUsersTable = loadUsersTable;
     window.showAddEventModal = showAddEventModal;
     window.showEditEventModal = showEditEventModal;
     window.deleteEvent = deleteEvent;

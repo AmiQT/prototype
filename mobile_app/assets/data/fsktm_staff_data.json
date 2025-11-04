@@ -4,7 +4,7 @@
     "name_en": "Faculty of Computer Science and Information Technology",
     "acronym": "FSKTM",
     "university": "Universiti Tun Hussein Onn Malaysia (UTHM)",
-    "total_staff": 103,
+    "total_staff": 104,
     "website": "https://community.uthm.edu.my/offices/info/28",
     "last_updated": "2024-12-19",
     "data_source": "AUTHENTIC - Scraped from UTHM Community Website using MCP Playwright"
@@ -659,6 +659,12 @@
       "title": "Pensyarah",
       "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
       "email": "zubaile@uthm.edu.my"
+    },
+    {
+      "name": "MOHD ZAINURI BIN SARINGAT",
+      "title": "Profesor Madya",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "zainuri@uthm.edu.my"
     }
   ]
 }
