@@ -10,7 +10,7 @@ const isLocalhost = window.location.hostname === 'localhost' ||
 
 // Set backend URL - auto-switch between local and production
 const LOCAL_BACKEND_URL = 'http://127.0.0.1:8000';
-const PRODUCTION_BACKEND_URL = 'https://your-backend-url.railway.app'; // ⚠️ UPDATE INI lepas deploy backend
+const PRODUCTION_BACKEND_URL = 'https://prototype-production-6284.up.railway.app'; // ✅ Railway backend URL
 
 window.BACKEND_URL = isLocalhost ? LOCAL_BACKEND_URL : PRODUCTION_BACKEND_URL;
 
