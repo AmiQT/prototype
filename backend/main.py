@@ -185,13 +185,13 @@ from app.routers import (
     auth,
     events,
     media,
+    ml_analytics,
     profiles_supabase,
     search,
     search_simple,
     showcase,
     student_analytics,
     sync,
-    test_endpoints,
     users,
 )
 
@@ -199,7 +199,6 @@ app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(profiles_supabase.router)  # Profile management with Supabase structure
 app.include_router(events.router)  # Events management
-app.include_router(test_endpoints.router)  # Test endpoints without auth
 app.include_router(sync.router)
 app.include_router(search.router)  # Advanced search capabilities
 app.include_router(search_simple.router)  # Simplified search for testing
@@ -207,6 +206,7 @@ app.include_router(student_analytics.router)  # Student-focused analytics
 app.include_router(media.router, prefix="/api/media")  # Media upload and management
 app.include_router(showcase.router)  # Showcase posts management
 app.include_router(ai_assistant.router)
+app.include_router(ml_analytics.router)  # ML analytics with student risk prediction
 
 # Additional routers will be added as we build them
 # from app.routers import media, analytics, sync

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Risk Analysis - Dashboard</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Dashboard Styles -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components/ml-risk-card.css">
+</head>
+<body>
+    <div class="container-fluid p-4">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h1>Student Risk Analysis</h1>
+                <p class="text-muted">AI-powered student performance prediction and recommendations</p>
+            </div>
+        </div>
+
+        <!-- Single Student Risk Card -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h4 class="mb-3">Student Risk Profile</h4>
+                <div id="student-risk-container"></div>
+            </div>
+            
+            <!-- Batch Analysis Panel -->
+            <div class="col-md-6">
+                <h4 class="mb-3">Batch Analysis</h4>
+                <div class="card">
+                    <div class="card-body">
+                        <form id="batch-predict-form">
+                            <div class="mb-3">
+                                <label for="student-ids" class="form-label">Student IDs (comma-separated)</label>
+                                <textarea 
+                                    class="form-control" 
+                                    id="student-ids" 
+                                    rows="4"
+                                    placeholder="CD21110001, CD21110002, CD21110003"
+                                ></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-chart-bar"></i> Analyze Students
+                            </button>
+                        </form>
+                        
+                        <div id="batch-results" class="mt-3" style="display: none;">
+                            <h5>Results:</h5>
+                            <div id="batch-results-container" class="table-responsive"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Health Check Status -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">ML System Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="health-status">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            Checking ML system...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Import ML Analytics Service -->
+    <script type="module">
+        import { MLRiskCard } from './js/components/MLRiskCard.js';
+        import { mlAnalyticsService } from './js/services/MLAnalyticsService.js';
+
+        // Global cleanup function for stuck backdrops
+        window.cleanupModals = function() {
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+            console.log('✅ Modal cleanup complete');
+        };
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Check health status
+            await checkMLHealth();
+            
+            // Load single student risk card
+            // Replace 'CD21110001' with actual student ID from your database
+            new MLRiskCard('student-risk-container', 'CD21110001');
+            
+            // Setup batch prediction form
+            setupBatchForm();
+        });
+
+        // Check ML System Health
+        async function checkMLHealth() {
+            try {
+                const result = await mlAnalyticsService.checkHealth();
+                const healthDiv = document.getElementById('health-status');
+                
+                if (result.success) {
+                    healthDiv.innerHTML = `
+                        <div class="alert alert-success mb-0">
+                            <strong><i class="fas fa-check-circle"></i> ML System Healthy</strong>
+                            <ul class="mb-0 mt-2">
+                                <li><strong>Status:</strong> ${result.status}</li>
+                                <li><strong>Model:</strong> ${result.model}</li>
+                                <li><strong>Cache Size:</strong> ${result.cache.size} items (max: ${result.cache.max_size})</li>
+                                <li><strong>Cache Hit Rate:</strong> ${result.cache.hit_rate}</li>
+                            </ul>
+                        </div>
+                    `;
+                } else {
+                    healthDiv.innerHTML = `
+                        <div class="alert alert-danger mb-0">
+                            <strong><i class="fas fa-times-circle"></i> ML System Error</strong>
+                            <p class="mb-0 mt-2">${result.error}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Health check failed:', error);
+            }
+        }
+
+        // Setup Batch Prediction Form
+        function setupBatchForm() {
+            const form = document.getElementById('batch-predict-form');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const studentIds = document.getElementById('student-ids').value
+                    .split(',')
+                    .map(id => id.trim())
+                    .filter(id => id.length > 0);
+                
+                if (studentIds.length === 0) {
+                    alert('Please enter at least one student ID');
+                    return;
+                }
+                
+                // Show loading
+                const resultsDiv = document.getElementById('batch-results');
+                const resultsContainer = document.getElementById('batch-results-container');
+                resultsContainer.innerHTML = '<p>Analyzing students...</p>';
+                resultsDiv.style.display = 'block';
+                
+                try {
+                    const result = await mlAnalyticsService.batchPredict(studentIds);
+                    
+                    if (result.success) {
+                        displayBatchResults(result.data);
+                    } else {
+                        resultsContainer.innerHTML = `<div class="alert alert-danger">Error: ${result.error}</div>`;
+                    }
+                } catch (error) {
+                    console.error('Batch prediction error:', error);
+                    resultsContainer.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                }
+            });
+        }
+
+        // Display Batch Results in Table
+        function displayBatchResults(data) {
+            const resultsContainer = document.getElementById('batch-results-container');
+            
+            if (!data.results || data.results.length === 0) {
+                resultsContainer.innerHTML = '<p>No results returned</p>';
+                return;
+            }
+            
+            let html = `
+                <table class="table table-hover table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Risk Level</th>
+                            <th>Risk Score</th>
+                            <th>Top Risk Factor</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            data.results.forEach(student => {
+                const riskFormat = mlAnalyticsService.formatRiskScore(student.risk_score);
+                const topFactor = student.risk_factors[0] || 'N/A';
+                
+                html += `
+                    <tr>
+                        <td><strong>${student.student_id}</strong></td>
+                        <td>
+                            <span class="badge bg-${riskFormat.color}">
+                                ${riskFormat.icon} ${student.risk_level.toUpperCase()}
+                            </span>
+                        </td>
+                        <td>${Math.round(student.risk_score * 100)}%</td>
+                        <td>${topFactor}</td>
+                        <td>
+                            <button class="btn btn-sm btn-info view-details" data-student-index="${data.results.indexOf(student)}">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+            `;
+            
+            resultsContainer.innerHTML = html;
+            
+            // Add event listeners to View buttons
+            document.querySelectorAll('.view-details').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const studentIndex = parseInt(e.target.closest('button').dataset.studentIndex);
+                    const student = data.results[studentIndex];
+                    showStudentSummary(student);
+                });
+            });
+        }
+
+        // Show student summary in results area instead of modal
+        function showStudentSummary(prediction) {
+            const riskFormat = mlAnalyticsService.formatRiskScore(prediction.risk_score);
+            
+            const summaryHtml = `
+                <div class="card border-${riskFormat.color} mb-3">
+                    <div class="card-header bg-${riskFormat.color} text-white">
+                        <h5 class="mb-0">
+                            ${riskFormat.icon} ${prediction.student_id} - ${prediction.risk_level.toUpperCase()} RISK
+                            <button class="btn btn-sm btn-light float-end" onclick="location.reload()">
+                                <i class="fas fa-times"></i> Close
+                            </button>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="alert alert-${riskFormat.color}">
+                                    <strong>Risk Score:</strong> ${Math.round(prediction.risk_score * 100)}% | 
+                                    <strong>Confidence:</strong> ${Math.round(prediction.confidence * 100)}%
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-danger"><i class="fas fa-exclamation-triangle"></i> Risk Factors</h6>
+                                <ul class="list-group mb-3">
+                                    ${prediction.risk_factors.map(f => `
+                                        <li class="list-group-item list-group-item-danger">⚠️ ${f}</li>
+                                    `).join('')}
+                                </ul>
+
+                                ${prediction.strengths && prediction.strengths.length > 0 ? `
+                                    <h6 class="text-success"><i class="fas fa-star"></i> Strengths</h6>
+                                    <ul class="list-group mb-3">
+                                        ${prediction.strengths.map(s => `
+                                            <li class="list-group-item list-group-item-success">✨ ${s}</li>
+                                        `).join('')}
+                                    </ul>
+                                ` : ''}
+                            </div>
+
+                            <div class="col-md-6">
+                                <h6 class="text-info"><i class="fas fa-lightbulb"></i> Recommendations</h6>
+                                <ol class="list-group list-group-numbered mb-3">
+                                    ${prediction.recommendations.map(r => `
+                                        <li class="list-group-item">${r}</li>
+                                    `).join('')}
+                                </ol>
+                            </div>
+                        </div>
+
+                        ${prediction.gemini_insights ? `
+                            <div class="card bg-light mt-3">
+                                <div class="card-body">
+                                    <h6 class="text-primary"><i class="fas fa-brain"></i> AI Analysis (Gemini - ${Math.round(prediction.gemini_insights.confidence * 100)}% confidence)</h6>
+                                    <p class="mb-2"><strong>AI Risk Score:</strong> ${Math.round(prediction.gemini_insights.risk_score * 100)}%</p>
+                                    <details>
+                                        <summary class="btn btn-sm btn-outline-primary">Show AI Recommendations</summary>
+                                        <ol class="mt-2">
+                                            ${prediction.gemini_insights.recommendations.map(r => `<li>${r}</li>`).join('')}
+                                        </ol>
+                                    </details>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            // Replace results with summary
+            const resultsDiv = document.getElementById('batch-results');
+            resultsDiv.innerHTML = summaryHtml;
+            resultsDiv.style.display = 'block';
+            
+            // Scroll to results
+            resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+</html>

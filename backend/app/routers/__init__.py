@@ -3,13 +3,13 @@ from . import (
     auth,
     events,
     media,
+    ml_analytics,
     profiles_supabase,
     search,
     search_simple,
     showcase,
     student_analytics,
     sync,
-    test_endpoints,
     users,
 )
 
@@ -18,12 +18,12 @@ __all__ = [
     "auth",
     "events",
     "media",
+    "ml_analytics",
     "profiles_supabase",
     "search",
     "search_simple",
     "showcase",
     "student_analytics",
     "sync",
-    "test_endpoints",
     "users",
 ]

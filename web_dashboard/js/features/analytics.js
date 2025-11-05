@@ -1,4 +1,4 @@
-// Supabase integration - using backend API instead
+﻿// Supabase integration - using backend API instead
 import { API_ENDPOINTS, makeAuthenticatedRequest, testBackendConnection } from '../config/backend-config.js';
 import { addNotification } from '../ui/notifications.js';
 
@@ -699,6 +699,8 @@ async function setupAnalytics() {
         if (isInitialized) {
             // Already initialized, just reload data
             await loadOverviewStats();
+            // Re-expose ML functions to ensure they're available
+            exposeMlFunctions();
             return;
         }
 
@@ -707,6 +709,9 @@ async function setupAnalytics() {
         // ✅ SIMPLIFIED: Direct Supabase approach only
         // Custom backend reserved for future data mining features
         await setupAnalyticsWithSupabase();
+
+        // Expose ML functions to global scope for onclick handlers
+        exposeMlFunctions();
 
         const setupTime = performance.now() - startTime;
         AnalyticsLogger.info(`Analytics setup completed in ${setupTime.toFixed(2)}ms`);
@@ -2249,6 +2254,661 @@ async function prepareAdvancedChartData(dataType, options = {}) {
     return processedData;
 }
 
+// ============================================
+// ML ANALYTICS FUNCTIONS
+// ============================================
+
+// Import ML Analytics Service
+let MLAnalyticsService;
+
+async function initMLAnalytics() {
+    try {
+        const module = await import('../services/MLAnalyticsService.js');
+        MLAnalyticsService = module.mlAnalyticsService;
+        return MLAnalyticsService;
+    } catch (error) {
+        console.error('❌ ML Analytics Service failed to load:', error);
+        return null;
+    }
+}
+
+// Initialize on first use
+if (!MLAnalyticsService) {
+    initMLAnalytics();
+}
+
+// Expose ML functions to global window scope
+function exposeMlFunctions() {
+    // Expose to window for onclick handlers (legacy support)
+    window.analyzeAllStudents = analyzeAllStudents;
+    window.filterMLResults = filterMLResults;
+    window.toggleMLDetails = toggleMLDetails;
+    window.viewMLDetails = function(studentId) {
+        const detailEl = document.getElementById(`ml-details-${studentId}`);
+        if (detailEl) {
+            detailEl.style.display = detailEl.style.display === 'none' ? 'block' : 'none';
+        }
+    };
+    
+    // Also attach event listeners directly (more reliable)
+    setTimeout(() => {
+        const analyzeBtn = document.querySelector('button[onclick*="analyzeAllStudents"]');
+        const filterSelect = document.getElementById('ml-risk-filter');
+        const configBtn = document.querySelector('button[onclick*="toggleMLDetails"]');
+        
+        if (analyzeBtn) {
+            analyzeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                analyzeAllStudents();
+            });
+        }
+        
+        if (filterSelect) {
+            filterSelect.addEventListener('change', (e) => {
+                filterMLResults();
+            });
+        }
+        
+        if (configBtn) {
+            configBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                toggleMLDetails();
+            });
+        }
+    }, 500);
+}
+
+async function analyzeAllStudents() {
+    
+    // Ensure ML service is loaded
+    if (!MLAnalyticsService) {
+        const service = await initMLAnalytics();
+        if (!service) {
+            addNotification('❌ ML Service not available', 'error');
+            return;
+        }
+    }
+
+    const container = document.getElementById('ml-results-container');
+    if (!container) return;
+
+    try {
+        // Get configuration
+        const config = getMLConfig();
+        
+        // Show loading state
+        container.innerHTML = `
+            <div style="grid-column: 1/-1; padding: 40px; text-align: center;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p style="margin-top: 15px; color: #666;">Analyzing students with AI...</p>
+                ${config.department ? `<p style="color: #999; font-size: 14px;">Department: ${config.department}</p>` : ''}
+            </div>
+        `;
+
+        // Fetch all users to analyze
+        const { supabase } = await import('../config/supabase-config.js');
+        
+        // Build query with department filter if set
+        let query = supabase
+            .from('users')
+            .select('id, email, name, department, role')
+            .eq('role', 'student');
+        
+        if (config.department) {
+            query = query.eq('department', config.department);
+        }
+        
+        const { data: users, error } = await query;
+
+        if (error) {
+            console.error('❌ Error fetching students:', error);
+            throw error;
+        }
+        
+        
+        if (!users || users.length === 0) {
+            container.innerHTML = `
+                <div style="grid-column: 1/-1; padding: 40px; text-align: center; color: #999;">
+                    <i class="fas fa-info-circle"></i> No students found to analyze
+                </div>
+            `;
+            return;
+        }
+
+        // Create a map of student data for later reference
+        const studentDataMap = {};
+        users.forEach(user => {
+            studentDataMap[user.id] = {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                department: user.department
+            };
+        });
+
+        // Extract student IDs
+        const studentIds = users.map(u => u.id);
+
+        // Call batch prediction
+        const results = await MLAnalyticsService.batchPredict(studentIds);
+
+        if (!results.success) {
+            throw new Error(results.message || 'Batch analysis failed');
+        }
+
+        // Extract predictions array from data
+        const predictions = Array.isArray(results.data) ? results.data : (results.data.results || results.data.predictions || []);
+        
+        // Enrich predictions with student data
+        predictions.forEach(pred => {
+            const studentId = pred.student_id || pred.id;
+            if (studentDataMap[studentId]) {
+                pred.studentInfo = studentDataMap[studentId];
+            }
+        });
+
+        if (!predictions || predictions.length === 0) {
+            console.warn('⚠️ No predictions in results');
+            container.innerHTML = `
+                <div style="grid-column: 1/-1; padding: 40px; text-align: center; color: #999;">
+                    <i class="fas fa-info-circle"></i> No predictions returned from ML service
+                </div>
+            `;
+            return;
+        }
+
+        // Update stats
+        updateMLStats(predictions);
+
+        // Display results
+        displayMLResults(predictions);
+        
+        addNotification(`✅ Analyzed ${results.data.length} students successfully`, 'success');
+        console.log('✅ Analysis complete');
+
+    } catch (error) {
+        console.error('❌ Error analyzing students:', error);
+        container.innerHTML = `
+            <div style="grid-column: 1/-1; padding: 40px; text-align: center;">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i> ${error.message || 'Failed to analyze students'}
+                </div>
+            </div>
+        `;
+        addNotification(`❌ ${error.message || 'Analysis failed'}`, 'error');
+    }
+}
+
+function updateMLStats(results) {
+    if (!Array.isArray(results)) return;
+
+    let highRiskCount = 0;
+    let mediumRiskCount = 0;
+    let lowRiskCount = 0;
+
+    results.forEach(result => {
+        const level = (result.risk_level || result.riskLevel || '').toUpperCase();
+        if (level === 'HIGH') highRiskCount++;
+        else if (level === 'MEDIUM') mediumRiskCount++;
+        else if (level === 'LOW') lowRiskCount++;
+    });
+
+    // Update display
+    const analyzedEl = document.getElementById('ml-analyzed-count');
+    const highEl = document.getElementById('ml-high-risk-count');
+    const mediumEl = document.getElementById('ml-medium-risk-count');
+    const lowEl = document.getElementById('ml-low-risk-count');
+
+    if (analyzedEl) analyzedEl.textContent = results.length;
+    if (highEl) highEl.textContent = highRiskCount;
+    if (mediumEl) mediumEl.textContent = mediumRiskCount;
+    if (lowEl) lowEl.textContent = lowRiskCount;
+}
+
+function displayMLResults(results) {
+    const container = document.getElementById('ml-results-container');
+    if (!container) return;
+
+    if (!Array.isArray(results) || results.length === 0) {
+        container.innerHTML = `
+            <div style="grid-column: 1/-1; padding: 40px; text-align: center; color: #999;">
+                <p>No results to display</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Group by risk level
+    const grouped = {
+        'HIGH': [],
+        'MEDIUM': [],
+        'LOW': []
+    };
+
+    results.forEach(result => {
+        const level = result.riskLevel?.toUpperCase() || 'LOW';
+        if (grouped[level]) {
+            grouped[level].push(result);
+        }
+    });
+
+    let html = '';
+
+    // Display HIGH RISK first
+    if (grouped['HIGH'].length > 0) {
+        html += `<div class="ml-risk-group" style="grid-column: 1/-1;">
+            <h4 style="color: #d32f2f; margin: 15px 0 10px 0;">
+                <i class="fas fa-exclamation-circle"></i> High Risk (${grouped['HIGH'].length})
+            </h4>
+        </div>`;
+        grouped['HIGH'].forEach(result => {
+            html += createRiskCardHTML(result);
+        });
+    }
+
+    // Display MEDIUM RISK
+    if (grouped['MEDIUM'].length > 0) {
+        html += `<div class="ml-risk-group" style="grid-column: 1/-1;">
+            <h4 style="color: #f57c00; margin: 15px 0 10px 0;">
+                <i class="fas fa-exclamation-triangle"></i> Medium Risk (${grouped['MEDIUM'].length})
+            </h4>
+        </div>`;
+        grouped['MEDIUM'].forEach(result => {
+            html += createRiskCardHTML(result);
+        });
+    }
+
+    // Display LOW RISK
+    if (grouped['LOW'].length > 0) {
+        html += `<div class="ml-risk-group" style="grid-column: 1/-1;">
+            <h4 style="color: #388e3c; margin: 15px 0 10px 0;">
+                <i class="fas fa-check-circle"></i> Low Risk (${grouped['LOW'].length})
+            </h4>
+        </div>`;
+        grouped['LOW'].forEach(result => {
+            html += createRiskCardHTML(result);
+        });
+    }
+
+    container.innerHTML = html;
+}
+
+function createRiskCardHTML(result) {
+    // Map backend field names to frontend
+    const studentId = result.student_id || result.id;
+    const riskLevel = (result.risk_level || result.riskLevel || 'UNKNOWN').toUpperCase();
+    const riskScore = result.risk_score || result.riskScore;
+    const riskFactors = result.risk_factors || result.factors || [];
+    const recommendations = result.recommendations;
+    
+    // Get student info for display
+    const studentInfo = result.studentInfo || {};
+    const displayName = studentInfo.name || studentInfo.email || studentId;
+    const displayId = studentInfo.email ? studentInfo.email.split('@')[0] : studentId.substring(0, 8);
+    
+    let riskColor = '#388e3c'; // green
+    let riskIcon = 'check-circle';
+    
+    if (riskLevel === 'HIGH') {
+        riskColor = '#d32f2f';
+        riskIcon = 'exclamation-circle';
+    } else if (riskLevel === 'MEDIUM') {
+        riskColor = '#f57c00';
+        riskIcon = 'exclamation-triangle';
+    }
+
+    return `
+        <div class="ml-risk-card-item" style="
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            background: #fafafa;
+            transition: all 0.3s;
+        " onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.15)'; this.style.background='white';"
+           onmouseout="this.style.boxShadow='none'; this.style.background='#fafafa';">
+            <div style="display: flex; justify-content: space-between; align-items: start; gap: 10px;">
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <span style="
+                            color: white;
+                            background: ${riskColor};
+                            padding: 4px 12px;
+                            border-radius: 20px;
+                            font-size: 12px;
+                            font-weight: bold;
+                        ">
+                            <i class="fas fa-${riskIcon}"></i> ${riskLevel}
+                        </span>
+                        <div style="display: flex; flex-direction: column;">
+                            <strong style="font-size: 14px;">${displayName}</strong>
+                            ${studentInfo.email ? `<span style="color: #666; font-size: 12px;">${studentInfo.email}</span>` : ''}
+                        </div>
+                    </div>
+                    <div style="color: #666; font-size: 13px; line-height: 1.6;">
+                        <div>� Risk Score: <strong>${riskScore ? (riskScore * 100).toFixed(1) + '%' : 'N/A'}</strong></div>
+                        <div>⚠️ ${riskFactors.length || 0} risk factors identified</div>
+                        ${studentInfo.department ? `<div> ${studentInfo.department}</div>` : ''}
+                    </div>
+                </div>
+                <button onclick="viewMLDetails('${studentId}')" class="btn btn-sm btn-info" style="flex-shrink: 0;">
+                    <i class="fas fa-eye"></i> Details
+                </button>
+            </div>
+            <div id="ml-details-${studentId}" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e0e0e0; color: #555; font-size: 13px;">
+                ${riskFactors && riskFactors.length > 0 ? `<div><strong>Risk Factors:</strong><br>• ${riskFactors.slice(0, 3).join('<br>• ')}</div>` : ''}
+                ${recommendations && Array.isArray(recommendations) && recommendations.length > 0 ? `<div style="margin-top: 8px;"><strong>Recommendations:</strong><br>• ${recommendations.slice(0, 3).join('<br>• ')}</div>` : ''}
+                ${typeof recommendations === 'string' ? `<div style="margin-top: 8px;"><strong>Recommendations:</strong><br>${recommendations}</div>` : ''}
+            </div>
+        </div>
+    `;
+}
+
+function filterMLResults() {
+    const filter = document.getElementById('ml-risk-filter')?.value || 'all';
+    const cards = document.querySelectorAll('.ml-risk-card-item');
+
+    cards.forEach(card => {
+        if (filter === 'all') {
+            card.style.display = 'block';
+        } else {
+            const hasRiskLevel = card.textContent.includes(filter);
+            card.style.display = hasRiskLevel ? 'block' : 'none';
+        }
+    });
+}
+
+function toggleMLDetails() {
+    // Check if modal already exists
+    let existingModal = document.getElementById('ml-config-modal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Create configuration modal
+    const modalHTML = `
+        <style>
+            #ml-config-modal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: 1050;
+                width: 100%;
+                height: 100%;
+                overflow: auto;
+            }
+            #ml-config-modal .modal-dialog {
+                position: relative;
+                width: auto;
+                max-width: 600px;
+                margin: 1.75rem auto;
+            }
+            #ml-config-modal .modal-content {
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                background-color: #fff;
+                border: 1px solid rgba(0,0,0,.2);
+                border-radius: 8px;
+                box-shadow: 0 5px 15px rgba(0,0,0,.5);
+            }
+            #ml-config-modal .modal-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 1rem;
+                border-bottom: 1px solid #dee2e6;
+                border-radius: 8px 8px 0 0;
+            }
+            #ml-config-modal .modal-body {
+                position: relative;
+                flex: 1 1 auto;
+                padding: 1rem;
+                max-height: 70vh;
+                overflow-y: auto;
+            }
+            #ml-config-modal .modal-footer {
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+                padding: 1rem;
+                border-top: 1px solid #dee2e6;
+                gap: 10px;
+            }
+            #ml-config-modal .btn-close {
+                padding: 0.5rem;
+                background: transparent;
+                border: none;
+                font-size: 1.5rem;
+                font-weight: 700;
+                line-height: 1;
+                color: white;
+                opacity: 0.8;
+                cursor: pointer;
+            }
+            #ml-config-modal .btn-close:hover {
+                opacity: 1;
+            }
+            .modal-backdrop {
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: 1040;
+                width: 100vw;
+                height: 100vh;
+                background-color: rgba(0, 0, 0, 0.5);
+            }
+            body.modal-open {
+                overflow: hidden;
+            }
+        </style>
+        <div id="ml-config-modal" class="modal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                        <h5 class="modal-title">
+                            <i class="fas fa-cog"></i> ML Analytics Configuration
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label><i class="fas fa-users"></i> Batch Size</label>
+                            <input type="number" class="form-control" id="ml-batch-size" value="10" min="1" max="50">
+                            <small class="form-text text-muted">Number of students to analyze in one batch (1-50)</small>
+                        </div>
+                        
+                        <div class="form-group mt-3">
+                            <label><i class="fas fa-exclamation-triangle"></i> Risk Thresholds</label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <label class="text-danger">High Risk (≥)</label>
+                                    <input type="number" class="form-control" id="ml-high-threshold" value="70" min="0" max="100" step="5">
+                                </div>
+                                <div class="col-6">
+                                    <label class="text-warning">Medium Risk (≥)</label>
+                                    <input type="number" class="form-control" id="ml-medium-threshold" value="40" min="0" max="100" step="5">
+                                </div>
+                            </div>
+                            <small class="form-text text-muted">Risk score percentages for classification</small>
+                        </div>
+                        
+                        <div class="form-group mt-3">
+                            <label><i class="fas fa-building"></i> Filter by Department</label>
+                            <select class="form-control" id="ml-department-filter">
+                                <option value="">All Departments</option>
+                                <option value="Computer Science">Computer Science</option>
+                                <option value="Information Systems">Information Systems</option>
+                                <option value="Software Engineering">Software Engineering</option>
+                                <option value="Artificial Intelligence">Artificial Intelligence</option>
+                                <option value="Data Science">Data Science</option>
+                            </select>
+                            <small class="form-text text-muted">Analyze only students from selected department</small>
+                        </div>
+                        
+                        <div class="form-group mt-3">
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="ml-auto-refresh">
+                                <label class="custom-control-label" for="ml-auto-refresh">
+                                    <i class="fas fa-sync-alt"></i> Auto-refresh every 5 minutes
+                                </label>
+                            </div>
+                            <small class="form-text text-muted">Automatically re-analyze students periodically</small>
+                        </div>
+                        
+                        <div class="form-group mt-3">
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="ml-show-details" checked>
+                                <label class="custom-control-label" for="ml-show-details">
+                                    <i class="fas fa-info-circle"></i> Show detailed risk factors
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info mt-3" style="font-size: 13px;">
+                            <i class="fas fa-lightbulb"></i> <strong>Tip:</strong> Lower batch sizes reduce server load but take longer. Higher risk thresholds make classification more strict.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="saveMLConfig()">
+                            <i class="fas fa-save"></i> Save & Apply
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Load saved config
+    loadMLConfig();
+    
+    // Show modal using vanilla JavaScript
+    const modalElement = document.getElementById('ml-config-modal');
+    modalElement.style.display = 'block';
+    modalElement.classList.add('show');
+    document.body.classList.add('modal-open');
+    
+    // Add backdrop
+    const backdrop = document.createElement('div');
+    backdrop.className = 'modal-backdrop fade show';
+    backdrop.id = 'ml-config-backdrop';
+    document.body.appendChild(backdrop);
+    
+    // Close button handlers
+    const closeButtons = modalElement.querySelectorAll('[data-bs-dismiss="modal"]');
+    closeButtons.forEach(btn => {
+        btn.addEventListener('click', () => closeMLConfigModal());
+    });
+    
+    // Click outside to close
+    backdrop.addEventListener('click', () => closeMLConfigModal());
+}
+
+function closeMLConfigModal() {
+    const modalElement = document.getElementById('ml-config-modal');
+    const backdrop = document.getElementById('ml-config-backdrop');
+    
+    if (modalElement) {
+        modalElement.style.display = 'none';
+        modalElement.classList.remove('show');
+        modalElement.remove();
+    }
+    
+    if (backdrop) {
+        backdrop.remove();
+    }
+    
+    document.body.classList.remove('modal-open');
+}
+
+function loadMLConfig() {
+    // Load saved configuration from localStorage
+    const config = JSON.parse(localStorage.getItem('mlAnalyticsConfig') || '{}');
+    
+    if (config.batchSize) document.getElementById('ml-batch-size').value = config.batchSize;
+    if (config.highThreshold) document.getElementById('ml-high-threshold').value = config.highThreshold;
+    if (config.mediumThreshold) document.getElementById('ml-medium-threshold').value = config.mediumThreshold;
+    if (config.department) document.getElementById('ml-department-filter').value = config.department;
+    if (config.autoRefresh) document.getElementById('ml-auto-refresh').checked = config.autoRefresh;
+    if (config.showDetails !== undefined) document.getElementById('ml-show-details').checked = config.showDetails;
+}
+
+window.saveMLConfig = function() {
+    // Get values
+    const config = {
+        batchSize: parseInt(document.getElementById('ml-batch-size').value),
+        highThreshold: parseInt(document.getElementById('ml-high-threshold').value),
+        mediumThreshold: parseInt(document.getElementById('ml-medium-threshold').value),
+        department: document.getElementById('ml-department-filter').value,
+        autoRefresh: document.getElementById('ml-auto-refresh').checked,
+        showDetails: document.getElementById('ml-show-details').checked
+    };
+    
+    // Validate
+    if (config.mediumThreshold >= config.highThreshold) {
+        addNotification('Medium threshold must be lower than High threshold', 'error');
+        return;
+    }
+    
+    // Save to localStorage
+    localStorage.setItem('mlAnalyticsConfig', JSON.stringify(config));
+    
+    // Close modal
+    closeMLConfigModal();
+    
+    // Apply configuration
+    addNotification('Configuration saved successfully! Re-run analysis to apply changes.', 'success');
+    
+    // Setup auto-refresh if enabled
+    if (config.autoRefresh) {
+        setupMLAutoRefresh();
+    } else {
+        clearMLAutoRefresh();
+    }
+}
+
+let mlAutoRefreshInterval = null;
+
+function setupMLAutoRefresh() {
+    // Clear any existing interval
+    clearMLAutoRefresh();
+    
+    // Setup new interval (5 minutes)
+    mlAutoRefreshInterval = setInterval(() => {
+        addNotification('Auto-refreshing student risk analysis...', 'info');
+        analyzeAllStudents();
+    }, 5 * 60 * 1000);
+}
+
+function clearMLAutoRefresh() {
+    if (mlAutoRefreshInterval) {
+        clearInterval(mlAutoRefreshInterval);
+        mlAutoRefreshInterval = null;
+    }
+}
+
+function getMLConfig() {
+    // Get saved config or return defaults
+    const defaultConfig = {
+        batchSize: 10,
+        highThreshold: 70,
+        mediumThreshold: 40,
+        department: '',
+        autoRefresh: false,
+        showDetails: true
+    };
+    
+    const saved = localStorage.getItem('mlAnalyticsConfig');
+    return saved ? { ...defaultConfig, ...JSON.parse(saved) } : defaultConfig;
+}
+
 // Export all enhanced analytics functions
 export {
     loadOverviewStats,
@@ -2264,5 +2924,8 @@ export {
     generateComparativeReport,
     createAdvancedTrendChart,
     scheduleAutomatedReport,
-    getAnalyticsInsights
+    getAnalyticsInsights,
+    analyzeAllStudents,
+    filterMLResults,
+    toggleMLDetails
 };
