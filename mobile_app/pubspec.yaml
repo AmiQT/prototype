@@ -56,8 +56,8 @@ dependencies:
   url_launcher: ^6.2.6
 
   # Voice & Text-to-Speech
-  speech_to_text: ^6.6.0
-  flutter_tts: ^4.0.2
+  speech_to_text: ^7.3.0
+  flutter_tts: ^4.2.3
 
   # UI Enhancements
   shimmer: ^3.0.0
