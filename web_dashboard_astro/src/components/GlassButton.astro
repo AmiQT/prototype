@@ -1,0 +1,19 @@
+---
+interface Props {
+    href?: string;
+    type?: "button" | "submit" | "reset";
+    icon?: string;
+}
+
+const { href, type = "button", icon } = Astro.props;
+const Element = href ? "a" : "button";
+---
+
+<Element
+    href={href}
+    type={!href ? type : undefined}
+    class="glass-btn inline-flex items-center gap-2 justify-center relative z-10"
+>
+    {icon && <i class={icon} />}
+    <slot />
+</Element>

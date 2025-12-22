@@ -1,0 +1,159 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+
+interface Props {
+    title: string;
+    activeSection: string;
+}
+
+const { title, activeSection } = Astro.props;
+
+const navItems = [
+    {
+        href: "/aurora",
+        icon: "fas fa-home",
+        label: "Dashboard",
+        section: "dashboard",
+    },
+    {
+        href: "/aurora/analytics",
+        icon: "fas fa-chart-line",
+        label: "Analytics",
+        section: "analytics",
+    },
+    {
+        href: "/aurora/users",
+        icon: "fas fa-users",
+        label: "Users",
+        section: "users",
+    },
+    {
+        href: "/aurora/settings",
+        icon: "fas fa-cog",
+        label: "Settings",
+        section: "settings",
+    },
+];
+---
+
+<MainLayout title={title}>
+    <link rel="stylesheet" href="/src/styles/glassmorphism.css" />
+
+    <div class="min-h-screen">
+        <!-- Sidebar -->
+        <aside
+            class="fixed left-0 top-0 h-screen w-64 z-30 hidden lg:block p-4"
+        >
+            <div class="glass-card glass-blur-heavy h-full flex flex-col">
+                <div class="p-6 border-b border-white/20">
+                    <h2
+                        class="text-2xl font-bold text-white"
+                        style="font-family: var(--font-heading);"
+                    >
+                        🌌 Aurora
+                    </h2>
+                </div>
+
+                <nav class="flex-1 p-4 space-y-2">
+                    {
+                        navItems.map((item) => (
+                            <a
+                                href={item.href}
+                                class={`
+                                flex items-center gap-3 p-4 rounded-xl font-semibold text-sm
+                                transition-all duration-300
+                                ${
+                                    item.section === activeSection
+                                        ? "glass-card glass-card-glow text-white"
+                                        : "text-white/80 hover:glass-card hover:text-white"
+                                }
+                            `}
+                                style="font-family: var(--font-heading);"
+                            >
+                                <i class={`${item.icon} text-lg`} />
+                                <span>{item.label}</span>
+                            </a>
+                        ))
+                    }
+                </nav>
+
+                <div class="p-4">
+                    <button id="aurora-logout-btn" class="w-full glass-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="lg:ml-64 min-h-screen flex flex-col">
+            <!-- Top Header -->
+            <header class="sticky top-0 z-20 p-4">
+                <div
+                    class="glass-card glass-blur-heavy px-6 py-4 flex items-center justify-between"
+                >
+                    <div class="flex items-center gap-4">
+                        <button
+                            id="aurora-mobile-toggle"
+                            class="lg:hidden text-white"
+                        >
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                        <h1
+                            class="text-2xl font-bold text-white"
+                            style="font-family: var(--font-heading);"
+                        >
+                            {title}
+                        </h1>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="hidden md:flex items-center gap-2 px-4 py-2 glass-card"
+                        >
+                            <i class="fas fa-robot text-white"></i>
+                            <span class="font-semibold text-white text-sm"
+                                >AI Online</span
+                            >
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="flex-1">
+                <slot />
+            </main>
+
+            <!-- Footer -->
+            <footer class="p-4 mt-auto">
+                <div class="glass-card glass-blur-heavy px-6 py-4">
+                    <p class="text-center text-white/80 font-semibold text-sm">
+                        Made with 🌌 Glassmorphism Aurora ✨ 2025
+                    </p>
+                </div>
+            </footer>
+        </div>
+    </div>
+</MainLayout>
+
+<script>
+    import { supabase } from "../lib/supabase";
+
+    document
+        .getElementById("aurora-logout-btn")
+        ?.addEventListener("click", async () => {
+            const { error } = await supabase.auth.signOut();
+            if (error) {
+                console.error("Error logging out:", error);
+                alert("Failed to logout");
+            } else {
+                window.location.href = "/login";
+            }
+        });
+</script>
+
+<style>
+    @import url("../styles/glassmorphism.css");
+</style>

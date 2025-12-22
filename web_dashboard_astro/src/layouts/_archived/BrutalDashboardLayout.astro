@@ -1,0 +1,173 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+
+interface Props {
+    title: string;
+    activeSection: string;
+}
+
+const { title, activeSection } = Astro.props;
+
+const navItems = [
+    {
+        href: "/brutal",
+        icon: "fas fa-home",
+        label: "Dashboard",
+        section: "dashboard",
+    },
+    {
+        href: "/brutal/analytics",
+        icon: "fas fa-chart-line",
+        label: "Analytics",
+        section: "analytics",
+    },
+    {
+        href: "/brutal/users",
+        icon: "fas fa-users",
+        label: "Users",
+        section: "users",
+    },
+    {
+        href: "/brutal/settings",
+        icon: "fas fa-cog",
+        label: "Settings",
+        section: "settings",
+    },
+];
+---
+
+<MainLayout title={title}>
+    <link rel="stylesheet" href="/src/styles/brutalism.css" />
+
+    <div class="min-h-screen bg-brutal-gray">
+        <!-- Sidebar -->
+        <aside
+            class="fixed left-0 top-0 h-screen w-64 bg-brutal-white brutal-border-right z-30 hidden lg:block"
+        >
+            <div class="p-6 brutal-border-bottom bg-brutal-gold">
+                <h2
+                    class="text-2xl font-bold text-brutal-black uppercase"
+                    style="font-family: var(--font-heading);"
+                >
+                    🎪 Brutal
+                </h2>
+            </div>
+
+            <nav class="p-4">
+                {
+                    navItems.map((item) => (
+                        <a
+                            href={item.href}
+                            class={`
+                            flex items-center gap-3 p-4 mb-2 brutal-border font-bold uppercase text-sm
+                            transition-all duration-200
+                            ${
+                                item.section === activeSection
+                                    ? "bg-brutal-cyan brutal-shadow-md"
+                                    : "bg-brutal-white hover:bg-brutal-lime hover:brutal-shadow-sm hover:translate-x-1"
+                            }
+                        `}
+                            style="font-family: var(--font-heading);"
+                        >
+                            <i
+                                class={`${item.icon} text-xl text-brutal-black`}
+                            />
+                            <span class="text-brutal-black">{item.label}</span>
+                        </a>
+                    ))
+                }
+            </nav>
+
+            <div class="absolute bottom-0 left-0 right-0 p-4">
+                <button
+                    id="logout-btn"
+                    class="w-full brutal-btn bg-brutal-magenta text-brutal-white"
+                >
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="lg:ml-64 min-h-screen flex flex-col">
+            <!-- Top Header -->
+            <header
+                class="h-20 bg-brutal-white brutal-border-bottom flex items-center justify-between px-6 sticky top-0 z-20"
+            >
+                <div class="flex items-center gap-4">
+                    <button
+                        id="mobile-menu-toggle"
+                        class="lg:hidden brutal-btn bg-brutal-cyan text-brutal-black p-3"
+                    >
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <h1
+                        class="text-2xl font-bold text-brutal-black uppercase"
+                        style="font-family: var(--font-heading);"
+                    >
+                        {title}
+                    </h1>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <div
+                        class="hidden md:flex items-center gap-2 px-4 py-2 bg-brutal-lime brutal-border brutal-shadow-sm"
+                    >
+                        <i class="fas fa-robot text-brutal-black"></i>
+                        <span
+                            class="font-bold text-brutal-black text-sm uppercase"
+                            style="font-family: var(--font-heading);"
+                            >AI Online</span
+                        >
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="flex-1 overflow-x-hidden">
+                <slot />
+            </main>
+
+            <!-- Footer -->
+            <footer class="bg-brutal-white brutal-border-top p-6 mt-auto">
+                <p
+                    class="text-center text-brutal-black font-bold uppercase text-sm"
+                    style="font-family: var(--font-heading);"
+                >
+                    Made with 🎪 Neo-Brutalism ⚡ 2025
+                </p>
+            </footer>
+        </div>
+    </div>
+</MainLayout>
+
+<script>
+    import { supabase } from "../lib/supabase";
+
+    // Logout functionality
+    document
+        .getElementById("logout-btn")
+        ?.addEventListener("click", async () => {
+            const { error } = await supabase.auth.signOut();
+            if (error) {
+                console.error("Error logging out:", error);
+                alert("Failed to logout");
+            } else {
+                window.location.href = "/login";
+            }
+        });
+
+    // Mobile menu toggle
+    document
+        .getElementById("mobile-menu-toggle")
+        ?.addEventListener("click", () => {
+            // TODO: Implement mobile menu
+            alert("Mobile menu coming soon!");
+        });
+</script>
+
+<style>
+    /* Ensure brutalism.css is loaded */
+    @import url("../styles/brutalism.css");
+</style>

@@ -1,0 +1,48 @@
+---
+interface Props {
+    color?:
+        | "gold"
+        | "cyan"
+        | "magenta"
+        | "purple"
+        | "lime"
+        | "orange"
+        | "white"
+        | "black";
+    href?: string;
+    type?: "button" | "submit" | "reset";
+    icon?: string;
+    size?: "sm" | "md" | "lg";
+}
+
+const {
+    color = "gold",
+    href,
+    type = "button",
+    icon,
+    size = "md",
+} = Astro.props;
+
+const colorClass = `bg-brutal-${color}`;
+const textColorClass =
+    color === "black" || color === "purple" || color === "magenta"
+        ? "text-brutal-white"
+        : "text-brutal-black";
+
+const sizeClasses = {
+    sm: "px-3 py-2 text-xs",
+    md: "px-4 py-3 text-sm",
+    lg: "px-6 py-4 text-base",
+};
+
+const Element = href ? "a" : "button";
+---
+
+<Element
+    href={href}
+    type={!href ? type : undefined}
+    class={`brutal-btn ${colorClass} ${textColorClass} ${sizeClasses[size]} inline-flex items-center gap-2 justify-center`}
+>
+    {icon && <i class={icon} />}
+    <slot />
+</Element>

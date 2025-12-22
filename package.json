@@ -1,0 +1,23 @@
+{
+  "name": "prototype",
+  "version": "1.0.0",
+  "description": "End-to-end platform for UTHM student talent profiling that ships a Python FastAPI backend, a Flutter mobile client, and a Supabase-powered web dashboard.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AmiQT/prototype.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AmiQT/prototype/issues"
+  },
+  "homepage": "https://github.com/AmiQT/prototype#readme"
+}

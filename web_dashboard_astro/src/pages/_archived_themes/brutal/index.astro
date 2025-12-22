@@ -1,0 +1,321 @@
+---
+import BrutalDashboardLayout from "../../layouts/BrutalDashboardLayout.astro";
+import BentoCard from "../../components/BentoCard.astro";
+import BrutalButton from "../../components/BrutalButton.astro";
+---
+
+<BrutalDashboardLayout title="Dashboard" activeSection="dashboard">
+    <div class="bento-grid">
+        <!-- Large Card: Daily Overview -->
+        <BentoCard
+            color="gold"
+            size="large"
+            title="Welcome Back! 🎪"
+            noPadding={true}
+        >
+            <div class="p-6 h-full flex flex-col justify-between">
+                <div>
+                    <h3
+                        class="text-2xl font-bold text-brutal-black uppercase mb-2"
+                        style="font-family: var(--font-heading);"
+                    >
+                        Welcome Back! 🎪
+                    </h3>
+                    <p class="text-brutal-black font-medium text-lg mb-4">
+                        Dashboard is looking BOLD today!
+                    </p>
+                </div>
+                <div class="space-y-3">
+                    <div
+                        class="flex items-center justify-between p-3 bg-brutal-white brutal-border"
+                    >
+                        <span
+                            class="font-bold text-sm uppercase"
+                            style="font-family: var(--font-heading);"
+                            >Today's Tasks</span
+                        >
+                        <span class="text-2xl font-bold">12</span>
+                    </div>
+                    <div
+                        class="flex items-center justify-between p-3 bg-brutal-white brutal-border"
+                    >
+                        <span
+                            class="font-bold text-sm uppercase"
+                            style="font-family: var(--font-heading);"
+                            >Active Projects</span
+                        >
+                        <span class="text-2xl font-bold">5</span>
+                    </div>
+                    <div
+                        class="flex items-center justify-between p-3 bg-brutal-white brutal-border"
+                    >
+                        <span
+                            class="font-bold text-sm uppercase"
+                            style="font-family: var(--font-heading);"
+                            >Completion Rate</span
+                        >
+                        <span class="text-2xl font-bold">87%</span>
+                    </div>
+                </div>
+            </div>
+        </BentoCard>
+
+        <!-- Small Card 1: Total Users -->
+        <BentoCard
+            color="cyan"
+            size="small"
+            title="Total Users"
+            value="1,234"
+            icon="fas fa-users"
+        />
+
+        <!-- Small Card 2: Active Events -->
+        <BentoCard
+            color="magenta"
+            size="small"
+            title="Events"
+            value="42"
+            icon="fas fa-calendar-alt"
+        />
+
+        <!-- Small Card 3: Revenue -->
+        <BentoCard
+            color="purple"
+            size="small"
+            title="Revenue"
+            value="$12.5K"
+            icon="fas fa-dollar-sign"
+        />
+
+        <!-- Small Card 4: Growth -->
+        <BentoCard
+            color="lime"
+            size="small"
+            title="Growth"
+            value="+24%"
+            icon="fas fa-arrow-up"
+        />
+
+        <!-- Medium Wide Card: Quick Actions -->
+        <BentoCard
+            color="orange"
+            size="full"
+            title="⚡ Quick Actions"
+            noPadding={true}
+        >
+            <div class="p-6">
+                <h3
+                    class="text-lg font-bold text-brutal-black uppercase mb-4"
+                    style="font-family: var(--font-heading);"
+                >
+                    ⚡ Quick Actions
+                </h3>
+                <div class="flex flex-wrap gap-3">
+                    <BrutalButton color="white" icon="fas fa-plus" size="sm">
+                        New User
+                    </BrutalButton>
+                    <BrutalButton
+                        color="white"
+                        icon="fas fa-calendar"
+                        size="sm"
+                    >
+                        Create Event
+                    </BrutalButton>
+                    <BrutalButton
+                        color="white"
+                        icon="fas fa-file-export"
+                        size="sm"
+                    >
+                        Export Data
+                    </BrutalButton>
+                    <BrutalButton
+                        color="white"
+                        icon="fas fa-chart-bar"
+                        size="sm"
+                    >
+                        View Reports
+                    </BrutalButton>
+                    <BrutalButton color="white" icon="fas fa-cog" size="sm">
+                        Settings
+                    </BrutalButton>
+                </div>
+            </div>
+        </BentoCard>
+
+        <!-- Medium Card 1: Recent Activity -->
+        <BentoCard
+            color="white"
+            size="medium"
+            title="📊 Recent Activity"
+            noPadding={true}
+        >
+            <div class="p-6">
+                <h3
+                    class="text-md font-bold text-brutal-black uppercase mb-3"
+                    style="font-family: var(--font-heading);"
+                >
+                    📊 Recent Activity
+                </h3>
+                <div class="space-y-2">
+                    <div
+                        class="p-2 bg-brutal-gold brutal-border-left"
+                        style="border-left-width: 4px;"
+                    >
+                        <p class="text-xs font-bold uppercase">
+                            New user registered
+                        </p>
+                        <p class="text-xs text-gray-600">2 minutes ago</p>
+                    </div>
+                    <div
+                        class="p-2 bg-brutal-cyan brutal-border-left"
+                        style="border-left-width: 4px;"
+                    >
+                        <p class="text-xs font-bold uppercase">
+                            Event published
+                        </p>
+                        <p class="text-xs text-gray-600">15 minutes ago</p>
+                    </div>
+                    <div
+                        class="p-2 bg-brutal-lime brutal-border-left"
+                        style="border-left-width: 4px;"
+                    >
+                        <p class="text-xs font-bold uppercase">
+                            Report generated
+                        </p>
+                        <p class="text-xs text-gray-600">1 hour ago</p>
+                    </div>
+                </div>
+            </div>
+        </BentoCard>
+
+        <!-- Medium Card 2: System Status -->
+        <BentoCard
+            color="white"
+            size="medium"
+            title="🔧 System Status"
+            noPadding={true}
+        >
+            <div class="p-6">
+                <h3
+                    class="text-md font-bold text-brutal-black uppercase mb-3"
+                    style="font-family: var(--font-heading);"
+                >
+                    🔧 System Status
+                </h3>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold uppercase">API</span>
+                        <span class="brutal-badge brutal-badge-success"
+                            >Online</span
+                        >
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold uppercase">Database</span
+                        >
+                        <span class="brutal-badge brutal-badge-success"
+                            >Online</span
+                        >
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold uppercase">Storage</span>
+                        <span class="brutal-badge brutal-badge-warning"
+                            >Slow</span
+                        >
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold uppercase">Email</span>
+                        <span class="brutal-badge brutal-badge-success"
+                            >Online</span
+                        >
+                    </div>
+                </div>
+            </div>
+        </BentoCard>
+
+        <!-- Medium Card 3: Top Performers -->
+        <BentoCard
+            color="white"
+            size="medium"
+            title="⭐ Top Performers"
+            noPadding={true}
+        >
+            <div class="p-6">
+                <h3
+                    class="text-md font-bold text-brutal-black uppercase mb-3"
+                    style="font-family: var(--font-heading);"
+                >
+                    ⭐ Top Performers
+                </h3>
+                <div class="space-y-3">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-8 h-8 bg-brutal-gold brutal-border flex items-center justify-center font-bold"
+                        >
+                            1
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-xs font-bold uppercase">John Doe</p>
+                            <p class="text-xs text-gray-600">95 points</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-8 h-8 bg-brutal-cyan brutal-border flex items-center justify-center font-bold"
+                        >
+                            2
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-xs font-bold uppercase">
+                                Jane Smith
+                            </p>
+                            <p class="text-xs text-gray-600">89 points</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-8 h-8 bg-brutal-magenta brutal-border flex items-center justify-center font-bold text-white"
+                        >
+                            3
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-xs font-bold uppercase">
+                                Mike Johnson
+                            </p>
+                            <p class="text-xs text-gray-600">84 points</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </BentoCard>
+    </div>
+
+    <script>
+        // Load real data from Supabase
+        import { supabase } from "../../lib/supabase";
+
+        async function loadDashboardData() {
+            try {
+                // Get total users count
+                const { count: userCount } = await supabase
+                    .from("users")
+                    .select("*", { count: "exact", head: true });
+
+                // Update UI if elements exist
+                if (userCount !== null) {
+                    const cards = document.querySelectorAll(".bento-card");
+                    // Find the user card and update it
+                    console.log("Total users:", userCount);
+                }
+            } catch (error) {
+                console.error("Error loading dashboard data:", error);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", loadDashboardData);
+    </script>
+</BrutalDashboardLayout>
+
+<style>
+    /* Import brutalism styles */
+    @import url("../../styles/brutalism.css");
+</style>

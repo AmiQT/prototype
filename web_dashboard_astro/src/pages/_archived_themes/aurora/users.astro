@@ -1,0 +1,101 @@
+---
+import AuroraDashboardLayout from "../../layouts/AuroraDashboardLayout.astro";
+import GlassCard from "../../components/GlassCard.astro";
+import GlassButton from "../../components/GlassButton.astro";
+---
+
+<AuroraDashboardLayout title="Users" activeSection="users">
+    <div class="p-4 flex gap-3 justify-between items-center">
+        <input
+            type="text"
+            placeholder="Search users..."
+            class="glass-input flex-1 max-w-md"
+        />
+        <div class="flex gap-3">
+            <GlassButton icon="fas fa-plus">Add User</GlassButton>
+            <GlassButton icon="fas fa-filter">Filter</GlassButton>
+        </div>
+    </div>
+
+    <div class="p-4">
+        <div class="glass-card overflow-hidden">
+            <table class="glass-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="font-semibold text-white">John Doe</td>
+                        <td class="text-white/80">john@example.com</td>
+                        <td
+                            ><span class="glass-badge glass-badge-info"
+                                >Student</span
+                            ></td
+                        >
+                        <td
+                            ><span class="glass-badge glass-badge-success"
+                                >Active</span
+                            ></td
+                        >
+                        <td>
+                            <div class="flex gap-2">
+                                <GlassButton icon="fas fa-edit" />
+                                <GlassButton icon="fas fa-trash" />
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="font-semibold text-white">Jane Smith</td>
+                        <td class="text-white/80">jane@example.com</td>
+                        <td
+                            ><span class="glass-badge glass-badge-warning"
+                                >Lecturer</span
+                            ></td
+                        >
+                        <td
+                            ><span class="glass-badge glass-badge-success"
+                                >Active</span
+                            ></td
+                        >
+                        <td>
+                            <div class="flex gap-2">
+                                <GlassButton icon="fas fa-edit" />
+                                <GlassButton icon="fas fa-trash" />
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="font-semibold text-white">Mike Johnson</td>
+                        <td class="text-white/80">mike@example.com</td>
+                        <td
+                            ><span class="glass-badge glass-badge-info"
+                                >Student</span
+                            ></td
+                        >
+                        <td
+                            ><span class="glass-badge glass-badge-warning"
+                                >Pending</span
+                            ></td
+                        >
+                        <td>
+                            <div class="flex gap-2">
+                                <GlassButton icon="fas fa-edit" />
+                                <GlassButton icon="fas fa-trash" />
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</AuroraDashboardLayout>
+
+<style>
+    @import url("../../styles/glassmorphism.css");
+</style>

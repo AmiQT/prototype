@@ -1,0 +1,84 @@
+---
+import AuroraDashboardLayout from "../../layouts/AuroraDashboardLayout.astro";
+import GlassCard from "../../components/GlassCard.astro";
+import GlassButton from "../../components/GlassButton.astro";
+---
+
+<AuroraDashboardLayout title="Settings" activeSection="settings">
+    <div class="aurora-grid">
+        <GlassCard size="wide" glow={true}>
+            <h3 class="text-lg font-bold text-white mb-4">
+                👤 Profile Settings
+            </h3>
+            <div class="space-y-4">
+                <div>
+                    <label
+                        class="block text-sm font-semibold text-white/80 mb-2"
+                        >Name</label
+                    >
+                    <input
+                        type="text"
+                        class="glass-input w-full"
+                        placeholder="Your Name"
+                        value="John Doe"
+                    />
+                </div>
+                <div>
+                    <label
+                        class="block text-sm font-semibold text-white/80 mb-2"
+                        >Email</label
+                    >
+                    <input
+                        type="email"
+                        class="glass-input w-full"
+                        placeholder="your@email.com"
+                        value="john@example.com"
+                    />
+                </div>
+                <GlassButton icon="fas fa-save">Save Changes</GlassButton>
+            </div>
+        </GlassCard>
+
+        <GlassCard size="medium">
+            <h3 class="text-md font-bold text-white mb-4">🔔 Notifications</h3>
+            <div class="space-y-3">
+                <div class="flex items-center justify-between p-3 glass-card">
+                    <span class="text-sm font-semibold text-white"
+                        >Email Alerts</span
+                    >
+                    <div class="w-12 h-6 bg-white/20 rounded-full"></div>
+                </div>
+                <div class="flex items-center justify-between p-3 glass-card">
+                    <span class="text-sm font-semibold text-white"
+                        >Push Notifications</span
+                    >
+                    <div class="w-12 h-6 bg-white/20 rounded-full"></div>
+                </div>
+            </div>
+        </GlassCard>
+
+        <GlassCard size="medium">
+            <h3 class="text-md font-bold text-white mb-4">🔒 Security</h3>
+            <div class="space-y-3">
+                <GlassButton icon="fas fa-key">Change Password</GlassButton>
+                <GlassButton icon="fas fa-shield-alt"
+                    >Two-Factor Auth</GlassButton
+                >
+            </div>
+        </GlassCard>
+
+        <GlassCard size="full">
+            <h3 class="text-lg font-bold text-white mb-4">⚠️ Danger Zone</h3>
+            <div class="flex gap-3">
+                <GlassButton icon="fas fa-trash-restore"
+                    >Reset Settings</GlassButton
+                >
+                <GlassButton icon="fas fa-download">Export Data</GlassButton>
+            </div>
+        </GlassCard>
+    </div>
+</AuroraDashboardLayout>
+
+<style>
+    @import url("../../styles/glassmorphism.css");
+</style>

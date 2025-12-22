@@ -1,0 +1,2201 @@
+---
+import DashboardLayout from "../../layouts/DashboardLayout.astro";
+---
+
+<DashboardLayout title="Analytics" activeSection="analytics">
+    <!-- Actions Toolbar -->
+    <div class="flex justify-end gap-4 mb-6">
+        <button
+            id="generate-report-btn"
+            class="bg-white text-gray-700 border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2 transition-colors shadow-sm"
+        >
+            <i class="fas fa-file-pdf text-red-500"></i> Generate Report
+        </button>
+        <button
+            id="export-csv-btn"
+            class="bg-white text-gray-700 border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2 transition-colors shadow-sm"
+        >
+            <i class="fas fa-file-csv text-green-500"></i> Export CSV
+        </button>
+    </div>
+
+    <!-- Quick Stats Cards - NEW -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div
+            class="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-2xl shadow-lg text-white"
+        >
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-blue-100 text-sm font-medium">
+                        Jumlah Pelajar
+                    </p>
+                    <p class="text-3xl font-bold" id="total-students">0</p>
+                </div>
+                <div
+                    class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center"
+                >
+                    <i class="fas fa-user-graduate text-2xl"></i>
+                </div>
+            </div>
+            <p class="text-blue-100 text-xs mt-2">
+                <span id="new-students-week">0</span> pelajar baru minggu ini
+            </p>
+        </div>
+
+        <div
+            class="bg-gradient-to-br from-green-500 to-green-600 p-6 rounded-2xl shadow-lg text-white"
+        >
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-green-100 text-sm font-medium">
+                        Purata CGPA
+                    </p>
+                    <p class="text-3xl font-bold" id="avg-cgpa">0.00</p>
+                </div>
+                <div
+                    class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center"
+                >
+                    <i class="fas fa-chart-line text-2xl"></i>
+                </div>
+            </div>
+            <p class="text-green-100 text-xs mt-2">
+                Berdasarkan <span id="cgpa-count">0</span> pelajar
+            </p>
+        </div>
+
+        <div
+            class="bg-gradient-to-br from-purple-500 to-purple-600 p-6 rounded-2xl shadow-lg text-white relative"
+        >
+            <!-- Info Icon -->
+            <div class="absolute top-3 right-3 group">
+                <button
+                    class="w-5 h-5 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white/80 hover:text-white transition-colors"
+                >
+                    <i class="fas fa-info text-xs"></i>
+                </button>
+                <div
+                    class="absolute right-0 top-7 w-56 p-3 bg-white rounded-lg shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50"
+                >
+                    <p class="text-xs font-semibold text-gray-700 mb-1">
+                        Skor Kokurikulum
+                    </p>
+                    <p class="text-xs text-gray-500">
+                        Purata skor aktiviti kokurikulum pelajar (0-100%).
+                        Dikira berdasarkan penglibatan dalam event, kelab, dan
+                        aktiviti luar.
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-purple-100 text-sm font-medium">
+                        Purata Kokurikulum
+                    </p>
+                    <p class="text-3xl font-bold" id="avg-koku">0%</p>
+                </div>
+                <div
+                    class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center"
+                >
+                    <i class="fas fa-running text-2xl"></i>
+                </div>
+            </div>
+            <p class="text-purple-100 text-xs mt-2">
+                <span id="koku-balanced">0</span> pelajar seimbang
+            </p>
+        </div>
+
+        <div
+            class="bg-gradient-to-br from-orange-500 to-orange-600 p-6 rounded-2xl shadow-lg text-white"
+        >
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-orange-100 text-sm font-medium">
+                        Event Aktif
+                    </p>
+                    <p class="text-3xl font-bold" id="active-events">0</p>
+                </div>
+                <div
+                    class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center"
+                >
+                    <i class="fas fa-calendar-check text-2xl"></i>
+                </div>
+            </div>
+            <p class="text-orange-100 text-xs mt-2">
+                <span id="event-participation">0</span> penyertaan
+            </p>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">
+                User Growth Trend
+            </h3>
+            <div class="h-64 relative">
+                <canvas id="userGrowthChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Academic vs Kokurikulum Balance Chart -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-800">
+                    Keseimbangan Akademik vs Kokurikulum
+                </h3>
+                <!-- Info Icon with Tooltip -->
+                <div class="relative group">
+                    <button
+                        class="w-6 h-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors"
+                    >
+                        <i class="fas fa-info text-xs"></i>
+                    </button>
+                    <!-- Tooltip (Hidden by default, show on hover) -->
+                    <div
+                        class="absolute right-0 top-8 w-64 p-3 bg-white rounded-lg shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50"
+                    >
+                        <p class="text-xs font-semibold text-gray-700 mb-2">
+                            Panduan Kategori:
+                        </p>
+                        <div class="space-y-1.5 text-xs">
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-green-500">
+                                </div>
+                                <span class="text-gray-600"
+                                    ><b class="text-green-700">Seimbang</b> — maintain
+                                    kedua-dua</span
+                                >
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-blue-500">
+                                </div>
+                                <span class="text-gray-600"
+                                    ><b class="text-blue-700">Fokus Akademik</b> —
+                                    kurang koku</span
+                                >
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-orange-500">
+                                </div>
+                                <span class="text-gray-600"
+                                    ><b class="text-orange-700">Fokus Koku</b> — akademik
+                                    perlu improve</span
+                                >
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-gray-400">
+                                </div>
+                                <span class="text-gray-600"
+                                    ><b class="text-gray-700">Tak Lengkap</b> — profile
+                                    belum siap</span
+                                >
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="h-64 relative">
+                <canvas id="balanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAK Statistics Section - NEW -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-bold text-gray-800">
+                <i class="fas fa-user-tie text-[#667eea] mr-2"></i>
+                Statistik PAK (Penasihat Akademik)
+            </h3>
+            <select
+                id="pak-filter"
+                class="px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-[#667eea] bg-white text-gray-600"
+            >
+                <option value="">Semua PAK</option>
+            </select>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-gray-50 p-4 rounded-xl">
+                <div class="flex items-center gap-3 mb-3">
+                    <div
+                        class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center"
+                    >
+                        <i class="fas fa-users text-blue-600"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">Jumlah PAK</p>
+                        <p
+                            class="text-2xl font-bold text-gray-800"
+                            id="total-pak"
+                        >
+                            0
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-xl">
+                <div class="flex items-center gap-3 mb-3">
+                    <div
+                        class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center"
+                    >
+                        <i class="fas fa-user-check text-green-600"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">Pelajar Seliaan</p>
+                        <p
+                            class="text-2xl font-bold text-gray-800"
+                            id="supervised-students"
+                        >
+                            0
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-xl">
+                <div class="flex items-center gap-3 mb-3">
+                    <div
+                        class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center"
+                    >
+                        <i class="fas fa-chart-pie text-purple-600"></i>
+                    </div>
+                    <div>
+                        <p class="text-gray-500 text-sm">Purata per PAK</p>
+                        <p
+                            class="text-2xl font-bold text-gray-800"
+                            id="avg-per-pak"
+                        >
+                            0
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAK Distribution Chart -->
+        <div class="mt-6 flex justify-start">
+            <div class="h-48 w-80">
+                <canvas id="pakDistributionChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Analytics Tabs - NEW -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
+        <div class="border-b border-gray-200 mb-6">
+            <nav class="flex space-x-8" aria-label="Tabs">
+                <button
+                    class="analytics-tab active border-b-2 border-[#667eea] text-[#667eea] px-1 py-4 text-sm font-medium"
+                    data-tab="skills"
+                >
+                    <i class="fas fa-code mr-2"></i>Skills Distribution
+                </button>
+                <button
+                    class="analytics-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 px-1 py-4 text-sm font-medium"
+                    data-tab="program"
+                >
+                    <i class="fas fa-graduation-cap mr-2"></i>Program Analysis
+                </button>
+                <button
+                    class="analytics-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 px-1 py-4 text-sm font-medium"
+                    data-tab="engagement"
+                >
+                    <i class="fas fa-chart-bar mr-2"></i>Engagement Metrics
+                </button>
+                <button
+                    class="analytics-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 px-1 py-4 text-sm font-medium"
+                    data-tab="risk"
+                >
+                    <i class="fas fa-exclamation-triangle mr-2"></i>Risk
+                    Analysis
+                </button>
+            </nav>
+        </div>
+
+        <!-- Tab Content: Skills -->
+        <div id="tab-skills" class="tab-content">
+            <h4 class="text-md font-semibold text-gray-700 mb-4">
+                Top 10 Skills Paling Popular
+            </h4>
+            <div class="h-80 relative">
+                <canvas id="skillsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Tab Content: Program -->
+        <div id="tab-program" class="tab-content hidden">
+            <h4 class="text-md font-semibold text-gray-700 mb-4">
+                Taburan Pelajar Mengikut Program
+            </h4>
+            <div class="h-80 relative">
+                <canvas id="programChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Tab Content: Engagement -->
+        <div id="tab-engagement" class="tab-content hidden">
+            <h4 class="text-md font-semibold text-gray-700 mb-4">
+                Metrik Penglibatan Pelajar
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="h-64 relative">
+                    <canvas id="engagementChart"></canvas>
+                </div>
+                <div class="space-y-4">
+                    <div class="bg-blue-50 p-4 rounded-xl">
+                        <p class="text-blue-600 text-sm font-medium">
+                            Profile Completion Rate
+                        </p>
+                        <p
+                            class="text-2xl font-bold text-blue-800"
+                            id="profile-completion-rate"
+                        >
+                            0%
+                        </p>
+                        <div
+                            class="mt-2 h-2 bg-blue-200 rounded-full overflow-hidden"
+                        >
+                            <div
+                                id="profile-completion-bar"
+                                class="h-full bg-blue-600 rounded-full"
+                                style="width: 0%"
+                            >
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-xl">
+                        <p class="text-green-600 text-sm font-medium">
+                            Event Participation Rate
+                        </p>
+                        <p
+                            class="text-2xl font-bold text-green-800"
+                            id="event-participation-rate"
+                        >
+                            0%
+                        </p>
+                        <div
+                            class="mt-2 h-2 bg-green-200 rounded-full overflow-hidden"
+                        >
+                            <div
+                                id="event-participation-bar"
+                                class="h-full bg-green-600 rounded-full"
+                                style="width: 0%"
+                            >
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-xl">
+                        <p class="text-purple-600 text-sm font-medium">
+                            Showcase Post Rate
+                        </p>
+                        <p
+                            class="text-2xl font-bold text-purple-800"
+                            id="showcase-rate"
+                        >
+                            0%
+                        </p>
+                        <div
+                            class="mt-2 h-2 bg-purple-200 rounded-full overflow-hidden"
+                        >
+                            <div
+                                id="showcase-bar"
+                                class="h-full bg-purple-600 rounded-full"
+                                style="width: 0%"
+                            >
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Risk -->
+        <div id="tab-risk" class="tab-content hidden">
+            <h4 class="text-md font-semibold text-gray-700 mb-4">
+                Analisis Risiko Pelajar
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-red-50 p-4 rounded-xl border border-red-100">
+                    <span class="text-red-600 text-sm font-medium"
+                        >Risiko Tinggi</span
+                    >
+                    <p class="text-2xl font-bold text-red-700" id="count-high">
+                        0
+                    </p>
+                </div>
+                <div
+                    class="bg-yellow-50 p-4 rounded-xl border border-yellow-100"
+                >
+                    <span class="text-yellow-600 text-sm font-medium"
+                        >Risiko Sederhana</span
+                    >
+                    <p
+                        class="text-2xl font-bold text-yellow-700"
+                        id="count-medium"
+                    >
+                        0
+                    </p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-xl border border-green-100">
+                    <span class="text-green-600 text-sm font-medium"
+                        >Risiko Rendah</span
+                    >
+                    <p class="text-2xl font-bold text-green-700" id="count-low">
+                        0
+                    </p>
+                </div>
+            </div>
+            <div class="h-64 relative">
+                <canvas id="riskDistributionChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- ML Analysis Section -->
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-bold text-gray-800">
+                AI Student Risk Analysis
+            </h3>
+            <span
+                id="ml-health-badge"
+                class="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500"
+            >
+                <i class="fas fa-circle-notch fa-spin"></i> Checking System...
+            </span>
+        </div>
+
+        <!-- Input Area -->
+        <div class="flex gap-4 mb-6">
+            <input
+                type="text"
+                id="student-ids-input"
+                placeholder="Enter Student IDs (comma separated, e.g., AI2001, CB2002)"
+                class="flex-1 border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#667eea]"
+            />
+            <button
+                id="analyze-btn"
+                class="bg-[#667eea] text-white px-6 py-2 rounded-lg hover:bg-[#5a6fd6] transition-colors flex items-center gap-2"
+            >
+                <i class="fas fa-magic"></i> Analyze
+            </button>
+        </div>
+
+        <!-- Results Area (Hidden by default) -->
+        <div id="ml-results-area" class="hidden space-y-8">
+            <!-- Heatmap -->
+            <div>
+                <h4 class="text-sm font-semibold text-gray-600 mb-4">
+                    Risk Distribution Heatmap
+                </h4>
+                <div
+                    class="h-64 relative border border-gray-100 rounded-xl p-4 bg-gray-50"
+                >
+                    <canvas id="riskHeatmapChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Results Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th
+                                class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                                >Student ID</th
+                            >
+                            <th
+                                class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                                >Risk Level</th
+                            >
+                            <th
+                                class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                                >Confidence</th
+                            >
+                            <th
+                                class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                                >Top Factor</th
+                            >
+                            <th
+                                class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                                >Action</th
+                            >
+                        </tr>
+                    </thead>
+                    <tbody
+                        id="ml-results-body"
+                        class="divide-y divide-gray-100"
+                    >
+                        <!-- Results will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="ml-empty-state" class="text-center py-12 text-gray-400">
+            <i class="fas fa-robot text-4xl mb-3"></i>
+            <p>Enter student IDs and click Analyze to see AI predictions</p>
+        </div>
+    </div>
+
+    <!-- Action Plan Modal -->
+    <div
+        id="action-plan-modal"
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4"
+    >
+        <div
+            class="bg-white rounded-3xl max-w-3xl w-full mx-4 relative overflow-hidden shadow-2xl max-h-[90vh] flex flex-col"
+        >
+            <!-- Header with gradient -->
+            <div
+                class="bg-gradient-to-r from-[#667eea] to-[#764ba2] p-6 relative"
+            >
+                <button
+                    id="close-modal-btn"
+                    class="absolute top-4 right-4 w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all duration-200"
+                >
+                    <i class="fas fa-times text-white"></i>
+                </button>
+                <div class="flex items-center gap-4">
+                    <div
+                        class="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center"
+                    >
+                        <i class="fas fa-brain text-white text-2xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-white">
+                            AI Intervention Plan
+                        </h3>
+                        <p class="text-white/80 text-sm" id="modal-student-id">
+                            Generating insights...
+                        </p>
+                    </div>
+                </div>
+                <!-- Decorative elements -->
+                <div
+                    class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2"
+                >
+                </div>
+                <div
+                    class="absolute bottom-0 left-20 w-20 h-20 bg-white/5 rounded-full translate-y-1/2"
+                >
+                </div>
+            </div>
+
+            <!-- Content area with scroll -->
+            <div
+                id="action-plan-content"
+                class="p-6 space-y-6 overflow-y-auto flex-1"
+            >
+                <!-- Loading state -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-center py-12">
+                        <div class="relative">
+                            <div
+                                class="w-16 h-16 border-4 border-[#667eea]/20 rounded-full"
+                            >
+                            </div>
+                            <div
+                                class="w-16 h-16 border-4 border-[#667eea] border-t-transparent rounded-full animate-spin absolute top-0 left-0"
+                            >
+                            </div>
+                            <i
+                                class="fas fa-sparkles text-[#667eea] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                            ></i>
+                        </div>
+                    </div>
+                    <p class="text-center text-gray-500 text-sm">
+                        AI is analyzing student data and generating personalized
+                        recommendations...
+                    </p>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div
+                class="border-t border-gray-100 p-4 bg-gray-50/50 flex justify-between items-center"
+            >
+                <div class="flex items-center gap-2 text-xs text-gray-400">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Powered by Gemini AI</span>
+                </div>
+                <button
+                    id="modal-close-footer-btn"
+                    class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</DashboardLayout>
+
+<!-- Department Distribution Table (Existing) -->
+<div
+    class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8"
+>
+    <div class="p-6 border-b border-gray-100">
+        <h3 class="text-lg font-bold text-gray-800">Department Distribution</h3>
+    </div>
+    <div class="p-6">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th
+                            class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                            >Department</th
+                        >
+                        <th
+                            class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                            >Faculty</th
+                        >
+                        <th
+                            class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                            >Student Count</th
+                        >
+                        <th
+                            class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                            >Percentage</th
+                        >
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    <tr>
+                        <td
+                            class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+                            >Computer Science</td
+                        >
+                        <td
+                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                            >FSKTM</td
+                        >
+                        <td
+                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                            >120</td
+                        >
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center gap-2">
+                                <div
+                                    class="w-16 h-2 bg-gray-100 rounded-full overflow-hidden"
+                                >
+                                    <div class="h-full bg-[#667eea] w-[45%]">
+                                    </div>
+                                </div>
+                                <span class="text-xs text-gray-500">45%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td
+                            class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+                            >Information Technology</td
+                        >
+                        <td
+                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                            >FSKTM</td
+                        >
+                        <td
+                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                            >85</td
+                        >
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center gap-2">
+                                <div
+                                    class="w-16 h-2 bg-gray-100 rounded-full overflow-hidden"
+                                >
+                                    <div class="h-full bg-[#667eea] w-[32%]">
+                                    </div>
+                                </div>
+                                <span class="text-xs text-gray-500">32%</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    import Chart from "chart.js/auto";
+    import { jsPDF } from "jspdf";
+    import autoTable from "jspdf-autotable";
+    import { supabase } from "../../lib/supabase";
+    import { mlAnalyticsService } from "../../services/MLAnalyticsService";
+    import { geminiService } from "../../services/GeminiService";
+
+    let heatmapChart: any = null;
+    let balanceChart: any = null;
+    let pakChart: any = null;
+    let skillsChart: any = null;
+    let programChart: any = null;
+    let engagementChart: any = null;
+    let riskChart: any = null;
+    let currentResults: any[] = [];
+    let userGrowthChart: any = null;
+
+    // Initialize Charts & Data
+    document.addEventListener("DOMContentLoaded", async () => {
+        await refreshDashboard();
+
+        // ML & Modal Listeners
+        checkMLSystem();
+        setupEventListeners();
+
+        // Setup Realtime Subscriptions
+        setupRealtimeSubscriptions();
+    });
+
+    // Refresh all dashboard data
+    async function refreshDashboard() {
+        const stats = await loadRealStats();
+        if (!stats) {
+            console.error("Failed to load statistics for dashboard");
+            return;
+        }
+
+        // Destroy existing charts before recreating
+        destroyCharts();
+
+        await initializeCharts(stats);
+        await updateQuickStats(stats);
+        await populateDepartmentTable(stats.departments);
+    }
+
+    // Destroy all chart instances
+    function destroyCharts() {
+        if (userGrowthChart) {
+            userGrowthChart.destroy();
+            userGrowthChart = null;
+        }
+        if (balanceChart) {
+            balanceChart.destroy();
+            balanceChart = null;
+        }
+        if (skillsChart) {
+            skillsChart.destroy();
+            skillsChart = null;
+        }
+        if (pakChart) {
+            pakChart.destroy();
+            pakChart = null;
+        }
+    }
+
+    // Setup Supabase Realtime subscriptions
+    function setupRealtimeSubscriptions() {
+        // Listen to users table changes
+        supabase
+            .channel("dashboard-users")
+            .on(
+                "postgres_changes",
+                { event: "*", schema: "public", table: "users" },
+                () => {
+                    console.log("🔄 Users changed, refreshing...");
+                    refreshDashboard();
+                },
+            )
+            .subscribe();
+
+        // Listen to profiles table changes
+        supabase
+            .channel("dashboard-profiles")
+            .on(
+                "postgres_changes",
+                { event: "*", schema: "public", table: "profiles" },
+                () => {
+                    console.log("🔄 Profiles changed, refreshing...");
+                    refreshDashboard();
+                },
+            )
+            .subscribe();
+
+        // Listen to events table changes
+        supabase
+            .channel("dashboard-events")
+            .on(
+                "postgres_changes",
+                { event: "*", schema: "public", table: "events" },
+                () => {
+                    console.log("🔄 Events changed, refreshing...");
+                    refreshDashboard();
+                },
+            )
+            .subscribe();
+
+        // Listen to participations table changes
+        supabase
+            .channel("dashboard-participations")
+            .on(
+                "postgres_changes",
+                { event: "*", schema: "public", table: "event_participations" },
+                () => {
+                    console.log("🔄 Participations changed, refreshing...");
+                    refreshDashboard();
+                },
+            )
+            .subscribe();
+
+        console.log("✅ Realtime subscriptions active");
+    }
+
+    async function loadRealStats() {
+        try {
+            const [
+                { data: users },
+                { data: allProfiles },
+                { data: events },
+                { data: participations },
+            ] = await Promise.all([
+                supabase
+                    .from("users")
+                    .select("id, created_at, department, role"),
+                supabase
+                    .from("profiles")
+                    .select(
+                        "academic_info, skills, personal_advisor, user_id, kokurikulum_score",
+                    ),
+                supabase.from("events").select("*"),
+                supabase.from("event_participations").select("*"),
+            ]);
+
+            // Get student user IDs only
+            const studentIds = new Set(
+                users
+                    ?.filter((u: any) => u.role === "student")
+                    .map((u: any) => u.id) || [],
+            );
+
+            // Filter profiles to students only
+            const profiles =
+                allProfiles?.filter((p: any) => studentIds.has(p.user_id)) ||
+                [];
+
+            // Aggregations
+            const depts: any = {};
+            const months: any = {};
+            const skillsMap: any = {};
+            const paks: any = {};
+            let totalCgpa = 0;
+            let cgpaCount = 0;
+            let totalKoku = 0;
+            let kokuCount = 0;
+            let balancedCount = 0;
+
+            users?.forEach((u) => {
+                // Dept
+                const d = u.department || "Other";
+                depts[d] = (depts[d] || 0) + 1;
+
+                // Growth
+                const m = new Date(u.created_at).toLocaleString("default", {
+                    month: "short",
+                });
+                months[m] = (months[m] || 0) + 1;
+            });
+
+            profiles?.forEach((p) => {
+                // CGPA
+                const cgpa = parseFloat(p.academic_info?.cgpa) || 0;
+                if (cgpa > 0) {
+                    totalCgpa += cgpa;
+                    cgpaCount++;
+                }
+                // Kokurikulum
+                const koku = parseFloat(p.kokurikulum_score) || 0;
+                if (koku > 0) {
+                    totalKoku += koku;
+                    kokuCount++;
+                }
+                // Check balanced (both data exists and within 15% diff)
+                if (cgpa > 0 && koku > 0) {
+                    const academicScore = (cgpa / 4.0) * 100;
+                    if (Math.abs(academicScore - koku) <= 15) {
+                        balancedCount++;
+                    }
+                }
+                // Skills
+                if (Array.isArray(p.skills)) {
+                    p.skills.forEach((s: string) => {
+                        skillsMap[s] = (skillsMap[s] || 0) + 1;
+                    });
+                }
+                // PAK
+                if (p.personal_advisor) {
+                    paks[p.personal_advisor] =
+                        (paks[p.personal_advisor] || 0) + 1;
+                }
+            });
+
+            return {
+                users: users || [],
+                profiles: profiles || [],
+                events: events || [],
+                participations: participations || [],
+                departments: depts,
+                growth: months,
+                skills: skillsMap,
+                paks: paks,
+                avgCgpa:
+                    cgpaCount > 0 ? (totalCgpa / cgpaCount).toFixed(2) : "0.00",
+                avgKoku:
+                    kokuCount > 0 ? (totalKoku / kokuCount).toFixed(0) : "0",
+                balancedCount: balancedCount,
+            };
+        } catch (e) {
+            console.error("Stats Load Failed:", e);
+            return null;
+        }
+    }
+
+    async function updateQuickStats(stats: any) {
+        if (!stats) return;
+        document.getElementById("total-students")!.textContent = stats.users
+            .filter((u: any) => u.role === "student")
+            .length.toString();
+        document.getElementById("avg-cgpa")!.textContent = stats.avgCgpa;
+        document.getElementById("cgpa-count")!.textContent =
+            stats.profiles.length.toString();
+        document.getElementById("active-events")!.textContent =
+            stats.events.length.toString();
+        document.getElementById("event-participation")!.textContent =
+            stats.participations.length.toString();
+        document.getElementById("total-pak")!.textContent = Object.keys(
+            stats.paks,
+        ).length.toString();
+        document.getElementById("supervised-students")!.textContent =
+            stats.profiles.length.toString();
+
+        // Kokurikulum stats
+        document.getElementById("avg-koku")!.textContent = stats.avgKoku + "%";
+        document.getElementById("koku-balanced")!.textContent =
+            stats.balancedCount.toString();
+    }
+
+    async function initializeCharts(stats: any) {
+        if (!stats) return;
+
+        // User Growth
+        const growthLabels = ["Sep", "Oct", "Nov", "Dec"];
+        userGrowthChart = new Chart(
+            document.getElementById("userGrowthChart") as any,
+            {
+                type: "line",
+                data: {
+                    labels: growthLabels,
+                    datasets: [
+                        {
+                            label: "New Users",
+                            data: growthLabels.map((l) => stats.growth[l] || 0),
+                            borderColor: "#667eea",
+                            tension: 0.4,
+                            fill: true,
+                            backgroundColor: "rgba(102, 126, 234, 0.1)",
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: "rgba(0,0,0,0.05)" },
+                        },
+                        x: { grid: { display: false } },
+                    },
+                },
+            },
+        );
+
+        // Skills Chart
+        const sortedSkills = Object.entries(stats.skills)
+            .sort((a: any, b: any) => b[1] - a[1])
+            .slice(0, 10);
+        skillsChart = new Chart(document.getElementById("skillsChart") as any, {
+            type: "bar",
+            data: {
+                labels: sortedSkills.map((s) => s[0]),
+                datasets: [
+                    {
+                        label: "Popularity",
+                        data: sortedSkills.map((s) => s[1]),
+                        backgroundColor: "rgba(102, 126, 234, 0.7)",
+                        borderRadius: 5,
+                    },
+                ],
+            },
+        });
+
+        // PAK Chart
+        const pakCtx = document.getElementById(
+            "pakDistributionChart",
+        ) as HTMLCanvasElement;
+        if (pakCtx) {
+            pakChart = new Chart(pakCtx, {
+                type: "doughnut",
+                data: {
+                    labels: Object.keys(stats.paks),
+                    datasets: [
+                        {
+                            data: Object.values(stats.paks),
+                            backgroundColor: [
+                                "#667eea",
+                                "#764ba2",
+                                "#4facfe",
+                                "#22c55e",
+                            ],
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: "right",
+                            labels: {
+                                boxWidth: 12,
+                                padding: 20,
+                                font: { size: 11 },
+                            },
+                        },
+                    },
+                    // Cutout makes it look like a nice ring, not a solid disk
+                    cutout: "70%",
+                },
+            });
+        }
+
+        // Balance Chart (Akademik vs Kokurikulum)
+        const balanceCtx = document.getElementById(
+            "balanceChart",
+        ) as HTMLCanvasElement;
+        if (balanceCtx) {
+            const categories: { [key: string]: number } = {
+                Seimbang: 0,
+                "Fokus Akademik": 0,
+                "Fokus Kokurikulum": 0,
+                "Data Tak Lengkap": 0,
+            };
+
+            stats.profiles.forEach((p: any) => {
+                const cgpa = parseFloat(p.academic_info?.cgpa) || 0;
+                const koku = parseFloat(p.kokurikulum_score) || 0;
+
+                if (cgpa === 0 || koku === 0) {
+                    categories["Data Tak Lengkap"]++;
+                } else {
+                    const academicScore = (cgpa / 4.0) * 100;
+                    const diff = academicScore - koku;
+
+                    if (Math.abs(diff) <= 15) {
+                        categories["Seimbang"]++;
+                    } else if (diff > 15) {
+                        categories["Fokus Akademik"]++;
+                    } else {
+                        categories["Fokus Kokurikulum"]++;
+                    }
+                }
+            });
+
+            // Filter out zero values
+            const filteredLabels = Object.keys(categories).filter(
+                (k) => categories[k] > 0,
+            );
+            const filteredData = filteredLabels.map((k) => categories[k]);
+            const colorMap: { [key: string]: string } = {
+                Seimbang: "rgba(34, 197, 94, 0.85)",
+                "Fokus Akademik": "rgba(59, 130, 246, 0.85)",
+                "Fokus Kokurikulum": "rgba(249, 115, 22, 0.85)",
+                "Data Tak Lengkap": "rgba(156, 163, 175, 0.85)",
+            };
+
+            balanceChart = new Chart(balanceCtx, {
+                type: "doughnut",
+                data: {
+                    labels: filteredLabels,
+                    datasets: [
+                        {
+                            data: filteredData,
+                            backgroundColor: filteredLabels.map(
+                                (l) => colorMap[l],
+                            ),
+                            borderWidth: 2,
+                            borderColor: "#fff",
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: "bottom",
+                            labels: {
+                                boxWidth: 12,
+                                padding: 15,
+                                font: { size: 11 },
+                            },
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx: any) => {
+                                    const total = ctx.dataset.data.reduce(
+                                        (a: number, b: number) => a + b,
+                                        0,
+                                    );
+                                    const pct = (
+                                        (ctx.raw / total) *
+                                        100
+                                    ).toFixed(1);
+                                    return `${ctx.label}: ${ctx.raw} pelajar (${pct}%)`;
+                                },
+                            },
+                        },
+                    },
+                    cutout: "55%",
+                },
+            });
+        }
+    }
+
+    async function populateDepartmentTable(depts: any) {
+        const tbody = document.querySelector("tbody.divide-y");
+        if (!tbody || !depts) return;
+
+        const total = Object.values(depts).reduce(
+            (a: any, b: any) => a + b,
+            0,
+        ) as number;
+
+        tbody.innerHTML = Object.entries(depts)
+            .map(
+                ([name, count]: [any, any]) => `
+            <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${name}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">UTHM</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${count}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center gap-2">
+                        <div class="w-16 h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-[#667eea]" style="width: ${((count / total) * 100).toFixed(0)}%"></div>
+                        </div>
+                        <span class="text-xs text-gray-500">${((count / total) * 100).toFixed(1)}%</span>
+                    </div>
+                </td>
+            </tr>
+        `,
+            )
+            .join("");
+    }
+
+    function setupEventListeners() {
+        document
+            .getElementById("generate-report-btn")
+            ?.addEventListener("click", generateReport);
+        document
+            .getElementById("export-csv-btn")
+            ?.addEventListener("click", exportToCSV);
+        document
+            .getElementById("close-modal-btn")
+            ?.addEventListener("click", closeModal);
+        document
+            .getElementById("modal-close-footer-btn")
+            ?.addEventListener("click", closeModal);
+
+        // Initialize tabs
+        initializeTabs();
+    }
+
+    function initializeTabs() {
+        const tabs = document.querySelectorAll(".analytics-tab");
+        const tabContents = document.querySelectorAll(".tab-content");
+
+        tabs.forEach((tab) => {
+            tab.addEventListener("click", () => {
+                const targetTab = tab.getAttribute("data-tab");
+
+                // Remove active styles from all tabs
+                tabs.forEach((t) => {
+                    t.classList.remove(
+                        "active",
+                        "border-[#667eea]",
+                        "text-[#667eea]",
+                    );
+                    t.classList.add("border-transparent", "text-gray-500");
+                });
+
+                // Add active styles to clicked tab
+                tab.classList.add(
+                    "active",
+                    "border-[#667eea]",
+                    "text-[#667eea]",
+                );
+                tab.classList.remove("border-transparent", "text-gray-500");
+
+                // Hide all tab contents
+                tabContents.forEach((content) => {
+                    content.classList.add("hidden");
+                });
+
+                // Show target tab content
+                const targetContent = document.getElementById(
+                    `tab-${targetTab}`,
+                );
+                if (targetContent) {
+                    targetContent.classList.remove("hidden");
+                }
+            });
+        });
+    }
+
+    function closeModal() {
+        const m = document.getElementById("action-plan-modal");
+        m?.classList.add("hidden");
+        m?.classList.remove("flex");
+    }
+
+    // AI Plan Generation
+    async function generatePlan(studentId: string) {
+        const studentData = currentResults.find(
+            (r) => r.student_id === studentId,
+        );
+        if (!studentData) return;
+
+        const modal = document.getElementById("action-plan-modal");
+        const content = document.getElementById("action-plan-content");
+        const titleId = document.getElementById("modal-student-id");
+
+        if (modal && content && titleId) {
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            titleId.innerText = `Analyzing ${studentId}...`;
+
+            // Better loading state
+            content.innerHTML = `
+            <div class="space-y-4">
+                <div class="flex items-center justify-center py-12">
+                    <div class="relative">
+                        <div class="w-16 h-16 border-4 border-[#667eea]/20 rounded-full"></div>
+                        <div class="w-16 h-16 border-4 border-[#667eea] border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+                        <i class="fas fa-sparkles text-[#667eea] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"></i>
+                    </div>
+                </div>
+                <p class="text-center text-gray-500 text-sm">AI is analyzing student data and generating personalized recommendations...</p>
+            </div>`;
+
+            const result = await geminiService.generateActionPlan(studentData);
+
+            if (result.success && result.plan) {
+                titleId.innerText = `Student ${studentId}`;
+
+                // Get risk level styling
+                const riskLevel =
+                    studentData.risk_level?.toLowerCase() || "medium";
+                const riskConfig = {
+                    high: {
+                        bg: "bg-red-50",
+                        border: "border-red-200",
+                        text: "text-red-700",
+                        icon: "fa-exclamation-triangle",
+                        label: "High Risk",
+                    },
+                    medium: {
+                        bg: "bg-amber-50",
+                        border: "border-amber-200",
+                        text: "text-amber-700",
+                        icon: "fa-exclamation-circle",
+                        label: "Medium Risk",
+                    },
+                    low: {
+                        bg: "bg-green-50",
+                        border: "border-green-200",
+                        text: "text-green-700",
+                        icon: "fa-check-circle",
+                        label: "Low Risk",
+                    },
+                };
+                const risk =
+                    riskConfig[riskLevel as keyof typeof riskConfig] ||
+                    riskConfig.medium;
+
+                content.innerHTML = `
+                <!-- Risk Overview Card -->
+                <div class="${risk.bg} ${risk.border} border rounded-2xl p-5">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-12 h-12 ${risk.bg} rounded-xl flex items-center justify-center border ${risk.border}">
+                            <i class="fas ${risk.icon} ${risk.text} text-xl"></i>
+                        </div>
+                        <div>
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${risk.bg} ${risk.text} border ${risk.border}">
+                                ${risk.label}
+                            </span>
+                            <p class="text-gray-600 text-sm mt-1">Confidence: ${(studentData.confidence * 100).toFixed(0)}%</p>
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        <span class="font-medium text-gray-700">Primary Factor:</span> ${studentData.top_factor || "Multiple factors identified"}
+                    </div>
+                </div>
+
+                <!-- Intervention Strategy -->
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 border border-blue-100">
+                    <div class="flex items-start gap-3 mb-3">
+                        <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-lightbulb text-blue-600"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800">Intervention Strategy</h4>
+                            <p class="text-xs text-blue-600">AI-Generated Recommendation</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-700 text-sm leading-relaxed pl-13">${result.plan.interventionPlan}</p>
+                </div>
+
+                <!-- Recommended Actions -->
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <i class="fas fa-tasks text-[#667eea]"></i>
+                        <h4 class="font-bold text-gray-800">Recommended Actions</h4>
+                    </div>
+                    <div class="space-y-3">
+                        ${result.plan.recommendations
+                            .map(
+                                (rec: string, index: number) => `
+                            <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors group">
+                                <div class="w-8 h-8 bg-[#667eea]/10 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-[#667eea]/20 transition-colors">
+                                    <span class="text-[#667eea] font-bold text-sm">${index + 1}</span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-gray-700 text-sm leading-relaxed">${rec}</p>
+                                </div>
+                                <i class="fas fa-chevron-right text-gray-300 group-hover:text-[#667eea] transition-colors mt-1"></i>
+                            </div>
+                        `,
+                            )
+                            .join("")}
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-3 pt-2">
+                    <button class="flex-1 px-4 py-3 bg-[#667eea] text-white rounded-xl hover:bg-[#5a6fd6] transition-colors flex items-center justify-center gap-2 font-medium">
+                        <i class="fas fa-calendar-plus"></i>
+                        Schedule Intervention
+                    </button>
+                    <button class="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
+                        <i class="fas fa-download"></i>
+                        Export
+                    </button>
+                </div>
+            `;
+            } else {
+                content.innerHTML = `
+                <div class="text-center py-8">
+                    <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-800 mb-2">Generation Failed</h4>
+                    <p class="text-gray-500 text-sm mb-6">${result.error || "Unable to generate action plan. Please try again."}</p>
+                    <button onclick="generatePlan('${studentId}')" class="px-6 py-2 bg-[#667eea] text-white rounded-lg hover:bg-[#5a6fd6] transition-colors text-sm font-medium">
+                        <i class="fas fa-redo mr-2"></i>Try Again
+                    </button>
+                </div>
+            `;
+            }
+        }
+    }
+
+    // Export Functions
+    async function generateReport() {
+        const btn = document.getElementById("generate-report-btn");
+        if (btn) {
+            btn.innerHTML =
+                '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            (btn as HTMLButtonElement).disabled = true;
+        }
+
+        try {
+            // Fetch Data
+            const { data: users } = await supabase.from("users").select("*");
+            const { data: events } = await supabase.from("events").select("*");
+            const { data: profiles } = await supabase
+                .from("profiles")
+                .select("*");
+
+            const doc = new jsPDF();
+
+            // Header
+            doc.setFontSize(20);
+            doc.setTextColor(44, 62, 80);
+            doc.text("UTHM Talent Analytics Report", 105, 20, {
+                align: "center",
+            });
+
+            doc.setFontSize(12);
+            doc.setTextColor(52, 73, 94);
+            doc.text(
+                `Generated on: ${new Date().toLocaleString("en-MY")}`,
+                105,
+                30,
+                { align: "center" },
+            );
+
+            // Summary Section
+            doc.setFontSize(16);
+            doc.setTextColor(44, 62, 80);
+            doc.text("Executive Summary", 20, 50);
+
+            doc.setFontSize(10);
+            doc.setTextColor(52, 73, 94);
+            let y = 60;
+            doc.text(`Total Users: ${users?.length || 0}`, 20, y);
+            y += 7;
+            doc.text(`Total Events: ${events?.length || 0}`, 20, y);
+            y += 7;
+            doc.text(
+                `Students: ${users?.filter((u) => u.role === "student").length || 0}`,
+                20,
+                y,
+            );
+            y += 7;
+            doc.text(
+                `Lecturers: ${users?.filter((u) => u.role === "lecturer").length || 0}`,
+                20,
+                y,
+            );
+
+            // Tables
+            y += 15;
+            doc.setFontSize(14);
+            doc.setTextColor(44, 62, 80);
+            doc.text("Department Distribution", 20, y);
+
+            const deptCounts: Record<string, number> = {};
+            profiles?.forEach((p) => {
+                const dept =
+                    p.academic_info?.department || p.department || "Unknown";
+                deptCounts[dept] = (deptCounts[dept] || 0) + 1;
+            });
+
+            const tableData = Object.entries(deptCounts).map(
+                ([dept, count]) => [dept, count],
+            );
+
+            autoTable(doc, {
+                startY: y + 5,
+                head: [["Department", "Student Count"]],
+                body: tableData,
+                theme: "grid",
+                headStyles: { fillColor: [102, 126, 234] },
+            });
+
+            doc.save(
+                `uthm-analytics-report-${new Date().toISOString().split("T")[0]}.pdf`,
+            );
+            alert("PDF Report generated successfully!");
+        } catch (error: any) {
+            console.error("Error generating report:", error);
+            alert("Error generating report: " + error.message);
+        } finally {
+            if (btn) {
+                btn.innerHTML =
+                    '<i class="fas fa-file-pdf text-red-500"></i> Generate Report';
+                (btn as HTMLButtonElement).disabled = false;
+            }
+        }
+    }
+
+    async function exportToCSV() {
+        const btn = document.getElementById("export-csv-btn");
+        if (btn) {
+            btn.innerHTML =
+                '<i class="fas fa-spinner fa-spin"></i> Exporting...';
+            (btn as HTMLButtonElement).disabled = true;
+        }
+
+        try {
+            const { data: users, error } = await supabase
+                .from("users")
+                .select("*");
+
+            if (error) throw error;
+            if (!users || users.length === 0) {
+                alert("No data to export");
+                return;
+            }
+
+            // Prepare CSV Data
+            const headers = [
+                "ID",
+                "Name",
+                "Email",
+                "Role",
+                "Department",
+                "Created At",
+            ];
+            const rows = users.map((u) => [
+                u.id,
+                u.name || u.full_name || "",
+                u.email,
+                u.role,
+                u.department || "",
+                u.created_at,
+            ]);
+
+            const csvContent = [
+                headers.join(","),
+                ...rows.map((row) =>
+                    row
+                        .map((cell) => `"${String(cell).replace(/"/g, '""')}"`)
+                        .join(","),
+                ),
+            ].join("\n");
+
+            const blob = new Blob([csvContent], {
+                type: "text/csv;charset=utf-8;",
+            });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute(
+                "download",
+                `uthm-users-export-${new Date().toISOString().split("T")[0]}.csv`,
+            );
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error: any) {
+            console.error("Error exporting CSV:", error);
+            alert("Error exporting CSV: " + error.message);
+        } finally {
+            if (btn) {
+                btn.innerHTML =
+                    '<i class="fas fa-file-csv text-green-500"></i> Export CSV';
+                (btn as HTMLButtonElement).disabled = false;
+            }
+        }
+    }
+
+    // ML Logic
+    async function checkMLSystem() {
+        const badge = document.getElementById("ml-health-badge");
+        if (!badge) return;
+
+        const health = await mlAnalyticsService.checkHealth();
+        if (health.success) {
+            badge.innerHTML = `<i class="fas fa-check-circle text-green-500"></i> System Online (${health.model})`;
+            badge.classList.remove("bg-gray-100", "text-gray-500");
+            badge.classList.add("bg-green-50", "text-green-700");
+        } else {
+            badge.innerHTML = `<i class="fas fa-exclamation-circle text-red-500"></i> System Offline`;
+            badge.classList.remove("bg-gray-100", "text-gray-500");
+            badge.classList.add("bg-red-50", "text-red-700");
+        }
+    }
+
+    const analyzeBtn = document.getElementById("analyze-btn");
+    analyzeBtn?.addEventListener("click", async () => {
+        const input = document.getElementById(
+            "student-ids-input",
+        ) as HTMLInputElement;
+        const ids = input.value
+            .split(",")
+            .map((id) => id.trim())
+            .filter((id) => id);
+
+        if (ids.length === 0) {
+            alert("Please enter at least one student ID");
+            return;
+        }
+
+        // Show loading state
+        analyzeBtn.innerHTML =
+            '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+        analyzeBtn.setAttribute("disabled", "true");
+
+        const result = await mlAnalyticsService.batchPredict(ids);
+
+        if (result.success && result.data) {
+            displayResults(result.data.results);
+            updateHeatmap(result.data.results);
+        } else {
+            alert("Analysis failed: " + result.error);
+        }
+
+        // Reset button
+        analyzeBtn.innerHTML = '<i class="fas fa-magic"></i> Analyze';
+        analyzeBtn.removeAttribute("disabled");
+    });
+
+    function updateHeatmap(results: any[]) {
+        const ctx = document.getElementById(
+            "riskHeatmapChart",
+        ) as HTMLCanvasElement;
+        if (!ctx) return;
+
+        if (heatmapChart) {
+            heatmapChart.destroy();
+        }
+
+        const dataPoints = results.map((r) => ({
+            x: r.attendance_rate,
+            y: r.current_cgpa,
+            r: 8, // Radius
+            student_id: r.student_id,
+            risk_level: r.risk_level,
+        }));
+
+        heatmapChart = new Chart(ctx, {
+            type: "bubble",
+            data: {
+                datasets: [
+                    {
+                        label: "Student Risk Profile",
+                        data: dataPoints,
+                        backgroundColor: (context) => {
+                            const raw = context.raw as any;
+                            if (!raw) return "#ccc";
+                            if (raw.risk_level === "HIGH")
+                                return "rgba(239, 68, 68, 0.7)"; // Red
+                            if (raw.risk_level === "MEDIUM")
+                                return "rgba(234, 179, 8, 0.7)"; // Yellow
+                            return "rgba(34, 197, 94, 0.7)"; // Green
+                        },
+                        borderColor: (context) => {
+                            const raw = context.raw as any;
+                            if (!raw) return "#ccc";
+                            if (raw.risk_level === "HIGH")
+                                return "rgb(239, 68, 68)";
+                            if (raw.risk_level === "MEDIUM")
+                                return "rgb(234, 179, 8)";
+                            return "rgb(34, 197, 94)";
+                        },
+                        borderWidth: 1,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                const raw = context.raw as any;
+                                return `${raw.student_id}: CGPA ${raw.y}, Attendance ${raw.x}%`;
+                            },
+                        },
+                    },
+                    legend: { display: false },
+                },
+                scales: {
+                    x: {
+                        title: { display: true, text: "Attendance Rate (%)" },
+                        min: 0,
+                        max: 100,
+                    },
+                    y: {
+                        title: { display: true, text: "CGPA" },
+                        min: 0,
+                        max: 4.0,
+                    },
+                },
+            },
+        });
+    }
+
+    function displayResults(results: any[]) {
+        currentResults = results; // Store for AI generation
+        const resultsArea = document.getElementById("ml-results-area");
+        const emptyState = document.getElementById("ml-empty-state");
+        const tbody = document.getElementById("ml-results-body");
+
+        if (!resultsArea || !emptyState || !tbody) return;
+
+        resultsArea.classList.remove("hidden");
+        emptyState.classList.add("hidden");
+        tbody.innerHTML = "";
+
+        // Update Counts
+        const countHigh = document.getElementById("count-high");
+        const countMedium = document.getElementById("count-medium");
+        const countLow = document.getElementById("count-low");
+
+        if (countHigh)
+            countHigh.innerText = results
+                .filter((r) => r.risk_level === "HIGH")
+                .length.toString();
+        if (countMedium)
+            countMedium.innerText = results
+                .filter((r) => r.risk_level === "MEDIUM")
+                .length.toString();
+        if (countLow)
+            countLow.innerText = results
+                .filter((r) => r.risk_level === "LOW")
+                .length.toString();
+
+        results.forEach((r) => {
+            const format = mlAnalyticsService.formatRiskScore(r.risk_score);
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${r.student_id}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${format.bgClass}">
+                        ${format.icon} ${r.risk_level}
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${Math.round(r.confidence * 100)}%</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${r.risk_factors[0] || "None"}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button class="text-[#667eea] hover:text-[#5a6fd6] flex items-center gap-1 generate-plan-btn" data-student-id="${r.student_id}">
+                        <i class="fas fa-magic"></i> AI Plan
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    // ======== NEW DETAILED ANALYTICS FUNCTIONS ========
+
+    async function loadDetailedAnalytics() {
+        try {
+            // Fetch all data from Supabase
+            const [usersResult, profilesResult, eventsResult] =
+                await Promise.all([
+                    supabase.from("users").select("*"),
+                    supabase.from("profiles").select("*"),
+                    supabase.from("events").select("*"),
+                ]);
+
+            const users = usersResult.data || [];
+            const profiles = profilesResult.data || [];
+            const events = eventsResult.data || [];
+
+            // Calculate stats
+            const students = users.filter((u) => u.role === "student");
+            const totalStudents = students.length;
+
+            // Update quick stats
+            updateElement("total-students", totalStudents.toString());
+
+            // Count new students this week
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            const newStudents = students.filter(
+                (s) => new Date(s.created_at) > oneWeekAgo,
+            ).length;
+            updateElement("new-students-week", newStudents.toString());
+
+            // Calculate average CGPA
+            const cgpaValues = profiles
+                .filter((p) => p.academic_info?.cgpa)
+                .map((p) => parseFloat(p.academic_info.cgpa) || 0);
+            const avgCgpa =
+                cgpaValues.length > 0
+                    ? (
+                          cgpaValues.reduce((a, b) => a + b, 0) /
+                          cgpaValues.length
+                      ).toFixed(2)
+                    : "0.00";
+            updateElement("avg-cgpa", avgCgpa);
+            updateElement("cgpa-count", cgpaValues.length.toString());
+
+            // Calculate kokurikulum stats
+            const kokuValues = profiles
+                .filter((p) => p.kokurikulum_score != null)
+                .map((p) => p.kokurikulum_score || 0);
+            const avgKoku =
+                kokuValues.length > 0
+                    ? Math.round(
+                          kokuValues.reduce((a, b) => a + b, 0) /
+                              kokuValues.length,
+                      )
+                    : 0;
+            updateElement("avg-koku", `${avgKoku}%`);
+
+            // Count balanced students (those with good academic and koku balance)
+            const balancedStudents = profiles.filter((p) => {
+                const cgpa = parseFloat(p.academic_info?.cgpa) || 0;
+                const koku = p.kokurikulum_score || 0;
+                const academicScore = (cgpa / 4.0) * 100;
+                return Math.abs(academicScore - koku) <= 15;
+            }).length;
+            updateElement("koku-balanced", balancedStudents.toString());
+
+            // Active events
+            const now = new Date();
+            const activeEvents = events.filter(
+                (e) => new Date(e.end_date) > now,
+            ).length;
+            updateElement("active-events", activeEvents.toString());
+
+            // PAK Statistics
+            await loadPAKStatistics(profiles, users);
+
+            // Load charts
+            loadBalanceChart(profiles);
+            loadSkillsChart(profiles);
+            loadProgramChart(profiles);
+            loadEngagementMetrics(profiles, events, totalStudents);
+        } catch (error) {
+            console.error("Error loading detailed analytics:", error);
+        }
+    }
+
+    async function loadPAKStatistics(profiles: any[], users: any[]) {
+        // Get unique PAKs
+        const pakMap = new Map<string, number>();
+
+        profiles.forEach((p) => {
+            const pak = p.personal_advisor || p.academic_info?.personalAdvisor;
+            if (pak) {
+                pakMap.set(pak, (pakMap.get(pak) || 0) + 1);
+            }
+        });
+
+        const totalPak = pakMap.size;
+        const supervisedStudents = Array.from(pakMap.values()).reduce(
+            (a, b) => a + b,
+            0,
+        );
+        const avgPerPak =
+            totalPak > 0 ? Math.round(supervisedStudents / totalPak) : 0;
+
+        updateElement("total-pak", totalPak.toString());
+        updateElement("supervised-students", supervisedStudents.toString());
+        updateElement("avg-per-pak", avgPerPak.toString());
+
+        // Populate PAK filter dropdown
+        const pakFilter = document.getElementById(
+            "pak-filter",
+        ) as HTMLSelectElement;
+        if (pakFilter) {
+            pakMap.forEach((count, pak) => {
+                const option = document.createElement("option");
+                option.value = pak;
+                option.textContent = `${pak} (${count})`;
+                pakFilter.appendChild(option);
+            });
+        }
+
+        // Load PAK distribution chart
+        loadPAKChart(pakMap);
+    }
+
+    function loadPAKChart(pakMap: Map<string, number>) {
+        const ctx = document.getElementById(
+            "pakDistributionChart",
+        ) as HTMLCanvasElement;
+        if (!ctx) return;
+
+        if (pakChart) pakChart.destroy();
+
+        const topPaks = Array.from(pakMap.entries())
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10);
+
+        pakChart = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: topPaks.map((p) =>
+                    p[0].split(" ").slice(0, 2).join(" "),
+                ),
+                datasets: [
+                    {
+                        label: "Jumlah Pelajar",
+                        data: topPaks.map((p) => p[1]),
+                        backgroundColor: "rgba(102, 126, 234, 0.7)",
+                        borderColor: "rgb(102, 126, 234)",
+                        borderWidth: 1,
+                        borderRadius: 8,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: "y",
+                plugins: {
+                    legend: { display: false },
+                    title: {
+                        display: true,
+                        text: "Top 10 PAK Mengikut Bilangan Pelajar",
+                    },
+                },
+                scales: {
+                    x: { beginAtZero: true },
+                },
+            },
+        });
+    }
+
+    function loadBalanceChart(profiles: any[]) {
+        const ctx = document.getElementById(
+            "balanceChart",
+        ) as HTMLCanvasElement;
+        if (!ctx) return;
+
+        if (balanceChart) balanceChart.destroy();
+
+        // Count students by balance category
+        const categories = {
+            Seimbang: 0,
+            "Fokus Akademik": 0,
+            "Fokus Kokurikulum": 0,
+            "Tiada Data": 0,
+        };
+
+        profiles.forEach((p) => {
+            const cgpa = parseFloat(p.academic_info?.cgpa) || 0;
+            const koku = p.kokurikulum_score || 0;
+
+            if (!cgpa && !koku) {
+                categories["Tiada Data"]++;
+            } else {
+                const academicScore = (cgpa / 4.0) * 100;
+                const diff = academicScore - koku;
+
+                if (Math.abs(diff) <= 10) {
+                    categories["Seimbang"]++;
+                } else if (diff > 10) {
+                    categories["Fokus Akademik"]++;
+                } else {
+                    categories["Fokus Kokurikulum"]++;
+                }
+            }
+        });
+
+        balanceChart = new Chart(ctx, {
+            type: "doughnut",
+            data: {
+                labels: Object.keys(categories),
+                datasets: [
+                    {
+                        data: Object.values(categories),
+                        backgroundColor: [
+                            "rgba(34, 197, 94, 0.8)",
+                            "rgba(59, 130, 246, 0.8)",
+                            "rgba(249, 115, 22, 0.8)",
+                            "rgba(156, 163, 175, 0.8)",
+                        ],
+                        borderWidth: 0,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                    },
+                },
+            },
+        });
+    }
+
+    function loadSkillsChart(profiles: any[]) {
+        const ctx = document.getElementById("skillsChart") as HTMLCanvasElement;
+        if (!ctx) return;
+
+        if (skillsChart) skillsChart.destroy();
+
+        // Count skills
+        const skillCounts = new Map<string, number>();
+        profiles.forEach((p) => {
+            (p.skills || []).forEach((skill: string) => {
+                skillCounts.set(skill, (skillCounts.get(skill) || 0) + 1);
+            });
+        });
+
+        const topSkills = Array.from(skillCounts.entries())
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10);
+
+        skillsChart = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: topSkills.map((s) => s[0]),
+                datasets: [
+                    {
+                        label: "Bilangan Pelajar",
+                        data: topSkills.map((s) => s[1]),
+                        backgroundColor: "rgba(102, 126, 234, 0.7)",
+                        borderColor: "rgb(102, 126, 234)",
+                        borderWidth: 1,
+                        borderRadius: 8,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true },
+                },
+            },
+        });
+    }
+
+    function loadProgramChart(profiles: any[]) {
+        const ctx = document.getElementById(
+            "programChart",
+        ) as HTMLCanvasElement;
+        if (!ctx) return;
+
+        if (programChart) programChart.destroy();
+
+        // Count programs
+        const programCounts = new Map<string, number>();
+        profiles.forEach((p) => {
+            const program = p.academic_info?.program || "Unknown";
+            programCounts.set(program, (programCounts.get(program) || 0) + 1);
+        });
+
+        const programs = Array.from(programCounts.entries()).sort(
+            (a, b) => b[1] - a[1],
+        );
+
+        const colors = [
+            "rgba(102, 126, 234, 0.8)",
+            "rgba(249, 115, 22, 0.8)",
+            "rgba(34, 197, 94, 0.8)",
+            "rgba(239, 68, 68, 0.8)",
+            "rgba(168, 85, 247, 0.8)",
+            "rgba(14, 165, 233, 0.8)",
+        ];
+
+        programChart = new Chart(ctx, {
+            type: "pie",
+            data: {
+                labels: programs.map((p) => p[0]),
+                datasets: [
+                    {
+                        data: programs.map((p) => p[1]),
+                        backgroundColor: programs.map(
+                            (_, i) => colors[i % colors.length],
+                        ),
+                        borderWidth: 0,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: "right",
+                        labels: {
+                            boxWidth: 12,
+                            font: { size: 11 },
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    function loadEngagementMetrics(
+        profiles: any[],
+        events: any[],
+        totalStudents: number,
+    ) {
+        // Profile completion rate
+        const completedProfiles = profiles.filter(
+            (p) => p.is_profile_complete,
+        ).length;
+        const profileRate =
+            totalStudents > 0
+                ? Math.round((completedProfiles / totalStudents) * 100)
+                : 0;
+        updateElement("profile-completion-rate", `${profileRate}%`);
+        updateProgressBar("profile-completion-bar", profileRate);
+
+        // Event participation (estimate based on events)
+        const eventParticipation = Math.min(
+            Math.round(((events.length * 10) / totalStudents) * 100),
+            100,
+        );
+        updateElement("event-participation-rate", `${eventParticipation}%`);
+        updateProgressBar("event-participation-bar", eventParticipation);
+
+        // Showcase rate (profiles with projects/experiences)
+        const showcaseProfiles = profiles.filter(
+            (p) =>
+                (p.projects && p.projects.length > 0) ||
+                (p.experiences && p.experiences.length > 0),
+        ).length;
+        const showcaseRate =
+            totalStudents > 0
+                ? Math.round((showcaseProfiles / totalStudents) * 100)
+                : 0;
+        updateElement("showcase-rate", `${showcaseRate}%`);
+        updateProgressBar("showcase-bar", showcaseRate);
+
+        // Load engagement chart
+        const ctx = document.getElementById(
+            "engagementChart",
+        ) as HTMLCanvasElement;
+        if (!ctx) return;
+
+        if (engagementChart) engagementChart.destroy();
+
+        engagementChart = new Chart(ctx, {
+            type: "radar",
+            data: {
+                labels: ["Profile", "Events", "Showcase", "Skills", "Koku"],
+                datasets: [
+                    {
+                        label: "Engagement Score",
+                        data: [
+                            profileRate,
+                            eventParticipation,
+                            showcaseRate,
+                            (profiles.filter((p) => p.skills?.length > 2)
+                                .length /
+                                totalStudents) *
+                                100,
+                            (profiles.filter((p) => p.kokurikulum_score > 50)
+                                .length /
+                                totalStudents) *
+                                100,
+                        ],
+                        fill: true,
+                        backgroundColor: "rgba(102, 126, 234, 0.2)",
+                        borderColor: "rgb(102, 126, 234)",
+                        pointBackgroundColor: "rgb(102, 126, 234)",
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        min: 0,
+                        max: 100,
+                    },
+                },
+            },
+        });
+    }
+
+    function updateElement(id: string, value: string) {
+        const el = document.getElementById(id);
+        if (el) el.innerText = value;
+    }
+
+    function updateProgressBar(id: string, value: number) {
+        const el = document.getElementById(id) as HTMLElement;
+        if (el) el.style.width = `${Math.min(value, 100)}%`;
+    }
+</script>

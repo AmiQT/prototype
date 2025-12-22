@@ -1,0 +1,201 @@
+---
+import BrutalDashboardLayout from "../../layouts/BrutalDashboardLayout.astro";
+import BentoCard from "../../components/BentoCard.astro";
+import BrutalButton from "../../components/BrutalButton.astro";
+---
+
+<BrutalDashboardLayout title="Settings" activeSection="settings">
+    <div class="bento-grid">
+        <!-- Profile Settings -->
+        <BentoCard color="gold" size="wide" noPadding={true}>
+            <div class="p-6">
+                <h3
+                    class="text-lg font-bold text-brutal-black uppercase mb-4"
+                    style="font-family: var(--font-heading);"
+                >
+                    👤 Profile Settings
+                </h3>
+                <div class="space-y-4">
+                    <div>
+                        <label
+                            class="block text-xs font-bold uppercase mb-2"
+                            style="font-family: var(--font-heading);"
+                            >Name</label
+                        >
+                        <input
+                            type="text"
+                            class="brutal-input w-full"
+                            placeholder="Your Name"
+                            value="John Doe"
+                        />
+                    </div>
+                    <div>
+                        <label
+                            class="block text-xs font-bold uppercase mb-2"
+                            style="font-family: var(--font-heading);"
+                            >Email</label
+                        >
+                        <input
+                            type="email"
+                            class="brutal-input w-full"
+                            placeholder="your@email.com"
+                            value="john@example.com"
+                        />
+                    </div>
+                    <BrutalButton color="magenta" icon="fas fa-save">
+                        Save Changes
+                    </BrutalButton>
+                </div>
+            </div>
+        </BentoCard>
+
+        <!-- Notification Settings -->
+        <BentoCard color="cyan" size="medium" noPadding={true}>
+            <div class="p-6">
+                <h3
+                    class="text-md font-bold text-brutal-black uppercase mb-4"
+                    style="font-family: var(--font-heading);"
+                >
+                    🔔 Notifications
+                </h3>
+                <div class="space-y-3">
+                    <div
+                        class="flex items-center justify-between p-3 bg-brutal-white brutal-border"
+                    >
+                        <span class="text-xs font-bold uppercase"
+                            >Email Alerts</span
+                        >
+                        <button
+                            class="w-12 h-6 bg-brutal-gold brutal-border relative"
+                        >
+                            <div
+                                class="w-5 h-5 bg-brutal-black absolute top-0 right-0 brutal-border"
+                                style="border-width: 2px;"
+                            >
+                            </div>
+                        </button>
+                    </div>
+                    <div
+                        class="flex items-center justify-between p-3 bg-brutal-white brutal-border"
+                    >
+                        <span class="text-xs font-bold uppercase"
+                            >Push Notifications</span
+                        >
+                        <button
+                            class="w-12 h-6 bg-brutal-gray brutal-border relative"
+                        >
+                            <div
+                                class="w-5 h-5 bg-brutal-white brutal-border absolute top-0 left-0"
+                                style="border-width: 2px;"
+                            >
+                            </div>
+                        </button>
+                    </div>
+                    <div
+                        class="flex items-center justify-between p-3 bg-brutal-white brutal-border"
+                    >
+                        <span class="text-xs font-bold uppercase"
+                            >SMS Alerts</span
+                        >
+                        <button
+                            class="w-12 h-6 bg-brutal-gold brutal-border relative"
+                        >
+                            <div
+                                class="w-5 h-5 bg-brutal-black absolute top-0 right-0 brutal-border"
+                                style="border-width: 2px;"
+                            >
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </BentoCard>
+
+        <!-- Security Settings -->
+        <BentoCard color="magenta" size="medium" noPadding={true}>
+            <div class="p-6">
+                <h3
+                    class="text-md font-bold text-brutal-white uppercase mb-4"
+                    style="font-family: var(--font-heading);"
+                >
+                    🔒 Security
+                </h3>
+                <div class="space-y-3">
+                    <BrutalButton color="white" icon="fas fa-key" size="sm">
+                        Change Password
+                    </BrutalButton>
+                    <BrutalButton
+                        color="white"
+                        icon="fas fa-shield-alt"
+                        size="sm"
+                    >
+                        Two-Factor Auth
+                    </BrutalButton>
+                    <BrutalButton color="white" icon="fas fa-clock" size="sm">
+                        Session History
+                    </BrutalButton>
+                </div>
+            </div>
+        </BentoCard>
+
+        <!-- Theme Settings -->
+        <BentoCard color="purple" size="medium" noPadding={true}>
+            <div class="p-6">
+                <h3
+                    class="text-md font-bold text-brutal-white uppercase mb-4"
+                    style="font-family: var(--font-heading);"
+                >
+                    🎨 Theme
+                </h3>
+                <div class="space-y-3">
+                    <div class="p-3 bg-brutal-gold brutal-border">
+                        <p class="text-xs font-bold uppercase">Current Theme</p>
+                        <p class="text-lg font-bold mt-1">Neo-Brutalism 🎪</p>
+                    </div>
+                    <BrutalButton color="white" icon="fas fa-palette" size="sm">
+                        Switch Theme
+                    </BrutalButton>
+                </div>
+            </div>
+        </BentoCard>
+
+        <!-- Danger Zone -->
+        <BentoCard color="white" size="full" noPadding={true}>
+            <div class="p-6">
+                <h3
+                    class="text-lg font-bold text-brutal-black uppercase mb-4"
+                    style="font-family: var(--font-heading);"
+                >
+                    ⚠️ Danger Zone
+                </h3>
+                <div class="flex flex-wrap gap-3">
+                    <BrutalButton
+                        color="orange"
+                        icon="fas fa-trash-restore"
+                        size="sm"
+                    >
+                        Reset Settings
+                    </BrutalButton>
+                    <BrutalButton
+                        color="magenta"
+                        icon="fas fa-download"
+                        size="sm"
+                    >
+                        Export Data
+                    </BrutalButton>
+                    <BrutalButton
+                        color="black"
+                        icon="fas fa-user-slash"
+                        size="sm"
+                    >
+                        Delete Account
+                    </BrutalButton>
+                </div>
+            </div>
+        </BentoCard>
+    </div>
+</BrutalDashboardLayout>
+
+<style>
+    @import url("../../styles/brutalism.css");
+</style>

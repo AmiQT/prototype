@@ -1,0 +1,362 @@
+---
+import BrutalDashboardLayout from "../../layouts/BrutalDashboardLayout.astro";
+import BentoCard from "../../components/BentoCard.astro";
+import BrutalButton from "../../components/BrutalButton.astro";
+---
+
+<BrutalDashboardLayout title="Analytics" activeSection="analytics">
+    <!-- Action Buttons -->
+    <div class="p-6 flex flex-wrap gap-3 justify-end">
+        <BrutalButton color="magenta" icon="fas fa-file-pdf" size="sm">
+            Generate PDF
+        </BrutalButton>
+        <BrutalButton color="cyan" icon="fas fa-file-csv" size="sm">
+            Export CSV
+        </BrutalButton>
+    </div>
+
+    <!-- Analytics Bento Grid -->
+    <div class="bento-grid">
+        <!-- Wide Chart Card: User Growth -->
+        <BentoCard color="gold" size="wide" noPadding={true}>
+            <div class="p-6 h-full flex flex-col">
+                <h3
+                    class="text-lg font-bold text-brutal-black uppercase mb-4"
+                    style="font-family: var(--font-heading);"
+                >
+                    📈 User Growth
+                </h3>
+                <div
+                    class="flex-1 brutal-chart-container bg-white"
+                    style="border: none; box-shadow: none;"
+                >
+                    <canvas id="userGrowthChart"></canvas>
+                </div>
+            </div>
+        </BentoCard>
+
+        <!-- Stat Card 1: Total Revenue -->
+        <BentoCard
+            color="cyan"
+            size="small"
+            title="Revenue"
+            value="$45.2K"
+            icon="fas fa-dollar-sign"
+        />
+
+        <!-- Stat Card 2: Active Users -->
+        <BentoCard
+            color="magenta"
+            size="small"
+            title="Active Users"
+            value="1,234"
+            icon="fas fa-user-check"
+        />
+
+        <!-- Stat Card 3: Conversion Rate -->
+        <BentoCard
+            color="lime"
+            size="small"
+            title="Conversion"
+            value="23.5%"
+            icon="fas fa-chart-pie"
+        />
+
+        <!-- Full Width Chart: Event Participation -->
+        <BentoCard color="cyan" size="full" noPadding={true}>
+            <div class="p-6">
+                <h3
+                    class="text-lg font-bold text-brutal-black uppercase mb-4"
+                    style="font-family: var(--font-heading);"
+                >
+                    📊 Event Participation
+                </h3>
+                <div
+                    class="brutal-chart-container bg-white"
+                    style="border: none; box-shadow: none; height: 300px;"
+                >
+                    <canvas id="eventChart"></canvas>
+                </div>
+            </div>
+        </BentoCard>
+
+        <!-- Department Stats Grid -->
+        <BentoCard color="purple" size="medium" noPadding={true}>
+            <div class="p-6">
+                <h3
+                    class="text-md font-bold text-brutal-white uppercase mb-4"
+                    style="font-family: var(--font-heading);"
+                >
+                    🏛️ Departments
+                </h3>
+                <div class="space-y-3">
+                    <div
+                        class="flex items-center justify-between p-3 bg-brutal-gold brutal-border"
+                    >
+                        <span class="font-bold text-xs uppercase">FSKTM</span>
+                        <span class="text-lg font-bold">205</span>
+                    </div>
+                    <div
+                        class="flex items-center justify-between p-3 bg-brutal-cyan brutal-border"
+                    >
+                        <span class="font-bold text-xs uppercase">FKE</span>
+                        <span class="text-lg font-bold">178</span>
+                    </div>
+                    <div
+                        class="flex items-center justify-between p-3 bg-brutal-magenta brutal-border text-white"
+                    >
+                        <span class="font-bold text-xs uppercase">FPTP</span>
+                        <span class="text-lg font-bold">156</span>
+                    </div>
+                </div>
+            </div>
+        </BentoCard>
+
+        <!-- Top Events -->
+        <BentoCard color="orange" size="medium" noPadding={true}>
+            <div class="p-6">
+                <h3
+                    class="text-md font-bold text-brutal-black uppercase mb-4"
+                    style="font-family: var(--font-heading);"
+                >
+                    🎯 Top Events
+                </h3>
+                <div class="space-y-3">
+                    <div class="p-3 bg-brutal-white brutal-border">
+                        <p class="font-bold text-xs uppercase">
+                            Tech Hackathon 2025
+                        </p>
+                        <p class="text-xs text-gray-600 mt-1">
+                            256 participants
+                        </p>
+                    </div>
+                    <div class="p-3 bg-brutal-white brutal-border">
+                        <p class="font-bold text-xs uppercase">Career Fair</p>
+                        <p class="text-xs text-gray-600 mt-1">
+                            189 participants
+                        </p>
+                    </div>
+                    <div class="p-3 bg-brutal-white brutal-border">
+                        <p class="font-bold text-xs uppercase">AI Workshop</p>
+                        <p class="text-xs text-gray-600 mt-1">
+                            142 participants
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </BentoCard>
+
+        <!-- Performance Metrics -->
+        <BentoCard color="lime" size="medium" noPadding={true}>
+            <div class="p-6">
+                <h3
+                    class="text-md font-bold text-brutal-black uppercase mb-4"
+                    style="font-family: var(--font-heading);"
+                >
+                    ⚡ Metrics
+                </h3>
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs font-bold uppercase"
+                                >Engagement</span
+                            >
+                            <span class="text-xs font-bold">87%</span>
+                        </div>
+                        <div class="h-3 bg-brutal-white brutal-border">
+                            <div
+                                class="h-full bg-brutal-black"
+                                style="width: 87%"
+                            >
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs font-bold uppercase"
+                                >Satisfaction</span
+                            >
+                            <span class="text-xs font-bold">92%</span>
+                        </div>
+                        <div class="h-3 bg-brutal-white brutal-border">
+                            <div
+                                class="h-full bg-brutal-black"
+                                style="width: 92%"
+                            >
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs font-bold uppercase"
+                                >Completion</span
+                            >
+                            <span class="text-xs font-bold">78%</span>
+                        </div>
+                        <div class="h-3 bg-brutal-white brutal-border">
+                            <div
+                                class="h-full bg-brutal-black"
+                                style="width: 78%"
+                            >
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </BentoCard>
+    </div>
+
+    <script>
+        import Chart from "chart.js/auto";
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // User Growth Chart
+            const userCtx = document.getElementById(
+                "userGrowthChart",
+            ) as HTMLCanvasElement;
+            if (userCtx) {
+                new Chart(userCtx, {
+                    type: "line",
+                    data: {
+                        labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+                        datasets: [
+                            {
+                                label: "New Users",
+                                data: [65, 89, 123, 156, 201, 234],
+                                borderColor: "#000000",
+                                backgroundColor: "#FFD700",
+                                borderWidth: 4,
+                                tension: 0,
+                                pointRadius: 6,
+                                pointBorderWidth: 3,
+                                pointBackgroundColor: "#00D9FF",
+                                pointBorderColor: "#000000",
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: {
+                            duration: 1000,
+                            easing: "easeOutBounce",
+                        },
+                        plugins: {
+                            legend: {
+                                display: false,
+                            },
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: "#000000",
+                                    lineWidth: 2,
+                                },
+                                ticks: {
+                                    font: {
+                                        family: "'Space Grotesk', sans-serif",
+                                        size: 12,
+                                        weight: "bold",
+                                    },
+                                },
+                            },
+                            x: {
+                                grid: {
+                                    color: "#000000",
+                                    lineWidth: 2,
+                                },
+                                ticks: {
+                                    font: {
+                                        family: "'Space Grotesk', sans-serif",
+                                        size: 12,
+                                        weight: "bold",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                });
+            }
+
+            // Event Participation Chart
+            const eventCtx = document.getElementById(
+                "eventChart",
+            ) as HTMLCanvasElement;
+            if (eventCtx) {
+                new Chart(eventCtx, {
+                    type: "bar",
+                    data: {
+                        labels: [
+                            "Hackathon",
+                            "Career Fair",
+                            "Workshop",
+                            "Seminar",
+                            "Competition",
+                        ],
+                        datasets: [
+                            {
+                                label: "Participants",
+                                data: [256, 189, 142, 98, 215],
+                                backgroundColor: [
+                                    "#FFD700",
+                                    "#00D9FF",
+                                    "#FF006E",
+                                    "#7209b7",
+                                    "#CCFF00",
+                                ],
+                                borderColor: "#000000",
+                                borderWidth: 4,
+                            },
+                        ],
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: {
+                            duration: 1000,
+                            easing: "easeOutBounce",
+                        },
+                        plugins: {
+                            legend: {
+                                display: false,
+                            },
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: "#000000",
+                                    lineWidth: 2,
+                                },
+                                ticks: {
+                                    font: {
+                                        family: "'Space Grotesk', sans-serif",
+                                        size: 12,
+                                        weight: "bold",
+                                    },
+                                },
+                            },
+                            x: {
+                                grid: {
+                                    display: false,
+                                },
+                                ticks: {
+                                    font: {
+                                        family: "'Space Grotesk', sans-serif",
+                                        size: 12,
+                                        weight: "bold",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                });
+            }
+        });
+    </script>
+</BrutalDashboardLayout>
+
+<style>
+    @import url("../../styles/brutalism.css");
+</style>

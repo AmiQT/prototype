@@ -1,0 +1,69 @@
+---
+interface Props {
+    color?:
+        | "gold"
+        | "cyan"
+        | "magenta"
+        | "purple"
+        | "lime"
+        | "orange"
+        | "white";
+    size?: "small" | "medium" | "large" | "wide" | "tall" | "full";
+    title?: string;
+    value?: string | number;
+    icon?: string;
+    noPadding?: boolean;
+}
+
+const {
+    color = "white",
+    size = "medium",
+    title,
+    value,
+    icon,
+    noPadding = false,
+} = Astro.props;
+
+const colorClass = `bg-brutal-${color}`;
+const sizeClass = `bento-${size}`;
+const paddingClass = noPadding ? "" : "p-6";
+---
+
+<div class={`bento-card ${sizeClass} ${colorClass} ${paddingClass}`}>
+    {
+        (title || value || icon) && (
+            <div class="flex flex-col h-full">
+                {icon && (
+                    <div class="mb-4">
+                        <i class={`${icon} text-4xl text-brutal-black`} />
+                    </div>
+                )}
+                {title && (
+                    <h3
+                        class="text-lg font-bold text-brutal-black uppercase mb-2"
+                        style="font-family: var(--font-heading);"
+                    >
+                        {title}
+                    </h3>
+                )}
+                {value && (
+                    <p
+                        class="text-4xl font-bold text-brutal-black mt-auto"
+                        style="font-family: var(--font-heading);"
+                    >
+                        {value}
+                    </p>
+                )}
+                <slot name="content" />
+            </div>
+        )
+    }
+    {!title && !value && !icon && <slot />}
+</div>
+
+<style>
+    .bento-card {
+        display: flex;
+        flex-direction: column;
+    }
+</style>

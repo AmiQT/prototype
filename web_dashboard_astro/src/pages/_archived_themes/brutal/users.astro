@@ -1,0 +1,252 @@
+---
+import BrutalDashboardLayout from "../../layouts/BrutalDashboardLayout.astro";
+import BentoCard from "../../components/BentoCard.astro";
+import BrutalButton from "../../components/BrutalButton.astro";
+---
+
+<BrutalDashboardLayout title="Users" activeSection="users">
+    <!-- Action Bar -->
+    <div class="p-6 flex flex-wrap gap-3 justify-between items-center">
+        <div class="brutal-input flex-1 max-w-md flex items-center gap-2">
+            <i class="fas fa-search text-brutal-black"></i>
+            <input
+                type="text"
+                placeholder="SEARCH USERS..."
+                class="flex-1 outline-none bg-transparent font-bold uppercase text-sm"
+                style="font-family: var(--font-heading);"
+            />
+        </div>
+        <div class="flex gap-3">
+            <BrutalButton color="gold" icon="fas fa-plus" size="sm">
+                Add User
+            </BrutalButton>
+            <BrutalButton color="cyan" icon="fas fa-filter" size="sm">
+                Filter
+            </BrutalButton>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="px-6 pb-6">
+        <div
+            class="bg-brutal-white brutal-border brutal-shadow-md overflow-hidden"
+        >
+            <table class="brutal-table">
+                <thead>
+                    <tr>
+                        <th class="bg-brutal-gold">ID</th>
+                        <th class="bg-brutal-cyan">Name</th>
+                        <th class="bg-brutal-magenta text-white">Email</th>
+                        <th class="bg-brutal-purple text-white">Role</th>
+                        <th class="bg-brutal-lime">Status</th>
+                        <th class="bg-brutal-orange">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="users-table-body">
+                    <!-- Mock Data -->
+                    <tr>
+                        <td class="font-bold">001</td>
+                        <td class="font-bold">John Doe</td>
+                        <td>john@example.com</td>
+                        <td>
+                            <span class="brutal-badge brutal-badge-info"
+                                >Student</span
+                            >
+                        </td>
+                        <td>
+                            <span class="brutal-badge brutal-badge-success"
+                                >Active</span
+                            >
+                        </td>
+                        <td>
+                            <div class="flex gap-2">
+                                <button
+                                    class="brutal-btn bg-brutal-cyan text-brutal-black"
+                                    style="padding: 0.25rem 0.5rem; font-size: 0.75rem;"
+                                >
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button
+                                    class="brutal-btn bg-brutal-magenta text-brutal-white"
+                                    style="padding: 0.25rem 0.5rem; font-size: 0.75rem;"
+                                >
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="font-bold">002</td>
+                        <td class="font-bold">Jane Smith</td>
+                        <td>jane@example.com</td>
+                        <td>
+                            <span class="brutal-badge brutal-badge-warning"
+                                >Lecturer</span
+                            >
+                        </td>
+                        <td>
+                            <span class="brutal-badge brutal-badge-success"
+                                >Active</span
+                            >
+                        </td>
+                        <td>
+                            <div class="flex gap-2">
+                                <button
+                                    class="brutal-btn bg-brutal-cyan text-brutal-black"
+                                    style="padding: 0.25rem 0.5rem; font-size: 0.75rem;"
+                                >
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button
+                                    class="brutal-btn bg-brutal-magenta text-brutal-white"
+                                    style="padding: 0.25rem 0.5rem; font-size: 0.75rem;"
+                                >
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="font-bold">003</td>
+                        <td class="font-bold">Mike Johnson</td>
+                        <td>mike@example.com</td>
+                        <td>
+                            <span class="brutal-badge brutal-badge-info"
+                                >Student</span
+                            >
+                        </td>
+                        <td>
+                            <span class="brutal-badge brutal-badge-warning"
+                                >Pending</span
+                            >
+                        </td>
+                        <td>
+                            <div class="flex gap-2">
+                                <button
+                                    class="brutal-btn bg-brutal-cyan text-brutal-black"
+                                    style="padding: 0.25rem 0.5rem; font-size: 0.75rem;"
+                                >
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button
+                                    class="brutal-btn bg-brutal-magenta text-brutal-white"
+                                    style="padding: 0.25rem 0.5rem; font-size: 0.75rem;"
+                                >
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="font-bold">004</td>
+                        <td class="font-bold">Sarah Williams</td>
+                        <td>sarah@example.com</td>
+                        <td>
+                            <span class="brutal-badge brutal-badge-info"
+                                >Student</span
+                            >
+                        </td>
+                        <td>
+                            <span class="brutal-badge brutal-badge-success"
+                                >Active</span
+                            >
+                        </td>
+                        <td>
+                            <div class="flex gap-2">
+                                <button
+                                    class="brutal-btn bg-brutal-cyan text-brutal-black"
+                                    style="padding: 0.25rem 0.5rem; font-size: 0.75rem;"
+                                >
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button
+                                    class="brutal-btn bg-brutal-magenta text-brutal-white"
+                                    style="padding: 0.25rem 0.5rem; font-size: 0.75rem;"
+                                >
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="font-bold">005</td>
+                        <td class="font-bold">Tom Brown</td>
+                        <td>tom@example.com</td>
+                        <td>
+                            <span
+                                class="brutal-badge brutal-badge-error text-white"
+                                >Admin</span
+                            >
+                        </td>
+                        <td>
+                            <span class="brutal-badge brutal-badge-success"
+                                >Active</span
+                            >
+                        </td>
+                        <td>
+                            <div class="flex gap-2">
+                                <button
+                                    class="brutal-btn bg-brutal-cyan text-brutal-black"
+                                    style="padding: 0.25rem 0.5rem; font-size: 0.75rem;"
+                                >
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button
+                                    class="brutal-btn bg-brutal-magenta text-brutal-white"
+                                    style="padding: 0.25rem 0.5rem; font-size: 0.75rem;"
+                                >
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-6 flex justify-center gap-2">
+            <BrutalButton color="white" size="sm" icon="fas fa-chevron-left">
+                Prev
+            </BrutalButton>
+            <BrutalButton color="gold" size="sm">1</BrutalButton>
+            <BrutalButton color="white" size="sm">2</BrutalButton>
+            <BrutalButton color="white" size="sm">3</BrutalButton>
+            <BrutalButton color="white" size="sm" icon="fas fa-chevron-right">
+                Next
+            </BrutalButton>
+        </div>
+    </div>
+
+    <script>
+        // Load real users from Supabase
+        import { supabase } from "../../lib/supabase";
+
+        async function loadUsers() {
+            try {
+                const { data: users, error } = await supabase
+                    .from("users")
+                    .select("*")
+                    .limit(10);
+
+                if (error) throw error;
+
+                if (users && users.length > 0) {
+                    const tbody = document.getElementById("users-table-body");
+                    if (tbody) {
+                        // Could update table with real data here
+                        console.log("Loaded users:", users);
+                    }
+                }
+            } catch (error) {
+                console.error("Error loading users:", error);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", loadUsers);
+    </script>
+</BrutalDashboardLayout>
+
+<style>
+    @import url("../../styles/brutalism.css");
+</style>

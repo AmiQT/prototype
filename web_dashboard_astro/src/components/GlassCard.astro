@@ -1,0 +1,17 @@
+---
+interface Props {
+    size?: "small" | "medium" | "large" | "wide" | "tall" | "full";
+    glow?: boolean;
+    noPadding?: boolean;
+}
+
+const { size = "medium", glow = false, noPadding = false } = Astro.props;
+
+const sizeClass = `aurora-${size}`;
+const glowClass = glow ? "glass-card-glow" : "";
+const paddingClass = noPadding ? "" : "p-6";
+---
+
+<div class={`glass-card ${sizeClass} ${glowClass} ${paddingClass}`}>
+    <slot />
+</div>

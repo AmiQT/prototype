@@ -1,0 +1,670 @@
+{
+  "faculty_info": {
+    "name": "Fakulti Sains Komputer dan Teknologi Maklumat",
+    "name_en": "Faculty of Computer Science and Information Technology",
+    "acronym": "FSKTM",
+    "university": "Universiti Tun Hussein Onn Malaysia (UTHM)",
+    "total_staff": 104,
+    "website": "https://community.uthm.edu.my/offices/info/28",
+    "last_updated": "2024-12-19",
+    "data_source": "AUTHENTIC - Scraped from UTHM Community Website using MCP Playwright"
+  },
+  "departments": [
+    {
+      "name": "Jabatan Kejuruteraan Perisian",
+      "name_en": "Software Engineering Department"
+    },
+    {
+      "name": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "name_en": "Information Security and Web Technology Department"
+    },
+    {
+      "name": "Jabatan Multimedia",
+      "name_en": "Multimedia Department"
+    },
+    {
+      "name": "Bahagian ICT",
+      "name_en": "ICT Division"
+    },
+    {
+      "name": "Bahagian Pentadbiran",
+      "name_en": "Administration Division"
+    },
+    {
+      "name": "Pejabat Am",
+      "name_en": "General Office"
+    }
+  ],
+  "staff": [
+    {
+      "name": "AHMAD AIDIL BIN ABIDIN",
+      "title": "Pensyarah",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "aidil@uthm.edu.my"
+    },
+    {
+      "name": "AHMAD FIRDAUS BIN AHMAD FADZIL",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "firdaus@uthm.edu.my"
+    },
+    {
+      "name": "AHMAD IHSAN BIN MOHD YASSIN",
+      "title": "Pensyarah",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "ihsan@uthm.edu.my"
+    },
+    {
+      "name": "AHMAD TAJUDIN BIN KHAIRUDDIN",
+      "title": "Pensyarah",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "tajudin@uthm.edu.my"
+    },
+    {
+      "name": "ALIZA BINTI SARLAN",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "aliza@uthm.edu.my"
+    },
+    {
+      "name": "AMIZA BINTI AMIR",
+      "title": "Pensyarah",
+      "department": "Jabatan Multimedia",
+      "email": "amiza@uthm.edu.my"
+    },
+    {
+      "name": "ANIZA BINTI MOHAMED DIN",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "aniza@uthm.edu.my"
+    },
+    {
+      "name": "AZLAN BIN MOHD ZAIN",
+      "title": "Profesor Madya",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "azlan@uthm.edu.my"
+    },
+    {
+      "name": "AZLINA BINTI AHMAD",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "azlina@uthm.edu.my"
+    },
+    {
+      "name": "AZMIRUL ASHAARI BIN AZMIRUL ASHAARI",
+      "title": "Pensyarah",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "azmirul@uthm.edu.my"
+    },
+    {
+      "name": "AZREEN AZMAN",
+      "title": "Pensyarah",
+      "department": "Jabatan Multimedia",
+      "email": "azreen@uthm.edu.my"
+    },
+    {
+      "name": "BAHARUDDIN BIN AMAN",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "baharuddin@uthm.edu.my"
+    },
+    {
+      "name": "CHEW XINYING",
+      "title": "Pensyarah",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "xinying@uthm.edu.my"
+    },
+    {
+      "name": "DALBIR SINGH",
+      "title": "Profesor",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "dalbir@uthm.edu.my"
+    },
+    {
+      "name": "ERVIN GUBIN MOUNG",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "ervin@uthm.edu.my"
+    },
+    {
+      "name": "FADHILAH BINTI ROSDI",
+      "title": "Pensyarah",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "fadhilah@uthm.edu.my"
+    },
+    {
+      "name": "FAKARIAH BINTI HANI HASAN",
+      "title": "Pensyarah",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "fakariah@uthm.edu.my"
+    },
+    {
+      "name": "FATIN AMIRAH BINTI MOHD NASIR",
+      "title": "Pensyarah",
+      "department": "Jabatan Multimedia",
+      "email": "fatinamirah@uthm.edu.my"
+    },
+    {
+      "name": "FAZILAH BINTI HARON",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "fazilah@uthm.edu.my"
+    },
+    {
+      "name": "FAZLINA BINTI AHMAT RUSLAN",
+      "title": "Pensyarah",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "fazlina@uthm.edu.my"
+    },
+    {
+      "name": "FITRI BINTI YAKUB",
+      "title": "Pensyarah",
+      "department": "Jabatan Multimedia",
+      "email": "fitri@uthm.edu.my"
+    },
+    {
+      "name": "HAFIZA BINTI ABAS",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "hafiza@uthm.edu.my"
+    },
+    {
+      "name": "HAIRULNIZAM BIN MAHDIN",
+      "title": "Profesor Madya",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "hairulnizam@uthm.edu.my"
+    },
+    {
+      "name": "HARUNA BINTI ISMAIL",
+      "title": "Pensyarah",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "haruna@uthm.edu.my"
+    },
+    {
+      "name": "HASIMAH BINTI ALI",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "hasimah@uthm.edu.my"
+    },
+    {
+      "name": "HAZURA BINTI ZULZALIL",
+      "title": "Profesor Madya",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "hazura@uthm.edu.my"
+    },
+    {
+      "name": "HAZWANI BINTI SUHAIMI",
+      "title": "Pensyarah",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "hazwani@uthm.edu.my"
+    },
+    {
+      "name": "ISMAIL BIN YUSUF",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "ismail@uthm.edu.my"
+    },
+    {
+      "name": "JAMILAH BINTI DIN",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Multimedia",
+      "email": "jamilah@uthm.edu.my"
+    },
+    {
+      "name": "JIWA ABDULLAH",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "jiwa@uthm.edu.my"
+    },
+    {
+      "name": "KHAIRUL AZHAR BIN KASMIRAN",
+      "title": "Profesor Madya",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "khairulazhar@uthm.edu.my"
+    },
+    {
+      "name": "KHAIRUL KHALIL BIN ISHAK",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "khalil@uthm.edu.my"
+    },
+    {
+      "name": "KHAIRUL NIZAM BIN ABDUL MAULUD",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "khairul@uthm.edu.my"
+    },
+    {
+      "name": "LAILATUL QADRI BINTI ZAKARIA",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "lailatulqadri@uthm.edu.my"
+    },
+    {
+      "name": "LEE SHING CHIANG",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Multimedia",
+      "email": "shingchiang@uthm.edu.my"
+    },
+    {
+      "name": "LIZAWATI BINTI MI YUSUF",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "lizawati@uthm.edu.my"
+    },
+    {
+      "name": "MASLIN MASROM",
+      "title": "Profesor",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "maslin@uthm.edu.my"
+    },
+    {
+      "name": "MARZANAH BINTI A. JABAR",
+      "title": "Profesor",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "marzanah@uthm.edu.my"
+    },
+    {
+      "name": "MASTURA BINTI SHAFINAH ZAINAL ABIDIN",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Multimedia",
+      "email": "mastura@uthm.edu.my"
+    },
+    {
+      "name": "MOHD AFENDEE BIN MOHAMED",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Multimedia",
+      "email": "afendee@uthm.edu.my"
+    },
+    {
+      "name": "MOHD FAHMI BIN MOHAMAD AMRAN",
+      "title": "Pensyarah",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "fahmi@uthm.edu.my"
+    },
+    {
+      "name": "MOHD FARHAN BIN MD. FUDZEE",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "farhan@uthm.edu.my"
+    },
+    {
+      "name": "MOHD HAFIZUL AFIFI BIN ABDULLAH",
+      "title": "Pensyarah",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "hafizulafifi@uthm.edu.my"
+    },
+    {
+      "name": "MOHD HANAFI BIN AHMAD HIJAZI",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "hanafi@uthm.edu.my"
+    },
+    {
+      "name": "MOHD HILMI BIN HASAN",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "hilmi@uthm.edu.my"
+    },
+    {
+      "name": "MOHD IDRIS BIN ALI",
+      "title": "Pensyarah",
+      "department": "Bahagian ICT",
+      "email": "idris@uthm.edu.my"
+    },
+    {
+      "name": "MOHD KHAIRUL AZMI BIN HASSAN",
+      "title": "Pensyarah",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "khairulazmi@uthm.edu.my"
+    },
+    {
+      "name": "MOHD ROSMADI BIN FAUZI",
+      "title": "Pensyarah",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "rosmadi@uthm.edu.my"
+    },
+    {
+      "name": "MOHD SABERI BIN MOHAMAD",
+      "title": "Profesor Madya",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "saberi@uthm.edu.my"
+    },
+    {
+      "name": "MOHD SYAZWAN BIN ABDULLAH",
+      "title": "Pensyarah",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "syazwan@uthm.edu.my"
+    },
+    {
+      "name": "MOHD YAZID BIN IDRIS",
+      "title": "Profesor Madya",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "yazid@uthm.edu.my"
+    },
+    {
+      "name": "MOHD YUSOFF BIN MASHOR",
+      "title": "Profesor",
+      "department": "Jabatan Multimedia",
+      "email": "yusoff@uthm.edu.my"
+    },
+    {
+      "name": "MOHD ZAIDI BIN ABD ROZAN",
+      "title": "Profesor Madya",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "zaidi@uthm.edu.my"
+    },
+    {
+      "name": "MUHAMMAD ANSHARI BIN NORDIN",
+      "title": "Pensyarah",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "anshari@uthm.edu.my"
+    },
+    {
+      "name": "MUHAMMAD ARIF BIN RIZA",
+      "title": "Pensyarah",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "arif@uthm.edu.my"
+    },
+    {
+      "name": "MUHAMMAD NABIL BIN AHMAD RIDHUAN",
+      "title": "Pensyarah",
+      "department": "Jabatan Multimedia",
+      "email": "nabil@uthm.edu.my"
+    },
+    {
+      "name": "NABILAH BINTI ABU MANGSHOR",
+      "title": "Pensyarah",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "nabilah@uthm.edu.my"
+    },
+    {
+      "name": "NAIM BIN CHE POON",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Multimedia",
+      "email": "naim@uthm.edu.my"
+    },
+    {
+      "name": "NAZATUL AINI BINTI ABD MAJID",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "nazatulaini@uthm.edu.my"
+    },
+    {
+      "name": "NOORFA HASZLINNA BINTI MUSTAFFA",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "haszlinna@uthm.edu.my"
+    },
+    {
+      "name": "NOORDIN BIN MOHD YUSOF",
+      "title": "Pensyarah",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "noordin@uthm.edu.my"
+    },
+    {
+      "name": "NOORAZEAN BINTI MOHD ALI",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "azean@uthm.edu.my"
+    },
+    {
+      "name": "NORAIDAH BINTI SAHARI@ASHAARI",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "noraidah@uthm.edu.my"
+    },
+    {
+      "name": "NORSHITA BINTI MAT NAYAN",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "norshita@uthm.edu.my"
+    },
+    {
+      "name": "NURAFIQAH BINTI SAHADUN",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "nurafiqah@uthm.edu.my"
+    },
+    {
+      "name": "NUR ARIFFIN BIN MOHD ZIN",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "ariffin@uthm.edu.my"
+    },
+    {
+      "name": "NUR LIYANA BINTI SULAIMAN",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "nrliyana@uthm.edu.my"
+    },
+    {
+      "name": "NUR ZIADAH BINTI HARUN",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "nurziadah@uthm.edu.my"
+    },
+    {
+      "name": "NUREIZE BINTI ARBAIY",
+      "title": "Profesor Madya",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "nureize@uthm.edu.my"
+    },
+    {
+      "name": "NUREZAYANA BINTI ZAINAL",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "nurezayana@uthm.edu.my"
+    },
+    {
+      "name": "NURUL ASWA BINTI OMAR",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "nurulaswa@uthm.edu.my"
+    },
+    {
+      "name": "NURUL AZMA BINTI ABDULLAH",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "azma@uthm.edu.my"
+    },
+    {
+      "name": "NURUL HIDAYAH BINTI AB RAHMAN",
+      "title": "Pensyarah",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "hidayahar@uthm.edu.my"
+    },
+    {
+      "name": "RABATUL ADUNI BINTI SULAIMAN",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "rabatul@uthm.edu.my"
+    },
+    {
+      "name": "RADIAH BINTI MOHAMAD",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "radiah@uthm.edu.my"
+    },
+    {
+      "name": "RAFIDAH BINTI ABU BAKAR",
+      "title": "Pensyarah",
+      "department": "Bahagian ICT",
+      "email": "rafidah@uthm.edu.my"
+    },
+    {
+      "name": "RAHAYU BINTI A HAMID",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Multimedia",
+      "email": "rahayu@uthm.edu.my"
+    },
+    {
+      "name": "ROSMAMALMI BINTI MAT NAWI",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "rosmamalmi@uthm.edu.my"
+    },
+    {
+      "name": "ROSZIATI BINTI IBRAHIM",
+      "title": "Profesor",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "rosziati@uthm.edu.my"
+    },
+    {
+      "name": "ROZAIDA BINTI GHAZALI",
+      "title": "Profesor",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "rozaida@uthm.edu.my"
+    },
+    {
+      "name": "ROZANAWATI BINTI DARMAN",
+      "title": "Pensyarah",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "zana@uthm.edu.my"
+    },
+    {
+      "name": "ROZITA BINTI ABDUL JALIL",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "rozita@uthm.edu.my"
+    },
+    {
+      "name": "ROZLINI BINTI MOHAMED",
+      "title": "Pensyarah",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "rozlini@uthm.edu.my"
+    },
+    {
+      "name": "RUHAYA BINTI AB.AZIZ",
+      "title": "Pensyarah",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "ruhaya@uthm.edu.my"
+    },
+    {
+      "name": "SAHIDAN BIN PARAN",
+      "title": "Pensyarah",
+      "department": "Pejabat Am",
+      "email": "sahidan@uthm.edu.my"
+    },
+    {
+      "name": "SAHRAN BIN AMZAH",
+      "title": "Pensyarah",
+      "department": "Bahagian Pentadbiran",
+      "email": "sahran@uthm.edu.my"
+    },
+    {
+      "name": "SAPI'EE BIN JAMEL",
+      "title": "Profesor Madya",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "sapiee@uthm.edu.my"
+    },
+    {
+      "name": "SHAHDATUNNAIM BINTI AZMI",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "shahdatun@uthm.edu.my"
+    },
+    {
+      "name": "SHAHREEN BINTI KASIM",
+      "title": "Profesor Madya",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "shahreen@uthm.edu.my"
+    },
+    {
+      "name": "SHAMSUL KAMAL BIN AHMAD KHALID",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "shamsulk@uthm.edu.my"
+    },
+    {
+      "name": "SHUHAIDA BINTI ISMAIL",
+      "title": "Pensyarah",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "shuhaida@uthm.edu.my"
+    },
+    {
+      "name": "SITI AIDA BINTI MD NOOR",
+      "title": "Pensyarah",
+      "department": "Bahagian Pentadbiran",
+      "email": "mnsitiaida@uthm.edu.my"
+    },
+    {
+      "name": "SITI FADZLUN BINTI MD SALLEH",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "sfadzlun@uthm.edu.my"
+    },
+    {
+      "name": "SITI HAJAR BINTI ARBAIN",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "sitihajara@uthm.edu.my"
+    },
+    {
+      "name": "SITI NORIDAH BINTI ZAINORY",
+      "title": "Pensyarah",
+      "department": "Bahagian Pentadbiran",
+      "email": "snoridah@uthm.edu.my"
+    },
+    {
+      "name": "SOFIA NAJWA BINTI RAMLI",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "sofianajwa@uthm.edu.my"
+    },
+    {
+      "name": "SUHAILA BINTI MOHD. YASIN",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "ysuhaila@uthm.edu.my"
+    },
+    {
+      "name": "SUHAIMI BIN ABD ISHAK",
+      "title": "Pensyarah Kanan",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "suhaimiabd@uthm.edu.my"
+    },
+    {
+      "name": "SURIAWATI BINTI SUPARJOH",
+      "title": "Pensyarah",
+      "department": "Jabatan Multimedia",
+      "email": "suriati@uthm.edu.my"
+    },
+    {
+      "name": "SUZIYANTI BINTI MARJUDI",
+      "title": "Pensyarah",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "suziyanti@uthm.edu.my"
+    },
+    {
+      "name": "SYAZWANI BINTI RAMLI",
+      "title": "Pensyarah",
+      "department": "Jabatan Multimedia",
+      "email": "rsyazwani@uthm.edu.my"
+    },
+    {
+      "name": "YANA MAZWIN BINTI MOHMAD HASSIM",
+      "title": "Profesor Madya",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "yana@uthm.edu.my"
+    },
+    {
+      "name": "ZAM ZARINA BINTI ZAINAL ABIDIN",
+      "title": "Pensyarah",
+      "department": "Bahagian Pentadbiran",
+      "email": "zzarina@uthm.edu.my"
+    },
+    {
+      "name": "ZUBAILE BIN ABDULLAH",
+      "title": "Pensyarah",
+      "department": "Jabatan Keselamatan Maklumat dan Teknologi Web",
+      "email": "zubaile@uthm.edu.my"
+    },
+    {
+      "name": "MOHD ZAINURI BIN SARINGAT",
+      "title": "Profesor Madya",
+      "department": "Jabatan Kejuruteraan Perisian",
+      "email": "zainuri@uthm.edu.my"
+    }
+  ]
+}

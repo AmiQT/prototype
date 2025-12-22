@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: talent-backend
+    env: python
+    plan: free
+    region: singapore  # Closest to Malaysia 🇲🇾
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      # Database (Supabase PostgreSQL)
+      - key: DATABASE_URL
+        sync: false
+      # Supabase Client
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      # Cloudinary Media
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      # AI/ML
+      - key: GEMINI_API_KEY
+        sync: false
+      # Security
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALGORITHM
+        value: HS256
+      # CORS - Your Vercel URLs
+      - key: ALLOWED_ORIGINS
+        value: "https://student-talent-profiling-app.vercel.app,https://talent-app-black.vercel.app"
+      - key: ENVIRONMENT
+        value: production
