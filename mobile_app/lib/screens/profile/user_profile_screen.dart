@@ -9,8 +9,10 @@ import '../../models/project_model.dart';
 import '../../services/profile_service.dart';
 import '../../services/showcase_service.dart';
 import '../../services/supabase_auth_service.dart';
+import '../../services/direct_chat_service.dart';
 import '../../widgets/showcase/post_card_widget.dart';
 import '../student/showcase/post_detail_screen.dart';
+import '../chat/direct_chat_screen.dart';
 import '../../utils/app_theme.dart';
 import 'package:flutter/services.dart';
 
@@ -836,25 +838,57 @@ class _UserProfileScreenState extends State<UserProfileScreen>
     );
   }
 
-  void _showMessageOptions() {
+  void _showMessageOptions() async {
     HapticFeedback.lightImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Row(
-          children: [
-            Icon(Icons.message_outlined, color: Colors.white),
-            SizedBox(width: 12),
-            Expanded(child: Text('Message feature coming soon!')),
-          ],
-        ),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.green,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        margin: const EdgeInsets.all(16),
-      ),
+
+    if (_user == null) return;
+
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
     );
+
+    try {
+      final chatService = DirectChatService();
+      final conversationId = await chatService.startDirectChat(_user!.uid);
+
+      if (!mounted) return;
+      Navigator.of(context).pop(); // Close loading dialog
+
+      // Navigate to chat screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DirectChatScreen(
+            conversationId: conversationId,
+            otherUserName: _user!.name,
+            otherUserId: _user!.uid,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.of(context).pop(); // Close loading dialog
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(child: Text('Failed to start chat: $e')),
+            ],
+          ),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+    }
   }
 
   void _showFollowOptions() {

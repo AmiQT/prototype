@@ -22,8 +22,8 @@ class ChatHistoryService extends ChangeNotifier {
   Future<void> initialize() async {
     await _loadConversations();
     await _loadLastSync();
-    debugPrint(
-        'ChatHistoryService: Initialized with ${_conversations.length} conversations');
+    // debugPrint(
+    //     'ChatHistoryService: Initialized with ${_conversations.length} conversations');
   }
 
   /// Get conversations for a specific user
@@ -158,7 +158,7 @@ class ChatHistoryService extends ChangeNotifier {
     }
 
     notifyListeners();
-    debugPrint('ChatHistoryService: All history cleared');
+    // debugPrint('ChatHistoryService: All history cleared');
   }
 
   /// Get storage usage statistics

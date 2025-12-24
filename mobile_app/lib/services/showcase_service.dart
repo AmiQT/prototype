@@ -196,8 +196,8 @@ class ShowcaseService {
     if (currentRequests.isEmpty) return;
 
     final userIds = currentRequests.keys.toList();
-    debugPrint(
-        'ShowcaseService: Processing batched user requests for ${userIds.length} users');
+    // debugPrint(
+    //     'ShowcaseService: Processing batched user requests for ${userIds.length} users');
 
     try {
       // Batch fetch from database (FIXED - use correct column names)
@@ -257,8 +257,8 @@ class ShowcaseService {
     try {
       if (userIds.isEmpty) return {};
 
-      debugPrint(
-          'ShowcaseService: 🚀 BATCH fetching ${userIds.length} profiles in ONE query');
+      // debugPrint(
+      //     'ShowcaseService: 🚀 BATCH fetching ${userIds.length} profiles in ONE query');
 
       // ✅ OPTIMIZED: Fetch from users table with basic info
       final usersResponse = await _supabase
@@ -274,8 +274,8 @@ class ShowcaseService {
           .filter('user_id', 'in', userIds)
           .timeout(const Duration(seconds: 2));
 
-      debugPrint(
-          'ShowcaseService: ✅ Fetched ${usersResponse.length} users and ${profilesResponse.length} profiles');
+      // debugPrint(
+      //     'ShowcaseService: ✅ Fetched ${usersResponse.length} users and ${profilesResponse.length} profiles');
 
       // Create profiles map for quick lookup
       final profilesMap = <String, Map<String, dynamic>>{};
@@ -318,8 +318,8 @@ class ShowcaseService {
         }
       }
 
-      debugPrint(
-          'ShowcaseService: 🎯 Batch processing complete - ${results.length} profiles with images ready');
+      // debugPrint(
+      //     'ShowcaseService: 🎯 Batch processing complete - ${results.length} profiles with images ready');
       return results;
     } catch (e) {
       debugPrint('ShowcaseService: ❌ Batch fetch error: $e');
@@ -341,7 +341,7 @@ class ShowcaseService {
   /// Get all showcase posts
   Future<List<Map<String, dynamic>>> getAllPosts() async {
     try {
-      debugPrint('ShowcaseService: Fetching posts from Supabase...');
+      // debugPrint('ShowcaseService: Fetching posts from Supabase...');
 
       // Use the correct query structure that works with Supabase
       final response = await _supabase.from('showcase_posts').select('''
@@ -366,8 +366,8 @@ class ShowcaseService {
             post_comments(*)
           ''').eq('is_public', true).order('created_at', ascending: false);
 
-      debugPrint(
-          'ShowcaseService: Fetched ${response.length} posts from Supabase');
+      // debugPrint(
+      //     'ShowcaseService: Fetched ${response.length} posts from Supabase');
 
       // Extract unique user IDs (post authors + comment authors)
       final Set<String> allUserIds = {};
@@ -423,8 +423,8 @@ class ShowcaseService {
         };
       }).toList();
 
-      debugPrint(
-          'ShowcaseService: Successfully fetched ${postsWithProfiles.length} posts with profiles');
+      // debugPrint(
+      //     'ShowcaseService: Successfully fetched ${postsWithProfiles.length} posts with profiles');
       return postsWithProfiles;
     } catch (e) {
       debugPrint('ShowcaseService: Error fetching posts: $e');
@@ -487,7 +487,7 @@ class ShowcaseService {
   /// Get posts by user ID
   Future<List<Map<String, dynamic>>> getPostsByUserId(String userId) async {
     try {
-      debugPrint('ShowcaseService: Getting posts for user: $userId');
+      // debugPrint('ShowcaseService: Getting posts for user: $userId');
 
       final response = await _supabase.from('showcase_posts').select('''
             id,
@@ -906,8 +906,8 @@ class ShowcaseService {
       // Only log every 100th call to reduce console spam
       _callCount++;
       if (_callCount % 100 == 1) {
-        debugPrint(
-            'ShowcaseService: Getting showcase posts (ultra-optimized method)... [Call #$_callCount]');
+        // debugPrint(
+        //     'ShowcaseService: Getting showcase posts (ultra-optimized method)... [Call #$_callCount]');
       }
 
       // Generate cache key based on parameters
@@ -921,8 +921,8 @@ class ShowcaseService {
             DateTime.now().difference(cacheTime) < const Duration(seconds: 5)) {
           // MUCH FASTER: 5 seconds instead of 30
           stopwatch.stop();
-          debugPrint(
-              'ShowcaseService: ⚡ Ultra-fast cache hit - loaded in ${stopwatch.elapsedMilliseconds}ms');
+          // debugPrint(
+          //     'ShowcaseService: ⚡ Ultra-fast cache hit - loaded in ${stopwatch.elapsedMilliseconds}ms');
           return List<ShowcasePostModel>.from(_postsCache[cacheKey]!);
         }
         // Remove expired cache
@@ -937,8 +937,8 @@ class ShowcaseService {
         return await _ongoingRequests[requestKey] as List<ShowcasePostModel>;
       }
 
-      debugPrint('ShowcaseService: Loading real data from Supabase...');
-      final dbStartTime = Stopwatch()..start();
+      // debugPrint('ShowcaseService: Loading real data from Supabase...');
+      // final dbStartTime = Stopwatch()..start();
       final profilesStartTime = Stopwatch();
 
       // Smart timeout based on cache status
@@ -978,15 +978,15 @@ class ShowcaseService {
       }
 
       // Apply ordering and limiting with ultra-fast timeout
-      debugPrint('ShowcaseService: Starting posts query...');
+      // debugPrint('ShowcaseService: Starting posts query...');
       final postsQueryStart = Stopwatch()..start();
       final response = await query
           .order('created_at', ascending: false)
           .limit(limit)
           .timeout(timeoutDuration);
       postsQueryStart.stop();
-      debugPrint(
-          'ShowcaseService: Posts query completed in ${postsQueryStart.elapsedMilliseconds}ms, got ${response.length} posts');
+      // debugPrint(
+      //     'ShowcaseService: Posts query completed in ${postsQueryStart.elapsedMilliseconds}ms, got ${response.length} posts');
 
       // Extract unique user IDs (post authors + comment authors)
       final Set<String> allUserIds = {};
@@ -1006,17 +1006,17 @@ class ShowcaseService {
 
       // Fetch all profiles efficiently with ultra-fast timeout - OPTIMIZED
       profilesStartTime.start();
-      debugPrint(
-          'ShowcaseService: Starting profiles fetch for ${allUserIds.length} users...');
+      // debugPrint(
+      //     'ShowcaseService: Starting profiles fetch for ${allUserIds.length} users...');
       final profilesMap = await _fetchProfilesForUsers(allUserIds.toList())
           .timeout(const Duration(
               seconds: 2)); // Further reduced from 3 to 2 seconds
       profilesStartTime.stop();
-      debugPrint(
-          'ShowcaseService: Profiles fetch completed in ${profilesStartTime.elapsedMilliseconds}ms');
+      // debugPrint(
+      //     'ShowcaseService: Profiles fetch completed in ${profilesStartTime.elapsedMilliseconds}ms');
 
       // Parse posts to ShowcasePostModel with minimal processing
-      debugPrint('ShowcaseService: Starting posts parsing...');
+      // debugPrint('ShowcaseService: Starting posts parsing...');
       final parsingStart = Stopwatch()..start();
       final List<ShowcasePostModel> postsWithProfiles = [];
 
@@ -1082,19 +1082,19 @@ class ShowcaseService {
       }
 
       parsingStart.stop();
-      debugPrint(
-          'ShowcaseService: Posts parsing completed in ${parsingStart.elapsedMilliseconds}ms');
+      // debugPrint(
+      //     'ShowcaseService: Posts parsing completed in ${parsingStart.elapsedMilliseconds}ms');
 
       // Cache the results
       _postsCache[cacheKey] = postsWithProfiles;
       _cacheTimestamps[cacheKey] = DateTime.now();
 
-      debugPrint(
-          'ShowcaseService: Cached ${postsWithProfiles.length} posts for key: $cacheKey');
+      // debugPrint(
+      //     'ShowcaseService: Cached ${postsWithProfiles.length} posts for key: $cacheKey');
 
       stopwatch.stop();
-      debugPrint(
-          'ShowcaseService: TOTAL BREAKDOWN - Posts:${postsQueryStart.elapsedMilliseconds}ms, Profiles:${profilesStartTime.elapsedMilliseconds}ms, Parsing:${parsingStart.elapsedMilliseconds}ms, Total:${dbStartTime.elapsedMilliseconds}ms');
+      // debugPrint(
+      //     'ShowcaseService: TOTAL BREAKDOWN - Posts:${postsQueryStart.elapsedMilliseconds}ms, Profiles:${profilesStartTime.elapsedMilliseconds}ms, Parsing:${parsingStart.elapsedMilliseconds}ms, Total:${dbStartTime.elapsedMilliseconds}ms');
       return postsWithProfiles;
     } catch (e) {
       debugPrint('ShowcaseService: Error getting showcase posts: $e');
@@ -1140,57 +1140,78 @@ class ShowcaseService {
     }
   }
 
-  /// OPTIMIZED: TRUE Real-time stream using Supabase real-time + smart polling
+  /// TRUE Real-time stream using Supabase Realtime subscription
   Stream<List<ShowcasePostModel>> getShowcasePostsRealtimeStream({
     int limit = 10,
     PostCategory? category,
     PostPrivacy? privacy,
     String? userId,
-  }) async* {
-    try {
-      debugPrint(
-          'ShowcaseService: 🚀 Setting up TRUE real-time subscription...');
+  }) {
+    // Create a StreamController to manage the data flow
+    final controller = StreamController<List<ShowcasePostModel>>();
 
-      // 1. IMMEDIATE: Load data right away
+    // Variables to track the latest posts for smart diffing
+    List<ShowcasePostModel> lastPosts = [];
+
+    // Helper function to load and emit posts
+    Future<void> loadAndEmitPosts() async {
       try {
-        final immediateData = await getShowcasePosts(
+        final posts = await getShowcasePosts(
           limit: limit,
           privacy: privacy,
           category: category,
           userId: userId,
-        ).timeout(const Duration(seconds: 3));
+        ).timeout(const Duration(seconds: 5));
 
-        debugPrint(
-            'ShowcaseService: ⚡ Immediate data loaded: ${immediateData.length} posts');
-        yield immediateData;
+        // Only emit if data has changed or first load
+        if (lastPosts.isEmpty ||
+            posts.length != lastPosts.length ||
+            posts.asMap().entries.any((entry) {
+              final i = entry.key;
+              final newPost = entry.value;
+              final oldPost = i < lastPosts.length ? lastPosts[i] : null;
+              return oldPost == null ||
+                  newPost.id != oldPost.id ||
+                  newPost.likes.length != oldPost.likes.length ||
+                  newPost.comments.length != oldPost.comments.length;
+            })) {
+          lastPosts = posts;
+          if (!controller.isClosed) {
+            controller.add(posts);
+          }
+        }
       } catch (e) {
-        debugPrint('ShowcaseService: ❌ Error loading immediate data: $e');
-        yield <ShowcasePostModel>[];
-      }
-
-      // 2. REAL-TIME: Set up Supabase real-time subscription (future enhancement)
-      // Note: Supabase real-time subscription can be added here for even faster updates
-
-      // 3. SMART POLLING: Every 5 seconds for social media feel
-      await for (final _ in Stream.periodic(const Duration(seconds: 5))) {
-        try {
-          final freshData = await getShowcasePosts(
-            limit: limit,
-            privacy: privacy,
-            category: category,
-            userId: userId,
-          ).timeout(const Duration(seconds: 2)); // Faster timeout
-
-          yield freshData;
-        } catch (e) {
-          debugPrint('ShowcaseService: ⚠️ Polling error: $e');
-          // Continue with previous data
+        debugPrint('ShowcaseService: Error loading posts for realtime: $e');
+        if (!controller.isClosed && lastPosts.isEmpty) {
+          controller.add(<ShowcasePostModel>[]);
         }
       }
-    } catch (e) {
-      debugPrint('ShowcaseService: ❌ Fatal real-time error: $e');
-      yield <ShowcasePostModel>[];
     }
+
+    // 1. IMMEDIATE: Load initial data
+    loadAndEmitPosts();
+
+    // 2. TRUE REAL-TIME: Set up Supabase Realtime subscription
+    final subscription = _supabase
+        .from('showcase_posts')
+        .stream(primaryKey: ['id'])
+        .eq('is_public', true)
+        .order('created_at', ascending: false)
+        .limit(limit)
+        .listen((data) {
+          // When real-time update comes, reload full data with profiles
+          loadAndEmitPosts();
+        }, onError: (error) {
+          debugPrint('ShowcaseService: Realtime subscription error: $error');
+        });
+
+    // Clean up subscription when stream is cancelled
+    controller.onCancel = () {
+      subscription.cancel();
+      controller.close();
+    };
+
+    return controller.stream;
   }
 
   /// Delete media file from Cloudinary

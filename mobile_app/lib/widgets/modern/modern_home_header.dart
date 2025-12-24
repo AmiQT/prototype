@@ -4,7 +4,7 @@ import 'glass_container.dart';
 
 class ModernHomeHeader extends StatelessWidget {
   final VoidCallback onNotificationTap;
-  final VoidCallback onProfileTap;
+  final VoidCallback onChatTap;
   final VoidCallback? onNewPostTap;
   final VoidCallback? onTrendingTap;
   final VoidCallback? onEventsTap;
@@ -12,7 +12,7 @@ class ModernHomeHeader extends StatelessWidget {
   const ModernHomeHeader({
     super.key,
     required this.onNotificationTap,
-    required this.onProfileTap,
+    required this.onChatTap,
     this.onNewPostTap,
     this.onTrendingTap,
     this.onEventsTap,
@@ -102,26 +102,13 @@ class ModernHomeHeader extends StatelessWidget {
               hasBadge: true,
             ),
             const SizedBox(width: 12),
-            GestureDetector(
-              onTap: onProfileTap,
-              child: Container(
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppTheme.primaryLightColor,
-                    width: 2,
-                  ),
-                ),
-                child: const CircleAvatar(
-                  radius: 18,
-                  backgroundColor: AppTheme.primaryColor,
-                  backgroundImage:
-                      AssetImage('assets/images/default_profile.png'),
-                  // Fallback to icon if no image
-                  child: Icon(Icons.person, color: Colors.white, size: 20),
-                ),
-              ),
+            _buildGlassIconButton(
+              icon: Icons.chat_bubble_outline,
+              onTap: onChatTap,
+              color: textColor,
+              glassColor: glassColor,
+              glassOpacity: glassOpacity,
+              borderColor: borderColor,
             ),
           ],
         ),

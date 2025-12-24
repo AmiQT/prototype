@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'services/supabase_auth_service.dart';
 import 'config/supabase_config.dart';
@@ -20,10 +21,15 @@ import 'screens/chat/chat_history_screen.dart';
 
 // Disable debug logging for cleaner testing
 void main() async {
-  // Disable debug prints for clean console output
-  debugPrint = (String? message, {int? wrapWidth}) {};
-
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables
+  try {
+    await dotenv.load(fileName: "assets/.env");
+  } catch (e) {
+    debugPrint('⚠️ Change to "assets/.env" or standard .env failed: $e');
+    // Attempt fallback or ignore if using --dart-define
+  }
 
   // Initialize Supabase
   try {

@@ -35,9 +35,6 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
   final ShowcaseService _showcaseService = ShowcaseService();
   final ScrollController _scrollController = ScrollController();
 
-  // Counter for reducing console spam
-  int _updateCount = 0;
-
   // Debug flag to disable real-time updates
   static const bool _enableRealTimeUpdates =
       true; // Enable real-time updates for better UX
@@ -112,8 +109,8 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
         // Fallback: Load manually if subscription doesn't deliver data quickly
         await Future.delayed(const Duration(seconds: 2));
         if (_posts.isEmpty && mounted) {
-          debugPrint(
-              'ShowcaseFeedScreen: Subscription fallback - loading manually');
+          // debugPrint(
+          //     'ShowcaseFeedScreen: Subscription fallback - loading manually');
           await _smartRefresh();
         }
       } catch (e) {
@@ -136,8 +133,8 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
     _postsSubscription?.cancel();
     _isSubscriptionActive = false;
 
-    debugPrint(
-        'ShowcaseFeedScreen: Setting up smart real-time subscription...');
+    // debugPrint(
+    //     'ShowcaseFeedScreen: Setting up smart real-time subscription...');
 
     try {
       _isSubscriptionActive = true;
@@ -150,16 +147,7 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
       )
           .listen(
         (posts) {
-          // Only log every 20th update to reduce console spam
-          _updateCount++;
-          if (_updateCount % 20 == 1) {
-            debugPrint(
-                'ShowcaseFeedScreen: Ultra-fast real-time update received: ${posts.length} posts [Update #$_updateCount]');
-            if (posts.isNotEmpty) {
-              debugPrint(
-                  'ShowcaseFeedScreen: First post data: ${posts.first.id} - ${posts.first.content.substring(0, posts.first.content.length > 20 ? 20 : posts.first.content.length)}...');
-            }
-          }
+          // Log logic removed
 
           if (mounted) {
             // SMART UPDATE: Only rebuild UI if data actually changed
@@ -177,8 +165,8 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
                 });
 
             if (hasChanges || _posts.isEmpty) {
-              debugPrint(
-                  'ShowcaseFeedScreen: 🔄 Real-time changes detected - updating UI');
+              // debugPrint(
+              //     'ShowcaseFeedScreen: 🔄 Real-time changes detected - updating UI');
               setState(() {
                 _posts = posts;
                 _isLoading = false; // Force loading state to false
@@ -187,13 +175,13 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
               });
 
               // Only log feed update every 20th time
-              if (_updateCount % 20 == 1) {
-                debugPrint(
-                    'ShowcaseFeedScreen: Feed updated with ${posts.length} posts [Update #$_updateCount] - Loading dismissed');
-              }
+              // if (_updateCount % 20 == 1) {
+              //   debugPrint(
+              //       'ShowcaseFeedScreen: Feed updated with ${posts.length} posts [Update #$_updateCount] - Loading dismissed');
+              // }
             } else {
-              debugPrint(
-                  'ShowcaseFeedScreen: No real-time changes detected - UI stays the same');
+              // debugPrint(
+              //     'ShowcaseFeedScreen: No real-time changes detected - UI stays the same');
             }
           }
         },
@@ -210,7 +198,7 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
         },
         onDone: () {
           _isSubscriptionActive = false; // Reset flag when subscription ends
-          debugPrint('ShowcaseFeedScreen: Real-time subscription ended');
+          // debugPrint('ShowcaseFeedScreen: Real-time subscription ended');
           // Smart fallback - only if no posts loaded
           if (_posts.isEmpty && mounted) {
             _smartRefresh(); // Remove await from onDone callback
@@ -229,7 +217,7 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
 
   /// Smart manual refresh to prevent redundant calls
   void refreshFeed() {
-    debugPrint('ShowcaseFeedScreen: Smart manual refresh requested');
+    // debugPrint('ShowcaseFeedScreen: Smart manual refresh requested');
 
     if (_enableRealTimeUpdates) {
       // Real-time mode - setup subscription (handles internal checks)
@@ -242,7 +230,7 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
 
   /// Smart refresh with priority system
   Future<void> _refreshFeedWithLoading() async {
-    debugPrint('ShowcaseFeedScreen: Smart refresh initiated');
+    // debugPrint('ShowcaseFeedScreen: Smart refresh initiated');
 
     _updateFeedState(
       isLoading: true,
@@ -261,8 +249,8 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
 
   /// Smart priority loading system - replaces redundant methods
   Future<void> _smartRefresh({bool clearPosts = false}) async {
-    debugPrint(
-        'ShowcaseFeedScreen: Smart refresh initiated (clear: $clearPosts)');
+    // debugPrint(
+    //     'ShowcaseFeedScreen: Smart refresh initiated (clear: $clearPosts)');
 
     if (clearPosts) {
       _updateFeedState(
@@ -325,9 +313,9 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
 
   /// Force refresh feed by calling backend API directly (ultra-fast)
   Future<void> forceRefreshFeed() async {
-    debugPrint('ShowcaseFeedScreen: Ultra-fast force refreshing feed...');
-    debugPrint(
-        'ShowcaseFeedScreen: Current posts before refresh: ${_posts.length}');
+    // debugPrint('ShowcaseFeedScreen: Ultra-fast force refreshing feed...');
+    // debugPrint(
+    //     'ShowcaseFeedScreen: Current posts before refresh: ${_posts.length}');
 
     setState(() {
       _isLoading = true;
@@ -348,18 +336,18 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
           )
           .timeout(const Duration(
               seconds: 3)); // Ultra-fast timeout (reduced from 4 to 3 seconds)
-      debugPrint(
-          'ShowcaseFeedScreen: Ultra-fast force refresh got ${posts.length} posts');
+      // debugPrint(
+      //     'ShowcaseFeedScreen: Ultra-fast force refresh got ${posts.length} posts');
 
       if (posts.isNotEmpty) {
-        debugPrint(
-            'ShowcaseFeedScreen: First post data: ${posts.first.id} - ${posts.first.content.substring(0, posts.first.content.length > 20 ? 20 : posts.first.content.length)}...');
-        debugPrint(
-            'ShowcaseFeedScreen: Last post data: ${posts.last.id} - ${posts.last.content.substring(0, posts.last.content.length > 20 ? 20 : posts.last.content.length)}...');
+        // debugPrint(
+        //     'ShowcaseFeedScreen: First post data: ${posts.first.id} - ${posts.first.content.substring(0, posts.first.content.length > 20 ? 20 : posts.first.content.length)}...');
+        // debugPrint(
+        //     'ShowcaseFeedScreen: Last post data: ${posts.last.id} - ${posts.last.content.substring(0, posts.last.content.length > 20 ? 20 : posts.last.content.length)}...');
       }
 
-      debugPrint(
-          'ShowcaseFeedScreen: Ultra-fast force refresh successfully received ${posts.length} posts');
+      // debugPrint(
+      //     'ShowcaseFeedScreen: Ultra-fast force refresh successfully received ${posts.length} posts');
 
       if (mounted) {
         setState(() {
@@ -367,8 +355,8 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
           _isLoading = false;
           _hasMore = posts.length >= _postsPerPage;
         });
-        debugPrint(
-            'ShowcaseFeedScreen: State updated with ${_posts.length} posts');
+        // debugPrint(
+        //     'ShowcaseFeedScreen: State updated with ${_posts.length} posts');
       }
 
       // Re-setup real-time subscription only if enabled
@@ -404,11 +392,11 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
     // Try up to 3 times with delay
     for (int i = 0; i < 3; i++) {
       _currentUser = authService.currentUser;
-      debugPrint(
-          '🔄 ShowcaseFeedScreen: Retry $i - Current user: ${_currentUser?.uid ?? "NULL"}');
+      // debugPrint(
+      //     '🔄 ShowcaseFeedScreen: Retry $i - Current user: ${_currentUser?.uid ?? "NULL"}');
 
       if (_currentUser != null) {
-        debugPrint('✅ ShowcaseFeedScreen: Current user loaded successfully');
+        // debugPrint('✅ ShowcaseFeedScreen: Current user loaded successfully');
         break;
       }
 

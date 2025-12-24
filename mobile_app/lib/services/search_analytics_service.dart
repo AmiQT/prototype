@@ -64,8 +64,8 @@ class SearchAnalyticsService {
       // Save analytics data
       await _saveAnalyticsData();
 
-      debugPrint(
-          'SearchAnalytics: Tracked search for "$query" - ${results.length} results in ${searchDuration.inMilliseconds}ms');
+      // debugPrint(
+      //     'SearchAnalytics: Tracked search for "$query" - ${results.length} results in ${searchDuration.inMilliseconds}ms');
     } catch (e) {
       debugPrint('SearchAnalytics: Error tracking search: $e');
     }
@@ -92,8 +92,8 @@ class SearchAnalyticsService {
       _analyticsEvents.add(event);
       await _saveAnalyticsData();
 
-      debugPrint(
-          'SearchAnalytics: Tracked ${interactionType.name} for "$query" -> ${result.user.name}');
+      // debugPrint(
+      //     'SearchAnalytics: Tracked ${interactionType.name} for "$query" -> ${result.user.name}');
     } catch (e) {
       debugPrint('SearchAnalytics: Error tracking interaction: $e');
     }
@@ -120,8 +120,8 @@ class SearchAnalyticsService {
       _analyticsEvents.add(event);
       await _saveAnalyticsData();
 
-      debugPrint(
-          'SearchAnalytics: Tracked filter usage - ${selectedFilters.length} filters applied');
+      // debugPrint(
+      //     'SearchAnalytics: Tracked filter usage - ${selectedFilters.length} filters applied');
     } catch (e) {
       debugPrint('SearchAnalytics: Error tracking filter usage: $e');
     }
@@ -312,8 +312,8 @@ class SearchAnalyticsService {
         );
       }
 
-      debugPrint(
-          'SearchAnalytics: Loaded ${_analyticsEvents.length} events, ${_searchTermFrequency.length} terms');
+      // debugPrint(
+      //     'SearchAnalytics: Loaded ${_analyticsEvents.length} events, ${_searchTermFrequency.length} terms');
     } catch (e) {
       debugPrint('SearchAnalytics: Error loading analytics data: $e');
     }
@@ -390,7 +390,7 @@ class SearchAnalyticsService {
       await prefs.remove(_performanceKey);
       await prefs.remove(_userEngagementKey);
 
-      debugPrint('SearchAnalytics: Cleared all analytics data');
+      // debugPrint('SearchAnalytics: Cleared all analytics data');
     } catch (e) {
       debugPrint('SearchAnalytics: Error clearing analytics data: $e');
     }

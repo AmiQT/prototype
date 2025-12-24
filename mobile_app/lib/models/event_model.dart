@@ -24,6 +24,10 @@ class EventModel {
   final List<String>? skillsGained;
   final List<String>? targetAudience;
 
+  // Payment fields
+  final double? price;
+  final bool isPaid;
+
   EventModel({
     required this.id,
     required this.title,
@@ -44,6 +48,8 @@ class EventModel {
     this.requirements,
     this.skillsGained,
     this.targetAudience,
+    this.price,
+    this.isPaid = false,
   });
 
   // Helper methods for registration
@@ -139,6 +145,12 @@ class EventModel {
           : (json['target_audience'] != null
               ? List<String>.from(json['target_audience'])
               : null),
+      price: json['price'] != null
+          ? (json['price'] is int
+              ? (json['price'] as int).toDouble()
+              : json['price'])
+          : null,
+      isPaid: json['isPaid'] ?? json['is_paid'] ?? false,
     );
   }
 
@@ -164,6 +176,8 @@ class EventModel {
       'requirements': requirements,
       'skillsGained': skillsGained,
       'targetAudience': targetAudience,
+      'price': price,
+      'isPaid': isPaid,
     };
   }
 
@@ -187,6 +201,8 @@ class EventModel {
     List<String>? requirements,
     List<String>? skillsGained,
     List<String>? targetAudience,
+    double? price,
+    bool? isPaid,
   }) {
     return EventModel(
       id: id ?? this.id,
@@ -208,6 +224,8 @@ class EventModel {
       requirements: requirements ?? this.requirements,
       skillsGained: skillsGained ?? this.skillsGained,
       targetAudience: targetAudience ?? this.targetAudience,
+      price: price ?? this.price,
+      isPaid: isPaid ?? this.isPaid,
     );
   }
 }

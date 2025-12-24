@@ -33,12 +33,12 @@ class EventService {
     final stopwatch = Stopwatch()..start();
     try {
       // MOBILE APP OPTIMIZATION: Skip custom backend, use Supabase directly
-      debugPrint(
-          'EventService: Using Supabase directly for mobile app (no custom backend delays)');
+      // debugPrint(
+      //     'EventService: Using Supabase directly for mobile app (no custom backend delays)');
       final result = await _getEventsFromSupabase();
       stopwatch.stop();
-      debugPrint(
-          'EventService: Direct Supabase completed in ${stopwatch.elapsedMilliseconds}ms');
+      // debugPrint(
+      //     'EventService: Direct Supabase completed in ${stopwatch.elapsedMilliseconds}ms');
       return result;
     } catch (e) {
       stopwatch.stop();
@@ -65,10 +65,12 @@ class EventService {
           id: eventData['id'] ?? '',
           title: eventData['title'] ?? '',
           description: eventData['description'] ?? '',
-          imageUrl: _getDefaultEventImage(eventData['title'] ?? 'Event') ??
-              '', // Use default image or empty string
-          category: _getCategoryFromLocation(
-              eventData['location']), // Derive category from location
+          imageUrl: eventData['image_url'] ??
+              _getDefaultEventImage(eventData['title'] ?? 'Event') ??
+              '', // Use provided image, default image, or empty string
+          category: eventData['category'] ??
+              _getCategoryFromLocation(eventData[
+                  'location']), // Use provided category or derive from location
           favoriteUserIds: [], // Will be populated below
           registerUrl: '', // Events table doesn't have register_url field
           createdAt: eventData['created_at'] != null
@@ -77,6 +79,20 @@ class EventService {
           updatedAt: eventData['updated_at'] != null
               ? DateTime.parse(eventData['updated_at'])
               : DateTime.now(),
+          // Payment fields
+          isPaid: eventData['is_paid'] ?? false,
+          price: eventData['price'] != null
+              ? (eventData['price'] is int
+                  ? (eventData['price'] as int).toDouble()
+                  : double.tryParse(eventData['price'].toString()))
+              : null,
+          // Event date & location
+          eventDate: eventData['event_date'] != null
+              ? DateTime.tryParse(eventData['event_date'])
+              : null,
+          location: eventData['location'],
+          maxParticipants: eventData['max_participants'],
+          currentParticipants: eventData['current_participants'],
         );
 
         events.add(event);
@@ -153,51 +169,10 @@ class EventService {
 
   Future<EventModel?> getEventById(String eventId) async {
     try {
-      debugPrint('EventService: Getting event by ID: $eventId');
+      // debugPrint('EventService: Getting event by ID: $eventId');
 
-      // Try backend first
-      try {
-        final token = await _getAuthToken();
-        if (token != null) {
-          final response = await http.get(
-            Uri.parse('$baseUrl/api/events/$eventId'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-          );
-
-          if (response.statusCode == 200) {
-            final eventData = json.decode(response.body);
-            debugPrint(
-                'EventService: Event loaded from backend: ${eventData['title']}');
-            return EventModel(
-              id: eventData['id'] ?? '',
-              title: eventData['title'] ?? '',
-              description: eventData['description'] ?? '',
-              imageUrl: eventData['image_url'] ?? eventData['imageUrl'] ?? '',
-              category: eventData['category'] ?? '',
-              favoriteUserIds: [], // Will be handled separately
-              registerUrl:
-                  eventData['register_url'] ?? eventData['registerUrl'] ?? '',
-              createdAt: eventData['created_at'] != null
-                  ? DateTime.parse(eventData['created_at'])
-                  : DateTime.now(),
-              updatedAt: eventData['updated_at'] != null
-                  ? DateTime.parse(eventData['updated_at'])
-                  : DateTime.now(),
-            );
-          } else {
-            debugPrint(
-                'EventService: Backend getEventById failed: ${response.statusCode}');
-          }
-        }
-      } catch (e) {
-        debugPrint('EventService: Backend getEventById error: $e');
-      }
-
-      // Fallback to Supabase
-      debugPrint('EventService: Using Supabase fallback for getEventById');
+      // SUPABASE-FIRST: Direct DB query is faster and more reliable
+      // Backend calls are slow due to Render cold starts
       return await _getEventFromSupabase(eventId);
     } catch (e) {
       debugPrint('❌ Error loading event: $e');
@@ -208,7 +183,7 @@ class EventService {
   /// Get single event from Supabase
   Future<EventModel?> _getEventFromSupabase(String eventId) async {
     try {
-      debugPrint('EventService: Getting event from Supabase: $eventId');
+      // debugPrint('EventService: Getting event from Supabase: $eventId');
 
       final response = await SupabaseConfig.client
           .from('events')
@@ -218,16 +193,18 @@ class EventService {
           .maybeSingle();
 
       if (response != null) {
-        debugPrint(
-            'EventService: Event found in Supabase: ${response['title']}');
+        // debugPrint(
+        //     'EventService: Event found in Supabase: ${response['title']}');
 
         final event = EventModel(
           id: response['id'] ?? eventId,
           title: response['title'] ?? '',
           description: response['description'] ?? '',
-          imageUrl: _getDefaultEventImage(response['title'] ?? 'Event') ??
-              '', // Use default image or empty string
-          category: _getCategoryFromLocation(response['location'] ?? ''),
+          imageUrl: response['image_url'] ??
+              _getDefaultEventImage(response['title'] ?? 'Event') ??
+              '', // Use provided image, default image, or empty string
+          category: response['category'] ??
+              _getCategoryFromLocation(response['location'] ?? ''),
           favoriteUserIds: [], // Will be populated below
           registerUrl: '', // Not available in Supabase events table
           createdAt: response['created_at'] != null
@@ -236,6 +213,20 @@ class EventService {
           updatedAt: response['updated_at'] != null
               ? DateTime.parse(response['updated_at'])
               : DateTime.now(),
+          // Payment fields
+          isPaid: response['is_paid'] ?? false,
+          price: response['price'] != null
+              ? (response['price'] is int
+                  ? (response['price'] as int).toDouble()
+                  : double.tryParse(response['price'].toString()))
+              : null,
+          // Event date & location
+          eventDate: response['event_date'] != null
+              ? DateTime.tryParse(response['event_date'])
+              : null,
+          location: response['location'],
+          maxParticipants: response['max_participants'],
+          currentParticipants: response['current_participants'],
         );
 
         // Populate favorite data for this single event
@@ -352,8 +343,8 @@ class EventService {
         throw Exception('User ID cannot be empty');
       }
 
-      debugPrint(
-          'EventService: Toggling favorite for event $eventId, user $userId, favorite: $isFavorite');
+      // debugPrint(
+      //     'EventService: Toggling favorite for event $eventId, user $userId, favorite: $isFavorite');
 
       // Try backend first
       try {
@@ -371,8 +362,8 @@ class EventService {
           );
 
           if (response.statusCode == 200) {
-            debugPrint(
-                'EventService: Favorite toggled successfully via backend');
+            // debugPrint(
+            //     'EventService: Favorite toggled successfully via backend');
             await _handleFavoriteNotification(eventId, userId, isFavorite);
             return;
           } else {
@@ -385,7 +376,7 @@ class EventService {
       }
 
       // Fallback to Supabase or local storage
-      debugPrint('EventService: Using fallback for favorite toggle');
+      // debugPrint('EventService: Using fallback for favorite toggle');
       await _toggleFavoriteFallback(eventId, userId, isFavorite);
       await _handleFavoriteNotification(eventId, userId, isFavorite);
     } catch (e) {
@@ -400,27 +391,26 @@ class EventService {
     try {
       // Try Supabase first
       try {
-        debugPrint('EventService: Attempting Supabase favorite toggle...');
+        // debugPrint('EventService: Attempting Supabase favorite toggle...');
 
         if (isFavorite) {
           // Add to favorites
-          final result =
-              await SupabaseConfig.client.from('event_favorites').upsert({
+          await SupabaseConfig.client.from('event_favorites').upsert({
             'user_id': userId,
             'event_id': eventId,
             'created_at': DateTime.now().toIso8601String(),
           });
-          debugPrint('EventService: Supabase upsert result: $result');
+          // debugPrint('EventService: Supabase upsert result: $result');
         } else {
           // Remove from favorites
-          final result = await SupabaseConfig.client
+          await SupabaseConfig.client
               .from('event_favorites')
               .delete()
               .eq('user_id', userId)
               .eq('event_id', eventId);
-          debugPrint('EventService: Supabase delete result: $result');
+          // debugPrint('EventService: Supabase delete result: $result');
         }
-        debugPrint('EventService: Favorite toggled successfully via Supabase');
+        // debugPrint('EventService: Favorite toggled successfully via Supabase');
         return;
       } catch (e) {
         debugPrint('EventService: Supabase favorite toggle failed: $e');
@@ -433,7 +423,7 @@ class EventService {
       }
 
       // Fallback to local storage (SharedPreferences)
-      debugPrint('EventService: Falling back to local storage...');
+      // debugPrint('EventService: Falling back to local storage...');
       await _toggleFavoriteLocal(eventId, userId, isFavorite);
     } catch (e) {
       debugPrint('EventService: Fallback favorite toggle error: $e');
@@ -458,8 +448,8 @@ class EventService {
       }
 
       await prefs.setStringList(key, favoriteEvents);
-      debugPrint(
-          'EventService: Favorite toggled successfully via local storage');
+      // debugPrint(
+      //     'EventService: Favorite toggled successfully via local storage');
     } catch (e) {
       debugPrint('EventService: Local storage favorite toggle error: $e');
     }
@@ -470,11 +460,17 @@ class EventService {
       String eventId, String userId, bool isFavorite) async {
     try {
       if (isFavorite) {
-        final event = await getEventById(eventId);
-        if (event != null) {
+        // Quick title-only query instead of slow getEventById
+        final result = await SupabaseConfig.client
+            .from('events')
+            .select('title')
+            .eq('id', eventId)
+            .maybeSingle();
+
+        if (result != null) {
           await AutoNotificationService.onEventFavorited(
             userId: userId,
-            eventTitle: event.title,
+            eventTitle: result['title'] ?? 'Event',
             eventId: eventId,
           );
         }
@@ -487,8 +483,8 @@ class EventService {
   /// Check if event is favorited by user
   Future<bool> isEventFavorited(String eventId, String userId) async {
     try {
-      debugPrint(
-          'EventService: Checking favorite status for event $eventId, user $userId');
+      // debugPrint(
+      //     'EventService: Checking favorite status for event $eventId, user $userId');
 
       // Try Supabase first
       try {
@@ -500,10 +496,10 @@ class EventService {
             .maybeSingle();
 
         if (response != null) {
-          debugPrint('EventService: Event is favorited in Supabase');
+          // debugPrint('EventService: Event is favorited in Supabase');
           return true;
         } else {
-          debugPrint('EventService: Event not found in Supabase favorites');
+          // debugPrint('EventService: Event not found in Supabase favorites');
         }
       } catch (e) {
         debugPrint('EventService: Supabase favorite check failed: $e');
@@ -519,8 +515,8 @@ class EventService {
       final key = 'favorite_events_$userId';
       final favoriteEvents = prefs.getStringList(key) ?? [];
       final isLocalFavorite = favoriteEvents.contains(eventId);
-      debugPrint(
-          'EventService: Local storage favorite status: $isLocalFavorite');
+      // debugPrint(
+      //     'EventService: Local storage favorite status: $isLocalFavorite');
       return isLocalFavorite;
     } catch (e) {
       debugPrint('EventService: Error checking favorite status: $e');
@@ -531,7 +527,7 @@ class EventService {
   /// Get all favorited events for a user
   Future<List<String>> getFavoriteEventIds(String userId) async {
     try {
-      debugPrint('EventService: Getting favorite events for user $userId');
+      // debugPrint('EventService: Getting favorite events for user $userId');
 
       // Try Supabase first
       try {
@@ -543,11 +539,11 @@ class EventService {
         if (response.isNotEmpty) {
           final eventIds =
               response.map((item) => item['event_id'] as String).toList();
-          debugPrint(
-              'EventService: Found ${eventIds.length} favorites in Supabase');
+          // debugPrint(
+          //     'EventService: Found ${eventIds.length} favorites in Supabase');
           return eventIds;
         } else {
-          debugPrint('EventService: No favorites found in Supabase');
+          // debugPrint('EventService: No favorites found in Supabase');
         }
       } catch (e) {
         debugPrint('EventService: Supabase favorite list failed: $e');
@@ -562,8 +558,8 @@ class EventService {
       final prefs = await SharedPreferences.getInstance();
       final key = 'favorite_events_$userId';
       final localFavorites = prefs.getStringList(key) ?? [];
-      debugPrint(
-          'EventService: Found ${localFavorites.length} favorites in local storage');
+      // debugPrint(
+      //     'EventService: Found ${localFavorites.length} favorites in local storage');
       return localFavorites;
     } catch (e) {
       debugPrint('EventService: Error getting favorite events: $e');
@@ -571,29 +567,143 @@ class EventService {
     }
   }
 
-  Stream<List<EventModel>> streamAllEvents() {
-    // Create a controller to emit initial data immediately
-    final controller = StreamController<List<EventModel>>();
+  /// OPTIMIZED: Get favorite events with full details in SINGLE query
+  Future<List<EventModel>> getFavoriteEventsWithDetails(String userId) async {
+    try {
+      // debugPrint('🔵 getFavoriteEventsWithDetails: Fetching for user $userId');
 
-    // Load initial data
-    getAllEvents().then((initialEvents) {
+      // Single query with embedded relation
+      final response =
+          await SupabaseConfig.client.from('event_favorites').select('''
+            event_id,
+            events!event_id (
+              id,
+              title,
+              description,
+              image_url,
+              category,
+              location,
+              event_date,
+              created_at,
+              updated_at,
+              is_active,
+              price,
+              max_participants,
+              current_participants,
+              registration_open,
+              registration_deadline
+            )
+          ''').eq('user_id', userId);
+
+      // debugPrint(
+      //     '🔵 getFavoriteEventsWithDetails: Got ${(response as List).length} favorites');
+
+      final events = <EventModel>[];
+      for (final item in response) {
+        final eventData = item['events'] as Map<String, dynamic>?;
+        if (eventData == null || eventData['is_active'] != true) continue;
+
+        events.add(EventModel(
+          id: eventData['id'] ?? '',
+          title: eventData['title'] ?? '',
+          description: eventData['description'] ?? '',
+          imageUrl: eventData['image_url'] ?? '',
+          category: eventData['category'] ?? 'General',
+          favoriteUserIds: [
+            userId
+          ], // Since this is from favorites, user has favorited it
+          registerUrl: '',
+          createdAt: eventData['created_at'] != null
+              ? DateTime.tryParse(eventData['created_at']) ?? DateTime.now()
+              : DateTime.now(),
+          updatedAt: eventData['updated_at'] != null
+              ? DateTime.tryParse(eventData['updated_at']) ?? DateTime.now()
+              : DateTime.now(),
+          eventDate: eventData['event_date'] != null
+              ? DateTime.tryParse(eventData['event_date'])
+              : null,
+          location: eventData['location'],
+          price: (eventData['price'] as num?)?.toDouble(),
+          maxParticipants: eventData['max_participants'],
+          currentParticipants: eventData['current_participants'],
+          registrationOpen: eventData['registration_open'],
+          registrationDeadline: eventData['registration_deadline'] != null
+              ? DateTime.tryParse(eventData['registration_deadline'])
+              : null,
+        ));
+      }
+
+      // Sort by creation date
+      events.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      // debugPrint(
+      //     '🔵 getFavoriteEventsWithDetails: Returning ${events.length} valid events');
+      return events;
+    } catch (e) {
       debugPrint(
-          'EventService: Stream started with ${initialEvents.length} events');
-      controller.add(initialEvents);
-    }).catchError((error) {
-      debugPrint('❌ Error loading initial events: $error');
-      controller.add(<EventModel>[]);
-    });
+          '❌ EventService: Error getting favorite events with details: $e');
+      return [];
+    }
+  }
 
-    // Set up periodic updates
-    Timer.periodic(const Duration(seconds: 30), (timer) async {
+  /// TRUE Real-time stream using Supabase Realtime subscription
+  Stream<List<EventModel>> streamAllEvents() {
+    final controller = StreamController<List<EventModel>>();
+    List<EventModel> lastEvents = [];
+
+    // Helper function to load and emit events with favorite data
+    Future<void> loadAndEmitEvents() async {
       try {
         final events = await getAllEvents();
-        controller.add(events);
-      } catch (error) {
-        debugPrint('❌ Error in periodic update: $error');
+
+        // Only emit if data has changed
+        if (lastEvents.isEmpty ||
+            events.length != lastEvents.length ||
+            events.asMap().entries.any((entry) {
+              final i = entry.key;
+              final newEvent = entry.value;
+              final oldEvent = i < lastEvents.length ? lastEvents[i] : null;
+              return oldEvent == null ||
+                  newEvent.id != oldEvent.id ||
+                  newEvent.currentParticipants !=
+                      oldEvent.currentParticipants ||
+                  newEvent.favoriteUserIds.length !=
+                      oldEvent.favoriteUserIds.length;
+            })) {
+          lastEvents = events;
+          if (!controller.isClosed) {
+            controller.add(events);
+          }
+        }
+      } catch (e) {
+        debugPrint('❌ Error loading events for realtime: $e');
+        if (!controller.isClosed && lastEvents.isEmpty) {
+          controller.add(<EventModel>[]);
+        }
       }
-    });
+    }
+
+    // 1. IMMEDIATE: Load initial data
+    loadAndEmitEvents();
+
+    // 2. TRUE REAL-TIME: Set up Supabase Realtime subscription
+    final subscription = SupabaseConfig.client
+        .from('events')
+        .stream(primaryKey: ['id'])
+        .eq('is_active', true)
+        .order('created_at', ascending: false)
+        .listen((data) {
+          // When real-time update comes, reload full data with favorites
+          loadAndEmitEvents();
+        }, onError: (error) {
+          debugPrint('❌ EventService: Realtime subscription error: $error');
+        });
+
+    // Clean up subscription when stream is cancelled
+    controller.onCancel = () {
+      subscription.cancel();
+      controller.close();
+    };
 
     return controller.stream;
   }
@@ -616,7 +726,10 @@ class EventService {
     required ProfileModel userProfile,
   }) async {
     try {
-      debugPrint('🔵 EventService: Starting registration for event $eventId');
+      // debugPrint('========================================');
+      // debugPrint('🔵 EventService: REGISTER FOR EVENT CALLED');
+      // debugPrint('🔵 Event ID: $eventId');
+      // debugPrint('========================================');
 
       final userId = SupabaseConfig.auth.currentUser?.id;
       if (userId == null) {
@@ -624,39 +737,30 @@ class EventService {
         return null;
       }
 
-      debugPrint('🔵 EventService: User ID: $userId');
+      // debugPrint('🔵 Step 1: User ID: $userId');
 
       // Check if already registered
-      debugPrint('🔵 EventService: Checking if already registered...');
+      // debugPrint('🔵 Step 2: Checking if already registered...');
       final alreadyRegistered = await isRegisteredForEvent(eventId, userId);
+      // debugPrint(
+      //     '🔵 Step 2.1: isRegisteredForEvent returned: $alreadyRegistered');
       if (alreadyRegistered) {
         debugPrint(
             '⚠️ EventService: User already registered for event $eventId');
         return null;
       }
 
-      debugPrint('🔵 EventService: User not registered yet, proceeding...');
+      // debugPrint('🔵 Step 3: User not registered yet, proceeding...');
 
-      // Get event to check capacity (OPTIONAL - skip if event doesn't have registration fields yet)
-      final event = await getEventById(eventId);
-      if (event == null) {
-        debugPrint(
-            '⚠️ EventService: Event $eventId not found, but continuing with registration');
-        // Continue anyway - event exists in database
-      } else {
-        debugPrint('🔵 EventService: Event found: ${event.title}');
-
-        // Only check canRegister if event has registration fields
-        if (event.registrationOpen != null && !event.canRegister) {
-          debugPrint(
-              '❌ EventService: Cannot register - ${event.registrationStatus}');
-          return null;
-        }
-      }
+      // SKIP getEventById - it's causing timeout due to backend being slow
+      // Capacity check is already done in the UI before calling this function
+      // The event object is already available at the caller side
+      // debugPrint(
+      //     '🔵 Step 4: Skipping event fetch (optimization) - proceeding directly...');
 
       // Auto-fill registration data from profile
-      debugPrint(
-          '🔵 EventService: Creating registration with auto-filled data...');
+      // debugPrint(
+      //     '🔵 EventService: Creating registration with auto-filled data...');
       final registration = EventRegistrationModel(
         eventId: eventId,
         userId: userId,
@@ -672,11 +776,11 @@ class EventService {
         relevantSkills: userProfile.skills,
       );
 
-      debugPrint('🔵 EventService: Registration data prepared');
+      // debugPrint('🔵 EventService: Registration data prepared');
       final dataToInsert = registration.toJsonForInsert();
-      debugPrint('🔵 EventService: Data to insert: $dataToInsert');
+      // debugPrint('🔵 EventService: Data to insert: $dataToInsert');
 
-      debugPrint('🔵 EventService: Inserting into database...');
+      // debugPrint('🔵 Step 5: Inserting into database...');
 
       // Insert into database
       final response = await SupabaseConfig.client
@@ -685,20 +789,18 @@ class EventService {
           .select()
           .single();
 
-      debugPrint('✅ EventService: Successfully registered for event $eventId');
-      debugPrint('🔵 EventService: Response: $response');
+      // debugPrint('✅ EventService: Successfully registered for event $eventId');
+      // debugPrint('🔵 EventService: Response: $response');
 
-      // Update current participants count in events table (only if event has the field)
-      if (event != null && event.maxParticipants != null) {
-        debugPrint('🔵 EventService: Updating participant count...');
-        await _incrementParticipantCount(eventId);
-      }
+      // Update current participants count in events table
+      // debugPrint('🔵 Step 6: Updating participant count...');
+      await _incrementParticipantCount(eventId);
 
       // Send confirmation notification
-      debugPrint('🔵 EventService: Sending confirmation notification...');
+      // debugPrint('🔵 Step 7: Sending confirmation notification...');
       await AutoNotificationService.sendEventRegistrationConfirmation(
-        eventTitle: event?.title ?? 'Event',
-        eventDate: event?.eventDate ?? DateTime.now(),
+        eventTitle: 'Event Registration',
+        eventDate: DateTime.now(),
       );
 
       return EventRegistrationModel.fromJson(response);
@@ -747,6 +849,60 @@ class EventService {
           .toList();
     } catch (e) {
       debugPrint('❌ EventService: Error fetching registered events: $e');
+      return [];
+    }
+  }
+
+  /// OPTIMIZED: Get registered events with full event details in SINGLE query
+  /// This avoids the N+1 query problem of calling getEventById() for each registration
+  Future<List<Map<String, dynamic>>> getRegisteredEventsWithDetails(
+      String userId) async {
+    try {
+      debugPrint(
+          '🔵 getRegisteredEventsWithDetails: Fetching for user $userId');
+
+      // Single query with embedded relation - MUCH faster than loop
+      final response = await SupabaseConfig.client
+          .from('event_participations')
+          .select('''
+            *,
+            events!event_id (
+              id,
+              title,
+              description,
+              image_url,
+              category,
+              location,
+              event_date,
+              created_at,
+              updated_at,
+              is_active,
+              price,
+              max_participants,
+              current_participants,
+              registration_open,
+              registration_deadline
+            )
+          ''')
+          .eq('user_id', userId)
+          .order('registration_date', ascending: false);
+
+      debugPrint(
+          '🔵 getRegisteredEventsWithDetails: Got ${(response as List).length} registrations');
+
+      // Filter out registrations where event is null or inactive
+      final validResults = (response as List)
+          .where((item) =>
+              item['events'] != null && item['events']['is_active'] == true)
+          .toList();
+
+      debugPrint(
+          '🔵 getRegisteredEventsWithDetails: ${validResults.length} valid registrations');
+
+      return List<Map<String, dynamic>>.from(validResults);
+    } catch (e) {
+      debugPrint(
+          '❌ EventService: Error fetching registered events with details: $e');
       return [];
     }
   }
@@ -856,40 +1012,74 @@ class EventService {
   /// Helper: Increment participant count in events table
   Future<void> _incrementParticipantCount(String eventId) async {
     try {
-      // Get current count
-      final event = await getEventById(eventId);
-      if (event == null) return;
+      debugPrint(
+          '🔵 Step 6.1: Getting current participant count directly from Supabase...');
 
-      final newCount = (event.currentParticipants ?? 0) + 1;
+      // Direct query to get current count - MUCH faster than getEventById
+      final result = await SupabaseConfig.client
+          .from('events')
+          .select('current_participants')
+          .eq('id', eventId)
+          .maybeSingle();
+
+      debugPrint('🔵 Step 6.2: Current count result: $result');
+
+      if (result == null) {
+        debugPrint(
+            '⚠️ EventService: Event not found for participant count update');
+        return;
+      }
+
+      final currentCount = result['current_participants'] ?? 0;
+      final newCount = currentCount + 1;
+
+      debugPrint(
+          '🔵 Step 6.3: Updating count from $currentCount to $newCount...');
 
       await SupabaseConfig.client
           .from('events')
           .update({'current_participants': newCount}).eq('id', eventId);
 
-      debugPrint('✅ EventService: Incremented participant count to $newCount');
+      debugPrint('✅ Step 6.4: Incremented participant count to $newCount');
     } catch (e) {
       debugPrint('❌ EventService: Error incrementing participant count: $e');
+      // Don't throw - this is non-critical
     }
   }
 
   /// Helper: Decrement participant count in events table
   Future<void> _decrementParticipantCount(String eventId) async {
     try {
-      // Get current count
-      final event = await getEventById(eventId);
-      if (event == null) return;
+      debugPrint('🔵 Decrement: Getting current participant count...');
 
-      final newCount = (event.currentParticipants ?? 1) - 1;
+      // Direct query - MUCH faster than getEventById
+      final result = await SupabaseConfig.client
+          .from('events')
+          .select('current_participants')
+          .eq('id', eventId)
+          .maybeSingle();
+
+      if (result == null) {
+        debugPrint(
+            '⚠️ EventService: Event not found for participant count update');
+        return;
+      }
+
+      final currentCount = result['current_participants'] ?? 1;
+      final newCount = currentCount - 1;
       final finalCount = newCount < 0 ? 0 : newCount;
+
+      debugPrint(
+          '🔵 Decrement: Updating count from $currentCount to $finalCount...');
 
       await SupabaseConfig.client
           .from('events')
           .update({'current_participants': finalCount}).eq('id', eventId);
 
-      debugPrint(
-          '✅ EventService: Decremented participant count to $finalCount');
+      debugPrint('✅ Decrement: Done - count is now $finalCount');
     } catch (e) {
       debugPrint('❌ EventService: Error decrementing participant count: $e');
+      // Don't throw - this is non-critical
     }
   }
 }

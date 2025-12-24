@@ -41,6 +41,11 @@ class Profile(Base):
     experiences = Column(JSON, nullable=True)  # JSONB
     projects = Column(JSON, nullable=True)  # JSONB
     
+    # Talent system - soft skills, hobbies, and quiz results
+    soft_skills = Column(JSON, nullable=True)  # Array of soft skill objects
+    hobbies = Column(JSON, nullable=True)  # Array of hobby objects
+    talent_quiz_results = Column(JSON, nullable=True)  # Quiz results object
+    
     # Personal Advisor (PAK - Penasihat Akademik)
     personal_advisor = Column(String, nullable=True)  # PAK name e.g. "Dr. Muhaini"
     personal_advisor_email = Column(String, nullable=True)  # PAK email

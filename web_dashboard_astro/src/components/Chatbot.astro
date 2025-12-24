@@ -99,13 +99,14 @@
     const chatMessages = document.getElementById("chat-messages");
 
     const BACKEND_URL =
-        import.meta.env.PUBLIC_BACKEND_URL || "http://localhost:8000";
-    
+        import.meta.env.PUBLIC_BACKEND_URL ||
+        "https://prototype-348e.onrender.com";
+
     // Use LangChain v2 API for better stability
     const AI_ENDPOINT = `${BACKEND_URL}/api/ai/v2/command`;
 
     let isOpen = false;
-    let sessionId: string | null = null;  // Track session for conversation memory
+    let sessionId: string | null = null; // Track session for conversation memory
 
     function toggleChat() {
         isOpen = !isOpen;
@@ -154,7 +155,7 @@
                 },
                 body: JSON.stringify({
                     command: message,
-                    session_id: sessionId,  // Include session for conversation memory
+                    session_id: sessionId, // Include session for conversation memory
                     context: {
                         page: window.location.pathname,
                         userAgent: navigator.userAgent,

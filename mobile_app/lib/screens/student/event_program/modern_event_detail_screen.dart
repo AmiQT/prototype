@@ -8,6 +8,7 @@ import '../../../services/event_service.dart';
 import '../../../services/profile_service.dart';
 import '../../../utils/app_theme.dart';
 import '../../../config/supabase_config.dart';
+import '../../payment/payment_summary_screen.dart';
 
 class ModernEventDetailScreen extends StatefulWidget {
   final EventModel event;
@@ -40,6 +41,7 @@ class _ModernEventDetailScreenState extends State<ModernEventDetailScreen>
   void initState() {
     super.initState();
     _userId = SupabaseConfig.auth.currentUser?.id;
+    // Initialize from passed event data (may not be accurate)
     _isFavorite =
         _userId != null && widget.event.favoriteUserIds.contains(_userId);
 
@@ -68,6 +70,7 @@ class _ModernEventDetailScreenState extends State<ModernEventDetailScreen>
     _animationController.forward();
     _loadRegistrationStatus();
     _loadUserProfile();
+    _loadFavoriteStatus(); // Load accurate favorite status from Supabase
   }
 
   @override
@@ -258,6 +261,10 @@ class _ModernEventDetailScreenState extends State<ModernEventDetailScreen>
           Row(
             children: [
               _buildCategoryBadge(),
+              if (widget.event.isPaid && widget.event.price != null) ...[
+                const SizedBox(width: AppTheme.spaceSm),
+                _buildPriceBadge(),
+              ],
               const Spacer(),
               _buildInterestCount(),
             ],
@@ -268,9 +275,9 @@ class _ModernEventDetailScreenState extends State<ModernEventDetailScreen>
                 ? widget.event.title
                 : 'Untitled Event',
             style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
-                ),
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface,
+            ),
           ),
         ],
       ),
@@ -306,6 +313,35 @@ class _ModernEventDetailScreenState extends State<ModernEventDetailScreen>
     );
   }
 
+  Widget _buildPriceBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spaceMd,
+        vertical: AppTheme.spaceXs,
+      ),
+      decoration: BoxDecoration(
+        color: AppTheme.secondaryColor,
+        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.secondaryColor.withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Text(
+        'RM ${(widget.event.price ?? 0).toStringAsFixed(2)}',
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
   Widget _buildInterestCount() {
     final theme = Theme.of(context);
     return Container(
@@ -329,9 +365,9 @@ class _ModernEventDetailScreenState extends State<ModernEventDetailScreen>
           Text(
             '${widget.event.favoriteUserIds.length} interested',
             style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w500,
-                ),
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
@@ -368,9 +404,9 @@ class _ModernEventDetailScreenState extends State<ModernEventDetailScreen>
               Text(
                 'About This Event',
                 style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSurface,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface,
+                ),
               ),
             ],
           ),
@@ -380,9 +416,9 @@ class _ModernEventDetailScreenState extends State<ModernEventDetailScreen>
                 ? widget.event.description
                 : 'No description available for this event.',
             style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  height: 1.6,
-                ),
+              color: theme.colorScheme.onSurfaceVariant,
+              height: 1.6,
+            ),
           ),
         ],
       ),
@@ -411,9 +447,9 @@ class _ModernEventDetailScreenState extends State<ModernEventDetailScreen>
           Text(
             'Event Details',
             style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
-                ),
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: AppTheme.spaceMd),
           _buildMetaItem(
@@ -449,16 +485,16 @@ class _ModernEventDetailScreenState extends State<ModernEventDetailScreen>
         Text(
           '$label: ',
           style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w500,
-              ),
+            color: theme.colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         Text(
           value,
           style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurface,
-                fontWeight: FontWeight.w600,
-              ),
+            color: theme.colorScheme.onSurface,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ],
     );
@@ -642,6 +678,58 @@ class _ModernEventDetailScreenState extends State<ModernEventDetailScreen>
       );
     }
 
+    if (canRegister) {
+      if (widget.event.isPaid &&
+          widget.event.price != null &&
+          widget.event.price! > 0) {
+        // Paid Event Flow
+        return Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: AppTheme.primaryGradient,
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: ElevatedButton.icon(
+            onPressed: _isLoadingRegistration ? null : _handlePaidRegistration,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              shadowColor: Colors.transparent,
+              padding: const EdgeInsets.symmetric(vertical: AppTheme.spaceMd),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+              ),
+            ),
+            icon: _isLoadingRegistration
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Icon(Icons.payment_rounded, color: Colors.white),
+            label: Text(
+              _isLoadingRegistration
+                  ? 'Processing...'
+                  : 'Pay RM ${widget.event.price!.toStringAsFixed(2)} & Join',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+          ),
+        );
+      }
+    }
+
     // Show Register button
     return Container(
       width: double.infinity,
@@ -697,25 +785,11 @@ class _ModernEventDetailScreenState extends State<ModernEventDetailScreen>
   }
 
   Widget _buildSecondaryActions() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildSecondaryButton(
-            icon: Icons.share_rounded,
-            label: 'Share Event',
-            onTap: _shareEvent,
-          ),
-        ),
-        const SizedBox(width: AppTheme.spaceMd),
-        Expanded(
-          child: _buildSecondaryButton(
-            icon: _isFavorite ? Icons.favorite : Icons.favorite_border,
-            label: _isFavorite ? 'Favorited' : 'Add to Favorites',
-            onTap: _toggleFavorite,
-            isActive: _isFavorite,
-          ),
-        ),
-      ],
+    // Only Share button - Favorites is already in AppBar icon
+    return _buildSecondaryButton(
+      icon: Icons.share_rounded,
+      label: 'Share Event',
+      onTap: _shareEvent,
     );
   }
 
@@ -815,6 +889,26 @@ class _ModernEventDetailScreenState extends State<ModernEventDetailScreen>
     );
   }
 
+  // ==================== FAVORITE METHODS ====================
+
+  Future<void> _loadFavoriteStatus() async {
+    if (_userId == null) return;
+
+    try {
+      final isFavorite = await _eventService.isEventFavorited(
+        widget.event.id,
+        _userId!,
+      );
+      if (mounted) {
+        setState(() {
+          _isFavorite = isFavorite;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading favorite status: $e');
+    }
+  }
+
   // ==================== REGISTRATION METHODS ====================
 
   Future<void> _loadRegistrationStatus() async {
@@ -845,6 +939,21 @@ class _ModernEventDetailScreenState extends State<ModernEventDetailScreen>
       }
     } catch (e) {
       debugPrint('Error loading user profile: $e');
+    }
+  }
+
+  Future<void> _handlePaidRegistration() async {
+    // Navigate to Payment Summary
+    final paymentSuccess = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PaymentSummaryScreen(event: widget.event),
+      ),
+    );
+
+    if (paymentSuccess == true) {
+      // If payment successful, proceed to register
+      _registerForEventInApp();
     }
   }
 

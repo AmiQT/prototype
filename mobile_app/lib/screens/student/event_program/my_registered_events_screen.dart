@@ -45,20 +45,53 @@ class _MyRegisteredEventsScreenState extends State<MyRegisteredEventsScreen>
     });
 
     try {
-      final registrations = await _eventService.getRegisteredEvents(_userId!);
+      // OPTIMIZED: Single query instead of N+1 loop
+      final results =
+          await _eventService.getRegisteredEventsWithDetails(_userId!);
 
-      // Load full event details for each registration
+      // Convert to EventRegistrationWithEvent objects
       final registrationsWithEvents = <EventRegistrationWithEvent>[];
-      for (final registration in registrations) {
-        final event = await _eventService.getEventById(registration.eventId);
-        if (event != null) {
-          registrationsWithEvents.add(
-            EventRegistrationWithEvent(
-              registration: registration,
-              event: event,
-            ),
-          );
-        }
+      for (final item in results) {
+        final eventData = item['events'] as Map<String, dynamic>?;
+        if (eventData == null) continue;
+
+        // Create EventModel from embedded event data
+        final event = EventModel(
+          id: eventData['id'] ?? '',
+          title: eventData['title'] ?? '',
+          description: eventData['description'] ?? '',
+          imageUrl: eventData['image_url'] ?? '',
+          category: eventData['category'] ?? 'General',
+          favoriteUserIds: [],
+          registerUrl: '',
+          createdAt: eventData['created_at'] != null
+              ? DateTime.tryParse(eventData['created_at']) ?? DateTime.now()
+              : DateTime.now(),
+          updatedAt: eventData['updated_at'] != null
+              ? DateTime.tryParse(eventData['updated_at']) ?? DateTime.now()
+              : DateTime.now(),
+          eventDate: eventData['event_date'] != null
+              ? DateTime.tryParse(eventData['event_date'])
+              : null,
+          location: eventData['location'],
+          price: (eventData['price'] as num?)?.toDouble(),
+          maxParticipants: eventData['max_participants'],
+          currentParticipants: eventData['current_participants'],
+          registrationOpen: eventData['registration_open'],
+          registrationDeadline: eventData['registration_deadline'] != null
+              ? DateTime.tryParse(eventData['registration_deadline'])
+              : null,
+        );
+
+        // Create EventRegistrationModel from registration data
+        final registration = EventRegistrationModel.fromJson(item);
+
+        registrationsWithEvents.add(
+          EventRegistrationWithEvent(
+            registration: registration,
+            event: event,
+          ),
+        );
       }
 
       if (mounted) {

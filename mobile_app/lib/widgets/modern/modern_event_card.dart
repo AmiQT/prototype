@@ -201,7 +201,15 @@ class _ModernEventCardState extends State<ModernEventCard>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _buildCategoryBadge(),
+          Row(
+            children: [
+              _buildCategoryBadge(),
+              if (widget.event.isPaid && widget.event.price != null) ...[
+                const SizedBox(width: AppTheme.spaceXs),
+                _buildPriceBadge(),
+              ],
+            ],
+          ),
           _buildFavoriteButton(),
         ],
       ),
@@ -239,6 +247,35 @@ class _ModernEventCardState extends State<ModernEventCard>
         style: TextStyle(
           color:
               theme.brightness == Brightness.dark ? Colors.white : Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 10,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPriceBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spaceSm,
+        vertical: AppTheme.spaceXs,
+      ),
+      decoration: BoxDecoration(
+        color: AppTheme.secondaryColor,
+        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Text(
+        'RM ${(widget.event.price ?? 0).toStringAsFixed(2)}',
+        style: const TextStyle(
+          color: Colors.white,
           fontWeight: FontWeight.bold,
           fontSize: 10,
           letterSpacing: 0.5,

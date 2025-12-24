@@ -5,7 +5,11 @@
 
 class BackendConfig {
   // Use Render backend for production APK (stable URL)
+  // Use Render backend for production APK (stable URL)
   static const String baseUrl = 'https://prototype-348e.onrender.com';
+
+  // Use local backend for development (Android Emulator)
+  // static const String baseUrl = 'http://10.0.2.2:8000';
 
   // Headers for API requests
   static const Map<String, String> defaultHeaders = {

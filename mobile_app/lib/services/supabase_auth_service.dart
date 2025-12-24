@@ -2,10 +2,11 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
 import '../config/supabase_config.dart';
+import '../config/app_config.dart';
 
 class SupabaseAuthService {
-  static const String baseUrl =
-      'https://prototype-348e.onrender.com'; // Render backend - STABLE URL
+  static String get baseUrl =>
+      AppConfig.backendUrl; // Dynamic URL from AppConfig
 
   UserModel? _currentUser;
 
@@ -76,18 +77,18 @@ class SupabaseAuthService {
   Future<UserModel> signInWithEmailAndPassword(
       String email, String password) async {
     try {
-      debugPrint(
-          'SupabaseAuthService: Attempting to sign in with email: $email');
+      // debugPrint(
+      //     'SupabaseAuthService: Attempting to sign in with email: $email');
 
       // Test network connectivity first
-      debugPrint('SupabaseAuthService: Testing network connectivity...');
+      // debugPrint('SupabaseAuthService: Testing network connectivity...');
       try {
         await SupabaseConfig.client
             .from('profiles')
             .select('count')
             .limit(1)
             .timeout(const Duration(seconds: 5));
-        debugPrint('SupabaseAuthService: Network test successful');
+        // debugPrint('SupabaseAuthService: Network test successful');
       } catch (e) {
         debugPrint('SupabaseAuthService: Network test failed: $e');
         throw Exception(
@@ -100,8 +101,8 @@ class SupabaseAuthService {
       );
 
       if (response.user != null) {
-        debugPrint(
-            'SupabaseAuthService: Sign in successful for user: ${response.user!.id}');
+        // debugPrint(
+        //     'SupabaseAuthService: Sign in successful for user: ${response.user!.id}');
 
         // Load user profile from your backend or Supabase
         await _loadUserProfile(response.user!.id);
@@ -150,7 +151,7 @@ class SupabaseAuthService {
     String? department,
   }) async {
     try {
-      debugPrint('SupabaseAuthService: Attempting to register user: $email');
+      // debugPrint('SupabaseAuthService: Attempting to register user: $email');
 
       final response = await SupabaseConfig.auth.signUp(
         email: email,
@@ -164,8 +165,8 @@ class SupabaseAuthService {
       );
 
       if (response.user != null) {
-        debugPrint(
-            'SupabaseAuthService: Registration successful for user: ${response.user!.id}');
+        // debugPrint(
+        //     'SupabaseAuthService: Registration successful for user: ${response.user!.id}');
 
         // Create user profile in your backend
         final userModel = UserModel(
@@ -205,7 +206,7 @@ class SupabaseAuthService {
     try {
       await SupabaseConfig.auth.signOut();
       _currentUser = null;
-      debugPrint('SupabaseAuthService: User signed out successfully');
+      // debugPrint('SupabaseAuthService: User signed out successfully');
     } catch (e) {
       debugPrint('SupabaseAuthService: Sign out error: $e');
       rethrow;
@@ -216,7 +217,7 @@ class SupabaseAuthService {
   Future<void> resetPassword(String email) async {
     try {
       await SupabaseConfig.auth.resetPasswordForEmail(email);
-      debugPrint('SupabaseAuthService: Password reset email sent to: $email');
+      // debugPrint('SupabaseAuthService: Password reset email sent to: $email');
     } catch (e) {
       debugPrint('SupabaseAuthService: Password reset error: $e');
       rethrow;
@@ -244,8 +245,8 @@ class SupabaseAuthService {
               'is_profile_complete': updates['profileCompleted'],
               'updated_at': DateTime.now().toIso8601String(),
             });
-            debugPrint(
-                'SupabaseAuthService: Profile completion status updated in profiles table');
+            // debugPrint(
+            //     'SupabaseAuthService: Profile completion status updated in profiles table');
           } catch (e) {
             debugPrint('SupabaseAuthService: Supabase update failed: $e');
           }
@@ -257,7 +258,7 @@ class SupabaseAuthService {
         await _loadUserProfile(currentUserId!);
       }
 
-      debugPrint('SupabaseAuthService: User profile updated successfully');
+      // debugPrint('SupabaseAuthService: User profile updated successfully');
     } catch (e) {
       debugPrint('SupabaseAuthService: Profile update error: $e');
       rethrow;
@@ -309,7 +310,7 @@ class SupabaseAuthService {
         headers: {'Authorization': 'Bearer $token'},
       );
 
-      debugPrint('SupabaseAuthService: User created in backend successfully');
+      // debugPrint('SupabaseAuthService: User created in backend successfully');
     } catch (e) {
       debugPrint('SupabaseAuthService: Error creating user in backend: $e');
     }
@@ -321,10 +322,10 @@ class SupabaseAuthService {
     try {
       // Skip users table operations to avoid RLS policy infinite recursion
       // User data will be managed through Supabase auth metadata and profiles table
-      debugPrint(
-          'SupabaseAuthService: Skipping users table operations to avoid RLS policy issues');
-      debugPrint(
-          'SupabaseAuthService: User authentication handled by Supabase auth: $userId');
+      // debugPrint(
+      //     'SupabaseAuthService: Skipping users table operations to avoid RLS policy issues');
+      // debugPrint(
+      //     'SupabaseAuthService: User authentication handled by Supabase auth: $userId');
     } catch (e) {
       debugPrint('SupabaseAuthService: Error in _ensureUserInSupabase: $e');
     }
@@ -334,8 +335,8 @@ class SupabaseAuthService {
   Future<bool> validateSMAPCredentials(
       String studentId, String password) async {
     try {
-      debugPrint(
-          'SupabaseAuthService: Validating SMAP credentials for: $studentId');
+      // debugPrint(
+      //     'SupabaseAuthService: Validating SMAP credentials for: $studentId');
 
       // Your existing SMAP validation logic
       if (!_isValidStudentIdFormat(studentId)) {
@@ -382,58 +383,58 @@ class SupabaseAuthService {
   // Check if user has completed profile
   Future<bool> hasCompletedProfile(String userId) async {
     try {
-      debugPrint(
-          'SupabaseAuthService: Checking profile completion for userId: $userId');
+      // debugPrint(
+      //     'SupabaseAuthService: Checking profile completion for userId: $userId');
 
       // If userId is empty, return false
       if (userId.isEmpty) {
-        debugPrint(
-            'SupabaseAuthService: Empty userId provided, returning false');
+        // debugPrint(
+        //     'SupabaseAuthService: Empty userId provided, returning false');
         return false;
       }
 
       // Check if current user has a completed profile
       if (_currentUser != null && _currentUser!.uid == userId) {
-        debugPrint(
-            'SupabaseAuthService: Using cached user profile completion: ${_currentUser!.profileCompleted}');
+        // debugPrint(
+        //     'SupabaseAuthService: Using cached user profile completion: ${_currentUser!.profileCompleted}');
         return _currentUser!.profileCompleted;
       }
 
       // If _currentUser is null or doesn't match, load user profile first
       if (_currentUser == null || _currentUser!.uid != userId) {
-        debugPrint(
-            'SupabaseAuthService: Loading user profile for userId: $userId');
+        // debugPrint(
+        //     'SupabaseAuthService: Loading user profile for userId: $userId');
         await _loadUserProfile(userId);
 
         // Check again after loading
         if (_currentUser != null && _currentUser!.uid == userId) {
-          debugPrint(
-              'SupabaseAuthService: Using loaded user profile completion: ${_currentUser!.profileCompleted}');
+          // debugPrint(
+          //     'SupabaseAuthService: Using loaded user profile completion: ${_currentUser!.profileCompleted}');
           return _currentUser!.profileCompleted;
         }
       }
 
       // Check current auth user
-      final currentAuthUser = SupabaseConfig.auth.currentUser;
-      debugPrint(
-          'SupabaseAuthService: Current auth user: ${currentAuthUser?.id}');
-      debugPrint(
-          'SupabaseAuthService: Auth user matches userId: ${currentAuthUser?.id == userId}');
+      // final currentAuthUser = SupabaseConfig.auth.currentUser;
+      // debugPrint(
+      //     'SupabaseAuthService: Current auth user: ${currentAuthUser?.id}');
+      // debugPrint(
+      //     'SupabaseAuthService: Auth user matches userId: ${currentAuthUser?.id == userId}');
 
       // Try to get profile from Supabase profiles table
       try {
-        debugPrint('SupabaseAuthService: Checking profiles table...');
+        // debugPrint('SupabaseAuthService: Checking profiles table...');
         final response = await SupabaseConfig.client
             .from('profiles')
             .select('is_profile_complete')
             .eq('user_id', userId)
             .single();
 
-        debugPrint('SupabaseAuthService: Profiles table response: $response');
+        // debugPrint('SupabaseAuthService: Profiles table response: $response');
         if (response['is_profile_complete'] != null) {
           final result = response['is_profile_complete'] as bool;
-          debugPrint(
-              'SupabaseAuthService: Profile completion from profiles table: $result');
+          // debugPrint(
+          //     'SupabaseAuthService: Profile completion from profiles table: $result');
           return result;
         }
       } catch (e) {
@@ -442,18 +443,18 @@ class SupabaseAuthService {
 
       // Try to get user from Supabase users table
       try {
-        debugPrint('SupabaseAuthService: Checking users table...');
+        // debugPrint('SupabaseAuthService: Checking users table...');
         final response = await SupabaseConfig.client
             .from('users')
             .select('profile_completed')
             .eq('id', userId)
             .single();
 
-        debugPrint('SupabaseAuthService: Users table response: $response');
+        // debugPrint('SupabaseAuthService: Users table response: $response');
         if (response['profile_completed'] != null) {
           final result = response['profile_completed'] as bool;
-          debugPrint(
-              'SupabaseAuthService: Profile completion from users table: $result');
+          // debugPrint(
+          //     'SupabaseAuthService: Profile completion from users table: $result');
           return result;
         }
       } catch (e) {
@@ -461,8 +462,8 @@ class SupabaseAuthService {
       }
 
       // If we can't get user data, assume profile is complete for existing auth users
-      debugPrint(
-          'SupabaseAuthService: No profile data found, assuming complete for auth user');
+      // debugPrint(
+      //     'SupabaseAuthService: No profile data found, assuming complete for auth user');
       return true;
     } catch (e) {
       debugPrint('SupabaseAuthService: Error checking profile completion: $e');
@@ -545,12 +546,12 @@ class SupabaseAuthService {
 
         if (userResponse != null && userResponse['role'] != null) {
           userRole = _parseUserRole(userResponse['role']);
-          debugPrint(
-              'SupabaseAuthService: Got role from users table: ${userResponse['role']} -> $userRole');
+          // debugPrint(
+          //     'SupabaseAuthService: Got role from users table: ${userResponse['role']} -> $userRole');
         }
       } catch (e) {
-        debugPrint(
-            'SupabaseAuthService: Could not get role from users table: $e');
+        // debugPrint(
+        //     'SupabaseAuthService: Could not get role from users table: $e');
       }
 
       // Try to get user from profiles table - get the latest profile if multiple exist

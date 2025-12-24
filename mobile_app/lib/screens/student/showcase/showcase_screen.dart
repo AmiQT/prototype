@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 
 import 'showcase_feed_screen.dart';
 import 'post_creation_screen.dart';
+import '../../chat/conversation_list_screen.dart';
 import '../../../widgets/modern/modern_home_header.dart';
+import '../../../widgets/talent_recommendations_widget.dart';
 import '../../shared/notifications_screen.dart';
 import '../enhanced_student_dashboard.dart';
 
@@ -26,14 +28,28 @@ class _ShowcaseScreenState extends State<ShowcaseScreen> {
         children: [
           ModernHomeHeader(
             onNotificationTap: () => _navigateToNotifications(context),
-            onProfileTap: () => _switchToTab(3), // Profile tab
+            onChatTap: () => _navigateToChat(context),
             // Quick Action Callbacks
             onNewPostTap: () => _navigateToNewPost(context),
             onTrendingTap: () => _switchToTab(1), // Search/Trending tab
             onEventsTap: () => _switchToTab(2), // Events tab
           ),
           Expanded(
-            child: ShowcaseFeedScreen(key: _feedScreenKey),
+            child: CustomScrollView(
+              slivers: [
+                // Talent Discovery Banner & Recommendations
+                const SliverToBoxAdapter(
+                  child: TalentRecommendationsWidget(
+                    showDiscoverBanner: true,
+                    showSimilarStudents: true,
+                  ),
+                ),
+                // Feed content
+                SliverFillRemaining(
+                  child: ShowcaseFeedScreen(key: _feedScreenKey),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -66,6 +82,16 @@ class _ShowcaseScreenState extends State<ShowcaseScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => const NotificationsScreen(),
+      ),
+    );
+  }
+
+  /// Navigate to Chat List
+  void _navigateToChat(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ConversationListScreen(),
       ),
     );
   }

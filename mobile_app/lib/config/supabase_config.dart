@@ -17,9 +17,9 @@ class SupabaseConfig {
       );
 
       if (kDebugMode) {
-        debugPrint('Supabase initialized successfully');
-        debugPrint('Supabase URL: $supabaseUrl');
-        debugPrint('Supabase Anon Key: ${supabaseAnonKey.substring(0, 20)}...');
+        // debugPrint('Supabase initialized successfully');
+        // debugPrint('Supabase URL: $supabaseUrl');
+        // debugPrint('Supabase Anon Key: ${supabaseAnonKey.substring(0, 20)}...');
       }
     } catch (e) {
       if (kDebugMode) {

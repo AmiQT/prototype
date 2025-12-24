@@ -225,6 +225,35 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
                         <input type="hidden" id="add-image-url" />
                     </div>
 
+                    <!-- Price & Payment -->
+                    <div class="space-y-3 mb-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                id="add-is-paid"
+                                class="w-4 h-4 rounded border-gray-300 text-[#667eea] focus:ring-[#667eea]"
+                            />
+                            <span class="text-sm font-medium text-gray-700"
+                                >This is a Paid Event</span
+                            >
+                        </label>
+
+                        <div id="add-price-container" class="hidden">
+                            <label
+                                class="block text-sm font-medium text-gray-700 mb-1"
+                                >Price (RM)</label
+                            >
+                            <input
+                                type="number"
+                                id="add-price"
+                                step="0.01"
+                                min="0"
+                                placeholder="0.00"
+                                class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#667eea]"
+                            />
+                        </div>
+                    </div>
+
                     <div>
                         <label
                             class="block text-sm font-medium text-gray-700 mb-1"
@@ -378,6 +407,35 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
                         <input type="hidden" id="edit-image-url" />
                     </div>
 
+                    <!-- Price & Payment -->
+                    <div class="space-y-3 mb-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                id="edit-is-paid"
+                                class="w-4 h-4 rounded border-gray-300 text-[#667eea] focus:ring-[#667eea]"
+                            />
+                            <span class="text-sm font-medium text-gray-700"
+                                >This is a Paid Event</span
+                            >
+                        </label>
+
+                        <div id="edit-price-container" class="hidden">
+                            <label
+                                class="block text-sm font-medium text-gray-700 mb-1"
+                                >Price (RM)</label
+                            >
+                            <input
+                                type="number"
+                                id="edit-price"
+                                step="0.01"
+                                min="0"
+                                placeholder="0.00"
+                                class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#667eea]"
+                            />
+                        </div>
+                    </div>
+
                     <div>
                         <label
                             class="block text-sm font-medium text-gray-700 mb-1"
@@ -475,7 +533,9 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
         if (urlInput) urlInput.value = "";
     });
 
-    const BACKEND_URL = "http://localhost:8000";
+    const BACKEND_URL =
+        import.meta.env.PUBLIC_BACKEND_URL ||
+        "https://prototype-348e.onrender.com";
 
     async function uploadToCloudinary(file: File) {
         const {
@@ -599,6 +659,12 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
             document.getElementById("add-image-url") as HTMLInputElement
         ).value;
 
+        const isPaid = (
+            document.getElementById("add-is-paid") as HTMLInputElement
+        ).checked;
+        const price = (document.getElementById("add-price") as HTMLInputElement)
+            .value;
+
         try {
             const { error } = await supabase.from("events").insert([
                 {
@@ -611,6 +677,8 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
                     max_participants: maxParticipants
                         ? parseInt(maxParticipants)
                         : null,
+                    is_paid: isPaid,
+                    price: isPaid && price ? parseFloat(price) : null,
                     is_active: true,
                     current_participants: 0,
                 },
@@ -628,6 +696,28 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
             );
         }
     });
+
+    // Toggle Price Input Logic
+    const togglePrice = (checkboxId: string, containerId: string) => {
+        const checkbox = document.getElementById(
+            checkboxId,
+        ) as HTMLInputElement;
+        const container = document.getElementById(containerId);
+        if (!checkbox || !container) return;
+
+        checkbox.addEventListener("change", () => {
+            if (checkbox.checked) {
+                container.classList.remove("hidden");
+            } else {
+                container.classList.add("hidden");
+                const input = container.querySelector("input");
+                if (input) input.value = "";
+            }
+        });
+    };
+
+    togglePrice("add-is-paid", "add-price-container");
+    togglePrice("edit-is-paid", "edit-price-container");
 
     // Edit Event Logic
     const editModal = document.getElementById("edit-event-modal");
@@ -668,6 +758,28 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
             categoryInput.value = event.category || "Academic";
             locationInput.value = event.location || "";
             editImageUrlInput.value = event.image_url || "";
+
+            // Populate Price
+            const isPaidCheckbox = document.getElementById(
+                "edit-is-paid",
+            ) as HTMLInputElement;
+            const priceContainer = document.getElementById(
+                "edit-price-container",
+            );
+            const priceInput = document.getElementById(
+                "edit-price",
+            ) as HTMLInputElement;
+
+            if (isPaidCheckbox && priceContainer && priceInput) {
+                isPaidCheckbox.checked = event.is_paid || false;
+                if (event.is_paid) {
+                    priceContainer.classList.remove("hidden");
+                    priceInput.value = event.price || "";
+                } else {
+                    priceContainer.classList.add("hidden");
+                    priceInput.value = "";
+                }
+            }
             if (editImagePreview) {
                 if (event.image_url) {
                     editImagePreview.innerHTML = `<img src="${event.image_url}" class="w-full h-full object-cover" />`;
@@ -697,6 +809,22 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
             category: categoryInput.value,
             location: locationInput.value,
             image_url: editImageUrlInput.value,
+            is_paid: (
+                document.getElementById("edit-is-paid") as HTMLInputElement
+            ).checked,
+            price:
+                (document.getElementById("edit-is-paid") as HTMLInputElement)
+                    .checked &&
+                (document.getElementById("edit-price") as HTMLInputElement)
+                    .value
+                    ? parseFloat(
+                          (
+                              document.getElementById(
+                                  "edit-price",
+                              ) as HTMLInputElement
+                          ).value,
+                      )
+                    : null,
             updated_at: new Date().toISOString(),
         };
 
@@ -763,9 +891,12 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
                         ${new Date(event.event_date).toLocaleDateString()}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                            ${event.category || "General"}
-                        </span>
+                        <div class="flex flex-col gap-1 items-start">
+                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                ${event.category || "General"}
+                            </span>
+                            ${event.is_paid ? `<span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-amber-100 text-amber-800">RM ${event.price}</span>` : ""}
+                        </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="px-2 py-1 inline-flex text-xs leading-5 font-medium rounded-full ${

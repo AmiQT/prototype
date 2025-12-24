@@ -2,6 +2,7 @@ import 'academic_info_model.dart';
 import 'experience_model.dart';
 import 'project_model.dart';
 import 'achievement_model.dart';
+import 'talent_model.dart';
 
 class ProfileModel {
   final String id;
@@ -54,6 +55,9 @@ class ProfileModel {
   final String? email;
   final String? backgroundImageUrl;
 
+  // Talent profile for soft skills, hobbies, and quiz results
+  final TalentProfileModel? talentProfile;
+
   ProfileModel({
     required this.id,
     required this.userId,
@@ -85,6 +89,7 @@ class ProfileModel {
     required this.updatedAt,
     this.email,
     this.backgroundImageUrl,
+    this.talentProfile,
   });
 
   // Factory constructor to create ProfileModel from JSON
@@ -135,6 +140,9 @@ class ProfileModel {
       completedSections: List<String>.from(json['completedSections'] ?? []),
       createdAt: parseDateTime(json['created_at'] ?? json['createdAt']),
       updatedAt: parseDateTime(json['updated_at'] ?? json['updatedAt']),
+      talentProfile: json['talent_profile'] != null
+          ? TalentProfileModel.fromJson(json['talent_profile'])
+          : null,
     );
   }
 
@@ -161,6 +169,7 @@ class ProfileModel {
       'completedSections': completedSections,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'talentProfile': talentProfile?.toJson(),
     };
   }
 
@@ -196,6 +205,7 @@ class ProfileModel {
     List<String>? completedSections,
     DateTime? createdAt,
     DateTime? updatedAt,
+    TalentProfileModel? talentProfile,
   }) {
     return ProfileModel(
       id: id ?? this.id,
@@ -218,6 +228,7 @@ class ProfileModel {
       completedSections: completedSections ?? this.completedSections,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      talentProfile: talentProfile ?? this.talentProfile,
     );
   }
 

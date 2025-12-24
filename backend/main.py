@@ -6,6 +6,9 @@ import os
 from dotenv import load_dotenv
 import cloudinary
 import logging
+import threading
+import requests
+import time
 
 
 # Load environment variables FIRST before any imports that need them
@@ -195,6 +198,7 @@ from app.routers import (
     showcase,
     student_analytics,
     student_balance,
+    talents,
     users,
 )
 
@@ -211,6 +215,7 @@ app.include_router(ai_assistant.router)  # Legacy AI assistant (Gemini direct)
 app.include_router(ai_langchain.router)  # NEW: LangChain Agentic AI v2
 app.include_router(ml_analytics.router)  # ML analytics with student risk prediction
 app.include_router(student_balance.router)  # Student balance analysis with AI action plans
+app.include_router(talents.router)  # Talent system - soft skills, hobbies, quiz
 
 # Additional routers will be added as we build them
 # from app.routers import media, analytics, sync

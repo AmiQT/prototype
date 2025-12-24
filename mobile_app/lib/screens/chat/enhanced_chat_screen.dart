@@ -10,7 +10,7 @@ import '../../models/chat_models.dart';
 import '../../widgets/chat/chat_message_bubble.dart';
 import '../../widgets/chat/typing_indicator.dart';
 import '../../widgets/chat/chat_input_field.dart';
-import '../../config/app_config.dart';
+// import '../../config/app_config.dart';
 
 class EnhancedChatScreen extends StatefulWidget {
   final String? conversationId;
@@ -52,17 +52,17 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
     try {
       setState(() => _isLoading = true);
 
-      debugPrint('EnhancedChatScreen: Starting service initialization...');
+      // debugPrint('EnhancedChatScreen: Starting service initialization...');
 
       // Initialize chat services
-      debugPrint('EnhancedChatScreen: Initializing chat services...');
+      // debugPrint('EnhancedChatScreen: Initializing chat services...');
 
       // Gemini only: verify key presence
-      final hasGeminiKey = AppConfig.hasGeminiApiKey;
-      debugPrint('EnhancedChatScreen: Gemini API key available: $hasGeminiKey');
+      // final hasGeminiKey = AppConfig.hasGeminiApiKey;
+      // debugPrint('EnhancedChatScreen: Gemini API key available: $hasGeminiKey');
 
-      debugPrint('EnhancedChatScreen: Chat service initialized (Gemini only)');
-      debugPrint('EnhancedChatScreen: Using Gemini service');
+      // debugPrint('EnhancedChatScreen: Chat service initialized (Gemini only)');
+      // debugPrint('EnhancedChatScreen: Using Gemini service');
 
       // Load conversation if provided
       if (widget.conversationId != null) {
@@ -73,7 +73,7 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
       }
 
       setState(() => _isLoading = false);
-      debugPrint('EnhancedChatScreen: All services initialized successfully');
+      // debugPrint('EnhancedChatScreen: All services initialized successfully');
     } catch (e) {
       debugPrint('EnhancedChatScreen: Initialization error: $e');
       debugPrint('EnhancedChatScreen: Error type: ${e.runtimeType}');
@@ -91,7 +91,8 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
 
   Future<void> _loadConversationMessages() async {
     // Load messages from local history
-    final messages = await _historyService.getConversationMessages(_currentConversationId!);
+    final messages =
+        await _historyService.getConversationMessages(_currentConversationId!);
     if (messages.isNotEmpty) {
       setState(() {
         _messages.clear();
@@ -116,10 +117,9 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
 
     // Create conversation if this is the first message
     if (_messages.isEmpty) {
-      final conversationTitle = content.length > 50 
-          ? '${content.substring(0, 50)}...' 
-          : content;
-      
+      final conversationTitle =
+          content.length > 50 ? '${content.substring(0, 50)}...' : content;
+
       final conversation = ChatConversation(
         id: _currentConversationId!,
         userId: userId,
@@ -129,9 +129,9 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
         isActive: true,
         messageCount: 0,
       );
-      
+
       await _historyService.saveConversation(conversation);
-      debugPrint('Created new conversation: ${conversation.id}');
+      // debugPrint('Created new conversation: ${conversation.id}');
     }
 
     // Clear input and show typing
@@ -165,7 +165,7 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
         role: MessageRole.assistant,
         timestamp: DateTime.now(),
       );
-      
+
       setState(() {
         _messages.add(streamingMessage);
       });
@@ -173,11 +173,12 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
       // Intelligent routing: FSKTM vs General AI
       String? fsktmContext;
       if (_isFSKTMQuestion(content)) {
-        debugPrint('RAG: Detected FSKTM query, fetching context...');
-        fsktmContext = await FSKTMDataService.getFSKTMContextForAIWithQuery(content);
-        debugPrint('RAG: Context size = ${fsktmContext.length} chars');
+        // debugPrint('RAG: Detected FSKTM query, fetching context...');
+        fsktmContext =
+            await FSKTMDataService.getFSKTMContextForAIWithQuery(content);
+        // debugPrint('RAG: Context size = ${fsktmContext.length} chars');
       } else {
-        debugPrint('RAG: General query, no FSKTM context needed');
+        // debugPrint('RAG: General query, no FSKTM context needed');
       }
 
       // Use streaming for real-time response
@@ -192,7 +193,8 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
         final index = _messages.indexWhere((m) => m.id == aiMessageId);
         if (index != -1) {
           setState(() {
-            _messages[index] = _messages[index].copyWith(content: partialContent);
+            _messages[index] =
+                _messages[index].copyWith(content: partialContent);
           });
           _scrollToBottom();
         }
@@ -437,7 +439,8 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
 
   void _showUsageInfo() async {
     // Usage monitoring removed with Firebase removal
-    final Map<String, dynamic> report = {}; // Placeholder for future usage reporting
+    final Map<String, dynamic> report =
+        {}; // Placeholder for future usage reporting
     final suggestions = List<String>.from(report['suggestions'] ?? const []);
 
     showDialog(

@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart'
+    as http; // Add http package for connectivity check
 // Removed debug config for production
 
 class AppConfig {
@@ -39,10 +41,10 @@ class AppConfig {
       await dotenv.load(fileName: "assets/.env");
 
       // Load API keys from environment file (trim to avoid stray whitespace)
-      final envOpenRouterKey =
-          dotenv.env['OPENROUTER_API_KEY']?.trim() ?? dotenv.env['openrouter_api_key']?.trim();
-      final envGeminiKey =
-          dotenv.env['GEMINI_API_KEY']?.trim() ?? dotenv.env['gemini_api_key']?.trim();
+      final envOpenRouterKey = dotenv.env['OPENROUTER_API_KEY']?.trim() ??
+          dotenv.env['openrouter_api_key']?.trim();
+      final envGeminiKey = dotenv.env['GEMINI_API_KEY']?.trim() ??
+          dotenv.env['gemini_api_key']?.trim();
 
       // Also support --dart-define values for CI / release builds
       const String defineOpenRouterKey =
@@ -52,7 +54,8 @@ class AppConfig {
 
       // Pick first non-empty source for each key
       _openRouterApiKey = _sanitizeApiKey(envOpenRouterKey) ??
-          _sanitizeApiKey(defineOpenRouterKey.isNotEmpty ? defineOpenRouterKey : null);
+          _sanitizeApiKey(
+              defineOpenRouterKey.isNotEmpty ? defineOpenRouterKey : null);
       _geminiApiKey = _sanitizeApiKey(envGeminiKey) ??
           _sanitizeApiKey(defineGeminiKey.isNotEmpty ? defineGeminiKey : null);
 
@@ -65,6 +68,11 @@ class AppConfig {
               '⚠️ Gemini API key not configured - chatbot features will be disabled');
         }
       }
+
+      // Check local backend connectivity in debug mode
+      if (kDebugMode) {
+        await _checkLocalBackendConnectivity();
+      }
     } catch (e) {
       if (kDebugMode) {
         debugPrint('Error loading environment variables: $e');
@@ -75,6 +83,33 @@ class AppConfig {
       // Set default values if loading fails
       _openRouterApiKey = null;
       _geminiApiKey = null;
+    }
+  }
+
+  // Helper to check if local backend is running
+  static Future<void> _checkLocalBackendConnectivity() async {
+    try {
+      final localUrl = _getLocalUrl();
+      debugPrint(
+          'AppConfig: Checking local backend availability at $localUrl...');
+
+      // Try to hit the health endpoint or root
+      final response = await http
+          .get(Uri.parse('$localUrl/users/health'))
+          .timeout(const Duration(seconds: 2));
+
+      if (response.statusCode == 200) {
+        _isLocalBackendReachable = true;
+        debugPrint(
+            '✅ AppConfig: Local backend DETECTED. Switching to local environment.');
+      } else {
+        debugPrint(
+            '⚠️ AppConfig: Local backend responded with ${response.statusCode}. Defaulting to Cloud.');
+      }
+    } catch (e) {
+      _isLocalBackendReachable = false;
+      debugPrint(
+          'AppConfig: Local backend unreachable ($e). Defaulting to Cloud environment.');
     }
   }
 
@@ -92,10 +127,27 @@ class AppConfig {
   // Cloud Development Configuration
   // Update these URLs after deploying your backend and web dashboard
 
+  // Backend Configuration
+  static bool _isLocalBackendReachable = false;
+  static bool get isLocalBackendReachable => _isLocalBackendReachable;
+
   // Backend API URLs
-  static const String backendUrl = kDebugMode
-      ? 'http://localhost:8000' // Local development
-      : 'https://prototype-348e.onrender.com'; // Cloud backend
+  static String get backendUrl {
+    // Priority 1: If local backend was detected as reachable during init
+    if (kDebugMode && _isLocalBackendReachable) {
+      return _getLocalUrl();
+    }
+    // Priority 2: Default to cloud for release or if local is unreachable
+    return 'https://prototype-348e.onrender.com'; // Cloud backend
+  }
+
+  static String _getLocalUrl() {
+    // if (defaultTargetPlatform == TargetPlatform.android) {
+    //   return 'http://10.0.2.2:8000'; // Android Emulator
+    // }
+    // return 'http://localhost:8000'; // iOS Simulator and Web
+    return 'https://prototype-348e.onrender.com'; // Force production for web safety
+  }
 
   // Web Dashboard URL
   static const String webDashboardUrl =
@@ -105,14 +157,14 @@ class AppConfig {
   static const String supabaseUrl = 'https://xibffemtpboiecpeynon.supabase.co';
 
   // API Endpoints
-  static const String apiBase = '$backendUrl/api';
-  static const String authEndpoint = '$apiBase/auth';
-  static const String usersEndpoint = '$apiBase/users';
-  static const String eventsEndpoint = '$apiBase/events';
-  static const String achievementsEndpoint = '$apiBase/achievements';
-  static const String mediaEndpoint = '$apiBase/media';
-  static const String searchEndpoint = '$apiBase/search';
-  static const String analyticsEndpoint = '$apiBase/analytics';
+  static String get apiBase => '$backendUrl/api';
+  static String get authEndpoint => '$apiBase/auth';
+  static String get usersEndpoint => '$apiBase/users';
+  static String get eventsEndpoint => '$apiBase/events';
+  static String get achievementsEndpoint => '$apiBase/achievements';
+  static String get mediaEndpoint => '$apiBase/media';
+  static String get searchEndpoint => '$apiBase/search';
+  static String get analyticsEndpoint => '$apiBase/analytics';
 
   // Feature Flags
   static const bool enableCloudSync = true;

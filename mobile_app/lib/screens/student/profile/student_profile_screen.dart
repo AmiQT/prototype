@@ -15,8 +15,10 @@ import '../achievements/achievements_screen.dart';
 import '../../settings/settings_screen.dart';
 import '../../auth/comprehensive_profile_setup_screen.dart';
 import '../../profile/comprehensive_edit_profile_screen.dart';
-import '../../../models/user_model.dart';
+// import '../../../models/user_model.dart';
 import '../../../widgets/modern/bento_card.dart';
+import '../talent/talent_quiz_screen.dart';
+import '../talent/talent_quiz_result_screen.dart';
 
 import '../../../utils/app_theme.dart';
 
@@ -31,7 +33,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   ProfileModel? _profile;
   bool _isLoading = true;
   bool _isUploadingHeader = false;
-  UserRole _userRole = UserRole.student; // Track user role
+  // UserRole _userRole = UserRole.student; // Unused
 
   @override
   void initState() {
@@ -75,17 +77,17 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           Provider.of<ProfileService>(context, listen: false);
 
       final userId = authService.currentUserId;
-      final userRole = authService.currentUser?.role ?? UserRole.student;
-      debugPrint(
-          'StudentProfileScreen: User role detected: $userRole'); // Debug
+      // final userRole = authService.currentUser?.role ?? UserRole.student;
+      // debugPrint(
+      //     'StudentProfileScreen: User role detected: $userRole'); // Debug
       if (userId != null) {
         final profile = await profileService.getProfileByUserId(userId);
         setState(() {
           _profile = profile;
-          _userRole = userRole;
+          // _userRole = userRole;
           _isLoading = false;
         });
-        debugPrint('StudentProfileScreen: Role set to $_userRole'); // Debug
+        // debugPrint('StudentProfileScreen: Role set to $_userRole'); // Debug
       } else {
         setState(() {
           _isLoading = false;
@@ -444,6 +446,104 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
+
+                  // Talent DNA Card
+                  BentoCard(
+                    title: 'Talent DNA',
+                    icon: Icons.auto_awesome,
+                    onTap: () async {
+                      if (profile.talentProfile?.quizResults != null) {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TalentQuizResultScreen(
+                              quizResult: profile.talentProfile!.quizResults!,
+                            ),
+                          ),
+                        );
+                      } else {
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const TalentQuizScreen(),
+                          ),
+                        );
+                      }
+                      _loadProfile();
+                    },
+                    child: profile.talentProfile?.quizResults != null
+                        ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color:
+                                      theme.primaryColor.withValues(alpha: 0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Text(
+                                  '🏆',
+                                  style: TextStyle(fontSize: 24),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                profile.talentProfile!.quizResults!
+                                        .primaryTalent ??
+                                    'Unknown',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Top Talent',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: theme.textTheme.bodySmall?.color,
+                                ),
+                              ),
+                            ],
+                          )
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                'Discover Your Hidden Talents',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: theme.primaryColor,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'Start Quiz',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(width: 4),
+                                    Icon(Icons.arrow_forward,
+                                        size: 14, color: Colors.white),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
 
                   // Row 3: Skills & Academic
                   Row(

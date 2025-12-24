@@ -14,7 +14,8 @@ class FavoriteEventsScreen extends StatefulWidget {
   State<FavoriteEventsScreen> createState() => _FavoriteEventsScreenState();
 }
 
-class _FavoriteEventsScreenState extends State<FavoriteEventsScreen> {
+class _FavoriteEventsScreenState extends State<FavoriteEventsScreen>
+    with RouteAware {
   final EventService _eventService = EventService();
   List<EventModel> _favoriteEvents = [];
   bool _isLoading = true;
@@ -24,6 +25,22 @@ class _FavoriteEventsScreenState extends State<FavoriteEventsScreen> {
   void initState() {
     super.initState();
     _initializeData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Register for route changes to refresh when returning to this screen
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      // RouteObserver subscription would go here if we had one globally
+    }
+  }
+
+  @override
+  void didPopNext() {
+    // Refresh when returning from another screen
+    _loadFavoriteEvents();
   }
 
   Future<void> _initializeData() async {
@@ -41,16 +58,17 @@ class _FavoriteEventsScreenState extends State<FavoriteEventsScreen> {
   }
 
   Future<void> _loadFavoriteEvents() async {
+    if (_userId == null) return;
+
     try {
-      final allEvents = await _eventService.getAllEvents();
-      _favoriteEvents = allEvents
-          .where((event) => event.favoriteUserIds.contains(_userId))
-          .toList();
+      // OPTIMIZED: Direct Supabase query instead of filtering client-side
+      final events = await _eventService.getFavoriteEventsWithDetails(_userId!);
 
-      // Sort by creation date (newest events first)
-      _favoriteEvents.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
-      setState(() {});
+      if (mounted) {
+        setState(() {
+          _favoriteEvents = events;
+        });
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -6,6 +6,7 @@ import '../models/profile_model.dart';
 import '../models/academic_info_model.dart';
 import '../models/experience_model.dart';
 import '../models/project_model.dart';
+import '../models/talent_model.dart';
 import '../config/supabase_config.dart';
 import '../config/backend_config.dart';
 import '../utils/profile_image_cleanup.dart';
@@ -31,13 +32,13 @@ class ProfileService {
 
   Future<void> saveProfile(ProfileModel profile) async {
     try {
-      debugPrint(
-          'ProfileService: Saving profile for userId: ${profile.userId}');
+      // debugPrint(
+      //     'ProfileService: Saving profile for userId: ${profile.userId}');
 
       // Clean up placeholder URLs before saving
       if (ProfileImageCleanup.isPlaceholderUrl(profile.profileImageUrl)) {
-        debugPrint(
-            'ProfileService: Detected placeholder URL, setting to null for fallback');
+        // debugPrint(
+        //     'ProfileService: Detected placeholder URL, setting to null for fallback');
         profile = profile.copyWith(profileImageUrl: null);
       }
 
@@ -53,8 +54,8 @@ class ProfileService {
       }
 
       // MOBILE APP OPTIMIZATION: Skip custom backend, use Supabase directly
-      debugPrint(
-          'ProfileService: Using Supabase directly for mobile app (no custom backend delays)');
+      // debugPrint(
+      //     'ProfileService: Using Supabase directly for mobile app (no custom backend delays)');
 
       /* REMOVED FOR MOBILE: Custom backend calls (causes 30s delays)
       // Try to save to backend first
@@ -91,8 +92,8 @@ class ProfileService {
   // Save profile to Supabase as fallback
   Future<void> _saveProfileToSupabase(ProfileModel profile) async {
     try {
-      debugPrint(
-          'ProfileService: Saving profile to Supabase for userId: ${profile.userId}');
+      // debugPrint(
+      //     'ProfileService: Saving profile to Supabase for userId: ${profile.userId}');
 
       // Get authenticated client with user context
       final client = SupabaseConfig.client;
@@ -102,11 +103,11 @@ class ProfileService {
         throw Exception('User not authenticated in Supabase');
       }
 
-      debugPrint('ProfileService: Using authenticated user: ${user.id}');
-      debugPrint(
-          'ProfileService: Client auth state: ${client.auth.currentSession != null ? 'authenticated' : 'not authenticated'}');
-      debugPrint(
-          'ProfileService: Current session user: ${client.auth.currentSession?.user.id}');
+      // debugPrint('ProfileService: Using authenticated user: ${user.id}');
+      // debugPrint(
+      //     'ProfileService: Client auth state: ${client.auth.currentSession != null ? 'authenticated' : 'not authenticated'}');
+      // debugPrint(
+      //     'ProfileService: Current session user: ${client.auth.currentSession?.user.id}');
 
       // Prepare profile data
       final profileData = {
@@ -123,19 +124,19 @@ class ProfileService {
         'updated_at': profile.updatedAt.toIso8601String(),
       };
 
-      debugPrint(
-          'ProfileService: Attempting to upsert profile data: ${profileData.keys}');
+      // debugPrint(
+      //     'ProfileService: Attempting to upsert profile data: ${profileData.keys}');
 
       // Save to profiles table using authenticated context
       await client.from('profiles').upsert(profileData);
-      debugPrint('ProfileService: Profile upsert successful');
+      // debugPrint('ProfileService: Profile upsert successful');
 
       // Skip users table update to avoid RLS policy infinite recursion
       // Profile completion status is already stored in profiles table
-      debugPrint(
-          'ProfileService: Skipping users table update to avoid RLS policy issues');
+      // debugPrint(
+      //     'ProfileService: Skipping users table update to avoid RLS policy issues');
 
-      debugPrint('ProfileService: Profile saved to Supabase successfully');
+      // debugPrint('ProfileService: Profile saved to Supabase successfully');
     } catch (e) {
       debugPrint('ProfileService: Error saving profile to Supabase: $e');
       debugPrint('ProfileService: Error type: ${e.runtimeType}');
@@ -161,8 +162,8 @@ class ProfileService {
       }
 
       // MOBILE APP OPTIMIZATION: Skip custom backend, use Supabase directly
-      debugPrint(
-          'ProfileService: Getting profile from Supabase directly for mobile app');
+      // debugPrint(
+      //     'ProfileService: Getting profile from Supabase directly for mobile app');
       return await _getProfileFromSupabase(userId);
 
       /* REMOVED FOR MOBILE: Custom backend calls (causes 30s delays)
@@ -245,6 +246,23 @@ class ProfileService {
         updatedAt: response['updated_at'] != null
             ? DateTime.parse(response['updated_at'])
             : DateTime.now(),
+        talentProfile: TalentProfileModel(
+          userId: response['user_id'] ?? userId,
+          softSkills: (response['soft_skills'] as List<dynamic>?)
+                  ?.map((s) => SoftSkillModel.fromJson(s))
+                  .toList() ??
+              [],
+          hobbies: (response['hobbies'] as List<dynamic>?)
+                  ?.map((h) => HobbyModel.fromJson(h))
+                  .toList() ??
+              [],
+          quizResults: response['talent_quiz_results'] != null
+              ? TalentQuizResultModel.fromJson(response['talent_quiz_results'])
+              : null,
+          updatedAt: response['updated_at'] != null
+              ? DateTime.parse(response['updated_at'])
+              : DateTime.now(),
+        ),
       );
     } catch (e) {
       debugPrint('ProfileService: Error getting profile from Supabase: $e');
@@ -376,8 +394,8 @@ class ProfileService {
   // Upload profile header image using Cloudinary
   Future<String?> uploadHeaderImage(String filePath, String userId) async {
     try {
-      debugPrint('ProfileService: Uploading header image to Cloudinary...');
-      debugPrint('ProfileService: File path: $filePath');
+      // debugPrint('ProfileService: Uploading header image to Cloudinary...');
+      // debugPrint('ProfileService: File path: $filePath');
 
       final imageUrl = await CloudinaryConfig.uploadImage(
         filePath: filePath,
@@ -385,7 +403,7 @@ class ProfileService {
         folder: 'profile_headers',
       );
 
-      debugPrint('ProfileService: Header uploaded successfully: $imageUrl');
+      // debugPrint('ProfileService: Header uploaded successfully: $imageUrl');
       return imageUrl;
     } catch (e) {
       debugPrint('ProfileService: Error uploading header to Cloudinary: $e');
@@ -397,8 +415,8 @@ class ProfileService {
   Future<String?> uploadHeaderImageBytes(
       Uint8List bytes, String fileName, String userId) async {
     try {
-      debugPrint(
-          'ProfileService: Uploading header image bytes to Cloudinary...');
+      // debugPrint(
+      //     'ProfileService: Uploading header image bytes to Cloudinary...');
 
       // Use CloudinaryConfig directly with bytes
       final uri =
@@ -425,7 +443,7 @@ class ProfileService {
 
       if (response.statusCode == 200) {
         final secureUrl = jsonResponse['secure_url'] as String;
-        debugPrint('ProfileService: Header uploaded successfully: $secureUrl');
+        // debugPrint('ProfileService: Header uploaded successfully: $secureUrl');
         return secureUrl;
       } else {
         throw Exception(
