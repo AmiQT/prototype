@@ -1,22 +1,55 @@
+
 # Student Talent Profiling App - Prototype
 
-End-to-end platform for UTHM student talent profiling that ships a Python FastAPI backend, a Flutter mobile client, and a Supabase-powered web dashboard.
+![Flutter](https://img.shields.io/badge/Flutter-%2302569B.svg?style=for-the-badge&logo=Flutter&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
+![Astro](https://img.shields.io/badge/astro-%232C2052.svg?style=for-the-badge&logo=astro&logoColor=white)
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+
+End-to-end platform for UTHM student talent profiling that ships a Python FastAPI backend, a Flutter mobile client, and a modern **Astro-based Web Dashboard**.
 
 > **Security first:** this repository ships without secrets. Populate your own `.env` files before running any service and never commit credentials.
 
-## Highlights
-- Unified talent profiling experience across mobile, web, and backend services.
-- Supabase authentication, PostgreSQL data layer, and Cloudinary media pipeline.
-- **Agentic AI assistant with Bahasa Melayu as default response language** - Natural NLP for Malaysian users with tool calling, conversation memory, and Gemini integration.
-- Rich analytics dashboards, showcase management, and student achievements tracking.
-- Comprehensive docs for setup, migration, deployment, and troubleshooting.
+## 📖 Table of Contents
+- [Highlights](#-highlights)
+- [Feature Matrix](#-feature-matrix)
+- [Gallery](##-gallery)
+- [Repository Layout](#-repository-layout)
+- [System Architecture](#-system-architecture)
+- [Core Components](#-core-components)
+- [Environment & Secrets](#-environment--secrets)
+- [Documentation Hub](#-documentation-hub)
 
-## Repository Layout
+## ✨ Highlights
+- 📱 **Unified Ecosystem**: Seamless talent profiling across mobile (Flutter) and web (Astro).
+- 🤖 **Agentic AI Assistant**: Powered by **Google Gemini** and **LangGraph**, the AI goes beyond chatbots—it executes tools, queries databases, and provides predictive insights in **Bahasa Melayu**.
+- 🚀 **Modern Tech Stack**: Supabase (Auth/DB), FastAPI (Backend), Cloudinary (Media), and Astro v5 (Dashboard).
+- 📊 **Rich Analytics**: Visualise student risk, achievements, and department performance with Chart.js and automated PDF reporting.
+
+## 🏆 Feature Matrix
+
+| Feature | Description | Status |
+| :--- | :--- | :--- |
+| **Talent Profiling** | Upload certificates (PDF/Image) & auto-tag skills via Vision AI | ✅ **Production** |
+| **Agentic AI** | Voice-enabled Chatbot with local UTHM context (Bahasa Melayu) | ✅ **Production** |
+| **Predictive Analytics**| Risk score calculation based on CGPA & participation | 🚧 **Beta** |
+| **Smart Reports** | Auto-generate PDF Achievement Reports for Departments | ✅ **Production** |
+| **Event Tracker** | QR Code check-ins for events (Kokurikulum) | 🔄 **In Progress** |
+
+## 📸 Gallery
+
+| Mobile App (Home) | AI Chat (Voice) | Web Dashboard (Analytics) |
+| :---: | :---: | :---: |
+| ![Mobile Home](assets/mobile_home_demo.png) | ![AI Chat](assets/mobile_chat_demo.png) | ![Dashboard](assets/dashboard_demo.png) |
+| *Student Profile Overview* | *Talking to the Agent in BM* | *Admin Assessment Panel* |
+
+## 📂 Repository Layout
 ```
 prototype/
-|-- backend/                # FastAPI application, routers, AI assistant, Alembic scripts
+|-- backend/                # FastAPI application, AI agents (LangGraph), Alembic scripts
 |-- mobile_app/             # Flutter app with Supabase auth, showcase, chat, analytics
-|-- web_dashboard/          # Static dashboard (HTML/CSS/JS) + Supabase integration scripts
+|-- web_dashboard_astro/    # Admin Dashboard (Astro v5 + Tailwind v4 + TypeScript)
 |-- api/                    # Lightweight Vercel serverless handler (health + test endpoints)
 |-- assets/                 # Branding assets (cover, logo, favicon)
 |-- data/                   # Sample JSON datasets for local testing
@@ -28,115 +61,93 @@ prototype/
 |-- SETUP.md                # Repository-wide setup walkthrough
 ```
 
-## System Architecture
+## 🏗️ System Architecture
 ```
 Supabase Auth + PostgreSQL
           |
           v
-FastAPI backend (backend/)
+FastAPI Backend (backend/) <--- Agentic AI (Gemini + LangGraph)
     |    \
     |     \__ Cloudinary media services
     |
-    +--> Flutter mobile app (mobile_app/)
+    +--> Flutter Mobile App (mobile_app/)
     |
-    +--> Web dashboard (web_dashboard/)
-
-Agentic AI layer (backend/app/ai_assistant)
-    |- Conversation memory + templates
-    |- Tool calling (Supabase, analytics, showcase ops)
-    |- Gemini/OpenRouter client
+    +--> Web Dashboard (web_dashboard_astro/)
 ```
 
-## Core Components
+## 🧩 Core Components
 
-### Backend (FastAPI + Supabase)
-- Modern FastAPI project with routers for auth, profiles, events, showcase, analytics, media, and AI assistant (`backend/app/routers`).
-- SQLAlchemy ORM with Alembic migrations (`backend/migrations`) targeting Supabase PostgreSQL.
-- Supabase JWT verification (`backend/app/auth/supabase_auth.py`) and Cloudinary integration for media uploads.
-- **Agentic AI assistant (`backend/app/ai_assistant/`) with Bahasa Melayu default responses** - Natural language processing for Malaysian users with conversation memory, response variation, tool execution, and Supabase bridging. See `docs/development/AI_BAHASA_MELAYU_DEFAULT.md` for details.
-- Health probes (`/` and `/health`), and test endpoints for media uploads.
-- Dependencies defined in `backend/requirements.txt`; run with Python 3.11+.
+### 🐍 Backend (FastAPI + Agentic AI)
+- **Framework**: FastAPI with SQLAlchemy ORM and Alembic migrations targeting Supabase PostgreSQL.
+- **Agentic AI (`backend/app/ai_assistant/`)**: 
+  - Built with **LangGraph** for stateful multi-turn conversations.
+  - Features a **Tool Registry** (`tools.py`) for database querying, analytics, and predictive insights.
+  - **Bahasa Melayu Default**: Optimized prompts for authentic Malaysian context.
+- **Setup**:
+  ```bash
+  cd backend
+  python -m venv .venv
+  .venv\Scripts\activate
+  pip install -r requirements.txt
+  python main.py # Runs on http://localhost:8000
+  ```
 
-```
-cd backend
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-python main.py
-# Server: http://localhost:8000
-```
+### 📱 Mobile App (Flutter)
+- **Tech**: Flutter (Dart 3.x) with Provider state management.
+- **Features**: 
+  - Real-time profile updates & certificate uploads (Cloudinary).
+  - Voice-enabled AI Chat interface.
+  - Student Showcase feed with rich interactions.
+- **Setup**:
+  ```bash
+  cd mobile_app
+  flutter pub get
+  flutter run
+  ```
 
-### Mobile App (Flutter)
-- Cross-platform Flutter client (`mobile_app/`) covering onboarding, profile setup, showcase feeds, chat, notifications, analytics, and offline caching.
-- Service layer integrates Supabase (`supabase_flutter`), media uploads, AI chat, and search optimisations (`lib/services/`).
-- Feature-rich screen modules for students, lecturers, shared views, and settings (`lib/screens/`).
-- Configuration via `assets/.env` and `lib/config/`; linting rules in `analysis_options.yaml`.
+### 🌐 Web Dashboard (Astro)
+- **Tech**: **Astro v5.0**, **TailwindCSS v4.0**, and **TypeScript**.
+- **Features**:
+  - High-performance, island-architecture based admin portal.
+  - **Dynamic Reporting**: Automated PDF generation (`jspdf`) for student achievement reports.
+  - **Visual Analytics**: Interactive charts (`chart.js`) for risk and participation tracking.
+  - **AI Console**: Direct interface to test and monitor Agentic AI performance.
+- **Setup**:
+  ```bash
+  cd web_dashboard_astro
+  npm install
+  npm run dev # Runs on http://localhost:4321
+  ```
 
-```
-cd mobile_app
-flutter pub get
-flutter run   # Choose desired device/emulator
-```
-
-### Web Dashboard (Static + Supabase)
-- Static HTML dashboard (`web_dashboard/`) with modular JS architecture for analytics, user management, events, and AI assistant tools.
-- Environment generator (`npm run generate-env`) writes `js/config/env.js` from project `.env`.
-- Dev server powered by `live-server`; deployment presets via `netlify.toml` and `vercel.json`.
-
-```
-cd web_dashboard
-npm install
-npm run generate-env   # writes js/config/env.js
-npm run dev            # http://127.0.0.1:8080/login.html
-```
-
-### Serverless Edge API
+### ⚡ Serverless Edge API
 - `api/index.py` exposes a minimal HTTP handler for Vercel-style deployments (health checks, smoke endpoints).
 
-## Environment & Secrets
-Create `.env` files (see `backend/.env.example` and `web_dashboard/js/config/env.example.js`). Key variables include:
-- `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`
+## 🔐 Environment & Secrets
+Create `.env` files for each service.
+
+**Backend (`backend/.env`):**
+- `SUPABASE_URL`, `SUPABASE_KEY`
 - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
-- `OPENROUTER_API_KEY`, `AI_OPENROUTER_ENABLED`
-- `BACKEND_URL`, `ALLOWED_ORIGINS`, `ENABLE_AI_ASSISTANT`, `ENABLE_ANALYTICS`
+- `OPENROUTER_API_KEY` (or Google Gemini API Key)
 
-Keep `.env` files untracked and rotate credentials regularly.
+**Web Dashboard (`web_dashboard_astro/.env`):**
+- `PUBLIC_SUPABASE_URL`
+- `PUBLIC_SUPABASE_ANON_KEY`
 
-## Sample Data, Assets, & Tools
-- `data/` contains curated JSON datasets (FSKTM profile information, knowledge base, website scrape) for local demos.
-- `assets/` stores the cover graphic and university branding used across surfaces.
+**Mobile App (`mobile_app/assets/.env`):**
+- `SUPABASE_URL`, `SUPABASE_ANON_KEY`
 
-## Documentation Hub
-- [SETUP.md](SETUP.md): high-level setup, Supabase configuration, deployment pointers.
-- [SECURITY.md](SECURITY.md): hardening checklist and secret management.
-- [PRE-COMMIT-CHECKLIST.md](PRE-COMMIT-CHECKLIST.md): manual QA list before pushing.
+## 📚 Documentation Hub
+- [SETUP.md](SETUP.md): High-level setup and Supabase configuration.
+- [SECURITY.md](SECURITY.md): Hardening checklist and secret management.
 - `docs/`:
-  - `backend/` (Cloudinary setup, database reset guide)
-  - `development/` (architecture, performance, debugging, agentic AI upgrade playbooks)
-    - **`AI_BAHASA_MELAYU_DEFAULT.md`**: Complete guide for AI chatbot Bahasa Melayu implementation
-    - **`AI_MALAY_QUICK_REFERENCE.md`**: Quick reference for developers working with Malay AI responses
-  - `fixes/`, `setup/`, `status/` (historical notes, migration logs, roadmap)
-  - `UPGRADE_AGENTIC_AI_FEATURES.md` for the full AI assistant upgrade narrative
+  - `development/`: Guides on AI architecture, debugging, and performance.
+  - `AI_BAHASA_MELAYU_DEFAULT.md`: Guide for the Malay AI implementation.
 
-## Deployment & Automation
-- `.github/workflows/` orchestrates backend, web, and pages deployments.
-- `backend/render.yaml` and `backend/railway.json` document infra-as-code targets.
-- `web_dashboard/netlify.toml` + `vercel.json` cover static hosting pipelines.
-- Container support via `backend/Dockerfile`.
+## 🤝 Contributions
+- Follow the `PRE-COMMIT-CHECKLIST.md` before pushing.
+- Ensure all secrets are git-ignored.
+- Use the `web_dashboard_astro` for all dashboard-related development (legacy `web_dashboard` is deprecated).
 
-## Testing & Troubleshooting
-- Backend smoke scripts (`backend/test_final.py`) and health endpoints (`/health`).
-- Web dashboard ships manual JS test harnesses (`web_dashboard/js/tests/`).
-- Mobile app uses `flutter_test` and `mockito`; enable with `flutter test`.
-- Refer to `docs/development/debugging.md` and `docs/development/performance.md` for deeper diagnostics.
-
-## Contribution Workflow
-- Follow the pre-commit checklist, run formatters/lints where applicable, and keep secrets out of version control.
-- Use feature branches and document major architecture decisions within `docs/status/` or ADR notes.
-
-## License
-- Project artifacts currently inherit module-specific licenses (web dashboard is MIT via `package.json`). Clarify repository-wide licensing before public release.
-
----
-
-Happy building! Open an issue or start a discussion before significant architecture changes, and keep the Supabase + FastAPI hybrid story strong.
+## 📄 License
+MIT (Web Dashboard) & Proprietary (Core Systems) - check individual modules for details.

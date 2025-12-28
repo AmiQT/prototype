@@ -1,0 +1,1394 @@
+--- START OF Chapter 1.pdf ---
+1 CHAPTER 1 
+INTRODUCTION 
+1.1  Project Background 
+Universiti Tun Hussein Onn Malaysia (UTHM) is a public Malaysian university 
+that focused on engineering field and vocational training (TVET) with along general  
+course of management business and computer science.  The campus is filled with 
+talented student and always encourage development and skills for student throughout 
+competition, events and program industry- ready skills. Fakulti Sains Komputer dan 
+Teknologi Maklumat (FSKTM) is main faculty focused for computer science student 
+and keep being represent UTHM in competition related with software technology. One 
+of main goals UTHM is to prepare students for industry challenges with program 
+development talent.  
+ Until now, the management of faculty still using manual data management to 
+manage the data of talented students from FSKTM via office room through local 
+computer machine  and paper documentation. The data of student s is collected via 
+paper forms filled by students and lecturers. The access to data is l imited because of 
+record kept in office, only accessible during office hours. Lastly only office admin has 
+permission to access the data for recording or analysing it.  
+The problem of this process is that it limits the accessible of records due to 
+physical a ccess during office hours in the office. The collected data also may be 
+insufficient and inefficient becau se of lack student filling their  data manually. This 
+lead to dependence on lecturer to gather and collect data of talented students.  
+The solution proposed for these issues  is to build and develop St udent Talent 
+Profiling App, wh ich will in volve users from st udents, lecturers and administrators. 
+The application can help students to register and create their own profile talent wh ile 
+keep updating it from mobile phone. The feature offered such submit achievements, 
+tag skills and talent in r eal-time. For lectu rers, they can insight and view talented 
+students to recruit them in any competition and campaign. Administrator will manage 
+data remotely through dashboards website with function like analyse data and generate 
+report. 
+1.2  Problem statement  
+The problem with current issues is reliance on traditional methods. The usage 
+of paper-based documents and local digital storage on local machine computers will 
+make the data unsharred and access online among the staff, lead to bottlenecks 
+during urgent tasks. This limit access the data because local machines are specified 
+to store the data.  
+Time is constrained because office hours dependency only allows the staff to 
+access the data during office hours, it is inflexible for staff and lecturers to submit 
+new data of students outside the office hours. 
+Inefficient collection of data since it only reliance on lecturers to identify and 
+search for talented students among their students themselves. Manual paper forms 
+provided by the office is unattractive for students to fill and not effective since the 
+students prefer digital engagement. 
+1.3  Objective 
+The objectives of this system are to: 
+1. To design a student talent profiling app system using object-oriented approach. 
+2. To develop student talent profiling app systems using web- based and android 
+technology. 
+3. To test the developed system. 
+ 
+1.4  Scope 
+The student talent profiling app is based on educational technology domain, this 
+study domain focused on development and implementation of digital platforms in web-
+based and android technologies to create and manage student talent profile. The 
+domain will enhance student development and educational assessment to create 
+student with capabilities of surviving after graduation. It also uses data management 
+and data mining to create and manage the student data with systematic, effective and 
+efficient.  
+ 
+The case study is located on faculty of FSKTM in UTHM Parit Raja, Johor with 
+the staff of faculty assistance to help guiding the process of managing student record 
+and data.  
+ 
+Students, lecturers and office administrators are involved in this process. The 
+students are the main target because of their data and record since this app is collecting 
+their data, processing and storing it for office usage. For lecturers, they can insight 
+their own student talent such data of performance, record of skills and activities the 
+student have joined. The office administrator will manage all the process and data 
+record of student for analysis and help make decisions for student development 
+planning in the future. 
+ 
+The user list is student, lecturer and office administrator, where the student can 
+fill their own data into the app, lecturer can view and insight their student profile and 
+lastly office administrator can generate reports, manage records and analysis the data 
+for better decision making. 
+ 
+The function system of this app is student profile management. The students can 
+create their own profile, update it from time to time to ensure that the data is latest and 
+updated. Talent category management will allow users to define and categorize the 
+talents the student record has . Achievement management can add any certification 
+students have and link it with official proof of certification. Reporting and analytics 
+will generate student reports based on their achievement and talent listed. Data 
+management can secure data storage and retrieval with cloud storage. 
+1.5  Expected result. 
+The expected outcome of this student talent profiling app is to make students 
+aware of their talent and opportunities UTHM can provide to them. This also can 
+enhance student motivation to develop more talents and skills for themselves. For 
+lecturers, they can identify and view talented students in the faculty with better 
+experience. They also can guide the talented students to achieve new talent and skills 
+in the future. Office administration can record all talented student data for reference in 
+the future. 
+1.6  Project Significance 
+The advantages of this project include students filling in their own data to the 
+management for better planning and actions to be taken in the future while studying 
+normally. The capability to fill their own data by using the app will improve the user 
+experience and awareness of these data as students before graduation. The lecturer can 
+view and search for any talented students to guide them in getting new talents or 
+competition. The administrator can generate reports and use it for decision-making. 
+1.7 Chapter Organization 
+This report contains six chapters as follows: 
+Chapter 1 describes the introduction of the project background, problem statement, 
+objective, scope, expected result, methodology, project planning and project 
+significant.  
+Chapter 2 reviewed all the relevant theoretical literature used in the proposed system.  
+Chapter 3 describes the relevant methodology for the proposed system.  
+Chapter 4 explains the analysis and design of the development system.  
+Chapter 5 explains the implementation and testing of the development system.  
+Chapter 6 describes the conclusion and future work for the proposed system.  
+ 
+ 
+--- END OF Chapter 1.pdf ---
+
+--- START OF Chapter 2.pdf ---
+ 
+ 
+CHAPTER 2 
+ 
+ 
+LITERATURE REVIEW 
+ 
+2.1  Introduction 
+This chapter is presenting the review of any existing system that already exists in 
+literature from reputable publisher and relate it with the development of this project, 
+Student Talent Profiling App for comparison and improvement from the existed 
+system. It focuses on domain case study, method of technology that used for 
+developing the system, and study of existing related systems. The purpose of this 
+chapter is to provide theoretical background and justification for the proposed system 
+by analysing the s ystem, identifying any gaps, and explaining how the project will 
+contribute to solving the real-world problems in real case. 
+ The structure of the chapter will include description of current situation system 
+used in FSKTM, UTHM and followed by discussion on the method technology in 
+developing the new system. Three existing related system are analyzed, compared to 
+and evaluated. Lastly, the proposed system is described in detail, and its features are 
+compared with the existing systems. 
+  
+2.2  Domain Case Study  
+Fakulti Sains Komputer dan Teknologi Maklumat (FSKTM) at Universiti Tun Hussein 
+Onn Malaysia (UTHM) playing a vital role in produce quality skilled graduates’  
+student in computer science and technology. However, the current process of 
+managing student talents relies heavily on manual data collection through google 
+forms and local digital storage in office computers. 
+ According to the project background, only administrative staff have access to 
+updating and analyzing the data, leading to inefficiencies and limitations of access 
+during outside office hours. This problem highlighted the need for a centralized, 
+digitized, and accessible system that allows students to create and manage their own 
+profiles, achievement and enabling the lecturer to view and analyze talent-related data 
+efficiently. 
+ A digital platform like the Student Talent Profiling App will streamline this 
+process by allowing real-time updates, cloud-based data storage and user-based access 
+control. This will address the limitations of the current system by providing dynamic, 
+flexible, and interactive approaches to managing student talents. 
+  
+2.3  Method and Technology 
+2.3.1 Mobile App System 
+For the mobile app development, Flutter is used as the primary framework. Flutter is 
+a powerful, open- source framework by Google that allows for the development of 
+high-performance, cross-platform mobile applications for both Android and iOS. The 
+use of Flutter ensures that the mobile app runs seamlessly on both platforms, offering 
+a consistent user experience across devices. 
+Just like the web-based system, the mobile app is connected to Firebase, which serves 
+as the backend for real-time data storage and authentication. The app allows students 
+to create and manage their talent profiles, showcase achievements, and track progress. 
+The connection with Firebase ensures that all data entered in the mo bile app is 
+synchronized with the web- based system, providing administrators with real -time 
+updates. 
+The mobile app also integrates various functionalities, including notifications, to alert 
+students when there are updates or changes to their profiles or achievements. This 
+enhances the app's interactivity and engagement, allowing students to stay up to date 
+with their career development. 
+2.3.2 Web-based System 
+The web-based component of the Student Talent Profiling App serves as the Admin 
+Dashboard. The dashboard allows administrators to manage student profiles, generate 
+reports, and analyze data. For the front -end development, we use a combination of 
+HTML, CSS, and JavaScript. These technologies are essential for building the user 
+interface (UI), providing an interactive and responsive experience for the 
+administrators. 
+The front -end is connected to Firebase, which serves as the backend to store and 
+manage the data. Firebase is used for real -time data synchronization, authentication, 
+and database management. It allows for secure and efficient data handling, ensuring 
+that all student profiles and credentials are stored and accessed securely. Additionally, 
+Firebase integrates seamlessly with JavaScript, enabling dynamic updates to the 
+dashboard without needing to refresh the page. 
+The data mining functionality is an integral part of the web-based system. It is used to 
+generate reports and analytics on student performance, skills, and achievements. By 
+leveraging Firebase’s real-time database, the system can quickly process and analyze 
+student data to generate insights. These reports can help adminis trators and faculty 
+members track the progress of students, identify trends, and make informed decisions 
+about student development and career planning. 
+2.3.3 Object-Oriented Approach (OOA) 
+The Object-Oriented Approach (OOA) plays a crucial role in the design of the Student 
+Talent Profiling App. This software development methodology is focused on 
+organizing the system around objects rather than functions and logic. Objects represent 
+entities within the system, such as students, admin, achievements, and skills, each with 
+attributes and behaviours. 
+In this system, each entity, such as a student, has a corresponding class that 
+contains attributes like name, email, achievements, and methods for updating and 
+managing the data. Similarly, other entities such as Achievements or Skills are 
+modelled as classes that can store data and allow for easy retrieval, modification, and 
+interaction. 
+OOA allows for better modularity and reusability in the system, making it 
+easier to manage the development and maintenance of the application. Each module 
+of the app is treated as a separate object, allowing the development team to focus on 
+specific parts of the system without affecting other components. This modularity also 
+facilitates easier debugging, testing, and scaling of the system over time. 
+Since OOA is a methodology that guides the software design rather than a specific 
+technology, it fits within the System  Design section of the report, where you will 
+explain how the system was organized and structured. This methodology allows for 
+clear separation of responsibilities, smooth data flow, and the ability to easily extend 
+the system with new features. 
+  
+2.4  Study of Existing Related Systems  
+The management and recognition of student achievement have evolved significantly 
+with the advent of digital credentialing platforms. These platforms offer a secure, 
+verifiable, and sharable means to acknowledge student’s skill and accomplishments. 
+There ar e three existing system to be compared, start with Credly, LinkedIn, and 
+CertifyMe highlighting their features and relevance to the proposed Student Talent 
+Profiling App.  
+2.4.1 Credly by Pearson 
+The source of the platform is https://info.credly.com/ . Credly is a leading digital 
+credentialing platform that enables organizations to issue, manage, and share verifiable 
+digital credentials. It supports the Open Badge standard, allowing for rich metadata to 
+be embedded within each credential, such as the i ssuer’s identity, criteria for earning 
+the badge, and evidence of achievement. This transparency enhances trust and 
+recognition among employers and educational institutions.  
+ 
+Figure: 
+ The platform is widely used adopted across various sectors, including 
+education, corporate training, and professional certification. It integrates with learning 
+management systems (LMS) and offers analytics tools to track the impact and reach 
+of issued credentials. Credly’s scalability and security features make it a robust choice 
+for institutions aiming to implement a comprehensive digital credentialing system. 
+ This system offer significantly functionality with the proposed system, it have 
+credentials issuance where organizations can create and issue digital badges, 
+
+verification and security, analytics and reporting, a mobile application for on the go 
+and single Sign-On (SSO). 
+ There are areas where Credly lack and can be improved to suit better the needs 
+for Student Talent Profiling App. The improvement is localized language support, 
+integration with local systems, and customizable reporting. 
+2.4.2 LinkedIn 
+https://www.linkedin.com/ is the URL for the website. LinkedIn is a globally 
+recognized professional networking platform that facilitates connections among 
+professional, organization, and educational institutions. The platform allow users to 
+add certificates to their profiles, providing a dedicated section where achievements can 
+be displayed. These certificates often include metadata such as the issuer’s name, the 
+data of issuance, and the credential’s validity period, offering transparency and 
+verifiability to potential employers and collaborators. Additionally, LinkedIn supports 
+the integration of digital badges, which are visual representation of specific skills or 
+accomplishments. These badges can be shared across various platforms, includi ng 
+social media, enhancing the individual’s professional presence and reach. 
+ 
+Figure: 
+ LinkedIn offer several functionalities that can be complement the Student 
+Talent Profiling App. The student can link their digital credentials from Student Talent 
+Profiling App directly to their LinkedIn profile, providing a seamless representation 
+of their achievements. By displaying their credentials, students can attract the attention 
+of potential employers, collaborators, and industry professionals, fostering valuable 
+connections. Sharing achievements on LinkedIn can enhance the student’s 
+professional visibility, leading to increased recognition within their field of study. 
+LinkedIn allows connections to endorse skills and write recommendations, further 
+validating the student’s competencies and experience.  
+
+While LinkedIn provides robust features, there are areas where customization 
+could better suit for the project proposed. By implementing multilingual option can 
+cater a diverse student body. Ensuring compatibility with local LMS and database can 
+streamline processes. Developing tailored analytics dashboards can provide more 
+relevant insight for admin. With this, Student Talent Profiling App can offer a 
+comprehensive solution for recognizing and showcasing student achievement. 
+2.4.3 CertifyMe 
+https://www.certifyme.online/ is t he URL of the website. This system is a robust 
+digital credentialing platform designed to streamline the creation, issuance, and 
+management of verifiable digital certificates and badges. It offers a comprehensive 
+suite of features tailored for educational institutions, corporate training programs, and 
+professional associations. These features include customizable templates for 
+certificates and badges, integration capabilities with Learning  Management Systems 
+(LMS), analytics tools for tracking credential usage, and white -labelling options to 
+align the platform with an organization's branding. CertifyMe's platform supports the 
+issuance of Open Badge-compliant credentials, ensuring that each credential is secure, 
+tamper-proof, and easily shareable across various digital platforms. 
+ 
+ CertifyMe offers several functionalities that can complement and enhance the 
+Student Talent Profiling App at FSKTM, UTHM. The platform's customizable 
+templates allow the creation of digital credentials that reflect the university's branding, 
+providing students with professional -looking certificates and badges that they can 
+
+proudly share. The integration with LMS platforms ensures that credentials are issued 
+automatically upon course completion, streamlining the process and ensuring timely 
+recognition for students. The analytics tools provide valuable data on credential usage, 
+such as views, shares, and downloads, offering insights into student engagement and 
+the effectiveness of the university's programs. Additionally, CertifyMe's white -
+labeling options enable the university to maintain a consistent brand presence across 
+all digital credentials, reinforcing its identity and enhancing its reputation. 
+ While CertifyMe offers a comprehensive suite of features, there are areas 
+where customization could better suit the needs of FSKTM, UTHM. Implementing 
+multilingual support can cater to the diverse linguistic backgrounds of students, 
+ensuring that digital credentials are accessible to all. Integrating with local job portals 
+and professional networks can enhance the visibility of students' achievements and 
+facilitate their transition into the workforce. Additionally, developing mobile 
+applications or optimizing the platform for mobile devices can provide students with 
+convenient access to their digital credentials, allowing them to showcase their 
+accomplishments anytime and anywhere. By leveraging CertifyMe's capabilities and 
+customizing its features to align with the university's specific needs, FSKTM, UTHM 
+can provide students with a comprehensive solution for recognizing and showcasing 
+their achievements, thereby enhancing their academic and professional prospects. 
+2.4.4 Your proposed system 
+The proposed system, the Student Talent Profiling App, is designed to streamline and 
+enhance the management and visibility of student achievements, skills, and 
+qualifications at the Faculty of Computer Science and Information Technology 
+(FSKTM), Universiti Tun Hussein Onn Malaysia (UTHM). The app aims to serve as 
+a centralized digital platform where students can create and manage comprehensive 
+profiles, showcasing their academic accomplishments, skills, certifications, 
+extracurricular activities, and person al projects. This system offers a dynamic and 
+user-friendly interface that allows students to present a detailed and interactive 
+representation of their talents and experiences. 
+The key functionality of the proposed system revolves around the creation of 
+personalized digital portfolios. Students can input and update their information, 
+including their educational background, skills, achievements, and any certifications or 
+awards they have earned. The app integrates with external platforms like LinkedIn and 
+Credly, allowing students to automatically import and display digital credentials such 
+as certifications, badges, and endorsements. This feature ensures that students can 
+maintain a current, professional, and verifiable record of their accomplishments, which 
+can be shared easily with potential employers, collaborators, and academic institutions. 
+In addition to portfolio management, the system includes skill assessment tools 
+that enable students to evaluate their competencies in various areas. These tools consist 
+of interactive quizzes and self-assessments that help students gauge their strengths and 
+identify areas for improvement. By providing this feature, the app empowers students 
+to take a proactive approach to their personal and professional development. 
+Moreover, the proposed system offers career development resources, including 
+articles, webinars, and workshops on essential topics like resume writing, interview 
+techniques, and job search strategies. This is particularly beneficial for students as they 
+prepare to enter the workforce, as it equips them with the knowledge and tools they 
+need to succeed in their job search. Additionally, the app facilitates job matching and 
+networking opportunities, connecting students with potential employers and industry 
+professionals. This feature fosters valuable relationships and can help students find 
+internships, job opportunities, and mentors, further enhancing their career prospects. 
+The system's design also emphasizes data -driven decision-making. With the 
+integration of analytics, the app will provide valuable insights into students' skills, 
+achievements, and professional development. This will allow faculty members, career 
+advisors, and administrators to offer targeted support, track student progress, and make 
+informed decisions regarding program improvements and career services. The app's 
+database will securely store all user profiles and assessment results, ensuring that 
+student data is protected while remaining accessible to authorized users. 
+By providing students with a platform to document, manage, and showcase 
+their skills and achievements, the Student Talent Profiling App aims to enhance the 
+employability of graduates and improve industry engagement. It empowers students 
+to take control of their career development, offering a comprehensive solution that 
+supports both academic success and professional growth. The integration of external 
+platforms, career development resources, and networking opportunities creates a 
+holistic approach to student career readiness, equipping them with the tools and 
+resources needed to thrive in their future careers. 
+2.4.5 Comparison with the Existing Systems 
+The proposed Student Talent Profiling App combines the strengths of these existing 
+systems and introduces additional functionalities that are tailored to the needs of 
+students at FSKTM, UTHM. These include personalized profile creation, career 
+development resources, skill assessments, and job matching opportunities. The app not 
+only integrates with external platforms like LinkedIn and Credly but also provides an 
+intuitive interface and secure database for storing student data. It also incorporates 
+features for students to showcase their achievements and track their progress, 
+ultimately enhancing their employability and professional development. 
+ By integrating various credentialing and career readiness features into one 
+centralized platform, the Student Talent Profiling App offers a more comprehensive 
+solution for students, addressing the gaps that exist in the current systems. The app 
+aims to streamline the management of student profiles, enhance their visibility, and 
+provide them with the resources and opportunities they need to succeed in the job 
+market. 
+Table 2: System’s Comparison 
+Features/System Credly LinkedIn CertifyMe Student 
+Talent 
+Profiling 
+App 
+Log In √  √  √ √ 
+Profile 
+Management 
+√ X √ √ 
+Skill Assessment X X X √ 
+Achievement 
+Showcase 
+√ √ √ √ 
+Job Matching  √  √ 
+Integration with 
+External 
+Platforms 
+√ √ √ √ 
+Career 
+Development 
+Resources 
+X √ X √ 
+Networking 
+Opportunities  
+X √ X √ 
+Reporting and 
+Analytics 
+√ X X √ 
+ 
+The comparison table reveals several key differences and advantages of the proposed 
+Student Talent Profiling App over existing systems like Credly, LinkedIn, and 
+CertifyMe. While platforms like Credly and CertifyMe focus heavily on credentialing 
+and certification, and LinkedIn emphasizes professional networking, the proposed 
+system combines all these aspects and add s additional functionalities tailored to the 
+needs of FSKTM students at UTHM. 
+The Student Talent Profiling App goes beyond simple credentialing by 
+incorporating skill assessments, career development resources , and job matching , 
+which are not available in the existing systems. Additionally, the integration of 
+LinkedIn and Credly  allows for seamless sharing of achievements while still 
+maintaining a comprehensive approach to talent profiling that offers both personalized 
+student profiles and networking opportunities with potential employers. 
+By providing a centralized, easy-to-use platform for students to manage their skills, 
+achievements, and career readiness, the proposed system offers an all -in-one solution 
+that bridges gaps in the current systems, providing students with the tools they need to 
+enhance their professional development and employability. 
+2.5  Chapter Summary  
+In this chapter, we explored the functionalities of the existing systems—Credly, 
+LinkedIn, and CertifyMe—and compared them with the proposed Student Talent 
+Profiling App designed for FSKTM, UTHM. Each of these systems provides 
+valuable features, including digital credentialing, professional networking, and skill 
+recognition. Credly focuses on issuing and managing verified digital credentials, 
+while LinkedIn is widely used for professional networking and showcasing 
+certifications. CertifyMe offers customizable digital certificates and badges, making 
+it an ideal platform for credential issuance. 
+The proposed Student Talent Profiling App combines the strengths of these 
+systems, offering personalized student profiles, integration with external platforms 
+like LinkedIn and Credly, skill assessments, and job matching features. It goes 
+beyond credentialing by providing students with the tools they need to assess their 
+skills, receive career development resources, and connect with potential employers 
+and industry professionals. 
+By integrating features from the existing systems and adding new 
+functionalities that are specifically tailored to the needs of students at FSKTM, 
+UTHM, the proposed system aims to provide a comprehensive solution for managing 
+and showcasing student achievements, fostering employability, and enhancing 
+professional development. 
+This chapter laid the foundation for understanding how the Student Talent 
+Profiling App will improve the current student talent management process, offering a 
+holistic platform that empowers students to take control of their career readiness and 
+connect with opportunities. The next chapter will discuss the methodology used to 
+develop the system, detailing the process and technologies implemented to create the 
+app. 
+ 
+ 
+--- END OF Chapter 2.pdf ---
+
+--- START OF Chapter 3.pdf ---
+CHAPTER 3 
+ 
+ 
+ 
+ 
+ 
+ 
+METHODOLOGY 
+This chapter explain the use of prototype model in this project and the activities that 
+had been carried out in each phase.  
+3.1  Prototyping Model 
+Prototyping model is a software development approach that usually will be 
+together with SDLC, it where preliminary versions of system is built to refine the 
+requirements, validate concepts, and gather user feedback. It was iterative process 
+and since it related with agile scrum, there will be multiple prototype process along 
+with development phase to improve the system. Prototype model is chosen due to 
+low of cost, time and resources to begin it, it can be drawing on paper and simple 
+mock-up system in Figma software. The process will begin following the agile scrum 
+method, with pre-sprint, and after few sprints till the project is complete. The pre-
+sprint will have 4 process while the sprint1, 2, 3 and 4 will have iterative process 
+contain 6 processes. Figure below shows example of agile scrum methodology for 
+better understanding. 
+ 
+Figure 1 
+
+3.1.1 Planning (Sprint 0 and Pre-Sprint Planning 
+The starting point of development phase, there is 4 processes during this phase 
+with goal to establish the foundation of project and prepare for system development. 
+The process will have it is own objective and goals to be done. 
+The first process is requirement gathering and analysis, this process is to 
+understand goals of project, the need of user for better understanding. It will define 
+the core features of the application to meet the requirements users.  
+Initial user story mapping and creation is creating user stories based on 
+situations of users will likely happen when using the system. All the stories will be 
+organized to create story map. 
+Initial product backlog creation is compiling all user stories into product 
+backlog, this is to prioritize the stories based on their value to the users. 
+Architecture and technology selection, the process where technology to 
+develop mobile applications chosen, for mobile the programming language is Flutter, 
+while for website is React with Node.js with Express.js for backend.  
+3.1.2 Sprint 1 
+ The goal is to implement the basic student profile in the application with the 
+functionality.  
+ Planning 1 is selecting user stories, break down these stories into tasks, 
+estimate task effort and duration and define the sprint goal. 
+ Development, developing the profile system using Flutter and write unit tests. 
+ Integration testing, testing the profile system to work without issues. 
+ Code review, reviewing the code for better and consistent quality. 
+ Sprint review and demo, show the demo of system to supervisor and 
+stakeholder to gather any feedback. 
+ Sprint retrospective, reflect on the current sprint and create action activity for 
+sprint 2. 
+3.1.3 Sprint 2 
+ This phase is to implement talent assessment and viewing functionality. The 
+process same with previous sprint. 
+ Planning 2, same activity as planning 1. 
+ Development, develop the talent assessment tab section, implement profile 
+view for lecturers and write unit tests. 
+ Integration testing, the assessment form is tested, and profile view. 
+ Code review, reviewing the code. 
+ Sprint review and demo, the system is demonstrated to supervisors and 
+stakeholders. 
+ Sprint retrospective, reflect on current sprint and create action item for sprint 
+3. 
+3.1.4 Sprint 3 
+To integrate data mining techniques for student recommendation and 
+implement management website for administrator. 
+Planning 3, same with planning 1 and 2. 
+Development, implement data preprocessing using Python, clustering 
+algorithms to group similar talents, develop website and write unit tests. 
+Integration testing, test the data mining integration. 
+Code review, reviewing the code. 
+Sprint review and demo, demonstrating to supervisor and stakeholder. 
+Sprint retrospective, reflect on current sprint and create action items for sprint 
+4 
+3.1.5 Sprint 4 
+ To refine the application based on feedback 
+ Planning 4, same as planning 1, 2 and 3. 
+ Development, address feedback from all previous sprint, implement report 
+generation to website administrators. 
+Integration testing, testing the refined application and report generation. 
+Code review, review the code. 
+Sprint review and demo, demonstrating the system to supervisor and 
+stakeholder. 
+Sprint retrospective, reflect on all sprint and overall project, create action items 
+for future iterations or maintenance. 
+3.2  System Development Workflow 
+There are a total of five phases from the prototype model. As shown in Table 3.2.1, each 
+phase has its assignment and output that needs to be produced during the entire project 
+development.  
+ 
+ 
+ 
+Table Error! No text of specified style in document..2.1: Software development 
+activities and their task 
+Phase Tasks Output 
+Planning (Sprint 0 
+and Pre-Sprint 
+• Conduct interview with students, 
+lecturers and stakeholder. 
+• List core feature of the app. 
+• Create user stories and create user 
+story map. 
+• Compile user stories into product 
+backlog. 
+• Prepare technology environment, 
+install IDE, Flutter, Android Studio. 
+• Documented user 
+requirement, 
+specification and 
+project goals. 
+• User story map and 
+user stories. 
+• Prioritized product 
+backlog. 
+• Documented 
+architecture design 
+and technology 
+stack. 
+Sprint 1 • Create task based on user story map. 
+• Develop profile section using Flutter. 
+• Testing the profile section. 
+• Review code. 
+• Demonstrate to SV and Stakeholders. 
+• Create action for sprint 2. 
+• Student profile 
+creation with 
+function. 
+• Tested profile 
+system. 
+• Feedback from SV 
+and stakeholder. 
+• Action for 
+improvement 
+Sprint 2 • Create task based on user story map 
+• Develop talent assessment and 
+viewing function. 
+• Testing the developed section. 
+• Review code. 
+• Demonstrate to SV and Stakeholders. 
+• Create action for sprint 3. 
+• Student talent 
+assessment and 
+profile viewing. 
+• Tested developed 
+system 
+• Feedback from SV 
+and stakeholder. 
+• Action for 
+improvement. 
+Sprint 3 • Create task based on user story map 
+• Integrate data mining techniques. 
+• Testing data mining function. 
+• Student 
+recommendation 
+algorithm. 
+• Review code. 
+• Demonstrate to SV and Stakeholders. 
+• Create action for sprint 4. 
+• Tested data mining 
+technique 
+• Feedback from SV 
+and stakeholder. 
+• Action for 
+improvement. 
+Sprint 4 • Create task based on user story map 
+• Address feedback and implement 
+report generation. 
+• Testing overall the application. 
+• Review code. 
+• Demonstrate to SV and Stakeholders. 
+• Create action for future maintenance. 
+• Refined application 
+and report 
+function. 
+• Tested the overall 
+application. 
+• Feedback from SV 
+and stakeholder. 
+• Action for 
+improvement. 
+ 
+3.3  Chapter Summary 
+Overall, agile scrum for the development of this application is better option to choose 
+for development with phase contain of Sprint 0, 1, 2, 3 and 4 with each process iteratively 
+till the end of the project. The sprint 1 focused on implementing the basic student profile 
+creation function, for student to input their own information. Sprint 2, expanded by adding 
+talent assessment and profile viewing features allowing students to declare their own skills 
+and lecturer to insight the student profile. Sprint 3, implement data mining techniques to 
+enable the application to provide student based on personalized activity recommendations 
+based on their profile. Lastly sprint 4, the end of phase development refining application 
+based on SV and stakeholder and implement reporting generation for administrator. 
+ 
+--- END OF Chapter 3.pdf ---
+
+--- START OF Chapter 4 Part 1.pdf ---
+ 
+1  
+2  
+3 CHAPTER 4 
+ 
+ANALYSIS AND DESIGN 
+ 
+This chapter discusses the findings from the analysis and design process of the Student 
+Talent Profiling App, which follows an object -oriented approach. The system is 
+developed to digitize and streamline the management of student talents within 
+Universiti Tun Hussein Onn Malaysia (UTHM), specifically for the Faculty of 
+Computer Science and Information Technology (FSKTM). This chapter outlines the 
+system modules, functional and non- functional requirements, user  requirements, 
+hardware and software specifications, and system design using UML diagrams.  
+4.1  System Requirement Analysis 
+Table 4.1 summarises the system’s modules. There are 5 modules designed to 
+support three main user roles which is student, lecturer, and office administrator. 
+Each module provides specific functionality to ensure a seamless experience in 
+managing talent profile and achievements.  
+ 
+ 
+Table 4.1: System’s Module 
+No Module Description 
+1 Registration 
+and Login 
+Module 
+• This module facilitates user authentication by allowing new 
+users to register for an account before logging in. Existing 
+users can log in using their ID and password. Upon successful 
+login, valid users are redirected to their dashboard. 
+2 Profile 
+Management 
+Module 
+• Enables students to create, view, and update their talent 
+profiles from a mobile device. Lecturers and administrators 
+can view these profiles.
+ 
+3 Achievement 
+Management 
+Module 
+• Provides functionality for students to add, edit, and manage 
+their academic and extracurricular achievements, including 
+supporting documents such as certificates. 
+4 Reporting and 
+Analytics 
+Module 
+• Allow office administrators to generate reports on student 
+achievements, talents, and overall performance for decision -
+making purposes. 
+• Admin can search and filter talented student based on skills 
+to analyse interest student. 
+• The report can be generated in graph for better visualisation. 
+5 Talent 
+Showcase and 
+Posting 
+Module 
+• This allows students to upload and post content in various 
+formats such as text, images, and videos to showcase their 
+talents interactively. Lecturers , and student can provide 
+comments and feedback. 
+ 
+ 
+ 
+ 
+ 
+4.1.1 Functional and Non-Functional Requirements 
+Table 4.2 lists functional requirements for this system. 
+ 
+Table 4.1: Functional requirements. 
+No Module Description 
+1 Registration 
+and Login 
+Module 
+• Allow new users to register for a new account before logging 
+in. 
+• Allow the existing users to log in with their ID and password. 
+• Redirect the valid users to the dashboard after  successful 
+login.  
+2 Profile 
+Management 
+Module 
+• Allow student to create and update their talent profiles. 
+• Enable lecturer and admins to view student profiles. 
+ 
+3 Achievement 
+Management 
+Module 
+• Allow students to submit and manage their achievements. 
+• Support uploading proof documents  through PDF and 
+credential URL 
+4 Reporting and 
+Analytics 
+Module
+ 
+• Generate reports on student data for administrative use. 
+• Provide filtering options (by date, category student, etc). 
+• Finding student interest with report data and form question. 
+5 Talent 
+Showcase and 
+Posting 
+Module 
+• Allow students to post text, images, and videos about their 
+achievements. 
+• Enable lecturers and admins to comment or give feedback on 
+posts. 
+ 
+Table 4.2: Non-functional requirements. 
+No Requirement Description 
+1 Performance The system should be responsive and capable of handling 
+multiple users simultaneously without significant delay. 
+2 Usability The interface must be intuitive and easy to use for all user 
+types, especially students and lecturers. 
+3 Security The system must ensure secure user authentication and 
+protect sensitive student data from unauthorized access. 
+4 Compatibility The application must be compatible across various devices 
+and browsers, including both Android and web platforms. 
+ 
+ 
+ 
+4.1.2 User Requirement Analysis 
+Table 4.1 lists the user requirements for this system. Users of this system includes 
+student, lecturer, and administrator.  
+ 
+ 
+ 
+Table 4.3: User requirements. 
+No Requirement 
+1.  All users must have a registered account with valid credentials. 
+2.  Students must be able to create and update their talent profile. 
+3.  Students must be able to submit and manage their achievements. 
+4.  Students must be able to post media (images, videos) to showcase their talents. 
+5.  Lecturers must be able to view student profiles and achievements. 
+6.  Lecturers must be able to comment or provide feedback on posted content. 
+7.  Administrators must be able to manage all records and user accounts. 
+8.  Administrators must be able to generate reports for planning and analysis. 
+9.  The system must provide role-based access control. 
+10.  Users must be able to access the system remotely at any time. 
+11.  Data must be stored securely using cloud-based storage. 
+12.  The app must support real-time updates and notifications. 
+13.  The system must be accessible via both mobile and web interfaces. 
+14.  The system must allow file uploads for achievement verification. 
+15.  The system must allow filtering and searching of student data by lecturers and 
+admins. 
+4.1.3 Hardware and Software Requirements 
+Table 4.5 lists the hardware and software requirements of the developed system. 
+Table 4.4: Hardware and software requirements 
+Aspect Requirement 
+Operating system Window 10 and above 
+CPU Minimum 2GHz  
+Memory Minimum 8GB RAM 
+Internet connection Wi-Fi or hotspot connection 
+Web browser Google chrome, Internet explorer or Microsoft edge 
+Development Tools Flutter, HTML, CSS, JavaScript (For web dashboard 
+only) 
+Backend Firebase (Cloud-based database and authentication) 
+ 
+--- END OF Chapter 4 Part 1.pdf ---
+
+--- START OF Chapter 4 Part 2.pdf ---
+4.3 System Analysis 
+System design describes the overall structure or flow of the system , including its 
+function. Indirectly, it will reduce the gap between the needs and the proposed system. 
+It also transfers the proposed system functionality into the graphical diagram according 
+to specific requirements. In this section, the proposed system design is described. 
+Object-oriented approach is used to generate the UML diagrams, which are Use Case 
+Diagram, Activity Diagram, Sequence Diagram and Class Diagram. 
+4.3.1 Use Case Diagram 
+Figure 4.3 shows the use case diagram that represents the overall activity using the 
+student talent profiling app, where the interaction actor and the system functionalities 
+are depicted. The main actor includes students, lecturers, and administrators. This 
+diagram represents the main tasks of each actor can perform based on module listed. 
+ 
+ 
+ 
+ 
+ 
+Figure 4.3: Use Case Diagram of Proposed System 
+
+ 
+4.3.2 Use Case Specification 
+Each use case based on each module listed, there are five modules to be specified 
+represent action perform from actor. 
+(i) Use Case 1: Login Module and Register 
+The system is designed for user to login and register in the app. For student, it designed 
+to help them register and login in the app after creating their profile, while for lecturer 
+and administrator they need to login with their credential login account provided. The 
+specification of the User Login use case is shown in Table 4.3.2.1 
+Table 4.3.2.1: Login Module and Register Use Case Specification 
+History Log 1.0.0 1. Create initial use case 
+1.0.1 1. Fixed alternative flow in normal flow. 
+2. Changed ID for alternative flow and 
+exceptions. 
+2.0.0 1. Added history log. 
+2. Functional requirements are added. 
+Version 2.0.0 
+Use Case ID UC-1 
+Use Case Name Login Module and Register 
+Created By Muhammad 
+Noor Azami 
+Updated By Muhammad 
+Noor Azami 
+Date Created 05/06/2025 Last Revision Date  
+Actors Student, Lecturer, Administrator 
+Description Users login into the Student Talent Profiling App using 
+valid credentials (username and password). All the details 
+can be obtained through SMAP account. 
+Preconditions Users must have a valid account in the system based on 
+SMAP account. 
+Post conditions After successful login, the user is redirected to the main 
+dashboard of the system. 
+Normal Flow 1. The user enters their SMAP username and password. 
+2. The system verifies the credentials against the 
+SMAP database. 
+3. If the credentials are valid: 
+• The system checks if a talent profile exists in 
+the app’ database. 
+• If user have talent profile, the user is 
+redirected to their dashboard. 
+• If no profile exists, the user is prompted to 
+create new profile. 
+4. If credentials are invalid, the system displays an error 
+message indicating invalid username or password. 
+Alternative Flow A1. Register 
+1. If the user is new to the app, they are asked to 
+register and create new profile talents. 
+2. The user will fill requirement of personal details. 
+3. The system displays pop up successful registration 
+message and redirect user to the dashboard. 
+Exceptions E1. Invalid login 
+1. If the SMAP credentials are invalid, the system 
+displays an message error “Invalid username or 
+password”. 
+E2. No Talent Profile 
+1. If the user logs in successful but has no profile in 
+the system, then message prompt up with “No 
+profile found, please create a new one”. The user is 
+then redirected to profile creation page. 
+ID Requirement Priority 
+Related 
+requirement 
+FR01-01 The system must 
+verify the SMAP 
+credentials during 
+login. 
+Basic 
+FR02-01 If the user does not 
+have profile, the 
+system prompts 
+message to create 
+new one. 
+High 
+FR03-01 The system should 
+display appropriate 
+error messages for 
+invalid login 
+attempt or missing 
+profiles. 
+High 
+ 
+Sequence Diagram: 
+ 
+Activity Diagram: 
+
+ 
+(ii) User Case 2: Profile Management 
+Table 4.3.2.2 shows the use case specification of profile management, this show how 
+process of student profile is handled in the system. 
+Table 4.3.2.2: Profile Management Use Case Specification 
+History Log 1.0.0 Created initial use case 
+1.0.1 Updated normal flow and alternatives flow 
+2.0.0 Finalized use case and related requirements 
+Version 2.0.0 
+Use Case ID UC-2 
+Use Case Name Profile Management 
+
+Created By Muhammad 
+Noor Azami 
+Updated By Muhammad 
+Noor Azami 
+Date Created 05/06/2025 Last Revision Date 05/06/2025 
+Actors Students, Lecturers, Administrator 
+Description The profile management module allows students to create, 
+view, and update their talent profiles. Lecturers and 
+administrators can view these profiles. 
+Preconditions The user must be logged in to access and manage their 
+profile. 
+Post conditions The student’s talent profile is updated or created, and it is 
+saved in the system’s database. 
+Normal Flow 1. Student logs in to the system. 
+2. The system checks if the student has a talent profile. 
+If no profile exists, the system prompts the student 
+to create a profile. 
+If a profile exists, the student is directed to the 
+profile management page. 
+3. The student can update their profile, including 
+adding or editing information such as personal data, 
+talent categories, achievements and qualifications. 
+4. After updates, the student saves the profile, and the 
+system stores the changes. 
+Alternative Flow A1. Profile Creation 
+1. If the student doesn’t have a profile, they must 
+enter following data to create one: 
+Personal details 
+Talent Categories 
+Achievements 
+2. Once the student fills in the required details, the 
+system saves the profile and redirects the student 
+to the profile management dashboard. 
+Exceptions E1. Missing Data 
+1. If the student misses any required fields, the 
+system displays an error message such as 
+“Please complete all required fields before saving 
+your profile.”. 
+Related 
+requirement 
+ID Requirement Priority 
+FR04-01 The system must 
+allow students to 
+create and update their 
+profiles. 
+Basic 
+FR04-02 The system should 
+allow lecturers and 
+administrators to view 
+profiles. 
+High 
+FR04-03 The system must 
+ensure all profiles are 
+stored securely and 
+can be retrieved when 
+needed. 
+High 
+Sequence Diagram: 
+ 
+ 
+ 
+Activity Diagram: 
+
+ 
+ 
+ 
+(iii) Use Case 3: Achievement Management 
+ 
+The table 4.3.2.3 shows the module for achievement management where how flow of 
+process achievement is managed from student and lecturer perspective to view the list 
+while the admin can access it to added it as report insight. 
+Table 4.3.2.3: Achievement Management Use Case Specification 
+History Log 1.0.0 Created initial use case 
+1.0.1 Updated normal flow and alternatives flow 
+2.0.0 Finalized use case and related 
+requirements 
+Version 2.0.0 
+Use Case ID UC-3 
+Use Case Name Achievement Management 
+Created By Muhammad 
+Noor Azami 
+Updated By Muhammad 
+Noor Azami 
+Date Created 05/06/2025 Last Revision Date 05/06/2025 
+Actors Students, Lecturers, Administrator 
+Description The achievement management module allows students to 
+add, edit and manage their academic and extracurricular 
+achievements, including uploading supporting documents 
+such as certificates. 
+
+Preconditions The user must be logged in to access and manage their 
+achievements. 
+Post conditions The student’s achievement records are saved and updated 
+in the system database. 
+Normal Flow 1. The student logs in to the system. 
+2. The student navigates to the Achievement 
+Management section. 
+3. The student can add a new achievement, edit 
+existing achievements, or delete achievements. 
+4. The student submits the achievement, and the 
+system saves it to the database. 
+5. If the achievement is successfully saved, the student 
+is notified of the update. 
+Alternative Flow A1. No Achievement Found 
+1. If the student does not have any achievements in 
+the system, they will be prompted to add new 
+achievements. 
+2. The student will be guided to the achievement form 
+where they can enter details. 
+Exceptions E1. Missing Data 
+1. If the student misses any required fields, the 
+system will prompt the student with an error 
+message “Please complete all the required fields 
+before submit your achievement.”. 
+E2. Invalid File Format 
+1. If the student uploads a document in an 
+unsupported format, the system will show an error 
+“Unsupported file format, please upload a PDF or 
+image file only.”. 
+Related 
+requirement 
+ID Requirement Priority 
+FR05-01 The system must 
+allow students to add, 
+edit and delete 
+achievements. 
+Basic 
+FR05-02 The system should 
+allow students to 
+upload supporting 
+documents. 
+High 
+FR05-03 The system must 
+ensure that 
+achievement data is 
+stored securely and is 
+retrievable by the 
+student, lecturer, or 
+administrator.  
+High 
+Sequence Diagram: 
+ 
+ 
+ 
+Activity Diagram: 
+
+ 
+ 
+ 
+ 
+(iv) Use Case 4: Reporting and Analytic 
+ 
+The table 4.3.2.4 shows the process of reporting and analytic module for admin to 
+use the dashboard for reporting and analytic work. 
+Table 4.3.2.4: Reporting and Analytic Use Case Specifications 
+History Log 1.0.0 Created initial use case 
+1.0.1 Updated normal flow and alternatives flow 
+2.0.0 Finalized use case and related 
+requirements 
+Version 2.0.0 
+Use Case ID UC-4 
+
+Use Case Name Reporting and Analytics 
+Created By Muhammad 
+Noor Azami 
+Updated By Muhammad 
+Noor Azami 
+Date Created 05/06/2025 Last Revision Date 05/06/2025 
+Actors Administrator 
+Description The reporting and analytics module allows administrators 
+to generate reports on student achievements, talents, and 
+overall performance for decision-making purpose. 
+Preconditions The user must be logged in to access as administrator. 
+Post conditions The system generates a report, which can be downloaded or 
+visualized. 
+Normal Flow 1. Administrator logs in to the system. 
+2. The administrator navigates to the reporting and 
+analytics section. 
+3. The administrator selects criteria for generating 
+report, such as data, category and achievement. 
+4. The system processes the request and generates a 
+report based on the selected criteria. 
+5. The report can be display as graph or table format, 
+downloaded as PDF file. 
+Alternative Flow A1. No Data Available 
+1. If no data matches the selected criteria, the system 
+will display a message “No data available, please 
+adjust the filter.”. 
+Exceptions E1. Report Generation Error 
+1. If there’s an error in generating the report, the 
+system will display an error message “There was 
+issue generating the report, please try again.”. 
+E2. Invalid Filters 
+1. If the administrator selects invalid or incompatible 
+filters, the system will display and error “Invalid filter 
+selection, please select valid criteria.”. 
+Related 
+requirement 
+ID Requirement Priority 
+FR05-01 The system must 
+allow administrators 
+Basic 
+to filter and generate 
+reports based on 
+student data. 
+FR05-02 The system should 
+generate reports in 
+visual formats for 
+better understanding. 
+High 
+FR05-03 The system should 
+allow downloading 
+reports in various 
+formats. 
+High 
+Sequence Diagram: 
+ 
+ 
+
+Activity Diagram: 
+ 
+ 
+  
+(v) Use Case 5: Talent Showcase and Posting Module 
+ 
+Table 4.3.2.5 shows talent showcase and posting modules for students and lecturers be 
+able to be posting anything related to their talent or showcase to everyone and receive 
+feedback comment of posting in real time. 
+Table 4.3.2.5: Talent Showcase and Posting Module Use Case Specifications 
+History Log 1.0.0 Created initial use case 
+1.0.1 Updated normal flow and alternatives flow 
+2.0.0 Finalized use case and related requirements 
+Version 2.0.0 
+Use Case ID UC-5 
+Use Case Name Talent Showcase and Posting 
+Created By Muhammad 
+Noor Azami 
+Updated By Muhammad 
+Noor Azami 
+Date Created 05/06/2025 Last Revision Date 05/06/2025 
+Actors Students, Lecturers, Administrator 
+Description The Talent Showcase and Posting module allows both 
+students and lecturers to upload and post content (text, 
+images, videos) to showcase their talents. They can also 
+
+comment on each other's posts to provide feedback and 
+interact. 
+Preconditions The user must be logged in to the system. 
+Post conditions The posted content is successfully uploaded and saved to 
+the system, the feedback is stored in the system. 
+Normal Flow 1. Student logs in to the system. 
+2. The student navigates to the talent showcase and 
+posting section. 
+3. The student selects an option to create a new post. 
+4. The student submits the post, and the system saves 
+the content. 
+5. The post is displayed in the system, visible to other 
+students, lecturers. 
+6. Student, and lectures can view the post and provide 
+feedback by commenting. 
+7. The student receives feedback notifications on the 
+post. 
+Alternative Flow A1. No Content Posted 
+1. If the user has no content to post, they will be 
+prompted with a message “Please upload content if 
+you have.”. 
+2. The user can then select to upload new content. 
+Exceptions E1. Invalid File Format 
+1. If the user uploads an invalid format, the system 
+will display an error message “Unsupported file 
+format, please upload image or video file.”. 
+E2. Missing Description 
+1. If the user posts without providing a description or 
+content, the system will prompt “Please provide a 
+description and upload content to post.”. 
+Related 
+requirement 
+ID Requirement Priority 
+FR08-01 The system must allow 
+students and lecturers 
+to post content. 
+High 
+FR08-02 The system should 
+allow users to comment 
+and provide feedback 
+on the posts. 
+High 
+FR08-03 The system should send 
+notifications to the post 
+owner when new 
+feedback is posted  
+Medium 
+Sequence Diagram: 
+ 
+ 
+Activity Diagram: 
+
+ 
+4.3.4 Class Diagram 
+A class diagram is a type of UML diagram that visually represents the structure of a 
+system by showing its classes, their attributes, methods, and relationships. It's used in 
+object-oriented software design to model the static structure of a system. 
+Figure 4.3.4 shows UML diagram for overall Student Talent Profiling App with 
+labelled data type to use for better workflow when developing the system app. 
+
+ 
+ 
+Figure 4.3.4: Class Diagram Student Talent Profiling App 
+ 
+4.3.5 Entity Relationship Diagram 
+An Entity Relationship Diagram (ERD) is a visual representation of how different 
+entities (objects or concepts) relate to each other in a system. ERDs are commonly 
+used in database design to model the structure of a database and ensure data integrity. 
+In this system, all modules with their own database model is designed to work together 
+
+and keep the database linked with each other while maintaining data integrity in flow 
+system. 
+ 
+ 
+ 
+   
+Figure 4.3.5: Entity Relationship Diagram for Student Talent Profiling App 
+ 
+4.3.6 Flowchart 
+ 
+A flowchart is a diagram that shows the steps in a process. It's used to visualize, 
+analyze, and communicate processes. Figure 4.3.6 shows a flowchart for the Student 
+Talent Profiling App from start to finish when using the app system. 
+
+ 
+   
+Figure 4.3.6: Student Talent Profiling App Flowchart 
+ 
+ 
+ 
+
+--- END OF Chapter 4 Part 2.pdf ---
+
+--- START OF Chapter 4 Part 3.pdf ---
+4.3  Design 
+After all the users’ requirements are successfully analyzed, the project will proceed in design 
+phase. In this phase, both interface and database had been designed to  help visualize the 
+system before proceeding with coding the system. 
+4.3.1 System Architecture 
+ 
+ 
+ 
+Figure 4.3.1 shows the system architecture of system-based block diagram  
+ 
+  
+
+4.3.2 Database Design 
+Schema Table and data dictionary 
+The following are the tables from the database that have been designed and extracted from 
+the class diagram. The data using MySQL technology to handle it. 
+i. Tbl_user: (userID, username, password, role, email, fullName) 
+ii. Tb1_profile: (profileID, userID, talentCategory, skills, 
+achievements) 
+iii. Tb1_achievement: (achievementID, userID, achievementName, date, 
+category, proofFile) 
+iv. Tb1_feedback: (feedbackID, userID, postID, commmentText, date) 
+4.3.2.1 User Table 
+Users in the showed table 4.3.2.1 include student and lecturer information such as name 
+and password to login in the system for next time. This also applies to the administrator 
+to store all the required information. 
+ 
+Table 4.3.2.1: User table 
+  Data Type  Size  Key  Descriptions  
+userID  VARCHAR  N/A Primary Key Primary key, unique 
+identifier for each 
+user. 
+Username VARCHAR 50 Unique User’s login name 
+Password VARCHAR 255  Encrypted password for 
+authentication 
+role VARCHAR 20  User’s role 
+email VARCHAR 100 Unique User’s email address 
+fullName VARCHAR 100  Full name of the user. 
+ 
+ 
+4.3.2.2 profile Table 
+profile table in 4.3.2.2 shows data stored when user creating profile in the system. 
+Table 4.3.2.2: profile table 
+Attributes  Data Type  Size  Key  Descriptions  
+profileID  INT  N/A Primary Key Primary key, unique 
+profile identifier 
+userID INT N/A Foreign Key Foreign key from 
+TB1_user, link to the 
+user’s ID 
+talentCategory VARCHAR 100  Talent category 
+skills TEXT N/A  Skill listed in the 
+profile 
+Achievement TEXT N/A Unique List of achievements 
+ 
+4.3.2.3 achievement Table 
+Table 4.3.2.3 shows the data for achievement when the user added or edit to show it in 
+profile.  
+Table 4.3.2.1: achievement table 
+Attributes  Data Type  Size  Key  Descriptions  
+achievementID INT  N/A Primary Key Primary key, unique 
+achievement identifier 
+userID INT N/A Foreign Key Foreign key from 
+TB1_user, link to the 
+student 
+achievementName VARCHAR 100  Name of the achievement 
+date DATE N/A  Date the achievement 
+was awarded 
+Category VARCHAR 50 Unique Category of the 
+achievement 
+proofFile VARCHAR 255  Path to the supporting 
+file or certificate 
+ 
+4.3.2.4 feedback Table 
+This table 4.3.2.4 stores feedback or comments from lecturers or students on talent 
+showcase posts.  
+Table 4.3.2.4: feedback Table 
+Attributes  Data Type  Size  Key  Descriptions  
+feedbackID  INT  N/A Primary Key Primary key, unique 
+feedback identifier 
+userID INT N/A Foreign Key Foreign key from 
+TB1_user, identifier 
+user providing the 
+feedback 
+postID INT 100 Foreign Key Foreign key to a 
+specific talent 
+showcase post 
+commonText TEXT N/A  Feedback text 
+date DATE N/A Unique Date the feedback was 
+posted 
+ 
+4.3.3 Interface Design 
+The following are the interfaces wireframe that have been designed based on each process in 
+Figure 4.2. The wireframe is designed using Figma software.  
+ 
+ 
+4.3.3.1 Login the app Interfaces 
+ 
+This is the wireframe interface for login module, where students will fill in their information 
+using SMAP to login to the system. If the account is valid, then they will bring it to the 
+dashboard for normal users but for new users, they will bring it to t he registration section to 
+create their own profile.  
+
+ 
+ 
+Figure 4.3.3.2: Profile Management Interfaces 
+ 
+For the second module, which is profile management, the page will show user information 
+including experience, project etc. It also shows the status of student performance to monitor 
+based on grade and curriculum activities for students to balance it. 
+
+ 
+Figure 4.3.3.3: Achievement and Event Program Interface 
+ 
+For the third module, achievement also can be seen from profile interface for quick view. For 
+any student that wants to look for new achievement or volunteering in any events and program, 
+they can explore any events UTHM currently has in the campus for students. Figure 4.3.3.3 
+shows example of events and programs faculty held to look for student participation.  
+ 
+Figure 4.3.3.4: Web Admin Dashboard Interfaces 
+
+For the next module, reporting and analytic interfaces are available on desktop versions since 
+it use web version for better experience due to ratio aspect and screen size. The web shows 
+the main dashboard for admin to quicken view all data available from students. There is quick 
+navigation for admin to navigate to other page for reporting and access full graph for full 
+reporting. 
+ 
+Figure 4.3.3.5: Talent Showcase and Posting Interfaces 
+ 
+For the last module, talent showcase is a section where students and lecturers can post any 
+image, video or text to the public for impression and build strong connections community in 
+the app, like social media as example. The user can like, comment and share the posting to 
+anyone.  
+4.4 Chapter Summary 
+Tis chapter 4 is focused on Analysis and Design of the Student Talent Profiling App. It 
+provides a comprehensive overview of system design, covering the system modules, 
+functional and non-functional requirements, user requirements, hardware and software 
+specifications, system architecture, and database design. All of this to ensure seamless 
+experience for all users.
+
+ 
+--- END OF Chapter 4 Part 3.pdf ---
+

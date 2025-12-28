@@ -77,3 +77,10 @@ build/Release
 
 # Generated files
 .dataconnect
+
+# SSH Keys & Oracle Cloud
+*.key
+*.pem
+ssh-key-*.key
+ssh-key-*.pub
+oci_auto_create.py
