@@ -132,8 +132,8 @@ jobs:
             # Cleanup old images
             docker image prune -f
 
-            # Health check
-            sleep 10
+            # Health check (wait 30s for AI models to load)
+            sleep 30
             curl -f http://localhost:8000/health || exit 1
 
       - name: 📋 Deployment Summary
