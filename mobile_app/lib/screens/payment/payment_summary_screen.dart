@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../models/event_model.dart';
 import '../../models/profile_model.dart';
 import '../../services/toyyibpay_service.dart';
@@ -48,7 +49,10 @@ class _PaymentSummaryScreenState extends State<PaymentSummaryScreen> {
     debugPrint('========================================');
     debugPrint('🔵 PAY BUTTON CLICKED');
     debugPrint('🔵 _userProfile: ${_userProfile?.fullName ?? "NULL"}');
+    debugPrint(
+        '🔵 Platform: ${kIsWeb ? "Web (via backend proxy)" : "Mobile (direct)"}');
     debugPrint('========================================');
+
     if (_userProfile == null) {
       debugPrint('❌ _userProfile is null! Cannot proceed.');
       ScaffoldMessenger.of(context).showSnackBar(

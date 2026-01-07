@@ -4,9 +4,9 @@
  */
 
 class BackendConfig {
-  // Use Render backend for production APK (stable URL)
-  // Use Render backend for production APK (stable URL)
-  static const String baseUrl = 'https://prototype-348e.onrender.com';
+  // Use Cloudflare Tunnel for backend connection
+  static const String baseUrl =
+      'https://graph-violin-throwing-governments.trycloudflare.com';
 
   // Use local backend for development (Android Emulator)
   // static const String baseUrl = 'http://10.0.2.2:8000';

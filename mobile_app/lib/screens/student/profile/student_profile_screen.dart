@@ -555,6 +555,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                           title: 'Skills',
                           icon: Icons.psychology_outlined,
                           height: 220,
+                          onTap: profile.skills.isEmpty
+                              ? () => _navigateToEditProfile(profile)
+                              : null,
                           child: profile.skills.isNotEmpty
                               ? Wrap(
                                   spacing: 6,
@@ -762,6 +765,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                   ),
                                 ),
                               );
+                            } else {
+                              // Navigate to edit profile to add experience
+                              _navigateToEditProfile(profile);
                             }
                           },
                           child: profile.experiences.isNotEmpty
@@ -807,6 +813,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                                   ),
                                 ),
                               );
+                            } else {
+                              // Navigate to edit profile to add projects
+                              _navigateToEditProfile(profile);
                             }
                           },
                           child: profile.projects.isNotEmpty

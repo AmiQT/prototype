@@ -193,6 +193,7 @@ from app.routers import (
     events,
     media,
     ml_analytics,
+    payment,
     profiles_supabase,
     search,
     showcase,
@@ -216,6 +217,7 @@ app.include_router(ai_langchain.router)  # NEW: LangChain Agentic AI v2
 app.include_router(ml_analytics.router)  # ML analytics with student risk prediction
 app.include_router(student_balance.router)  # Student balance analysis with AI action plans
 app.include_router(talents.router)  # Talent system - soft skills, hobbies, quiz
+app.include_router(payment.router)  # ToyyibPay payment proxy
 
 # Additional routers will be added as we build them
 # from app.routers import media, analytics, sync
