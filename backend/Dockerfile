@@ -33,11 +33,11 @@ ENV PATH="/opt/venv/bin:$PATH"
 RUN pip install --upgrade pip setuptools wheel && \
     pip install -r requirements.txt
 
-# Download spaCy model (English small for efficiency)
-RUN python -m spacy download en_core_web_sm
-
 # Download NLTK data
 RUN python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet')"
+
+# Download spaCy model
+RUN python -m spacy download en_core_web_sm
 
 # -----------------------------------------------------------------------------
 # Stage 2: Production - Minimal runtime image
