@@ -264,7 +264,18 @@ async def batch_predict(body: dict = None, db: Session = Depends(get_db)):
                 if sd.get("id") == pred.get("student_id") or sd.get("student_id") == pred.get("student_id"):
                     pred["display_id"] = sd.get("student_id", pred.get("student_id", "")[:8])
                     pred["full_name"] = sd.get("full_name", "Unknown")
+                    
+                    print(f"DEBUG: MATCH FOUND! Merging data for {pred['student_id']}")
+                    print(f"DEBUG: Setting CGPA={sd.get('cgpa')} and Koku={sd.get('kokurikulum_score')}")
+
+                    # Force merge CGPA and Koku for display/heatmap (Frontend expects current_cgpa)
+                    # Use the values we fetched from DB, default to 0 if missing
+                    pred["current_cgpa"] = sd.get("cgpa", 0.0)
+                    pred["kokurikulum_score"] = sd.get("kokurikulum_score", 0)
+                    
                     break
+            else:
+                print(f"DEBUG: NO MATCH found for pred_id={pred.get('student_id')}")
 
         return {
             "status": "success",

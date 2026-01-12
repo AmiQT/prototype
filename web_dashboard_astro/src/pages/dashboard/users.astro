@@ -230,6 +230,18 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
                                 placeholder="e.g. FSKTM"
                             />
                         </div>
+                        <div class="col-span-2">
+                            <label
+                                class="block text-sm font-medium text-gray-700 mb-1"
+                                >ID Number (Student/Staff ID)</label
+                            >
+                            <input
+                                type="text"
+                                id="add-student-id"
+                                class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#667eea]"
+                                placeholder="e.g. AI210001 or Staff ID"
+                            />
+                        </div>
                     </div>
 
                     <div class="flex justify-end gap-3 mt-6">
@@ -315,6 +327,18 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
                                 class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#667eea]"
                             />
                         </div>
+                        <div class="col-span-2">
+                            <label
+                                class="block text-sm font-medium text-gray-700 mb-1"
+                                >ID Number (Student/Staff ID)</label
+                            >
+                            <input
+                                type="text"
+                                id="edit-student-id"
+                                class="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:border-[#667eea]"
+                                placeholder="e.g. AI210001"
+                            />
+                        </div>
                     </div>
 
                     <div class="flex justify-end gap-3 mt-6">
@@ -378,6 +402,9 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
         const department = (
             document.getElementById("add-department") as HTMLInputElement
         ).value;
+        const studentId = (
+            document.getElementById("add-student-id") as HTMLInputElement
+        ).value;
 
         try {
             // Get current session for admin authorization
@@ -407,6 +434,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
                         name: name,
                         role: role,
                         department: department,
+                        student_id: studentId,
                         is_active: true,
                     }),
                 },
@@ -438,15 +466,19 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     });
 
     // Edit User Logic
+
     const editModal = document.getElementById("edit-user-modal");
     const editForm = document.getElementById("edit-user-form");
     const nameInput = document.getElementById("edit-name") as HTMLInputElement;
     const emailInput = document.getElementById(
         "edit-email",
     ) as HTMLInputElement;
-    const roleInput = document.getElementById("edit-role") as HTMLInputElement;
+    const roleInput = document.getElementById("edit-role") as HTMLSelectElement;
     const deptInput = document.getElementById(
         "edit-department",
+    ) as HTMLInputElement;
+    const idNumInput = document.getElementById(
+        "edit-student-id",
     ) as HTMLInputElement;
     const idInput = document.getElementById("edit-user-id") as HTMLInputElement;
 
@@ -466,6 +498,8 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
             emailInput.value = user.email || "";
             roleInput.value = user.role || "student";
             deptInput.value = user.department || "";
+            // Populate Student ID or Staff ID
+            idNumInput.value = user.student_id || user.staff_id || "";
 
             // Show modal
             editModal?.classList.remove("hidden");
@@ -494,6 +528,8 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
             email: emailInput.value,
             role: roleInput.value,
             department: deptInput.value,
+            student_id: idNumInput.value, // Update student_id
+            staff_id: roleInput.value === 'lecturer' || roleInput.value === 'admin' ? idNumInput.value : null, // Smart logic: also update staff_id if needed
             updated_at: new Date().toISOString(),
         };
 
@@ -519,6 +555,8 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
                 "<span>Save Changes</span>";
         }
     });
+
+
 
     async function loadUsers() {
         // ... (existing code)

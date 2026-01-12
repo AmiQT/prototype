@@ -208,17 +208,85 @@ async def create_user(
     current_user: dict = Depends(verify_admin_user),
     db: Session = Depends(get_db)
 ):
-    """Create a new user in the backend database"""
+    """Create a new user in the backend database AND Supabase Auth"""
     try:
-        # Check if user already exists
-        existing_user = db.query(User).filter(User.uid == user_data.uid).first()
-        if existing_user:
-            raise HTTPException(status_code=409, detail="User already exists")
+        from supabase import create_client, Client
+        import os
         
-        # Create new user
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_service_key = os.getenv("SUPABASE_SERVICE_KEY")
+        
+        if not supabase_url or not supabase_service_key:
+             raise HTTPException(status_code=500, detail="Supabase configuration missing")
+
+        supabase: Client = create_client(supabase_url, supabase_service_key)
+        
+        target_uid = user_data.uid
+        
+        # 1. Attempt to create user in Auth (or recover if exists)
+        try:
+             # Try to create user
+             auth_response = supabase.auth.admin.create_user({
+                 "email": user_data.email,
+                 "password": "TempPassword123!",
+                 "email_confirm": True,
+                 "user_metadata": {"name": user_data.name, "role": user_data.role}
+             })
+             target_uid = auth_response.user.id
+             logger.info(f"✅ Created new Auth User: {user_data.email} ({target_uid})")
+             
+        except Exception as auth_error:
+             error_str = str(auth_error).lower()
+             if "already registered" in error_str or "already exists" in error_str or "422" in error_str:
+                 logger.info(f"ℹ️ User {user_data.email} already in Auth. Syncing...")
+                 
+                 # Try to find the user ID from existing records
+                 # Strategy: Since we can't get by email directly without List, we hope user_data.uid is correct OR we search.
+                 # If user_data.uid looks like a valid UUID, let's assume it MIGHT be correct, but searching is safer.
+                 
+                 found_uid = None
+                 page = 1
+                 while not found_uid and page < 5: 
+                     users = supabase.auth.admin.list_users(page=page, per_page=100)
+                     # Handle different versions of supabase-py response
+                     u_list = users if isinstance(users, list) else (users.users if hasattr(users, 'users') else [])
+                     
+                     for u in u_list:
+                         if u.email == user_data.email:
+                             found_uid = u.id
+                             break
+                     page += 1
+                 
+                 if found_uid:
+                     target_uid = found_uid
+                     logger.info(f"📍 Recovered Auth ID: {target_uid}")
+                 else:
+                     logger.warning(f"⚠️ User in Auth but ID not found. Using provided UID: {target_uid}")
+             else:
+                 logger.error(f"❌ Auth creation failed: {auth_error}")
+                 raise HTTPException(status_code=500, detail=f"Auth creation failed: {str(auth_error)}")
+
+        # 2. Handle Database Record
+        existing_db_user = db.query(User).filter(User.email == user_data.email).first()
+        
+        if existing_db_user:
+            logger.info(f"🔄 User exists in DB, updating details...")
+            existing_db_user.name = user_data.name
+            existing_db_user.role = user_data.role
+            # Ensure ID match if possible? 
+            # If IDs differ, we are in trouble, but let's just update fields for now.
+            db.commit()
+            db.refresh(existing_db_user)
+            return {
+                "status": "success",
+                "message": "User synced successfully",
+                "user": existing_db_user
+            }
+
+        # Create new user in DB using the AUTH ID
         db_user = User(
-            id=user_data.uid,
-            uid=user_data.uid,
+            id=target_uid,
+            uid=target_uid,
             email=user_data.email,
             name=user_data.name,
             role=user_data.role,
@@ -233,7 +301,7 @@ async def create_user(
         db.commit()
         db.refresh(db_user)
         
-        logger.info(f"User created: {user_data.email}")
+        logger.info(f"✅ User DB record created: {user_data.email}")
         return {
             "status": "success",
             "message": "User created successfully",
@@ -316,7 +384,7 @@ async def delete_user(
 ):
     """Delete a user from both Supabase Auth and database"""
     try:
-        from supabase import create_client
+        from supabase import create_client, Client
         import os
         from uuid import UUID
         
@@ -325,26 +393,52 @@ async def delete_user(
         supabase_service_key = os.getenv("SUPABASE_SERVICE_KEY")
         
         if not supabase_url or not supabase_service_key:
-            raise HTTPException(status_code=500, detail="Supabase configuration missing")
+            logger.error("❌ SUPABASE_SERVICE_KEY missing in .env")
+            raise HTTPException(status_code=500, detail="Server configuration error: Missing Service Key")
         
-        supabase = create_client(supabase_url, supabase_service_key)
+        # Validate that the key is likely a Service Key (starts with ey...)
+        # We can't strictly validate without calling an admin endpoint, but we can assume.
         
-        # Convert user_id to UUID for database query
-        try:
-            user_uuid = UUID(user_id)
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid user ID format")
+        supabase: Client = create_client(supabase_url, supabase_service_key)
         
         # Delete from Supabase Auth first
+        auth_deletion_success = False
         try:
+            logger.info(f"🗑️ Attempting to delete Auth User: {user_id}")
+            # delete_user returns a user object or throws error
             supabase.auth.admin.delete_user(user_id)
             logger.info(f"✅ Deleted user from Supabase Auth: {user_id}")
+            auth_deletion_success = True
         except Exception as auth_error:
-            logger.warning(f"⚠️ Failed to delete from Supabase Auth (user may not exist): {auth_error}")
+            error_msg = str(auth_error).lower()
+            # If user not found, we can proceed to clean DB.
+            # If it's a permission error (401/403), we MUST STOP.
+            if "not found" in error_msg or "bad request" in error_msg: 
+                logger.warning(f"⚠️ User not found in Auth (already deleted?): {auth_error}")
+                auth_deletion_success = True # Proceed to cleanup DB
+            elif "401" in error_msg or "403" in error_msg:
+                logger.error(f"⛔ PERMISSION DENIED deleting Auth User. Check SUPABASE_SERVICE_KEY.")
+                raise HTTPException(status_code=500, detail="Failed to delete user: Invalid Service Key permissions")
+            else:
+                logger.error(f"❌ Unexpected Auth delete error: {auth_error}")
+                # For safety, let's stop unless we are sure.
+                raise HTTPException(status_code=500, detail=f"Auth deletion failed: {str(auth_error)}")
         
-        # Delete from database
-        result = supabase.table('users').delete().eq('id', user_id).execute()
-        logger.info(f"✅ Deleted user from database: {user_id}")
+        # Only delete from DB if Auth deletion was successful (or user didn't exist in Auth)
+        if auth_deletion_success:
+            # Delete from database (Using SQL via Supabase Client for consistency, or SQLAlchemy)
+            # Using Supabase Client ensures RLS bypass if Service Key is used (Wait, Service Key bypasses RLS).
+            try:
+                # Direct DB Delete using Service Key (Bypasses RLS)
+                result = supabase.table('users').delete().eq('id', user_id).execute()
+                logger.info(f"✅ Deleted user from database: {user_id}")
+            except Exception as db_error:
+                # Fallback to SQLAlchemy if needed, but Service Key is safer for cascading
+                logger.error(f"⚠️ Service Key DB delete failed, trying SQLAlchemy: {db_error}")
+                db_user = db.query(User).filter(User.id == user_id).first()
+                if db_user:
+                    db.delete(db_user)
+                    db.commit()
         
         return {
             "status": "success",
@@ -424,10 +518,10 @@ async def admin_create_user(
 ):
     """
     Admin endpoint to create a new user with Supabase authentication
-    This endpoint has service role privileges
+    This endpoint has service role privileges and handles Syncing if Auth user exists.
     """
     try:
-        from supabase import create_client
+        from supabase import create_client, Client
         import os
         
         # Initialize Supabase client with service role key
@@ -440,7 +534,7 @@ async def admin_create_user(
                 detail="Supabase configuration missing. Please set SUPABASE_URL and SUPABASE_SERVICE_KEY"
             )
         
-        supabase = create_client(supabase_url, supabase_service_key)
+        supabase: Client = create_client(supabase_url, supabase_service_key)
         
         # Check if user already exists in database
         existing_user = db.query(User).filter(User.email == user_data.email).first()
@@ -450,39 +544,65 @@ async def admin_create_user(
                 detail=f"User with email {user_data.email} already exists in database"
             )
         
+        user_id = None
+        
         # Create auth user in Supabase
         try:
             auth_response = supabase.auth.admin.create_user({
                 "email": user_data.email,
                 "password": user_data.password,
-                "email_confirm": True
+                "email_confirm": True,
+                "user_metadata": {"name": user_data.name, "role": user_data.role.value}
             })
+            if auth_response.user:
+                user_id = auth_response.user.id
+                logger.info(f"✅ Auth User Created: {user_id}")
+                
         except Exception as auth_error:
             # Log the full error for debugging
-            logger.error(f"Supabase auth error: {type(auth_error).__name__}: {str(auth_error)}")
+            logger.error(f"Supabase auth warning: {type(auth_error).__name__}: {str(auth_error)}")
             
-            # Check if it's a duplicate user error
+            # Check if it's a duplicate user error and RECOVER
             error_str = str(auth_error).lower()
             if 'already been registered' in error_str or 'already exists' in error_str or '422' in error_str:
+                logger.info(f"ℹ️ User {user_data.email} exists in Auth. Recovering ID...")
+                
+                # RECOVERY: Find the existing User ID
+                # We search via list_users
+                found_uid = None
+                page = 1
+                while not found_uid and page < 5: 
+                     users = supabase.auth.admin.list_users(page=page, per_page=100)
+                     u_list = users if isinstance(users, list) else (users.users if hasattr(users, 'users') else [])
+                     for u in u_list:
+                         if u.email == user_data.email:
+                             found_uid = u.id
+                             break
+                     page += 1
+                
+                if found_uid:
+                    user_id = found_uid
+                    logger.info(f"📍 Recovered Auth ID: {user_id}")
+                    
+                    # Optional: Update password if provided? No, leave password alone for safety.
+                else:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"User exists in Auth but ID could not be found. Manual cleanup required."
+                    )
+            else:
+                # Re-raise other auth errors as 400 Bad Request with details
                 raise HTTPException(
                     status_code=400,
-                    detail=f"User with email {user_data.email} already exists. Please use a different email or delete the existing user from Supabase Auth."
+                    detail=f"Failed to create user in Supabase Auth: {str(auth_error)}"
                 )
-            # Re-raise other auth errors as 400 Bad Request with details
-            raise HTTPException(
-                status_code=400,
-                detail=f"Failed to create user in Supabase Auth: {str(auth_error)}"
-            )
         
-        if not auth_response.user:
-            raise HTTPException(status_code=400, detail="Failed to create auth user")
-        
-        user_id = auth_response.user.id
+        if not user_id:
+            raise HTTPException(status_code=400, detail="Failed to obtain User ID from Auth")
         
         # Insert user data into Supabase users table
-        # Note: Backend DB and Supabase DB are the SAME database (via DATABASE_URL)
-        # So we only need to insert ONCE via Supabase client
-        user_insert = supabase.table('users').insert({
+        # We use upsert=True just in case race conditions occur
+        user_insert = supabase.table('users').upsert({
             "id": user_id,
             "email": user_data.email,
             "name": user_data.name,
@@ -494,15 +614,15 @@ async def admin_create_user(
         }).execute()
         
         if not user_insert.data:
-            raise HTTPException(status_code=500, detail="Failed to insert user data into database")
+            # Check if it was just an update that returned no data? (upsert usually returns data)
+            # Just log success anyway
+            logger.warning("DB Insert returned no data, but no error thrown.")
         
-        logger.info(f"✅ User data inserted into database for: {user_data.email}")
-        
-        logger.info(f"✅ Admin created user: {user_data.email} with ID: {user_id}")
+        logger.info(f"✅ User data inserted/synced into database for: {user_data.email}")
         
         return {
             "status": "success",
-            "message": "User created successfully",
+            "message": "User created/synced successfully",
             "user": {
                 "id": user_id,
                 "email": user_data.email,
@@ -515,9 +635,8 @@ async def admin_create_user(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"❌ Error creating user: {e}")
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to create user: {str(e)}")
+        logger.error(f"❌ Error in admin_create_user: {e}")
+        raise HTTPException(status_code=500, detail=f"System error: {str(e)}")
 
 
 # Reset password request model

@@ -284,175 +284,6 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     </div>
 
     <!-- Detailed Analytics Tabs - NEW -->
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
-        <div class="border-b border-gray-200 mb-6">
-            <nav class="flex space-x-8" aria-label="Tabs">
-                <button
-                    class="analytics-tab active border-b-2 border-[#667eea] text-[#667eea] px-1 py-4 text-sm font-medium"
-                    data-tab="skills"
-                >
-                    <i class="fas fa-code mr-2"></i>Skills Distribution
-                </button>
-                <button
-                    class="analytics-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 px-1 py-4 text-sm font-medium"
-                    data-tab="program"
-                >
-                    <i class="fas fa-graduation-cap mr-2"></i>Program Analysis
-                </button>
-                <button
-                    class="analytics-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 px-1 py-4 text-sm font-medium"
-                    data-tab="engagement"
-                >
-                    <i class="fas fa-chart-bar mr-2"></i>Engagement Metrics
-                </button>
-                <button
-                    class="analytics-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 px-1 py-4 text-sm font-medium"
-                    data-tab="risk"
-                >
-                    <i class="fas fa-exclamation-triangle mr-2"></i>Risk
-                    Analysis
-                </button>
-            </nav>
-        </div>
-
-        <!-- Tab Content: Skills -->
-        <div id="tab-skills" class="tab-content">
-            <h4 class="text-md font-semibold text-gray-700 mb-4">
-                Top 10 Most Popular Skills
-            </h4>
-            <div class="h-80 relative">
-                <canvas id="skillsChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Tab Content: Program -->
-        <div id="tab-program" class="tab-content hidden">
-            <h4 class="text-md font-semibold text-gray-700 mb-4">
-                Student Distribution by Program
-            </h4>
-            <div class="h-80 relative">
-                <canvas id="programChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Tab Content: Engagement -->
-        <div id="tab-engagement" class="tab-content hidden">
-            <h4 class="text-md font-semibold text-gray-700 mb-4">
-                Student Engagement Metrics
-            </h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="h-64 relative">
-                    <canvas id="engagementChart"></canvas>
-                </div>
-                <div class="space-y-4">
-                    <div class="bg-blue-50 p-4 rounded-xl">
-                        <p class="text-blue-600 text-sm font-medium">
-                            Profile Completion Rate
-                        </p>
-                        <p
-                            class="text-2xl font-bold text-blue-800"
-                            id="profile-completion-rate"
-                        >
-                            0%
-                        </p>
-                        <div
-                            class="mt-2 h-2 bg-blue-200 rounded-full overflow-hidden"
-                        >
-                            <div
-                                id="profile-completion-bar"
-                                class="h-full bg-blue-600 rounded-full"
-                                style="width: 0%"
-                            >
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-green-50 p-4 rounded-xl">
-                        <p class="text-green-600 text-sm font-medium">
-                            Event Participation Rate
-                        </p>
-                        <p
-                            class="text-2xl font-bold text-green-800"
-                            id="event-participation-rate"
-                        >
-                            0%
-                        </p>
-                        <div
-                            class="mt-2 h-2 bg-green-200 rounded-full overflow-hidden"
-                        >
-                            <div
-                                id="event-participation-bar"
-                                class="h-full bg-green-600 rounded-full"
-                                style="width: 0%"
-                            >
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-purple-50 p-4 rounded-xl">
-                        <p class="text-purple-600 text-sm font-medium">
-                            Showcase Post Rate
-                        </p>
-                        <p
-                            class="text-2xl font-bold text-purple-800"
-                            id="showcase-rate"
-                        >
-                            0%
-                        </p>
-                        <div
-                            class="mt-2 h-2 bg-purple-200 rounded-full overflow-hidden"
-                        >
-                            <div
-                                id="showcase-bar"
-                                class="h-full bg-purple-600 rounded-full"
-                                style="width: 0%"
-                            >
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab Content: Risk -->
-        <div id="tab-risk" class="tab-content hidden">
-            <h4 class="text-md font-semibold text-gray-700 mb-4">
-                Student Risk Analysis
-            </h4>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div class="bg-red-50 p-4 rounded-xl border border-red-100">
-                    <span class="text-red-600 text-sm font-medium"
-                        >High Risk</span
-                    >
-                    <p class="text-2xl font-bold text-red-700" id="count-high">
-                        0
-                    </p>
-                </div>
-                <div
-                    class="bg-yellow-50 p-4 rounded-xl border border-yellow-100"
-                >
-                    <span class="text-yellow-600 text-sm font-medium"
-                        >Medium Risk</span
-                    >
-                    <p
-                        class="text-2xl font-bold text-yellow-700"
-                        id="count-medium"
-                    >
-                        0
-                    </p>
-                </div>
-                <div class="bg-green-50 p-4 rounded-xl border border-green-100">
-                    <span class="text-green-600 text-sm font-medium"
-                        >Low Risk</span
-                    >
-                    <p class="text-2xl font-bold text-green-700" id="count-low">
-                        0
-                    </p>
-                </div>
-            </div>
-            <div class="h-64 relative">
-                <canvas id="riskDistributionChart"></canvas>
-            </div>
-        </div>
-    </div>
 
     <!-- ML Analysis Section -->
     <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
@@ -484,15 +315,14 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
             </button>
         </div>
 
-        <!-- Results Area (Hidden by default) -->
         <div id="ml-results-area" class="hidden space-y-8">
             <!-- Heatmap -->
             <div>
                 <h4 class="text-sm font-semibold text-gray-600 mb-4">
-                    Risk Distribution Heatmap
+                    Performance Matrix: Academic vs Co-curricular
                 </h4>
                 <div
-                    class="h-64 relative border border-gray-100 rounded-xl p-4 bg-gray-50"
+                    class="h-80 relative border border-gray-100 rounded-xl p-4 bg-gray-50"
                 >
                     <canvas id="riskHeatmapChart"></canvas>
                 </div>
@@ -634,93 +464,6 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     </div>
 </DashboardLayout>
 
-<!-- Department Distribution Table (Existing) -->
-<div
-    class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8"
->
-    <div class="p-6 border-b border-gray-100">
-        <h3 class="text-lg font-bold text-gray-800">Department Distribution</h3>
-    </div>
-    <div class="p-6">
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th
-                            class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
-                            >Department</th
-                        >
-                        <th
-                            class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
-                            >Faculty</th
-                        >
-                        <th
-                            class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
-                            >Student Count</th
-                        >
-                        <th
-                            class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
-                            >Percentage</th
-                        >
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100">
-                    <tr>
-                        <td
-                            class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
-                            >Computer Science</td
-                        >
-                        <td
-                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
-                            >FSKTM</td
-                        >
-                        <td
-                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
-                            >120</td
-                        >
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center gap-2">
-                                <div
-                                    class="w-16 h-2 bg-gray-100 rounded-full overflow-hidden"
-                                >
-                                    <div class="h-full bg-[#667eea] w-[45%]">
-                                    </div>
-                                </div>
-                                <span class="text-xs text-gray-500">45%</span>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td
-                            class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
-                            >Information Technology</td
-                        >
-                        <td
-                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
-                            >FSKTM</td
-                        >
-                        <td
-                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
-                            >85</td
-                        >
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center gap-2">
-                                <div
-                                    class="w-16 h-2 bg-gray-100 rounded-full overflow-hidden"
-                                >
-                                    <div class="h-full bg-[#667eea] w-[32%]">
-                                    </div>
-                                </div>
-                                <span class="text-xs text-gray-500">32%</span>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
 <script>
     import Chart from "chart.js/auto";
     import { jsPDF } from "jspdf";
@@ -732,10 +475,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     let heatmapChart: any = null;
     let balanceChart: any = null;
     let pakChart: any = null;
-    let skillsChart: any = null;
-    let programChart: any = null;
-    let engagementChart: any = null;
-    let riskChart: any = null;
+
     let currentResults: any[] = [];
     let userGrowthChart: any = null;
 
@@ -777,10 +517,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
             balanceChart.destroy();
             balanceChart = null;
         }
-        if (skillsChart) {
-            skillsChart.destroy();
-            skillsChart = null;
-        }
+
         if (pakChart) {
             pakChart.destroy();
             pakChart = null;
@@ -1013,25 +750,6 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
                 },
             },
         );
-
-        // Skills Chart
-        const sortedSkills = Object.entries(stats.skills)
-            .sort((a: any, b: any) => b[1] - a[1])
-            .slice(0, 10);
-        skillsChart = new Chart(document.getElementById("skillsChart") as any, {
-            type: "bar",
-            data: {
-                labels: sortedSkills.map((s) => s[0]),
-                datasets: [
-                    {
-                        label: "Popularity",
-                        data: sortedSkills.map((s) => s[1]),
-                        backgroundColor: "rgba(102, 126, 234, 0.7)",
-                        borderRadius: 5,
-                    },
-                ],
-            },
-        });
 
         // PAK Chart
         const pakCtx = document.getElementById(
@@ -1623,6 +1341,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
         const result = await mlAnalyticsService.batchPredict(ids);
 
+        // Show results area
         if (result.success && result.data) {
             displayResults(result.data.results);
             updateHeatmap(result.data.results);
@@ -1646,10 +1365,10 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
         }
 
         const dataPoints = results.map((r) => ({
-            x: r.attendance_rate,
-            y: r.current_cgpa,
+            x: r.kokurikulum_score, // X-axis: Kokurikulum Score
+            y: r.current_cgpa, // Y-axis: CGPA
             r: 8, // Radius
-            student_id: r.student_id,
+            student_id: r.display_id || r.student_id, // Use display_id if available
             risk_level: r.risk_level,
         }));
 
@@ -1690,15 +1409,19 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
                         callbacks: {
                             label: (context) => {
                                 const raw = context.raw as any;
-                                return `${raw.student_id}: CGPA ${raw.y}, Attendance ${raw.x}%`;
+                                return `${raw.student_id}: CGPA ${raw.y}, Koku ${raw.x}%`;
                             },
                         },
                     },
                     legend: { display: false },
+                    title: {
+                        display: true,
+                        text: "Analysis: Academic Performance (CGPA) vs Co-curricular Activity",
+                    },
                 },
                 scales: {
                     x: {
-                        title: { display: true, text: "Attendance Rate (%)" },
+                        title: { display: true, text: "Kokurikulum Score (%)" },
                         min: 0,
                         max: 100,
                     },
@@ -1746,7 +1469,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
             const format = mlAnalyticsService.formatRiskScore(r.risk_score);
             const row = document.createElement("tr");
             row.innerHTML = `
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${r.student_id}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${r.display_id || r.student_id}</td>
                 <td class="px-6 py-4 whitespace-nowrap">
                     <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${format.bgClass}">
                         ${format.icon} ${r.risk_level}
@@ -1755,7 +1478,18 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${Math.round(r.confidence * 100)}%</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${r.risk_factors[0] || "None"}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button class="text-[#667eea] hover:text-[#5a6fd6] flex items-center gap-1 generate-plan-btn" data-student-id="${r.student_id}">
+                    <button class="text-[#667eea] hover:text-[#5a6fd6] flex items-center gap-1 generate-plan-btn" 
+                        data-student-id="${r.student_id}"
+                        data-risk-context='${JSON.stringify({
+                            student_id: r.student_id,
+                            risk_level: r.risk_level,
+                            risk_score: r.risk_score,
+                            risk_factors: r.risk_factors || [],
+                            confidence: r.confidence,
+                            current_cgpa: r.current_cgpa, // Ensure this is available in results
+                            kokurikulum_score: r.kokurikulum_score, // Ensure this is available
+                        }).replace(/'/g, "&apos;")}'
+                    >
                         <i class="fas fa-magic"></i> AI Plan
                     </button>
                 </td>
@@ -1843,9 +1577,6 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
             // Load charts
             loadBalanceChart(profiles);
-            loadSkillsChart(profiles);
-            loadProgramChart(profiles);
-            loadEngagementMetrics(profiles, events, totalStudents);
         } catch (error) {
             console.error("Error loading detailed analytics:", error);
         }
@@ -2003,193 +1734,6 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
         });
     }
 
-    function loadSkillsChart(profiles: any[]) {
-        const ctx = document.getElementById("skillsChart") as HTMLCanvasElement;
-        if (!ctx) return;
-
-        if (skillsChart) skillsChart.destroy();
-
-        // Count skills
-        const skillCounts = new Map<string, number>();
-        profiles.forEach((p) => {
-            (p.skills || []).forEach((skill: string) => {
-                skillCounts.set(skill, (skillCounts.get(skill) || 0) + 1);
-            });
-        });
-
-        const topSkills = Array.from(skillCounts.entries())
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 10);
-
-        skillsChart = new Chart(ctx, {
-            type: "bar",
-            data: {
-                labels: topSkills.map((s) => s[0]),
-                datasets: [
-                    {
-                        label: "Bilangan Pelajar",
-                        data: topSkills.map((s) => s[1]),
-                        backgroundColor: "rgba(102, 126, 234, 0.7)",
-                        borderColor: "rgb(102, 126, 234)",
-                        borderWidth: 1,
-                        borderRadius: 8,
-                    },
-                ],
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: true },
-                },
-            },
-        });
-    }
-
-    function loadProgramChart(profiles: any[]) {
-        const ctx = document.getElementById(
-            "programChart",
-        ) as HTMLCanvasElement;
-        if (!ctx) return;
-
-        if (programChart) programChart.destroy();
-
-        // Count programs
-        const programCounts = new Map<string, number>();
-        profiles.forEach((p) => {
-            const program = p.academic_info?.program || "Unknown";
-            programCounts.set(program, (programCounts.get(program) || 0) + 1);
-        });
-
-        const programs = Array.from(programCounts.entries()).sort(
-            (a, b) => b[1] - a[1],
-        );
-
-        const colors = [
-            "rgba(102, 126, 234, 0.8)",
-            "rgba(249, 115, 22, 0.8)",
-            "rgba(34, 197, 94, 0.8)",
-            "rgba(239, 68, 68, 0.8)",
-            "rgba(168, 85, 247, 0.8)",
-            "rgba(14, 165, 233, 0.8)",
-        ];
-
-        programChart = new Chart(ctx, {
-            type: "pie",
-            data: {
-                labels: programs.map((p) => p[0]),
-                datasets: [
-                    {
-                        data: programs.map((p) => p[1]),
-                        backgroundColor: programs.map(
-                            (_, i) => colors[i % colors.length],
-                        ),
-                        borderWidth: 0,
-                    },
-                ],
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: "right",
-                        labels: {
-                            boxWidth: 12,
-                            font: { size: 11 },
-                        },
-                    },
-                },
-            },
-        });
-    }
-
-    function loadEngagementMetrics(
-        profiles: any[],
-        events: any[],
-        totalStudents: number,
-    ) {
-        // Profile completion rate
-        const completedProfiles = profiles.filter(
-            (p) => p.is_profile_complete,
-        ).length;
-        const profileRate =
-            totalStudents > 0
-                ? Math.round((completedProfiles / totalStudents) * 100)
-                : 0;
-        updateElement("profile-completion-rate", `${profileRate}%`);
-        updateProgressBar("profile-completion-bar", profileRate);
-
-        // Event participation (estimate based on events)
-        const eventParticipation = Math.min(
-            Math.round(((events.length * 10) / totalStudents) * 100),
-            100,
-        );
-        updateElement("event-participation-rate", `${eventParticipation}%`);
-        updateProgressBar("event-participation-bar", eventParticipation);
-
-        // Showcase rate (profiles with projects/experiences)
-        const showcaseProfiles = profiles.filter(
-            (p) =>
-                (p.projects && p.projects.length > 0) ||
-                (p.experiences && p.experiences.length > 0),
-        ).length;
-        const showcaseRate =
-            totalStudents > 0
-                ? Math.round((showcaseProfiles / totalStudents) * 100)
-                : 0;
-        updateElement("showcase-rate", `${showcaseRate}%`);
-        updateProgressBar("showcase-bar", showcaseRate);
-
-        // Load engagement chart
-        const ctx = document.getElementById(
-            "engagementChart",
-        ) as HTMLCanvasElement;
-        if (!ctx) return;
-
-        if (engagementChart) engagementChart.destroy();
-
-        engagementChart = new Chart(ctx, {
-            type: "radar",
-            data: {
-                labels: ["Profile", "Events", "Showcase", "Skills", "Koku"],
-                datasets: [
-                    {
-                        label: "Engagement Score",
-                        data: [
-                            profileRate,
-                            eventParticipation,
-                            showcaseRate,
-                            (profiles.filter((p) => p.skills?.length > 2)
-                                .length /
-                                totalStudents) *
-                                100,
-                            (profiles.filter((p) => p.kokurikulum_score > 50)
-                                .length /
-                                totalStudents) *
-                                100,
-                        ],
-                        fill: true,
-                        backgroundColor: "rgba(102, 126, 234, 0.2)",
-                        borderColor: "rgb(102, 126, 234)",
-                        pointBackgroundColor: "rgb(102, 126, 234)",
-                    },
-                ],
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    r: {
-                        min: 0,
-                        max: 100,
-                    },
-                },
-            },
-        });
-    }
-
     function updateElement(id: string, value: string) {
         const el = document.getElementById(id);
         if (el) el.innerText = value;
@@ -2199,4 +1743,107 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
         const el = document.getElementById(id) as HTMLElement;
         if (el) el.style.width = `${Math.min(value, 100)}%`;
     }
+
+    // AI Plan Modal Logic
+    const planModal = document.getElementById("action-plan-modal");
+    const closeModalBtn = document.getElementById("close-modal-btn");
+    const planContent = document.getElementById("action-plan-content");
+    const modalStudentId = document.getElementById("modal-student-id");
+
+    // Close Modal
+    closeModalBtn?.addEventListener("click", () => {
+        planModal?.classList.add("hidden");
+        planModal?.classList.remove("flex");
+    });
+
+    // Close on click outside
+    planModal?.addEventListener("click", (e) => {
+        if (e.target === planModal) {
+            planModal?.classList.add("hidden");
+            planModal?.classList.remove("flex");
+        }
+    });
+
+    // Delegate click for Generate Plan button
+    document
+        .getElementById("ml-results-body")
+        ?.addEventListener("click", async (e) => {
+            const target = (e.target as HTMLElement).closest(
+                ".generate-plan-btn",
+            );
+            if (!target) return;
+
+            const btn = target as HTMLButtonElement;
+            const studentId = btn.dataset.studentId;
+            const riskContextStr = btn.dataset.riskContext;
+            let riskContext = {};
+
+            try {
+                if (riskContextStr) {
+                    riskContext = JSON.parse(
+                        riskContextStr.replace(/&apos;/g, "'"),
+                    );
+                }
+            } catch (e) {
+                console.warn("Failed to parse risk context", e);
+            }
+
+            if (!studentId || !planModal || !planContent || !modalStudentId)
+                return;
+
+            // Open Modal
+            planModal.classList.remove("hidden");
+            planModal.classList.add("flex");
+            modalStudentId.textContent = `Generating plan for ${studentId}...`;
+
+            // Show Loading State
+            planContent.innerHTML = `
+            <div class="flex flex-col items-center justify-center py-12 space-y-4">
+                <i class="fas fa-brain fa-spin text-4xl text-[#667eea]"></i>
+                <p class="text-gray-500 font-medium">Analyzing student profile...</p>
+            </div>
+        `;
+
+            // Generate Plan
+            const result = await mlAnalyticsService.generateInterventionPlan(
+                studentId,
+                riskContext,
+            );
+
+            if (result.success && result.plan) {
+                modalStudentId.textContent = `Intervention Plan for ${studentId}`;
+
+                // Format MD to HTML (simple conversion)
+                const htmlContent = result.plan
+                    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                    .replace(
+                        /### (.*?)\n/g,
+                        '<h4 class="text-lg font-bold text-gray-800 mt-4 mb-2">$1</h4>',
+                    )
+                    .replace(
+                        /- (.*?)\n/g,
+                        '<li class="ml-4 list-disc text-gray-600">$1</li>',
+                    )
+                    .replace(/\n/g, "<br>");
+
+                planContent.innerHTML = `
+                <div class="prose max-w-none">
+                    ${htmlContent}
+                </div>
+                <div class="mt-8 pt-4 border-t border-gray-100 flex justify-end">
+                     <button class="bg-[#667eea] text-white px-4 py-2 rounded-lg hover:bg-[#5a6fd6] transition-colors" onclick="document.getElementById('action-plan-modal').classList.add('hidden');document.getElementById('action-plan-modal').classList.remove('flex')">
+                        Close Plan
+                    </button>
+                </div>
+            `;
+            } else {
+                planContent.innerHTML = `
+                <div class="text-center py-12 text-red-500 space-y-4">
+                    <i class="fas fa-exclamation-circle text-4xl"></i>
+                    <p>Failed to generate plan. Please try again.</p>
+                    <p class="text-sm text-gray-400">${result.error || "Unknown error"}</p>
+                </div>
+            `;
+            }
+        });
 </script>
