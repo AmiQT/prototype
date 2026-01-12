@@ -85,6 +85,10 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
                         </th>
                         <th
                             class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                            >Student ID</th
+                        >
+                        <th
+                            class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
                             >Name</th
                         >
                         <th
@@ -112,7 +116,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
                 <tbody class="divide-y divide-gray-100" id="users-table-body">
                     <tr>
                         <td
-                            colspan="5"
+                            colspan="7"
                             class="px-6 py-8 text-center text-gray-500"
                         >
                             <div class="flex flex-col items-center gap-2">
@@ -343,7 +347,8 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     const addForm = document.getElementById("add-user-form");
 
     const BACKEND_URL =
-        import.meta.env.PUBLIC_BACKEND_URL || "https://prototype-348e.onrender.com";
+        import.meta.env.PUBLIC_BACKEND_URL ||
+        "https://infrared-booth-auckland-prevention.trycloudflare.com";
 
     addBtn?.addEventListener("click", () => {
         addModal?.classList.remove("hidden");
@@ -552,6 +557,9 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
                         <input type="checkbox" class="user-checkbox w-4 h-4 rounded border-gray-300 text-[#667eea] focus:ring-[#667eea]" data-id="${user.id}">
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="text-sm font-mono font-medium text-[#667eea] bg-[#667eea]/10 px-2 py-1 rounded">${user.student_id || user.staff_id || "-"}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
                             <div class="h-10 w-10 rounded-full bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center text-white font-bold text-sm shadow-md">
                                 ${user.name ? user.name.charAt(0).toUpperCase() : "U"}
@@ -699,13 +707,17 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
                     try {
                         // Get token from Supabase session (same as Add User)
-                        const { data: { session } } = await supabase.auth.getSession();
+                        const {
+                            data: { session },
+                        } = await supabase.auth.getSession();
                         const token = session?.access_token;
-                        
+
                         if (!token) {
-                            throw new Error("No authentication token found. Please login again.");
+                            throw new Error(
+                                "No authentication token found. Please login again.",
+                            );
                         }
-                        
+
                         const response = await fetch(
                             `${BACKEND_URL}/api/users/${userId}/reset-password`,
                             {

@@ -17,7 +17,7 @@
     <!-- Specific configuration for production domains -->
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">xibffemtpboiecpeynon.supabase.co</domain>
-        <domain includeSubdomains="true">prototype-348e.onrender.com</domain>
+        <domain includeSubdomains="true">infrared-booth-auckland-prevention.trycloudflare.com</domain>
         <domain includeSubdomains="true">prototype-talent-app.vercel.app</domain>
         <trust-anchors>
             <certificates src="system"/>

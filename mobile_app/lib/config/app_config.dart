@@ -137,8 +137,8 @@ class AppConfig {
     if (kDebugMode && _isLocalBackendReachable) {
       return _getLocalUrl();
     }
-    // Priority 2: Default to cloud for release or if local is unreachable
-    return 'https://prototype-348e.onrender.com'; // Cloud backend
+    // Priority 2: Default to AWS EC2 with Cloudflare Tunnel
+    return 'https://infrared-booth-auckland-prevention.trycloudflare.com'; // AWS EC2 Backend
   }
 
   static String _getLocalUrl() {
@@ -146,7 +146,7 @@ class AppConfig {
     //   return 'http://10.0.2.2:8000'; // Android Emulator
     // }
     // return 'http://localhost:8000'; // iOS Simulator and Web
-    return 'https://prototype-348e.onrender.com'; // Force production for web safety
+    return 'https://infrared-booth-auckland-prevention.trycloudflare.com'; // AWS EC2 Backend
   }
 
   // Web Dashboard URL

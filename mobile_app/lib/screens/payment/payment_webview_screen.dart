@@ -55,20 +55,49 @@ class _PaymentWebViewScreenState extends State<PaymentWebViewScreen> {
   }
 
   bool _checkPaymentStatus(String url) {
-    if (url.contains('status_id') || url.contains('bill_payment_status')) {
+    debugPrint('🔍 Checking payment URL: $url');
+
+    // Check for ToyyibPay return/callback URL patterns
+    if (url.contains('status_id') ||
+        url.contains('billcode') ||
+        url.contains('toyyibpay.com') && url.contains('transaction') ||
+        url.contains('billReturnUrl') ||
+        url.contains('billCallbackUrl')) {
       final uri = Uri.parse(url);
       final statusId = uri.queryParameters['status_id'];
-      final paymentStatus = uri.queryParameters['bill_payment_status'];
+      final paymentStatus = uri.queryParameters['billpaymentStatus'] ??
+          uri.queryParameters['bill_payment_status'];
 
-      // ToyyibPay status: 1 = Success, 3 = Cancel/Fail
-      // Some simple logic to detect success
+      debugPrint('🔍 statusId: $statusId, paymentStatus: $paymentStatus');
+
+      // ToyyibPay status: 1 = Success, 2 = Pending, 3 = Failed
       if (statusId == '1' || paymentStatus == '1') {
+        debugPrint('✅ Payment SUCCESS - Redirecting...');
         Navigator.pop(context, true); // Success
-      } else {
-        Navigator.pop(context, false); // Failed or Cancelled
+        return true;
+      } else if (statusId == '3' || paymentStatus == '3') {
+        debugPrint('❌ Payment FAILED - Redirecting...');
+        Navigator.pop(context, false); // Failed
+        return true;
+      } else if (statusId == '2' || paymentStatus == '2') {
+        debugPrint('⏳ Payment PENDING');
+        // Don't close, let user see pending status
+        return false;
       }
+    }
+
+    // Also check if URL contains success/failed keywords
+    if (url.contains('/payment/success') || url.contains('success=true')) {
+      debugPrint('✅ Payment SUCCESS via URL pattern');
+      Navigator.pop(context, true);
       return true;
     }
+    if (url.contains('/payment/failed') || url.contains('success=false')) {
+      debugPrint('❌ Payment FAILED via URL pattern');
+      Navigator.pop(context, false);
+      return true;
+    }
+
     return false;
   }
 

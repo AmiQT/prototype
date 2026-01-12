@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException, Query, Depends
 from sqlalchemy.orm import Session
 from typing import Optional, List
 import logging
+import uuid
 from datetime import timedelta
 
 from app.ml_analytics import MLPredictor, CacheManager, MLConfig
@@ -220,7 +221,13 @@ async def batch_predict(body: dict = None, db: Session = Depends(get_db)):
             
             # If not found, try UUID
             if not profile:
-                profile = db.query(Profile).filter(Profile.id == sid).first()
+                try:
+                    # Validate UUID before querying to avoid data type mismatch error
+                    val = uuid.UUID(sid, version=4)
+                    profile = db.query(Profile).filter(Profile.id == sid).first()
+                except ValueError:
+                    # strictly not a UUID, ignore
+                    pass
             
             if profile:
                 # Build full student data for prediction

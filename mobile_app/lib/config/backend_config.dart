@@ -6,7 +6,7 @@
 class BackendConfig {
   // Use Cloudflare Tunnel for backend connection
   static const String baseUrl =
-      'https://graph-violin-throwing-governments.trycloudflare.com';
+      'https://infrared-booth-auckland-prevention.trycloudflare.com';
 
   // Use local backend for development (Android Emulator)
   // static const String baseUrl = 'http://10.0.2.2:8000';

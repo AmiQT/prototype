@@ -28,7 +28,7 @@ class MLAnalyticsService {
     private baseUrl: string;
 
     constructor() {
-        this.baseUrl = import.meta.env.PUBLIC_BACKEND_URL || "https://prototype-348e.onrender.com";
+        this.baseUrl = import.meta.env.PUBLIC_BACKEND_URL || "https://infrared-booth-auckland-prevention.trycloudflare.com";
     }
 
     async checkHealth(): Promise<MLHealthStatus> {

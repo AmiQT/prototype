@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:url_launcher/url_launcher.dart';
 import '../../models/event_model.dart';
 import '../../models/profile_model.dart';
 import '../../services/toyyibpay_service.dart';
@@ -93,27 +94,43 @@ class _PaymentSummaryScreenState extends State<PaymentSummaryScreen> {
         final paymentUrl = _paymentService.getPaymentUrl(billCode);
 
         if (mounted) {
-          // 3. Open WebView
-          final result = await Navigator.push<bool>(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PaymentWebViewScreen(
-                paymentUrl: paymentUrl,
-                title: 'Payment Gateway',
-              ),
-            ),
-          );
-
-          // 4. Handle Result
-          if (mounted && result == true) {
-            Navigator.pop(context, true); // Return success to previous screen
-          } else if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Payment failed or cancelled.'),
-                backgroundColor: AppTheme.errorColor,
+          // On web, open in new tab (WebView doesn't work on web)
+          if (kIsWeb) {
+            await launchUrl(Uri.parse(paymentUrl),
+                mode: LaunchMode.externalApplication);
+            // Show success message
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                      'Payment page opened in new tab. Complete payment there.'),
+                  backgroundColor: AppTheme.primaryColor,
+                ),
+              );
+            }
+          } else {
+            // 3. Open WebView (mobile only)
+            final result = await Navigator.push<bool>(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PaymentWebViewScreen(
+                  paymentUrl: paymentUrl,
+                  title: 'Payment Gateway',
+                ),
               ),
             );
+
+            // 4. Handle Result
+            if (mounted && result == true) {
+              Navigator.pop(context, true); // Return success to previous screen
+            } else if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Payment failed or cancelled.'),
+                  backgroundColor: AppTheme.errorColor,
+                ),
+              );
+            }
           }
         }
       } else {

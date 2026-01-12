@@ -53,8 +53,8 @@
                 <div
                     class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-gray-100 text-sm text-gray-600 max-w-[80%]"
                 >
-                    Hi! Saya AI assistant kampus. Boleh saya bantu anda manage
-                    dashboard hari ini?
+                    Hi! I'm your campus AI assistant. How can I help you manage
+                    the dashboard today?
                 </div>
             </div>
         </div>
@@ -100,7 +100,7 @@
 
     const BACKEND_URL =
         import.meta.env.PUBLIC_BACKEND_URL ||
-        "https://prototype-348e.onrender.com";
+        "https://infrared-booth-auckland-prevention.trycloudflare.com";
 
     // Use LangChain v2 API for better stability
     const AI_ENDPOINT = `${BACKEND_URL}/api/ai/v2/command`;
@@ -143,7 +143,7 @@
 
             if (!token) {
                 removeMessage(loadingId);
-                addMessage("Sila login untuk menggunakan AI assistant.", "ai");
+                addMessage("Please login to use the AI assistant.", "ai");
                 return;
             }
 
@@ -177,7 +177,7 @@
                 console.error("AI Error:", data);
                 addMessage(
                     data.detail ||
-                        "Maaf, ada masalah teknikal. Sila cuba lagi.",
+                        "Sorry, there was a technical issue. Please try again.",
                     "ai",
                 );
             }
@@ -185,7 +185,7 @@
             console.error("Network Error:", error);
             removeMessage(loadingId);
             addMessage(
-                "Maaf, gagal menyambung ke server. Pastikan backend berjalan.",
+                "Sorry, failed to connect to server. Please ensure the backend is running.",
                 "ai",
             );
         }
@@ -222,7 +222,7 @@
         div.innerHTML = `
             <div class="w-8 h-8 rounded-full bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center text-white flex-shrink-0 text-xs"><i class="fas fa-robot"></i></div>
             <div class="bg-white border border-gray-100 text-gray-600 p-3 rounded-2xl rounded-tl-none text-sm">
-                <i class="fas fa-circle-notch fa-spin text-[#667eea]"></i> Sedang berfikir...
+                <i class="fas fa-circle-notch fa-spin text-[#667eea]"></i> Thinking...
             </div>
         `;
         chatMessages.appendChild(div);
