@@ -24,6 +24,7 @@ from .prompts import CONCISE_SYSTEM_PROMPT
 from .tools import get_student_tools, get_all_tools
 from .memory import get_session_history, memory_manager
 from app.ai_assistant.llm_factory import create_llm
+from app.core.key_manager import key_manager, get_gemini_key
 
 logger = logging.getLogger(__name__)
 
@@ -136,132 +137,79 @@ class StudentTalentAgent:
         Returns:
             Dict with response and metadata
         """
-        max_retries = min(key_manager.key_count, 3)  # Try up to 3 different keys
-        last_error = None
-        
-        for attempt in range(max_retries):
-            try:
-                # Rotate to new key on retry
-                if attempt > 0:
-                    new_key = get_gemini_key()
-                    self.llm = ChatGoogleGenerativeAI(
-                        model=self.model_name,
-                        google_api_key=new_key,
-                        temperature=self.temperature,
-                        convert_system_message_to_human=True
-                    )
-                    self.llm_with_tools = self.llm.bind_tools(self.tools)
-                    logger.info(f"🔄 Retrying with new key (attempt {attempt + 1}/{max_retries})")
-                
-                # Get session history
-                history = get_session_history(session_id)
-                
-                # Build messages with history
-                messages = list(history.messages) + [HumanMessage(content=message)]
-                
-                # Configure the run
-                run_config = RunnableConfig(
-                    configurable={"thread_id": session_id}
-                )
-                
-                # Invoke the graph
-                result = await self.graph.ainvoke(
-                    {"messages": messages},
-                    config=run_config
-                )
-                
-                # Extract final response
-                final_messages = result.get("messages", [])
-                
-                # Find the last AI message
-                ai_response = None
-                tool_calls_made = []
-                
-                for msg in reversed(final_messages):
-                    if isinstance(msg, AIMessage):
-                        if msg.content and not ai_response:
-                            # Handle both string and list content formats
-                            content = msg.content
-                            if isinstance(content, list):
-                                # Extract text from list format (Gemini multimodal response)
-                                text_parts = []
-                                for part in content:
-                                    if isinstance(part, dict) and part.get('type') == 'text':
-                                        text_parts.append(part.get('text', ''))
-                                    elif isinstance(part, str):
-                                        text_parts.append(part)
-                                ai_response = ''.join(text_parts)
-                            else:
-                                ai_response = str(content)
-                        if hasattr(msg, 'tool_calls') and msg.tool_calls:
-                            tool_calls_made.extend(msg.tool_calls)
-                    elif isinstance(msg, ToolMessage):
-                        pass  # Track tool results if needed
-                
-                # Save to history
-                history.add_user_message(message)
-                if ai_response:
-                    history.add_ai_message(ai_response)
-                
-                return {
-                    "success": True,
-                    "message": ai_response or "Maaf, saya tidak dapat memproses permintaan anda.",
-                    "session_id": session_id,
-                    "tool_calls": [
-                        {"name": tc.get("name"), "args": tc.get("args")}
-                        for tc in tool_calls_made
-                    ] if tool_calls_made else [],
-                    "source": "langchain_agent"
-                }
-                
-            except Exception as e:
-                error_str = str(e)
-                last_error = error_str
-                logger.error(f"Error in agent invoke (attempt {attempt + 1}): {e}")
-                
-                # Check for rate limit error - retry with different key
-                is_rate_limit = any(keyword in error_str.upper() for keyword in [
-                    "429", "RESOURCE_EXHAUSTED", "QUOTA", "RATE_LIMIT", "RATE LIMIT"
-                ])
-                
-                if is_rate_limit:
-                    if attempt < max_retries - 1:
-                        logger.warning(f"⚠️ Rate limited, trying next key...")
-                        import asyncio
-                        await asyncio.sleep(1)  # Brief delay before retry
-                        continue
-                    else:
-                        # All keys exhausted - provide helpful fallback
-                        fallback_message = (
-                            "Hai! 👋 Terima kasih kerana bertanya. "
-                            "Buat masa sekarang, saya sedang memproses banyak permintaan. "
-                            "Sementara menunggu, anda boleh:\n\n"
-                            "📚 Layari bahagian 'Aktiviti' untuk melihat event terkini\n"
-                            "🎯 Semak profil anda di tab 'Profil'\n"
-                            "💬 Berbual dengan rakan di 'Chat'\n\n"
-                            "Cuba tanya saya semula dalam beberapa minit ya! 😊"
-                        )
-                        return {
-                            "success": False,
-                            "message": fallback_message,
-                            "session_id": session_id,
-                            "error": "rate_limit",
-                            "retry_after": 60,
-                            "source": "langchain_agent"
-                        }
-                else:
-                    # Non-rate-limit error, don't retry
-                    break
-        
-        # Check if last error was rate limit related (fallback safety check)
-        is_rate_limit_error = last_error and any(keyword in last_error.upper() for keyword in [
-            "429", "RESOURCE_EXHAUSTED", "QUOTA", "RATE_LIMIT", "RATE LIMIT"
-        ])
-        
-        if is_rate_limit_error:
+        try:
+            # Get session history
+            history = get_session_history(session_id)
+            
+            # Build messages with history
+            messages = list(history.messages) + [HumanMessage(content=message)]
+            
+            # Configure the run
+            run_config = RunnableConfig(
+                configurable={"thread_id": session_id}
+            )
+            
+            # Invoke the graph
+            result = await self.graph.ainvoke(
+                {"messages": messages},
+                config=run_config
+            )
+            
+            # Extract final response
+            final_messages = result.get("messages", [])
+            
+            # Find the last AI message
+            ai_response = None
+            tool_calls_made = []
+            
+            for msg in reversed(final_messages):
+                if isinstance(msg, AIMessage):
+                    if msg.content and not ai_response:
+                        # Handle both string and list content formats
+                        content = msg.content
+                        if isinstance(content, list):
+                            # Extract text from list format (Gemini multimodal response)
+                            text_parts = []
+                            for part in content:
+                                if isinstance(part, dict) and part.get('type') == 'text':
+                                    text_parts.append(part.get('text', ''))
+                                elif isinstance(part, str):
+                                    text_parts.append(part)
+                            ai_response = ''.join(text_parts)
+                        else:
+                            ai_response = str(content)
+                    if hasattr(msg, 'tool_calls') and msg.tool_calls:
+                        tool_calls_made.extend(msg.tool_calls)
+                elif isinstance(msg, ToolMessage):
+                    pass  # Track tool results if needed
+            
+            # Save to history
+            history.add_user_message(message)
+            if ai_response:
+                history.add_ai_message(ai_response)
+            
             return {
-                "success": False,
-                "message": (
+                "success": True,
+                "message": ai_response or "Maaf, saya tidak dapat memproses permintaan anda.",
+                "session_id": session_id,
+                "tool_calls": [
+                    {"name": tc.get("name"), "args": tc.get("args")}
+                    for tc in tool_calls_made
+                ] if tool_calls_made else [],
+                "source": "langchain_agent"
+            }
+            
+        except Exception as e:
+            error_str = str(e)
+            logger.error(f"Error in agent invoke: {e}", exc_info=True)
+            
+            # Check for rate limit error - provide helpful fallback
+            is_rate_limit = any(keyword in error_str.upper() for keyword in [
+                "429", "RESOURCE_EXHAUSTED", "QUOTA", "RATE_LIMIT", "RATE LIMIT"
+            ])
+            
+            if is_rate_limit:
+                fallback_message = (
                     "Hai! 👋 Terima kasih kerana bertanya. "
                     "Buat masa sekarang, saya sedang memproses banyak permintaan. "
                     "Sementara menunggu, anda boleh:\n\n"
@@ -269,23 +217,24 @@ class StudentTalentAgent:
                     "🎯 Semak profil anda di tab 'Profil'\n"
                     "💬 Berbual dengan rakan di 'Chat'\n\n"
                     "Cuba tanya saya semula dalam beberapa minit ya! 😊"
-                ),
+                )
+                return {
+                    "success": False,
+                    "message": fallback_message,
+                    "session_id": session_id,
+                    "error": "rate_limit",
+                    "retry_after": 60,
+                    "source": "langchain_agent"
+                }
+            
+            # Generic error
+            return {
+                "success": False,
+                "message": f"Maaf, terjadi kesalahan: {error_str}",
                 "session_id": session_id,
-                "error": "rate_limit",
-                "retry_after": 60,
+                "error": error_str,
                 "source": "langchain_agent"
             }
-        
-        return {
-            "success": False,
-            "message": (
-                "Maaf, saya mengalami sedikit masalah teknikal. 🔧 "
-                "Sila cuba lagi sebentar atau hubungi pentadbir sistem."
-            ),
-            "session_id": session_id,
-            "error": last_error,
-            "source": "langchain_agent"
-        }
     
     def invoke_sync(
         self, 
@@ -304,133 +253,80 @@ class StudentTalentAgent:
         Returns:
             Dict with response and metadata
         """
-        import time
-        max_retries = min(key_manager.key_count, 3)  # Try up to 3 different keys
-        last_error = None
-        
-        for attempt in range(max_retries):
-            try:
-                # Rotate to new key on retry
-                if attempt > 0:
-                    new_key = get_gemini_key()
-                    self.llm = ChatGoogleGenerativeAI(
-                        model=self.model_name,
-                        google_api_key=new_key,
-                        temperature=self.temperature,
-                        convert_system_message_to_human=True
-                    )
-                    self.llm_with_tools = self.llm.bind_tools(self.tools)
-                    logger.info(f"🔄 Retrying with new key (attempt {attempt + 1}/{max_retries})")
-                
-                # Get session history
-                history = get_session_history(session_id)
-                
-                # Build messages with history
-                messages = list(history.messages) + [HumanMessage(content=message)]
-                
-                # Prepend system message
-                messages = [SystemMessage(content=CONCISE_SYSTEM_PROMPT)] + messages
-                
-                # Configure the run
-                run_config = RunnableConfig(
-                    configurable={"thread_id": session_id}
-                )
-                
-                # Invoke the graph synchronously
-                result = self.graph.invoke(
-                    {"messages": messages},
-                    config=run_config
-                )
-                
-                # Extract final response
-                final_messages = result.get("messages", [])
-                
-                # Find the last AI message with content
-                ai_response = None
-                tool_calls_made = []
-                
-                for msg in reversed(final_messages):
-                    if isinstance(msg, AIMessage):
-                        if msg.content and not ai_response:
-                            # Handle both string and list content formats
-                            content = msg.content
-                            if isinstance(content, list):
-                                # Extract text from list format (Gemini multimodal response)
-                                text_parts = []
-                                for part in content:
-                                    if isinstance(part, dict) and part.get('type') == 'text':
-                                        text_parts.append(part.get('text', ''))
-                                    elif isinstance(part, str):
-                                        text_parts.append(part)
-                                ai_response = ''.join(text_parts)
-                            else:
-                                ai_response = str(content)
-                        if hasattr(msg, 'tool_calls') and msg.tool_calls:
-                            tool_calls_made.extend(msg.tool_calls)
-                
-                # Save to history
-                history.add_user_message(message)
-                if ai_response:
-                    history.add_ai_message(ai_response)
-                
-                return {
-                    "success": True,
-                    "message": ai_response or "Maaf, saya tidak dapat memproses permintaan anda.",
-                    "session_id": session_id,
-                    "tool_calls": [
-                        {"name": tc.get("name"), "args": tc.get("args")}
-                        for tc in tool_calls_made
-                    ] if tool_calls_made else [],
-                    "source": "langchain_agent"
-                }
-                
-            except Exception as e:
-                error_str = str(e)
-                last_error = error_str
-                logger.error(f"Error in sync agent invoke (attempt {attempt + 1}): {e}")
-                
-                # Check for rate limit error - retry with different key
-                is_rate_limit = any(keyword in error_str.upper() for keyword in [
-                    "429", "RESOURCE_EXHAUSTED", "QUOTA", "RATE_LIMIT", "RATE LIMIT"
-                ])
-                
-                if is_rate_limit:
-                    if attempt < max_retries - 1:
-                        logger.warning(f"⚠️ Rate limited, trying next key...")
-                        time.sleep(1)  # Brief delay before retry
-                        continue
-                    else:
-                        # All keys exhausted - provide helpful fallback
-                        fallback_message = (
-                            "Hai! 👋 Terima kasih kerana bertanya. "
-                            "Buat masa sekarang, saya sedang memproses banyak permintaan. "
-                            "Sementara menunggu, anda boleh:\n\n"
-                            "📚 Layari bahagian 'Aktiviti' untuk melihat event terkini\n"
-                            "🎯 Semak profil anda di tab 'Profil'\n"
-                            "💬 Berbual dengan rakan di 'Chat'\n\n"
-                            "Cuba tanya saya semula dalam beberapa minit ya! 😊"
-                        )
-                        return {
-                            "success": False,
-                            "message": fallback_message,
-                            "session_id": session_id,
-                            "error": "rate_limit",
-                            "retry_after": 60,
-                            "source": "langchain_agent"
-                        }
-                else:
-                    # Non-rate-limit error, don't retry
-                    break
-        
-        # Check if last error was rate limit related (fallback safety check)
-        is_rate_limit_error = last_error and any(keyword in last_error.upper() for keyword in [
-            "429", "RESOURCE_EXHAUSTED", "QUOTA", "RATE_LIMIT", "RATE LIMIT"
-        ])
-        
-        if is_rate_limit_error:
+        try:
+            # Get session history
+            history = get_session_history(session_id)
+            
+            # Build messages with history
+            messages = list(history.messages) + [HumanMessage(content=message)]
+            
+            # Prepend system message
+            messages = [SystemMessage(content=CONCISE_SYSTEM_PROMPT)] + messages
+            
+            # Configure the run
+            run_config = RunnableConfig(
+                configurable={"thread_id": session_id}
+            )
+            
+            # Invoke the graph synchronously
+            result = self.graph.invoke(
+                {"messages": messages},
+                config=run_config
+            )
+            
+            # Extract final response
+            final_messages = result.get("messages", [])
+            
+            # Find the last AI message with content
+            ai_response = None
+            tool_calls_made = []
+            
+            for msg in reversed(final_messages):
+                if isinstance(msg, AIMessage):
+                    if msg.content and not ai_response:
+                        # Handle both string and list content formats
+                        content = msg.content
+                        if isinstance(content, list):
+                            # Extract text from list format (Gemini multimodal response)
+                            text_parts = []
+                            for part in content:
+                                if isinstance(part, dict) and part.get('type') == 'text':
+                                    text_parts.append(part.get('text', ''))
+                                elif isinstance(part, str):
+                                    text_parts.append(part)
+                            ai_response = ''.join(text_parts)
+                        else:
+                            ai_response = str(content)
+                    if hasattr(msg, 'tool_calls') and msg.tool_calls:
+                        tool_calls_made.extend(msg.tool_calls)
+            
+            # Save to history
+            history.add_user_message(message)
+            if ai_response:
+                history.add_ai_message(ai_response)
+            
             return {
-                "success": False,
-                "message": (
+                "success": True,
+                "message": ai_response or "Maaf, saya tidak dapat memproses permintaan anda.",
+                "session_id": session_id,
+                "tool_calls": [
+                    {"name": tc.get("name"), "args": tc.get("args")}
+                    for tc in tool_calls_made
+                ] if tool_calls_made else [],
+                "source": "langchain_agent"
+            }
+            
+        except Exception as e:
+            error_str = str(e)
+            logger.error(f"Error in agent invoke_sync: {e}", exc_info=True)
+            
+            # Check for rate limit error - provide helpful fallback
+            is_rate_limit = any(keyword in error_str.upper() for keyword in [
+                "429", "RESOURCE_EXHAUSTED", "QUOTA", "RATE_LIMIT", "RATE LIMIT"
+            ])
+            
+            if is_rate_limit:
+                fallback_message = (
                     "Hai! 👋 Terima kasih kerana bertanya. "
                     "Buat masa sekarang, saya sedang memproses banyak permintaan. "
                     "Sementara menunggu, anda boleh:\n\n"
@@ -438,23 +334,24 @@ class StudentTalentAgent:
                     "🎯 Semak profil anda di tab 'Profil'\n"
                     "💬 Berbual dengan rakan di 'Chat'\n\n"
                     "Cuba tanya saya semula dalam beberapa minit ya! 😊"
-                ),
+                )
+                return {
+                    "success": False,
+                    "message": fallback_message,
+                    "session_id": session_id,
+                    "error": "rate_limit",
+                    "retry_after": 60,
+                    "source": "langchain_agent"
+                }
+            
+            # Generic error
+            return {
+                "success": False,
+                "message": f"Maaf, terjadi kesalahan: {error_str}",
                 "session_id": session_id,
-                "error": "rate_limit",
-                "retry_after": 60,
+                "error": error_str,
                 "source": "langchain_agent"
             }
-        
-        return {
-            "success": False,
-            "message": (
-                "Maaf, saya mengalami sedikit masalah teknikal. 🔧 "
-                "Sila cuba lagi sebentar atau hubungi pentadbir sistem."
-            ),
-            "session_id": session_id,
-            "error": last_error,
-            "source": "langchain_agent"
-        }
     
     def clear_session(self, session_id: str) -> None:
         """Clear conversation history for a session."""
