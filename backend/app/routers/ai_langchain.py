@@ -114,10 +114,35 @@ async def process_command(
             detail=f"Agent configuration error: {str(e)}"
         )
     except Exception as e:
+        error_str = str(e)
         logger.error(f"Agent error: {e}", exc_info=True)
+        
+        # Check if it's a rate limit error - return friendly message
+        is_rate_limit = any(keyword in error_str.upper() for keyword in [
+            "429", "RESOURCE_EXHAUSTED", "QUOTA", "RATE_LIMIT", "RATE LIMIT"
+        ])
+        
+        if is_rate_limit:
+            return AgentCommandResponse(
+                success=False,
+                message=(
+                    "Hai! 👋 Terima kasih kerana bertanya. "
+                    "Buat masa sekarang, saya sedang memproses banyak permintaan. "
+                    "Sementara menunggu, anda boleh:\n\n"
+                    "📚 Layari bahagian 'Aktiviti' untuk melihat event terkini\n"
+                    "🎯 Semak profil anda di tab 'Profil'\n"
+                    "💬 Berbual dengan rakan di 'Chat'\n\n"
+                    "Cuba tanya saya semula dalam beberapa minit ya! 😊"
+                ),
+                session_id=request.session_id,
+                tool_calls=[],
+                source="langchain_agent",
+                data={"error": "rate_limit", "retry_after": 60}
+            )
+        
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Agent processing error: {str(e)}"
+            detail=f"Agent processing error: {error_str}"
         )
 
 
@@ -159,10 +184,35 @@ def process_command_sync(
         )
         
     except Exception as e:
+        error_str = str(e)
         logger.error(f"Agent sync error: {e}", exc_info=True)
+        
+        # Check if it's a rate limit error - return friendly message
+        is_rate_limit = any(keyword in error_str.upper() for keyword in [
+            "429", "RESOURCE_EXHAUSTED", "QUOTA", "RATE_LIMIT", "RATE LIMIT"
+        ])
+        
+        if is_rate_limit:
+            return AgentCommandResponse(
+                success=False,
+                message=(
+                    "Hai! 👋 Terima kasih kerana bertanya. "
+                    "Buat masa sekarang, saya sedang memproses banyak permintaan. "
+                    "Sementara menunggu, anda boleh:\n\n"
+                    "📚 Layari bahagian 'Aktiviti' untuk melihat event terkini\n"
+                    "🎯 Semak profil anda di tab 'Profil'\n"
+                    "💬 Berbual dengan rakan di 'Chat'\n\n"
+                    "Cuba tanya saya semula dalam beberapa minit ya! 😊"
+                ),
+                session_id=request.session_id,
+                tool_calls=[],
+                source="langchain_agent",
+                data={"error": "rate_limit", "retry_after": 60, "sync_mode": True}
+            )
+        
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Agent processing error: {str(e)}"
+            detail=f"Agent processing error: {error_str}"
         )
 
 

@@ -5,18 +5,27 @@ export const DEMO_CREDENTIALS = {
 
 export const isDemoMode = () => {
     if (typeof window === 'undefined') return false;
-    return localStorage.getItem('is_demo_mode') === 'true';
+    try {
+        return localStorage.getItem('is_demo_mode') === 'true';
+    } catch (e) {
+        console.warn('localStorage access blocked:', e);
+        return false;
+    }
 };
 
 export const setDemoMode = (enabled: boolean) => {
     if (typeof window === 'undefined') return;
-    if (enabled) {
-        localStorage.setItem('is_demo_mode', 'true');
-        // Set fake auth token to satisfy simple checks
-        localStorage.setItem('sb-access-token', 'demo-token'); 
-    } else {
-        localStorage.removeItem('is_demo_mode');
-        localStorage.removeItem('sb-access-token');
+    try {
+        if (enabled) {
+            localStorage.setItem('is_demo_mode', 'true');
+            // Set fake auth token to satisfy simple checks
+            localStorage.setItem('sb-access-token', 'demo-token'); 
+        } else {
+            localStorage.removeItem('is_demo_mode');
+            localStorage.removeItem('sb-access-token');
+        }
+    } catch (e) {
+        console.warn('localStorage access blocked:', e);
     }
 };
 

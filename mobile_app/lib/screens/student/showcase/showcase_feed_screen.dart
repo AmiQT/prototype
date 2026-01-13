@@ -11,7 +11,7 @@ import '../../../widgets/common/refresh_indicator.dart' as custom_refresh;
 
 import '../../../utils/app_theme.dart';
 import '../../../widgets/modern/glass_showcase_card.dart';
-import '../../../widgets/modern/glass_container.dart';
+
 // Using native Flutter widgets for competition simplicity
 import 'post_creation_screen.dart';
 import 'post_detail_screen.dart';
@@ -299,18 +299,6 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
     }
   }
 
-  /// Update category filter with smart refresh
-  void _updateCategoryFilter(PostCategory? category) {
-    _updateFeedState(selectedCategory: category);
-
-    // Smart refresh - avoid redundant calls
-    if (_enableRealTimeUpdates) {
-      _setupRealTimeSubscription(); // This handles subscription reset internally
-    } else {
-      _smartRefresh(); // Remove await
-    }
-  }
-
   /// Force refresh feed by calling backend API directly (ultra-fast)
   Future<void> forceRefreshFeed() async {
     // debugPrint('ShowcaseFeedScreen: Ultra-fast force refreshing feed...');
@@ -587,10 +575,7 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-          // Adaptive Horizontal Filter Chips
-          SliverToBoxAdapter(
-            child: _buildAdaptiveFilters(),
-          ),
+          // Category filters removed - not needed for MVP
 
           // Posts list
           SliverPadding(
@@ -629,66 +614,7 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
     );
   }
 
-  Widget _buildAdaptiveFilters() {
-    const categories = PostCategory.values;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    // Adaptive colors
-    final unselectedGlassColor = isDark ? Colors.white : Colors.black;
-    final unselectedOpacity = isDark ? 0.1 : 0.05;
-    final borderColor = isDark
-        ? Colors.white.withValues(alpha: 0.2)
-        : Colors.black.withValues(alpha: 0.1);
-    final textColor = isDark ? Colors.white70 : Colors.black87;
-
-    return Container(
-      height: 50,
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        scrollDirection: Axis.horizontal,
-        itemCount: categories.length + 1, // +1 for "All"
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
-        itemBuilder: (context, index) {
-          final isAll = index == 0;
-          final category = isAll ? null : categories[index - 1];
-          final isSelected = _selectedCategory == category;
-
-          final label =
-              isAll ? 'All' : category.toString().split('.').last.toUpperCase();
-
-          return GestureDetector(
-            onTap: () {
-              if (_selectedCategory != category) {
-                _updateCategoryFilter(category);
-              }
-            },
-            child: GlassContainer(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              borderRadius: BorderRadius.circular(25),
-              color: isSelected ? AppTheme.primaryColor : unselectedGlassColor,
-              opacity: isSelected
-                  ? (isDark ? 0.8 : 1.0)
-                  : unselectedOpacity, // Solid for light mode selected
-              border: Border.all(
-                color: isSelected ? AppTheme.primaryColor : borderColor,
-              ),
-              child: Center(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    color: isSelected ? Colors.white : textColor,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
+  // Category filter chips removed - not needed for MVP
 
   Widget _buildLoadingState() {
     return CustomScrollView(
@@ -923,20 +849,28 @@ class _ShowcaseFeedScreenState extends State<ShowcaseFeedScreen>
     });
   }
 
-  /// Refresh a specific post in the feed
+  /// Refresh a specific post in the feed (or remove if deleted)
   Future<void> _refreshSpecificPost(String postId) async {
     try {
       // Get updated post data
       final updatedPost = await _showcaseService.getPostById(postId);
 
-      if (updatedPost != null && mounted) {
+      if (mounted) {
         setState(() {
           final index = _posts.indexWhere((p) => p.id == postId);
           if (index != -1) {
-            _posts[index] = updatedPost;
+            if (updatedPost != null) {
+              // ✅ Post exists - update it
+              _posts[index] = updatedPost;
+              debugPrint('ShowcaseFeedScreen: Refreshed post $postId in feed');
+            } else {
+              // ✅ FIX: Post was deleted - remove from list
+              _posts.removeAt(index);
+              debugPrint(
+                  'ShowcaseFeedScreen: Removed deleted post $postId from feed');
+            }
           }
         });
-        debugPrint('ShowcaseFeedScreen: Refreshed post $postId in feed');
       }
     } catch (e) {
       debugPrint('ShowcaseFeedScreen: Error refreshing post $postId: $e');

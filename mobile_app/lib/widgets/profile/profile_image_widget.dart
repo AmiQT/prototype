@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 class ProfileImageWidget extends StatelessWidget {
   final String? imageUrl;
@@ -9,6 +10,7 @@ class ProfileImageWidget extends StatelessWidget {
   final Color? textColor;
   final BoxShape shape;
   final Widget? placeholder;
+  final String? cacheKey; // Optional cache key for forcing refresh
 
   const ProfileImageWidget({
     super.key,
@@ -19,7 +21,27 @@ class ProfileImageWidget extends StatelessWidget {
     this.textColor,
     this.shape = BoxShape.circle,
     this.placeholder,
+    this.cacheKey,
   });
+
+  /// Clear all cached images
+  static Future<void> clearCache() async {
+    await DefaultCacheManager().emptyCache();
+  }
+
+  /// Clear cache for a specific URL
+  static Future<void> clearCacheForUrl(String url) async {
+    await DefaultCacheManager().removeFile(url);
+  }
+
+  /// Get URL with cache-busting parameter
+  String _getImageUrlWithCacheBuster(String url) {
+    // Use cacheKey if provided, otherwise use current timestamp
+    final version =
+        cacheKey ?? DateTime.now().millisecondsSinceEpoch.toString();
+    final separator = url.contains('?') ? '&' : '?';
+    return '$url${separator}v=$version';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,9 +50,14 @@ class ProfileImageWidget extends StatelessWidget {
       return _buildFallbackWidget(context);
     }
 
+    // Add cache-busting to URL
+    final urlWithCacheBuster = _getImageUrlWithCacheBuster(imageUrl!);
+
     // Try to load the image with error handling
     return CachedNetworkImage(
-      imageUrl: imageUrl!,
+      imageUrl: urlWithCacheBuster,
+      cacheKey: cacheKey ??
+          imageUrl, // Use original URL as cache key if no explicit key
       width: size,
       height: size,
       fit: BoxFit.cover,
@@ -53,7 +80,8 @@ class ProfileImageWidget extends StatelessWidget {
 
   Widget _buildFallbackWidget(BuildContext context) {
     final theme = Theme.of(context);
-    final bgColor = backgroundColor ?? theme.primaryColor.withValues(alpha: 0.1);
+    final bgColor =
+        backgroundColor ?? theme.primaryColor.withValues(alpha: 0.1);
     final txtColor = textColor ?? theme.primaryColor;
 
     return Container(

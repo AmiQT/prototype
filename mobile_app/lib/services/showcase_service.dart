@@ -818,6 +818,9 @@ class ShowcaseService {
 
       debugPrint('ShowcaseService: Post created successfully!');
 
+      // ✅ FIX: Clear cache to ensure feed shows new post immediately
+      clearAllCaches();
+
       return PostCreationResult(
         success: true,
         postId: 'temp_post_id_${DateTime.now().millisecondsSinceEpoch}',
@@ -877,6 +880,9 @@ class ShowcaseService {
 
       debugPrint(
           'ShowcaseService: Post created successfully with pre-uploaded URLs!');
+
+      // ✅ FIX: Clear cache to ensure feed shows new post immediately
+      clearAllCaches();
 
       return PostCreationResult(
         success: true,
@@ -1200,6 +1206,8 @@ class ShowcaseService {
         .limit(limit)
         .listen((data) {
           // When real-time update comes, reload full data with profiles
+          // NOTE: Don't clear cache here - it's too aggressive and slows down loading
+          // Cache is already cleared in create/delete methods
           loadAndEmitPosts();
         }, onError: (error) {
           debugPrint('ShowcaseService: Realtime subscription error: $error');
@@ -1276,6 +1284,9 @@ class ShowcaseService {
       await _supabase.from('showcase_posts').delete().eq('id', postId);
 
       debugPrint('ShowcaseService: Post deleted successfully: $postId');
+
+      // ✅ FIX: Clear cache to ensure deleted post is removed from feed immediately
+      clearAllCaches();
     } catch (e) {
       debugPrint('Error deleting showcase post: $e');
       rethrow;
@@ -1847,8 +1858,12 @@ class ShowcaseService {
       if (response != null) {
         final post = ShowcasePostModel.fromJson(response);
 
-        // Resolve user name separately to avoid join issues
+        // Resolve user name AND profile image separately to avoid join issues
+        String? resolvedName;
+        String? resolvedProfileImage;
+
         try {
+          // Fetch user name from users table
           final user = await _supabase
               .from('users')
               .select('name')
@@ -1856,26 +1871,38 @@ class ShowcaseService {
               .maybeSingle();
 
           if (user != null && user['name'] != null) {
-            // ✅ FIXED: Also load comments for complete post data
-            final comments = await getPostComments(postId);
-            debugPrint(
-                'ShowcaseService: Loaded ${comments.length} comments for post $postId');
+            resolvedName = user['name'].toString();
+          }
 
-            return post.copyWith(
-              userName: user['name'].toString(),
-              comments: comments,
-            );
+          // ✅ FIX: Also fetch latest profile image from profiles table
+          // Using 'user_id' column as that's the correct column name in profiles table
+          final profile = await _supabase
+              .from('profiles')
+              .select('profile_image_url, full_name')
+              .eq('user_id', post.userId)
+              .maybeSingle();
+
+          if (profile != null) {
+            resolvedProfileImage = profile['profile_image_url'];
+            // Use profile full_name as fallback if users.name is empty
+            if (resolvedName == null || resolvedName.isEmpty) {
+              resolvedName = profile['full_name']?.toString();
+            }
           }
         } catch (e) {
-          debugPrint('Error resolving user name: $e');
+          debugPrint('Error resolving user data: $e');
         }
 
-        // ✅ FIXED: Load comments even if user name resolution fails
+        // ✅ FIXED: Load comments for complete post data
         final comments = await getPostComments(postId);
-        debugPrint(
-            'ShowcaseService: Loaded ${comments.length} comments for post $postId');
+        // debugPrint(
+        //     'ShowcaseService: Loaded ${comments.length} comments for post $postId');
 
-        return post.copyWith(comments: comments);
+        return post.copyWith(
+          userName: resolvedName ?? post.userName,
+          userProfileImage: resolvedProfileImage ?? post.userProfileImage,
+          comments: comments,
+        );
       }
       return null;
     } catch (e) {
@@ -1893,8 +1920,8 @@ class ShowcaseService {
   /// Load comments for a specific post from post_comments table (FIXED: correct source)
   Future<List<CommentModel>> getPostComments(String postId) async {
     try {
-      debugPrint(
-          'ShowcaseService: Loading comments for post $postId from post_comments table');
+      // debugPrint(
+      //     'ShowcaseService: Loading comments for post $postId from post_comments table');
 
       // FIXED: Load from post_comments table (where addCommentExtended saves)
       final response = await _supabase
@@ -1912,8 +1939,8 @@ class ShowcaseService {
           .eq('post_id', postId)
           .order('created_at', ascending: true);
 
-      debugPrint(
-          'ShowcaseService: Found ${response.length} comments for post $postId');
+      // debugPrint(
+      //     'ShowcaseService: Found ${response.length} comments for post $postId');
 
       // OPTIMIZED: Batch fetch ALL comment user profiles in ONE query
       final commentUserIds = response
@@ -1921,10 +1948,10 @@ class ShowcaseService {
           .toSet()
           .toList();
 
-      debugPrint(
-          'ShowcaseService: 🚀 Batch fetching profiles for ${commentUserIds.length} comment authors');
+      // debugPrint(
+      //     'ShowcaseService: 🚀 Batch fetching profiles for ${commentUserIds.length} comment authors');
       final userProfiles = await _fetchProfilesForUsers(commentUserIds);
-      debugPrint('ShowcaseService: ✅ Comment profiles loaded in batch');
+      // debugPrint('ShowcaseService: ✅ Comment profiles loaded in batch');
 
       final comments = <CommentModel>[];
       for (final commentData in response) {
@@ -2002,42 +2029,41 @@ class _MockDocument {
   }
 
   /// Add snapshots() method for compatibility with PostDetailScreen
-  Stream<ShowcasePostModel?> snapshots() {
+  /// ✅ FIXED: Removed periodic polling to prevent excessive refreshes
+  Stream<ShowcasePostModel?> snapshots() async* {
     debugPrint('Mock snapshots() called for document $id');
-    // Return a stream that fetches the post from Supabase with immediate updates
-    return Stream.periodic(const Duration(seconds: 30))
-        .asyncMap<ShowcasePostModel?>((_) async {
+
+    try {
+      // Fetch post data once
+      final response = await _service._supabase
+          .from('showcase_posts')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+      final post = ShowcasePostModel.fromJson(response);
+
+      // Resolve user name separately to avoid join issues
       try {
-        // Get post data only first
-        final response = await _service._supabase
-            .from('showcase_posts')
-            .select('*')
-            .eq('id', id)
-            .single();
+        final user = await _service._supabase
+            .from('users')
+            .select('name')
+            .eq('id', post.userId)
+            .maybeSingle();
 
-        final post = ShowcasePostModel.fromJson(response);
-
-        // Resolve user name separately to avoid join issues
-        try {
-          final user = await _service._supabase
-              .from('users')
-              .select('name')
-              .eq('id', post.userId)
-              .maybeSingle();
-
-          if (user != null && user['name'] != null) {
-            return post.copyWith(userName: user['name'].toString());
-          }
-        } catch (e) {
-          debugPrint('Error resolving user name in stream: $e');
+        if (user != null && user['name'] != null) {
+          yield post.copyWith(userName: user['name'].toString());
+          return;
         }
-
-        return post;
       } catch (e) {
-        debugPrint('Error fetching post $id: $e');
-        return null;
+        debugPrint('Error resolving user name in stream: $e');
       }
-    });
+
+      yield post;
+    } catch (e) {
+      debugPrint('Error fetching post $id: $e');
+      yield null;
+    }
   }
 
   // ==================== CACHE MANAGEMENT ====================

@@ -189,6 +189,7 @@ async def test_upload(file: UploadFile = File(...)):
 from app.routers import (
     ai_assistant,
     ai_langchain,
+    ai_hybrid,  # NEW: Hybrid AI v3 with smart routing
     auth,
     events,
     media,
@@ -213,7 +214,8 @@ app.include_router(student_analytics.router)  # Student-focused analytics
 app.include_router(media.router, prefix="/api/media")  # Media upload and management
 app.include_router(showcase.router)  # Showcase posts management
 app.include_router(ai_assistant.router)  # Legacy AI assistant (Gemini direct)
-app.include_router(ai_langchain.router)  # NEW: LangChain Agentic AI v2
+app.include_router(ai_langchain.router)  # LangChain Agentic AI v2
+app.include_router(ai_hybrid.router)  # NEW: Hybrid AI v3 with smart routing
 app.include_router(ml_analytics.router)  # ML analytics with student risk prediction
 app.include_router(student_balance.router)  # Student balance analysis with AI action plans
 app.include_router(talents.router)  # Talent system - soft skills, hobbies, quiz

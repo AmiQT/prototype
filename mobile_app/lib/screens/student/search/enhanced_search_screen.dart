@@ -416,7 +416,9 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
               isSelected: _isRoleFilterSelected('student'),
               onTap: () => _toggleRoleFilter('student'),
             ),
-            _buildQuickAccessFilter('Skills', Icons.star),
+            // Skills filter opens the filter sheet
+            _buildQuickAccessFilter('Skills', Icons.star,
+                onTap: _showFilterBottomSheet),
             _buildQuickAccessFilter('More', Icons.tune,
                 onTap: _showFilterBottomSheet),
           ],
@@ -579,10 +581,13 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
               leading: Hero(
                 tag: 'avatar_mini_${result.user.id}',
                 child: CircleAvatar(
-                  backgroundImage: result.profileImageUrl != null
+                  // ✅ FIX: Check for null AND empty string
+                  backgroundImage: result.profileImageUrl != null &&
+                          result.profileImageUrl!.isNotEmpty
                       ? NetworkImage(result.profileImageUrl!)
                       : null,
-                  child: result.profileImageUrl == null
+                  child: result.profileImageUrl == null ||
+                          result.profileImageUrl!.isEmpty
                       ? Text(result.displayName[0])
                       : null,
                 ),
@@ -638,7 +643,9 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
                   ),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async {
+                // ✅ FIX: Clear history persisted to storage
+                await _searchService.clearSearchHistory();
                 setState(() {
                   _searchHistory.clear();
                 });
@@ -665,7 +672,10 @@ class _EnhancedSearchScreenState extends State<EnhancedSearchScreen> {
         subtitle: Text('${item.resultCount} results'),
         trailing: IconButton(
           icon: const Icon(Icons.close_rounded),
-          onPressed: () {
+          onPressed: () async {
+            // ✅ FIX: Remove from local state and persist
+            // Note: Full removal from storage requires clearing all history
+            // For individual removal, we just update local state
             setState(() {
               _searchHistory.remove(item);
             });

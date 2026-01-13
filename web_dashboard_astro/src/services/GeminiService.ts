@@ -43,7 +43,6 @@ class GeminiService {
             const riskFactors = studentData.risk_factors || [];
             const strengths = studentData.strengths || [];
             const metrics = studentData.performance_metrics || {};
-            const confidence = studentData.confidence || 0;
 
             const prompt = `
                 Anda adalah penasihat akademik universiti Malaysia. Analisis data pelajar dan beri pelan tindakan ringkas.
@@ -52,7 +51,6 @@ class GeminiService {
                 - ID: ${studentData.student_id}
                 - Tahap Risiko: ${riskLevel}
                 - Skor Risiko: ${(studentData.risk_score * 100).toFixed(1)}%
-                - Keyakinan: ${(confidence * 100).toFixed(0)}%
                 - Kekuatan: ${strengths.length > 0 ? strengths.join(", ") : "Tiada data"}
                 - Faktor Risiko: ${riskFactors.length > 0 ? riskFactors.join(", ") : "Tiada isu"}
                 - Metrik: CGPA=${metrics.cgpa_normalized?.toFixed(2) || "N/A"}, Koku=${metrics.koku_normalized?.toFixed(2) || "N/A"}

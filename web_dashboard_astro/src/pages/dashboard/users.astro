@@ -135,16 +135,17 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
         <div
             class="p-4 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500"
         >
-            <span
-                >Showing 1 to 10 of <span id="total-count">0</span> entries</span
-            >
+            <span id="pagination-info">Showing 1 to 10 of <span id="total-count">0</span> entries</span>
             <div class="flex gap-2">
                 <button
-                    class="px-3 py-1 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                    id="prev-page-btn"
+                    class="px-3 py-1 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled>Previous</button
                 >
+                <span id="page-indicator" class="px-3 py-1 text-gray-700 font-medium">Page 1</span>
                 <button
-                    class="px-3 py-1 border border-gray-200 rounded-lg hover:bg-gray-50"
+                    id="next-page-btn"
+                    class="px-3 py-1 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >Next</button
                 >
             </div>
@@ -365,6 +366,11 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 <script>
     import { supabase } from "../../lib/supabase";
 
+    // Pagination state
+    let currentPage = 1;
+    const PAGE_SIZE = 10;
+    let totalUsers = 0;
+
     // Add User Logic
     const addModal = document.getElementById("add-user-modal");
     const addBtn = document.getElementById("add-user-btn");
@@ -558,14 +564,24 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
 
 
-    async function loadUsers() {
-        // ... (existing code)
+    async function loadUsers(page: number = 1) {
+        currentPage = page;
+        const offset = (page - 1) * PAGE_SIZE;
+        
         try {
+            // First get total count
+            const { count } = await supabase
+                .from("users")
+                .select("*", { count: "exact", head: true });
+            
+            totalUsers = count || 0;
+
+            // Then get paginated data
             const { data: users, error } = await supabase
                 .from("users")
                 .select("*")
                 .order("created_at", { ascending: false })
-                .limit(10);
+                .range(offset, offset + PAGE_SIZE - 1);
 
             if (error) throw error;
 
@@ -656,7 +672,10 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
             // Update count
             const countEl = document.getElementById("total-count");
-            if (countEl) countEl.textContent = users.length.toString();
+            if (countEl) countEl.textContent = totalUsers.toString();
+
+            // Update pagination info
+            updatePaginationUI(users.length);
 
             // Add Event Listeners via Delegation
             tbody.addEventListener("click", async (e) => {
@@ -796,7 +815,51 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
         }
     }
 
-    document.addEventListener("DOMContentLoaded", loadUsers);
+    // Pagination UI Update Function
+    function updatePaginationUI(currentCount: number) {
+        const totalPages = Math.ceil(totalUsers / PAGE_SIZE);
+        const startItem = (currentPage - 1) * PAGE_SIZE + 1;
+        const endItem = Math.min(currentPage * PAGE_SIZE, totalUsers);
+
+        // Update pagination info text
+        const paginationInfo = document.getElementById("pagination-info");
+        if (paginationInfo) {
+            paginationInfo.innerHTML = `Showing ${startItem} to ${endItem} of <span id="total-count">${totalUsers}</span> entries`;
+        }
+
+        // Update page indicator
+        const pageIndicator = document.getElementById("page-indicator");
+        if (pageIndicator) {
+            pageIndicator.textContent = `Page ${currentPage} of ${totalPages}`;
+        }
+
+        // Update button states
+        const prevBtn = document.getElementById("prev-page-btn") as HTMLButtonElement;
+        const nextBtn = document.getElementById("next-page-btn") as HTMLButtonElement;
+
+        if (prevBtn) {
+            prevBtn.disabled = currentPage <= 1;
+        }
+        if (nextBtn) {
+            nextBtn.disabled = currentPage >= totalPages;
+        }
+    }
+
+    // Pagination Event Listeners
+    document.getElementById("prev-page-btn")?.addEventListener("click", () => {
+        if (currentPage > 1) {
+            loadUsers(currentPage - 1);
+        }
+    });
+
+    document.getElementById("next-page-btn")?.addEventListener("click", () => {
+        const totalPages = Math.ceil(totalUsers / PAGE_SIZE);
+        if (currentPage < totalPages) {
+            loadUsers(currentPage + 1);
+        }
+    });
+
+    document.addEventListener("DOMContentLoaded", () => loadUsers(1));
 
     // Bulk Actions Logic
     document.addEventListener("DOMContentLoaded", () => {

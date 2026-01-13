@@ -62,51 +62,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   void _startRealTimeUpdates() {
-    // ULTRA-FAST REAL-TIME: Every 2 seconds for true social media experience
-    _postSubscription =
-        Stream.periodic(const Duration(seconds: 2), (count) async {
-      if (!mounted) return null;
+    // ✅ DISABLED: Removed ultra-fast polling to prevent excessive refreshes and log spam
+    // Real-time updates now handled by manual refresh when needed (e.g., after adding comment)
 
-      try {
-        // Only log every 10th refresh to reduce spam
-        if (count % 10 == 0) {
-          debugPrint(
-              'PostDetailScreen: ⚡ Ultra-fast refresh #$count for post ${widget.postId}');
-        }
-
-        // Get latest post data with faster timeout
-        final post = await _showcaseService.getPostById(widget.postId);
-        if (post == null) return null;
-
-        // Get latest comments with batch-optimized loading
-        final comments = await _showcaseService.getPostComments(widget.postId);
-        final updatedPost = post.copyWith(comments: comments);
-
-        // SMART UPDATE: Only rebuild if data actually changed
-        if (_post != null &&
-            (_post!.likes.length != updatedPost.likes.length ||
-                _post!.comments.length != updatedPost.comments.length ||
-                _post!.reactions != updatedPost.reactions ||
-                _post!.content != updatedPost.content)) {
-          if (count % 10 == 0) {
-            debugPrint(
-                'PostDetailScreen: 🔄 Changes detected - likes:${updatedPost.likes.length}, comments:${updatedPost.comments.length}');
-          }
-          if (mounted) {
-            setState(() {
-              _post = updatedPost;
-            });
-          }
-        }
-
-        return updatedPost;
-      } catch (e) {
-        debugPrint('PostDetailScreen: ❌ Refresh error: $e');
-        return _post;
-      }
-    }).asyncMap((event) async => await event).listen((post) {
-      // Stream listener for real-time updates
-    });
+    // REMOVED: Stream.periodic polling every 2 seconds
+    // This was causing excessive database queries and log spam
+    debugPrint('PostDetailScreen: Real-time polling disabled to reduce spam');
   }
 
   Future<void> _loadPost() async {
@@ -171,8 +132,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       title: const Text('Post'),
-      backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).colorScheme.surface,
-      foregroundColor: Theme.of(context).appBarTheme.foregroundColor ?? Theme.of(context).colorScheme.onSurface,
+      backgroundColor: Theme.of(context).appBarTheme.backgroundColor ??
+          Theme.of(context).colorScheme.surface,
+      foregroundColor: Theme.of(context).appBarTheme.foregroundColor ??
+          Theme.of(context).colorScheme.onSurface,
       elevation: 0,
       actions: [
         if (_post != null)
@@ -305,35 +268,9 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   }
 
   Stream<ShowcasePostModel?> _getPostStream() {
-    // FIXED: Real-time stream for post updates including comments and reactions
-    return Stream.periodic(const Duration(seconds: 5), (count) async {
-      try {
-        debugPrint(
-            'PostDetailScreen: 🔄 Real-time refresh #$count for post ${widget.postId}');
-
-        // Get latest post data
-        final post = await _showcaseService.getPostById(widget.postId);
-        if (post == null) return null;
-
-        // Get latest comments
-        final comments = await _showcaseService.getPostComments(widget.postId);
-        final updatedPost = post.copyWith(comments: comments);
-
-        // Update state if mounted
-        if (mounted) {
-          setState(() {
-            _post = updatedPost;
-          });
-        }
-
-        debugPrint(
-            'PostDetailScreen: ✅ Real-time update complete - ${comments.length} comments, ${post.likes.length} likes');
-        return updatedPost;
-      } catch (e) {
-        debugPrint('PostDetailScreen: ❌ Real-time update error: $e');
-        return _post; // Return current post on error
-      }
-    }).asyncMap((event) async => await event);
+    // ✅ FIXED: Removed periodic polling, now returns current post state only
+    // Real-time updates handled by manual refresh when needed
+    return Stream.value(_post);
   }
 
   Future<void> _handleLike(ShowcasePostModel post) async {

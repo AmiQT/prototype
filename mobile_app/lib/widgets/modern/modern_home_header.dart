@@ -190,21 +190,12 @@ class ModernHomeHeader extends StatelessWidget {
 
   Widget _buildQuickActions(BuildContext context, Color textColor,
       Color glassColor, double glassOpacity) {
+    // Only New Post button - Trending and Events removed for MVP
     final actions = [
       {
         'icon': Icons.add_circle_outline,
         'label': 'New Post',
         'onTap': onNewPostTap,
-      },
-      {
-        'icon': Icons.trending_up,
-        'label': 'Trending',
-        'onTap': onTrendingTap,
-      },
-      {
-        'icon': Icons.emoji_events_outlined,
-        'label': 'Events',
-        'onTap': onEventsTap,
       },
     ];
 

@@ -97,7 +97,8 @@ class SearchService {
           'SearchService: Successfully retrieved ${allProfiles.length} profiles');
 
       if (allProfiles.isEmpty) {
-        debugPrint('SearchService: No profiles returned from backend. Check profiles table or RLS policies.');
+        debugPrint(
+            'SearchService: No profiles returned from backend. Check profiles table or RLS policies.');
       }
 
       List<SearchResult> results = [];
@@ -106,7 +107,8 @@ class SearchService {
       final filteredProfiles = allProfiles
           .where((profileData) {
             // Ensure we have at least a name or valid profile
-            if (profileData['full_name'] == null || profileData['full_name'].toString().isEmpty) {
+            if (profileData['full_name'] == null ||
+                profileData['full_name'].toString().isEmpty) {
               // If no name, check if we have a user_id at least
               if (profileData['user_id'] == null) return false;
             }
@@ -115,7 +117,8 @@ class SearchService {
           .take(limit)
           .toList();
 
-      debugPrint('SearchService: Processing ${filteredProfiles.length} profiles after initial filtering');
+      debugPrint(
+          'SearchService: Processing ${filteredProfiles.length} profiles after initial filtering');
 
       for (final profileData in filteredProfiles) {
         try {
@@ -126,7 +129,8 @@ class SearchService {
             email: profileData['email'] ?? '',
             name: profileData['full_name'] ?? 'User',
             role: _getRoleFromProfileData(profileData),
-            studentId: profileData['academic_info']?['studentId'] ?? profileData['academic_info']?['student_id'],
+            studentId: profileData['academic_info']?['studentId'] ??
+                profileData['academic_info']?['student_id'],
             department: profileData['academic_info']?['department'] ??
                 profileData['academic_info']?['faculty'],
             createdAt: profileData['created_at'] != null
@@ -146,23 +150,24 @@ class SearchService {
 
           // Apply filters
           if (_passesFilters(user, profile, filters)) {
-             // Only add if it matches the query (score > 0) OR query is empty (showing all)
-             if (query.isEmpty || relevanceScore > 0) {
-                // Debug: Log when we add a result
-                if (query.isNotEmpty) {
-                   debugPrint('SearchService: Match found - User: ${user.name}, Score: $relevanceScore');
-                }
-                
-                results.add(SearchResult(
-                  user: user,
-                  profile: profile,
-                  relevanceScore: relevanceScore,
-                  matchedFields: matchedFields,
-                ));
-             } else {
-               // Debug: Log why it was skipped
-               // debugPrint('SearchService: Skipped user ${user.name} - Score: 0');
-             }
+            // Only add if it matches the query (score > 0) OR query is empty (showing all)
+            if (query.isEmpty || relevanceScore > 0) {
+              // Debug: Log when we add a result
+              if (query.isNotEmpty) {
+                debugPrint(
+                    'SearchService: Match found - User: ${user.name}, Score: $relevanceScore');
+              }
+
+              results.add(SearchResult(
+                user: user,
+                profile: profile,
+                relevanceScore: relevanceScore,
+                matchedFields: matchedFields,
+              ));
+            } else {
+              // Debug: Log why it was skipped
+              // debugPrint('SearchService: Skipped user ${user.name} - Score: 0');
+            }
           }
         } catch (e) {
           debugPrint(
@@ -304,7 +309,53 @@ class SearchService {
     }
   }
 
-  /// Calculate relevance score for search result
+  /// Calculate fuzzy match score between query and target string
+  /// Returns a score between 0.0 and 1.0 based on word overlap
+  double _fuzzyMatchScore(String query, String target) {
+    if (query.isEmpty || target.isEmpty) return 0.0;
+
+    // Normalize strings: lowercase and split into words
+    final queryWords = query.toLowerCase().split(RegExp(r'[\s\-_/]+'));
+    final targetWords = target.toLowerCase().split(RegExp(r'[\s\-_/]+'));
+
+    if (queryWords.isEmpty || targetWords.isEmpty) return 0.0;
+
+    int matchingWords = 0;
+    int partialMatches = 0;
+
+    for (final qWord in queryWords) {
+      if (qWord.length < 2) continue; // Skip very short words
+
+      for (final tWord in targetWords) {
+        // Exact word match
+        if (qWord == tWord) {
+          matchingWords += 2;
+          break;
+        }
+        // Word starts with query word (e.g., "web" matches "webdev")
+        else if (tWord.startsWith(qWord) || qWord.startsWith(tWord)) {
+          matchingWords += 1;
+          break;
+        }
+        // Word contains query word (partial match)
+        else if (tWord.contains(qWord) || qWord.contains(tWord)) {
+          partialMatches += 1;
+          break;
+        }
+      }
+    }
+
+    // Calculate score based on matches
+    final totalQueryWords = queryWords.where((w) => w.length >= 2).length;
+    if (totalQueryWords == 0) return 0.0;
+
+    // Full matches worth more than partial
+    double score =
+        (matchingWords * 1.0 + partialMatches * 0.5) / (totalQueryWords * 2);
+    return score.clamp(0.0, 1.0);
+  }
+
+  /// Calculate relevance score for search result - IMPROVED with fuzzy matching
   double _calculateRelevanceScore(
       String query, UserModel user, ProfileModel? profile) {
     if (query.isEmpty) return 1.0;
@@ -320,60 +371,54 @@ class SearchService {
     if (user.name.toLowerCase() == q) score += 20.0;
     if (profile?.fullName.toLowerCase() == q) score += 20.0;
 
-    // Bio and headline matches
-    if (profile?.bio?.toLowerCase().contains(q) == true) score += 5.0;
-    if (profile?.headline?.toLowerCase().contains(q) == true) score += 5.0;
+    // Bio and headline matches - use fuzzy matching
+    if (profile?.bio != null) {
+      final bioScore = _fuzzyMatchScore(q, profile!.bio!);
+      score += bioScore * 8.0; // Up to 8 points for bio match
+    }
+    if (profile?.headline != null) {
+      final headlineScore = _fuzzyMatchScore(q, profile!.headline!);
+      score += headlineScore * 10.0; // Up to 10 points for headline match
+    }
 
-    // Skills matches - improved matching logic
-    int skillMatches = 0;
+    // ✅ IMPROVED: Skills matches with fuzzy matching
+    double skillScore = 0.0;
     if (profile?.skills.isNotEmpty == true) {
       for (final skill in profile!.skills) {
-        final skillLower = skill.toLowerCase();
-        final qLower = q.toLowerCase();
+        final fuzzyScore = _fuzzyMatchScore(q, skill);
 
-        // Exact match
-        if (skillLower == qLower) {
-          skillMatches += 2; // Higher score for exact match
+        // Also check if any query word matches skill
+        final queryWords = q.split(RegExp(r'[\s\-_/]+'));
+        bool hasDirectMatch = false;
+        for (final word in queryWords) {
+          if (word.length >= 3 && skill.toLowerCase().contains(word)) {
+            hasDirectMatch = true;
+            break;
+          }
         }
-        // Contains match
-        else if (skillLower.contains(qLower)) {
-          skillMatches += 1;
-        }
-        // Partial word match (for multi-word skills)
-        else if (qLower.split(' ').any((word) => skillLower.contains(word))) {
-          skillMatches += 1;
-        }
-      }
-    }
 
-    // Debug: Log skills matching for troubleshooting
-    if (q.contains('web') || q.contains('development')) {
-      debugPrint(
-          'SearchService: Skills matching debug - Query: "$q", Skills: ${profile?.skills}');
-      debugPrint(
-          'SearchService: Skills matching debug - Matches: $skillMatches');
-      if (profile?.skills.isNotEmpty == true) {
-        for (final skill in profile!.skills) {
-          final skillLower = skill.toLowerCase();
-          final qLower = q.toLowerCase();
-          final exactMatch = skillLower == qLower;
-          final containsMatch = skillLower.contains(qLower);
-          final partialMatch =
-              qLower.split(' ').any((word) => skillLower.contains(word));
-          debugPrint(
-              'SearchService: Skill "$skill" - Exact: $exactMatch, Contains: $containsMatch, Partial: $partialMatch');
+        if (fuzzyScore > 0.3) {
+          // Good fuzzy match
+          skillScore += fuzzyScore * 8.0;
+        } else if (hasDirectMatch) {
+          // Direct word match
+          skillScore += 4.0;
         }
       }
     }
+    score += skillScore;
 
-    score += skillMatches * 3.0;
-
-    // Interests matches
-    final interestMatches = profile?.interests
-            .where((interest) => interest.toLowerCase().contains(q))
-            .length ??
-        0;
-    score += interestMatches * 2.0;
+    // ✅ IMPROVED: Interests matches with fuzzy matching
+    double interestScore = 0.0;
+    if (profile?.interests.isNotEmpty == true) {
+      for (final interest in profile!.interests) {
+        final fuzzyScore = _fuzzyMatchScore(q, interest);
+        if (fuzzyScore > 0.3) {
+          interestScore += fuzzyScore * 6.0;
+        }
+      }
+    }
+    score += interestScore;
 
     // Department matches
     if (user.department?.toLowerCase().contains(q) == true) score += 4.0;
@@ -393,34 +438,39 @@ class SearchService {
     }
 
     // PAK (Personal Advisor) matches - NEW
-    if (profile?.academicInfo?.personalAdvisor?.toLowerCase().contains(q) == true) {
+    if (profile?.academicInfo?.personalAdvisor?.toLowerCase().contains(q) ==
+        true) {
       score += 8.0; // High priority for PAK search
     }
     // Check for "PAK" keyword in query
     if (q.contains('pak ') || q.startsWith('pak')) {
-      final pakQuery = q.replaceFirst('pak ', '').replaceFirst('pak', '').trim();
-      if (pakQuery.isNotEmpty && 
-          profile?.academicInfo?.personalAdvisor?.toLowerCase().contains(pakQuery) == true) {
+      final pakQuery =
+          q.replaceFirst('pak ', '').replaceFirst('pak', '').trim();
+      if (pakQuery.isNotEmpty &&
+          profile?.academicInfo?.personalAdvisor
+                  ?.toLowerCase()
+                  .contains(pakQuery) ==
+              true) {
         score += 15.0; // Very high priority when explicitly searching for PAK
       }
     }
 
-    // Experience and project matches
-    final experienceMatches = profile?.experiences
-            .where((exp) =>
-                exp.title.toLowerCase().contains(q) ||
-                exp.description.toLowerCase().contains(q))
-            .length ??
-        0;
-    score += experienceMatches * 2.0;
+    // Experience and project matches with fuzzy matching
+    if (profile?.experiences.isNotEmpty == true) {
+      for (final exp in profile!.experiences) {
+        final titleScore = _fuzzyMatchScore(q, exp.title);
+        final descScore = _fuzzyMatchScore(q, exp.description);
+        score += (titleScore + descScore) * 3.0;
+      }
+    }
 
-    final projectMatches = profile?.projects
-            .where((proj) =>
-                proj.title.toLowerCase().contains(q) ||
-                proj.description.toLowerCase().contains(q))
-            .length ??
-        0;
-    score += projectMatches * 2.0;
+    if (profile?.projects.isNotEmpty == true) {
+      for (final proj in profile!.projects) {
+        final titleScore = _fuzzyMatchScore(q, proj.title);
+        final descScore = _fuzzyMatchScore(q, proj.description);
+        score += (titleScore + descScore) * 3.0;
+      }
+    }
 
     // Profile completeness bonus
     if (profile != null) {
@@ -457,14 +507,19 @@ class SearchService {
     }
 
     // PAK (Personal Advisor) matches - NEW
-    if (profile?.academicInfo?.personalAdvisor?.toLowerCase().contains(q) == true) {
+    if (profile?.academicInfo?.personalAdvisor?.toLowerCase().contains(q) ==
+        true) {
       matchedFields.add('personalAdvisor');
     }
     // Check for "PAK" keyword in query
     if (q.contains('pak ') || q.startsWith('pak')) {
-      final pakQuery = q.replaceFirst('pak ', '').replaceFirst('pak', '').trim();
-      if (pakQuery.isNotEmpty && 
-          profile?.academicInfo?.personalAdvisor?.toLowerCase().contains(pakQuery) == true) {
+      final pakQuery =
+          q.replaceFirst('pak ', '').replaceFirst('pak', '').trim();
+      if (pakQuery.isNotEmpty &&
+          profile?.academicInfo?.personalAdvisor
+                  ?.toLowerCase()
+                  .contains(pakQuery) ==
+              true) {
         matchedFields.add('personalAdvisor');
       }
     }
@@ -1004,7 +1059,8 @@ class SearchService {
   UserRole _getRoleFromProfileData(Map<String, dynamic> profileData) {
     final academicInfo = profileData['academic_info'];
     if (academicInfo != null) {
-      if (academicInfo['studentId'] != null || academicInfo['student_id'] != null) {
+      if (academicInfo['studentId'] != null ||
+          academicInfo['student_id'] != null) {
         return UserRole.student;
       } else if (academicInfo['position'] != null) {
         return UserRole.lecturer;

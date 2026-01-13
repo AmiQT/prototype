@@ -609,12 +609,14 @@ class StudentToolsProvider:
             question: str,
             context_topic: Optional[str] = None
         ) -> Dict[str, Any]:
-            """Jawab soalan menggunakan sistem RAG.
+            """Jawab soalan menggunakan sistem RAG dengan Supabase pgvector.
             
             Gunakan tool ini untuk:
-            - Menjawab soalan berdasarkan data pelajar
-            - Memberikan maklumat kontekstual
-            - Sintesis maklumat dari pelbagai sumber
+            - Menjawab soalan tentang FSKTM/fakulti
+            - Maklumat program akademik
+            - Maklumat staff dan kepakaran
+            - Maklumat penyelidikan dan pusat
+            - Hubungi fakulti
             
             Args:
                 question: Soalan untuk dijawab
@@ -624,6 +626,27 @@ class StudentToolsProvider:
                 Dict dengan jawapan dan sumber
             """
             try:
+                # Try new Supabase RAG first
+                try:
+                    from app.ai_assistant.rag_chain import get_supabase_rag
+                    rag = get_supabase_rag()
+                    
+                    if rag._initialized:
+                        result = rag.query_sync(question)
+                        
+                        if result.confidence > 0.5:
+                            return {
+                                "success": True,
+                                "question": question,
+                                "answer": result.answer,
+                                "confidence": result.confidence,
+                                "sources": len(result.sources),
+                                "source": "supabase_rag"
+                            }
+                except Exception as e:
+                    logger.warning(f"Supabase RAG failed, falling back: {e}")
+                
+                # Fallback to old RAG system
                 rag = get_rag_system()
                 
                 # Build context from database
@@ -651,7 +674,8 @@ class StudentToolsProvider:
                     "success": True,
                     "question": question,
                     "answer": answer,
-                    "context_size": len(context_docs)
+                    "context_size": len(context_docs),
+                    "source": "legacy_rag"
                 }
                 
             except Exception as e:
@@ -662,11 +686,60 @@ class StudentToolsProvider:
                     "answer": None
                 }
         
+        @tool
+        def query_fsktm_knowledge(
+            query: str
+        ) -> Dict[str, Any]:
+            """Cari maklumat dalam pangkalan pengetahuan FSKTM.
+            
+            Gunakan tool ini untuk soalan tentang:
+            - Maklumat fakulti (visi, misi, sejarah)
+            - Program sarjana muda dan pascasiswazah
+            - Pusat penyelidikan dan kumpulan fokus
+            - Kepakaran dan bidang penyelidikan
+            - Maklumat hubungan (email, telefon, alamat)
+            - Jabatan dan struktur organisasi
+            
+            Args:
+                query: Soalan atau kata kunci pencarian
+            
+            Returns:
+                Dict dengan hasil pencarian dan jawapan
+            """
+            try:
+                from app.ai_assistant.rag_chain import get_supabase_rag
+                
+                rag = get_supabase_rag()
+                result = rag.query_sync(query)
+                
+                return {
+                    "success": True,
+                    "query": query,
+                    "answer": result.answer,
+                    "confidence": result.confidence,
+                    "sources": [
+                        {
+                            "content": s.get("content", "")[:150],
+                            "category": s.get("metadata", {}).get("category", "unknown")
+                        }
+                        for s in result.sources[:3]
+                    ]
+                }
+                
+            except Exception as e:
+                logger.error(f"Error querying FSKTM knowledge: {e}")
+                return {
+                    "success": False,
+                    "error": str(e),
+                    "answer": "Maaf, tidak dapat mengakses pangkalan pengetahuan."
+                }
+        
         return [
             semantic_search_students,
             analyze_text,
             extract_malaysian_entities,
-            answer_from_knowledge
+            answer_from_knowledge,
+            query_fsktm_knowledge
         ]
 
 

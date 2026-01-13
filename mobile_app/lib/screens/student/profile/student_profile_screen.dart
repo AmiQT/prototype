@@ -51,8 +51,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       final bytes = base64Decode(base64String);
       return MemoryImage(bytes);
     } else if (imageUrl.startsWith('http')) {
-      // Handle network images
-      return NetworkImage(imageUrl);
+      // Handle network images with cache-busting
+      final cacheBuster = DateTime.now().millisecondsSinceEpoch;
+      final separator = imageUrl.contains('?') ? '&' : '?';
+      final urlWithCacheBuster = '$imageUrl${separator}v=$cacheBuster';
+      return NetworkImage(urlWithCacheBuster);
     } else if (imageUrl.startsWith('/') || imageUrl.contains('cache')) {
       // Handle local file images
       return FileImage(File(imageUrl));

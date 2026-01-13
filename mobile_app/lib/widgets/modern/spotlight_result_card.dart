@@ -51,10 +51,13 @@ class SpotlightResultCard extends StatelessWidget {
                     ),
                     child: CircleAvatar(
                       radius: 30,
-                      backgroundImage: result.profileImageUrl != null
+                      // ✅ FIX: Check for null AND empty string
+                      backgroundImage: result.profileImageUrl != null &&
+                              result.profileImageUrl!.isNotEmpty
                           ? NetworkImage(result.profileImageUrl!)
                           : null,
-                      child: result.profileImageUrl == null
+                      child: result.profileImageUrl == null ||
+                              result.profileImageUrl!.isEmpty
                           ? Text(result.displayName[0].toUpperCase())
                           : null,
                     ),

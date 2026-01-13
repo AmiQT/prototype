@@ -19,6 +19,8 @@ class CloudinaryConfig {
     required String filePath,
     required String userId,
     String? folder,
+    String? publicId, // Optional: set to overwrite existing image with same ID
+    bool overwrite = false, // Set to true to overwrite existing image
     Function(double progress)? onProgress,
   }) async {
     try {
@@ -36,6 +38,18 @@ class CloudinaryConfig {
       // Add upload preset for unsigned uploads
       request.fields['upload_preset'] = _uploadPreset;
       request.fields['folder'] = folder ?? 'showcase_media/$userId';
+
+      // Add public_id if provided (for overwriting)
+      if (publicId != null) {
+        request.fields['public_id'] = publicId;
+        // Always invalidate CDN cache when using public_id
+        request.fields['invalidate'] = 'true';
+      }
+
+      // Add overwrite flag
+      if (overwrite) {
+        request.fields['overwrite'] = 'true';
+      }
 
       // Add file
       request.files.add(

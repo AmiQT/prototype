@@ -72,8 +72,10 @@ class _ComprehensiveEditProfileScreenState
       return MemoryImage(bytes);
     } else if (imageUrl.startsWith('http') &&
         Uri.tryParse(imageUrl)?.hasAbsolutePath == true) {
-      // Handle valid network images
-      return NetworkImage(imageUrl);
+      // Handle valid network images with cache-busting
+      final cacheBuster = DateTime.now().millisecondsSinceEpoch;
+      final separator = imageUrl.contains('?') ? '&' : '?';
+      return NetworkImage('$imageUrl${separator}v=$cacheBuster');
     } else if (imageUrl.startsWith('/') || imageUrl.contains('cache')) {
       // Handle local file images (fallback)
       return FileImage(File(imageUrl));
@@ -177,25 +179,29 @@ class _ComprehensiveEditProfileScreenState
       'Programming (BIP)',
       'Multimedia (BIM)',
     ];
-    
+
     if (currentValue.isEmpty) return null;
     if (validCourses.contains(currentValue)) return currentValue;
-    
+
     // Try to match old values to new courses
     final lowerValue = currentValue.toLowerCase();
-    if (lowerValue.contains('information technology') || lowerValue.contains('bit')) {
+    if (lowerValue.contains('information technology') ||
+        lowerValue.contains('bit')) {
       return 'Information Technology (BIT)';
     } else if (lowerValue.contains('web') || lowerValue.contains('biw')) {
       return 'Web Technology (BIW)';
     } else if (lowerValue.contains('security') || lowerValue.contains('bis')) {
       return 'Security (BIS)';
-    } else if (lowerValue.contains('programming') || lowerValue.contains('bip') || 
-               lowerValue.contains('computer science') || lowerValue.contains('software')) {
+    } else if (lowerValue.contains('programming') ||
+        lowerValue.contains('bip') ||
+        lowerValue.contains('computer science') ||
+        lowerValue.contains('software')) {
       return 'Programming (BIP)';
-    } else if (lowerValue.contains('multimedia') || lowerValue.contains('bim')) {
+    } else if (lowerValue.contains('multimedia') ||
+        lowerValue.contains('bim')) {
       return 'Multimedia (BIM)';
     }
-    
+
     // Default to null if no match (user must select)
     return null;
   }
@@ -477,7 +483,8 @@ class _ComprehensiveEditProfileScreenState
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.school, color: AppTheme.primaryColor, size: 20),
+                    const Icon(Icons.school,
+                        color: AppTheme.primaryColor, size: 20),
                     const SizedBox(width: 8),
                     Text(
                       'Program / Course',
@@ -493,7 +500,8 @@ class _ComprehensiveEditProfileScreenState
                   initialValue: _getValidCourseValue(_programController.text),
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                   isExpanded: true,
                   items: const [
@@ -522,9 +530,11 @@ class _ComprehensiveEditProfileScreenState
                     setState(() {
                       _programController.text = value ?? '';
                       // Auto-set department based on course
-                      _departmentController.text = _getDepartmentFromCourse(value ?? '');
+                      _departmentController.text =
+                          _getDepartmentFromCourse(value ?? '');
                       // Auto-set faculty to FSKTM
-                      _facultyController.text = 'FSKTM (Fakulti Sains Komputer dan Teknologi Maklumat)';
+                      _facultyController.text =
+                          'FSKTM (Fakulti Sains Komputer dan Teknologi Maklumat)';
                     });
                   },
                 ),
@@ -707,11 +717,14 @@ class _ComprehensiveEditProfileScreenState
         });
 
         try {
-          // Upload image to Cloudinary
+          // Upload image to Cloudinary with consistent public_id to overwrite old image
           final cloudinaryUrl = await CloudinaryConfig.uploadImage(
             filePath: image.path,
             userId: widget.profile.userId,
             folder: 'profile_images',
+            publicId:
+                'profile_${widget.profile.userId}', // Consistent ID for overwrite
+            overwrite: true, // Overwrite existing image
           );
 
           setState(() {
@@ -809,6 +822,10 @@ class _ComprehensiveEditProfileScreenState
 
       // Save to Firestore
       await profileService.saveProfile(updatedProfile);
+
+      // Clear image cache to force reload of new profile image
+      PaintingBinding.instance.imageCache.clear();
+      PaintingBinding.instance.imageCache.clearLiveImages();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

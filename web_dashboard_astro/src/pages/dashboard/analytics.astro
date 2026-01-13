@@ -19,113 +19,6 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
         </button>
     </div>
 
-    <!-- Quick Stats Cards - NEW -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div
-            class="bg-gradient-to-br from-blue-500 to-blue-600 p-6 rounded-2xl shadow-lg text-white"
-        >
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-blue-100 text-sm font-medium">
-                        Total Students
-                    </p>
-                    <p class="text-3xl font-bold" id="total-students">0</p>
-                </div>
-                <div
-                    class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center"
-                >
-                    <i class="fas fa-user-graduate text-2xl"></i>
-                </div>
-            </div>
-            <p class="text-blue-100 text-xs mt-2">
-                <span id="new-students-week">0</span> new students this week
-            </p>
-        </div>
-
-        <div
-            class="bg-gradient-to-br from-green-500 to-green-600 p-6 rounded-2xl shadow-lg text-white"
-        >
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-green-100 text-sm font-medium">
-                        Average CGPA
-                    </p>
-                    <p class="text-3xl font-bold" id="avg-cgpa">0.00</p>
-                </div>
-                <div
-                    class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center"
-                >
-                    <i class="fas fa-chart-line text-2xl"></i>
-                </div>
-            </div>
-            <p class="text-green-100 text-xs mt-2">
-                Based on <span id="cgpa-count">0</span> students
-            </p>
-        </div>
-
-        <div
-            class="bg-gradient-to-br from-purple-500 to-purple-600 p-6 rounded-2xl shadow-lg text-white relative"
-        >
-            <!-- Info Icon -->
-            <div class="absolute top-3 right-3 group">
-                <button
-                    class="w-5 h-5 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white/80 hover:text-white transition-colors"
-                >
-                    <i class="fas fa-info text-xs"></i>
-                </button>
-                <div
-                    class="absolute right-0 top-7 w-56 p-3 bg-white rounded-lg shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50"
-                >
-                    <p class="text-xs font-semibold text-gray-700 mb-1">
-                        Co-curricular Score
-                    </p>
-                    <p class="text-xs text-gray-500">
-                        Average co-curricular activity score (0-100%).
-                        Calculated based on event participation, clubs, and
-                        external activities.
-                    </p>
-                </div>
-            </div>
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-purple-100 text-sm font-medium">
-                        Average Co-curricular
-                    </p>
-                    <p class="text-3xl font-bold" id="avg-koku">0%</p>
-                </div>
-                <div
-                    class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center"
-                >
-                    <i class="fas fa-running text-2xl"></i>
-                </div>
-            </div>
-            <p class="text-purple-100 text-xs mt-2">
-                <span id="koku-balanced">0</span> balanced students
-            </p>
-        </div>
-
-        <div
-            class="bg-gradient-to-br from-orange-500 to-orange-600 p-6 rounded-2xl shadow-lg text-white"
-        >
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-orange-100 text-sm font-medium">
-                        Active Events
-                    </p>
-                    <p class="text-3xl font-bold" id="active-events">0</p>
-                </div>
-                <div
-                    class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center"
-                >
-                    <i class="fas fa-calendar-check text-2xl"></i>
-                </div>
-            </div>
-            <p class="text-orange-100 text-xs mt-2">
-                <span id="event-participation">0</span> participations
-            </p>
-        </div>
-    </div>
-
     <!-- Charts Section -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -341,10 +234,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
                                 class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
                                 >Risk Level</th
                             >
-                            <th
-                                class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
-                                >Confidence</th
-                            >
+
                             <th
                                 class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
                                 >Top Factor</th
@@ -486,6 +376,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
         // ML & Modal Listeners
         checkMLSystem();
         setupEventListeners();
+        setupModalHandlers();
 
         // Setup Realtime Subscriptions
         setupRealtimeSubscriptions();
@@ -692,26 +583,36 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
     async function updateQuickStats(stats: any) {
         if (!stats) return;
-        document.getElementById("total-students")!.textContent = stats.users
+        
+        const totalStudentsEl = document.getElementById("total-students");
+        if (totalStudentsEl) totalStudentsEl.textContent = stats.users
             .filter((u: any) => u.role === "student")
             .length.toString();
-        document.getElementById("avg-cgpa")!.textContent = stats.avgCgpa;
-        document.getElementById("cgpa-count")!.textContent =
-            stats.profiles.length.toString();
-        document.getElementById("active-events")!.textContent =
-            stats.events.length.toString();
-        document.getElementById("event-participation")!.textContent =
-            stats.participations.length.toString();
-        document.getElementById("total-pak")!.textContent = Object.keys(
-            stats.paks,
-        ).length.toString();
-        document.getElementById("supervised-students")!.textContent =
-            stats.profiles.length.toString();
+            
+        const avgCgpaEl = document.getElementById("avg-cgpa");
+        if (avgCgpaEl) avgCgpaEl.textContent = stats.avgCgpa;
+        
+        const cgpaCountEl = document.getElementById("cgpa-count");
+        if (cgpaCountEl) cgpaCountEl.textContent = stats.profiles.length.toString();
+        
+        const activeEventsEl = document.getElementById("active-events");
+        if (activeEventsEl) activeEventsEl.textContent = stats.events.length.toString();
+        
+        const eventParticipationEl = document.getElementById("event-participation");
+        if (eventParticipationEl) eventParticipationEl.textContent = stats.participations.length.toString();
+        
+        const totalPakEl = document.getElementById("total-pak");
+        if (totalPakEl) totalPakEl.textContent = Object.keys(stats.paks).length.toString();
+        
+        const supervisedStudentsEl = document.getElementById("supervised-students");
+        if (supervisedStudentsEl) supervisedStudentsEl.textContent = stats.profiles.length.toString();
 
         // Kokurikulum stats
-        document.getElementById("avg-koku")!.textContent = stats.avgKoku + "%";
-        document.getElementById("koku-balanced")!.textContent =
-            stats.balancedCount.toString();
+        const avgKokuEl = document.getElementById("avg-koku");
+        if (avgKokuEl) avgKokuEl.textContent = stats.avgKoku + "%";
+        
+        const kokuBalancedEl = document.getElementById("koku-balanced");
+        if (kokuBalancedEl) kokuBalancedEl.textContent = stats.balancedCount.toString();
     }
 
     async function initializeCharts(stats: any) {
@@ -1055,7 +956,6 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
                             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${risk.bg} ${risk.text} border ${risk.border}">
                                 ${risk.label}
                             </span>
-                            <p class="text-gray-600 text-sm mt-1">Confidence: ${(studentData.confidence * 100).toFixed(0)}%</p>
                         </div>
                     </div>
                     <div class="text-sm text-gray-600">
@@ -1475,7 +1375,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
                         ${format.icon} ${r.risk_level}
                     </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${Math.round(r.confidence * 100)}%</td>
+
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${r.risk_factors[0] || "None"}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button class="text-[#667eea] hover:text-[#5a6fd6] flex items-center gap-1 generate-plan-btn" 
@@ -1744,57 +1644,58 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
         if (el) el.style.width = `${Math.min(value, 100)}%`;
     }
 
-    // AI Plan Modal Logic
-    const planModal = document.getElementById("action-plan-modal");
-    const closeModalBtn = document.getElementById("close-modal-btn");
-    const planContent = document.getElementById("action-plan-content");
-    const modalStudentId = document.getElementById("modal-student-id");
+    // AI Plan Modal Logic - Initialize after DOM is ready
+    function setupModalHandlers() {
+        const planModal = document.getElementById("action-plan-modal");
+        const closeModalBtn = document.getElementById("close-modal-btn");
+        const planContent = document.getElementById("action-plan-content");
+        const modalStudentId = document.getElementById("modal-student-id");
 
-    // Close Modal
-    closeModalBtn?.addEventListener("click", () => {
-        planModal?.classList.add("hidden");
-        planModal?.classList.remove("flex");
-    });
-
-    // Close on click outside
-    planModal?.addEventListener("click", (e) => {
-        if (e.target === planModal) {
+        // Close Modal
+        closeModalBtn?.addEventListener("click", () => {
             planModal?.classList.add("hidden");
             planModal?.classList.remove("flex");
-        }
-    });
+        });
 
-    // Delegate click for Generate Plan button
-    document
-        .getElementById("ml-results-body")
-        ?.addEventListener("click", async (e) => {
-            const target = (e.target as HTMLElement).closest(
-                ".generate-plan-btn",
-            );
-            if (!target) return;
-
-            const btn = target as HTMLButtonElement;
-            const studentId = btn.dataset.studentId;
-            const riskContextStr = btn.dataset.riskContext;
-            let riskContext = {};
-
-            try {
-                if (riskContextStr) {
-                    riskContext = JSON.parse(
-                        riskContextStr.replace(/&apos;/g, "'"),
-                    );
-                }
-            } catch (e) {
-                console.warn("Failed to parse risk context", e);
+        // Close on click outside
+        planModal?.addEventListener("click", (e) => {
+            if (e.target === planModal) {
+                planModal?.classList.add("hidden");
+                planModal?.classList.remove("flex");
             }
+        });
 
-            if (!studentId || !planModal || !planContent || !modalStudentId)
-                return;
+        // Delegate click for Generate Plan button
+        document
+            .getElementById("ml-results-body")
+            ?.addEventListener("click", async (e) => {
+                const target = (e.target as HTMLElement).closest(
+                    ".generate-plan-btn",
+                );
+                if (!target) return;
 
-            // Open Modal
-            planModal.classList.remove("hidden");
-            planModal.classList.add("flex");
-            modalStudentId.textContent = `Generating plan for ${studentId}...`;
+                const btn = target as HTMLButtonElement;
+                const studentId = btn.dataset.studentId;
+                const riskContextStr = btn.dataset.riskContext;
+                let riskContext = {};
+
+                try {
+                    if (riskContextStr) {
+                        riskContext = JSON.parse(
+                            riskContextStr.replace(/&apos;/g, "'"),
+                        );
+                    }
+                } catch (e) {
+                    console.warn("Failed to parse risk context", e);
+                }
+
+                if (!studentId || !planModal || !planContent || !modalStudentId)
+                    return;
+
+                // Open Modal
+                planModal.classList.remove("hidden");
+                planModal.classList.add("flex");
+                modalStudentId.textContent = `Generating plan for ${studentId}...`;
 
             // Show Loading State
             planContent.innerHTML = `
@@ -1846,4 +1747,5 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
             `;
             }
         });
+    }
 </script>
