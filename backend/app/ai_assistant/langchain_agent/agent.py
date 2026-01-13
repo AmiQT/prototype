@@ -464,22 +464,25 @@ class StudentTalentAgent:
 
 def create_agent(
     db: Session,
-    api_key: Optional[str] = None,
-    model_name: str = "gemini-2.5-flash"
+    provider: Optional[str] = None,
+    model_name: Optional[str] = None,
+    temperature: Optional[float] = None
 ) -> StudentTalentAgent:
     """
     Factory function to create a StudentTalentAgent.
     
     Args:
         db: SQLAlchemy database session
-        api_key: Gemini API key (optional, uses env var if not provided)
-        model_name: Model name to use
+        provider: LLM provider ("gemini" or "ollama", default from env)
+        model_name: Model name (default from env)
+        temperature: Temperature 0-1 (default from env)
         
     Returns:
         Configured StudentTalentAgent instance
     """
     return StudentTalentAgent(
         db=db,
-        api_key=api_key,
-        model_name=model_name
+        provider=provider,
+        model_name=model_name,
+        temperature=temperature
     )
