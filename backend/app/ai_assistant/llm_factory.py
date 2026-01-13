@@ -116,6 +116,12 @@ class LLMFactory:
             f"base_url={base_url}, temp={temperature}, timeout={timeout}s"
         )
         
+        # Custom headers for ngrok free tier (skip browser warning)
+        custom_headers = {}
+        if "ngrok" in base_url.lower():
+            custom_headers["ngrok-skip-browser-warning"] = "true"
+            logger.info("📡 Ngrok detected, adding skip-browser-warning header")
+        
         return ChatOllama(
             base_url=base_url,
             model=model_name,
@@ -125,7 +131,9 @@ class LLMFactory:
             num_predict=2048,  # Max tokens to generate
             top_k=40,          # Top-k sampling
             top_p=0.9,         # Top-p (nucleus) sampling
-            repeat_penalty=1.1  # Penalize repetition
+            repeat_penalty=1.1,  # Penalize repetition
+            # Custom headers for ngrok
+            headers=custom_headers
         )
     
     @staticmethod
