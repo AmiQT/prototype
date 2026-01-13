@@ -196,12 +196,30 @@ class StudentTalentAgent:
             }
             
         except Exception as e:
+            error_str = str(e)
             logger.error(f"Error in agent invoke: {e}", exc_info=True)
+            
+            # Check for rate limit error and provide friendly fallback message
+            if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str.lower():
+                fallback_message = (
+                    "🙏 Maaf, sistem AI sedang sibuk sekarang. "
+                    "Sila cuba lagi dalam beberapa saat. "
+                    "Terima kasih atas kesabaran anda!"
+                )
+                return {
+                    "success": False,
+                    "message": fallback_message,
+                    "session_id": session_id,
+                    "error": "rate_limit",
+                    "retry_after": 60,
+                    "source": "langchain_agent"
+                }
+            
             return {
                 "success": False,
-                "message": f"Maaf, berlaku ralat: {str(e)}",
+                "message": f"Maaf, berlaku ralat: {error_str}",
                 "session_id": session_id,
-                "error": str(e),
+                "error": error_str,
                 "source": "langchain_agent"
             }
     
@@ -286,12 +304,30 @@ class StudentTalentAgent:
             }
             
         except Exception as e:
+            error_str = str(e)
             logger.error(f"Error in sync agent invoke: {e}", exc_info=True)
+            
+            # Check for rate limit error and provide friendly fallback message
+            if "429" in error_str or "RESOURCE_EXHAUSTED" in error_str or "quota" in error_str.lower():
+                fallback_message = (
+                    "🙏 Maaf, sistem AI sedang sibuk sekarang. "
+                    "Sila cuba lagi dalam beberapa saat. "
+                    "Terima kasih atas kesabaran anda!"
+                )
+                return {
+                    "success": False,
+                    "message": fallback_message,
+                    "session_id": session_id,
+                    "error": "rate_limit",
+                    "retry_after": 60,
+                    "source": "langchain_agent"
+                }
+            
             return {
                 "success": False,
-                "message": f"Maaf, berlaku ralat: {str(e)}",
+                "message": f"Maaf, berlaku ralat: {error_str}",
                 "session_id": session_id,
-                "error": str(e),
+                "error": error_str,
                 "source": "langchain_agent"
             }
     
