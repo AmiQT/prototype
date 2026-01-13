@@ -24,7 +24,7 @@ router = APIRouter(prefix="/api/ai/v2", tags=["AI Assistant v2 (LangChain)"])
 # Request/Response models
 class AgentCommandRequest(BaseModel):
     """Request model for agent commands."""
-    command: str = Field(..., min_length=1, max_length=2000, description="User command/message")
+    command: str = Field(..., min_length=1, max_length=50000, description="User command/message with optional RAG context")
     context: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Additional context")
     session_id: Optional[str] = Field(None, description="Session ID for conversation memory")
 

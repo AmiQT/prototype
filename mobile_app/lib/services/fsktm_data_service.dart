@@ -488,7 +488,7 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
 
     if (relevantStaff.isNotEmpty) {
       context.writeln('=== STAFF BERKAITAN ===');
-      for (var member in relevantStaff.take(10)) {
+      for (var member in relevantStaff.take(3)) {
         context.writeln('**${member['name']}**');
         context.writeln('Jawatan: ${member['title']}');
         context.writeln('Jabatan: ${member['department']}');
@@ -496,8 +496,9 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
         context.writeln('---');
       }
     } else {
-      context.writeln('=== SENARAI STAFF (${staff.length} orang) ===');
-      for (var member in staff) {
+      context.writeln(
+          '=== SENARAI STAFF (menunjukkan 3 daripada ${staff.length} orang) ===');
+      for (var member in staff.take(3)) {
         context.writeln(
             '${member['name']} | ${member['title']} | ${member['email']}');
       }
@@ -568,7 +569,7 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
 
     if (relevantStaff.isNotEmpty) {
       context.writeln('=== STAFF BERKAITAN ===');
-      for (var member in relevantStaff.take(10)) {
+      for (var member in relevantStaff.take(3)) {
         context.writeln('**${member['name']}**');
         context.writeln('Jawatan: ${member['title']}');
         context.writeln('Jabatan: ${member['department']}');
@@ -576,8 +577,9 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
         context.writeln('---');
       }
     } else {
-      context.writeln('=== SENARAI STAFF (${staff.length} orang) ===');
-      for (var member in staff) {
+      context.writeln(
+          '=== SENARAI STAFF (menunjukkan 3 daripada ${staff.length} orang) ===');
+      for (var member in staff.take(3)) {
         context.writeln(
             '${member['name']} | ${member['title']} | ${member['email']}');
       }
@@ -861,8 +863,8 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
     if (relevantStaff.isNotEmpty) {
       // User mentioned specific staff/department - show detailed info
       context.writeln('=== STAFF BERKAITAN ===');
-      for (var member in relevantStaff.take(10)) {
-        // Limit to top 10
+      for (var member in relevantStaff.take(3)) {
+        // Limit to top 3
         context.writeln('**${member['name']}**');
         context.writeln('Jawatan: ${member['title']}');
         context.writeln('Jabatan: ${member['department']}');
@@ -875,8 +877,9 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
     } else if (queryIntent.contains('staff') ||
         queryIntent.contains('lecturer')) {
       // General staff query - show compact list
-      context.writeln('=== SENARAI STAFF (${staff.length} orang) ===');
-      for (var member in staff) {
+      context.writeln(
+          '=== SENARAI STAFF (menunjukkan 3 daripada ${staff.length} orang) ===');
+      for (var member in staff.take(3)) {
         context.writeln(
             '${member['name']} | ${member['title']} | ${member['email']}');
       }

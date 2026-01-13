@@ -5,19 +5,20 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/chat_models.dart';
 import '../config/app_config.dart';
+import '../config/supabase_config.dart';
 import 'chat_history_service.dart';
 
-/// Gemini API chat service with multimodal support and RAG
-/// Supports text, images, PDFs, audio, and video
-/// Enhanced with FSKTM knowledge base integration
+/// Gemini Chat Service - Now uses Backend Proxy
+/// All AI calls go through backend which handles Gemini API securely
+/// Enhanced with FSKTM knowledge base integration (RAG via backend)
 class GeminiChatService extends ChangeNotifier {
-  static const String _baseUrl =
-      'https://generativelanguage.googleapis.com/v1beta';
-  static const String _model = 'gemini-2.5-flash'; // Free tier model
+  // Backend AI endpoint - no more direct Gemini calls!
+  static String get _backendAiUrl =>
+      '${AppConfig.backendUrl}/api/ai/v2/command';
 
   final ChatHistoryService _historyService;
   bool _isTyping = false;
-  
+
   // RAG Response Cache - untuk soalan lazim
   static final Map<String, _CachedResponse> _responseCache = {};
   static const int _maxCacheSize = 50;
@@ -26,27 +27,24 @@ class GeminiChatService extends ChangeNotifier {
   GeminiChatService(this._historyService);
 
   bool get isTyping => _isTyping;
-  bool get hasApiKey {
-    return AppConfig.hasGeminiApiKey;
-  }
 
-  /// Get API key from secure configuration
-  String? get _apiKey {
-    return AppConfig.getGeminiApiKey();
+  /// Backend handles API key - always available if backend is up
+  bool get hasApiKey => true;
+
+  /// Get Supabase auth token for backend authentication
+  String? get _authToken {
+    return SupabaseConfig.auth.currentSession?.accessToken;
   }
 
   /// Send message with optional file attachments and RAG context
+  /// Now routes through backend for secure API key handling
   Future<ChatMessage> sendMessage({
     required String conversationId,
     required String content,
     required String userId,
     List<File>? attachments,
-    String? ragContext, // NEW: Optional RAG context from FSKTM data
+    String? ragContext,
   }) async {
-    if (!hasApiKey) {
-      throw Exception('Gemini API key not configured');
-    }
-
     _isTyping = true;
     notifyListeners();
 
@@ -63,12 +61,13 @@ class GeminiChatService extends ChangeNotifier {
 
       // Save user message to local history
       await _historyService.saveMessage(userMessage);
-      
+
       // Check cache for similar FSKTM queries
       if (ragContext != null) {
         final cachedResponse = _getCachedResponse(content);
         if (cachedResponse != null) {
-          debugPrint('RAG Cache HIT for query: ${content.substring(0, content.length.clamp(0, 50))}...');
+          debugPrint(
+              'RAG Cache HIT for query: ${content.substring(0, content.length.clamp(0, 50))}...');
           final aiMessage = ChatMessage(
             id: _generateMessageId(),
             conversationId: conversationId,
@@ -83,31 +82,50 @@ class GeminiChatService extends ChangeNotifier {
         }
       }
 
-      // Get conversation history for context
-      final history =
-          await _historyService.getConversationMessages(conversationId);
+      // Build backend request with RAG context INJECTED into command
+      // This ensures Gemini receives faculty/staff data even though backend doesn't parse rag_context separately
+      String commandWithContext = content;
+      if (ragContext != null && ragContext.isNotEmpty) {
+        commandWithContext = '''
+[KONTEKS FAKULTI UTHM - Gunakan data ini untuk menjawab soalan]
+$ragContext
+[TAMAT KONTEKS]
 
-      // Build request with multimodal support and RAG context
-      final requestBody =
-          await _buildGeminiRequest(content, history, attachments, ragContext);
+Soalan user: $content''';
+      }
 
-      // Send to Gemini API
+      final requestBody = {
+        'command': commandWithContext,
+        'session_id': conversationId,
+        'context': {
+          'user_id': userId,
+        },
+      };
+
+      // Get auth token
+      final authToken = _authToken;
+      if (authToken == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // Send to Backend AI endpoint (which calls Gemini securely)
       final response = await http.post(
-        Uri.parse('$_baseUrl/models/$_model:generateContent?key=$_apiKey'),
+        Uri.parse(_backendAiUrl),
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': 'Bearer $authToken',
         },
         body: jsonEncode(requestBody),
       );
 
       if (response.statusCode != 200) {
         throw Exception(
-            'Gemini API error: ${response.statusCode} - ${response.body}');
+            'Backend AI error: ${response.statusCode} - ${response.body}');
       }
 
       final responseData = jsonDecode(response.body);
-      final aiContent = _extractContentFromResponse(responseData);
-      
+      final aiContent = responseData['message'] ?? 'Maaf, tiada respons.';
+
       // Cache response for FSKTM queries
       if (ragContext != null) {
         _cacheResponse(content, aiContent);
@@ -135,7 +153,7 @@ class GeminiChatService extends ChangeNotifier {
   }
 
   /// Send message with STREAMING response - word by word output
-  /// Returns a Stream of partial content updates
+  /// Now routes through backend, simulates streaming from full response
   Stream<String> sendMessageStreaming({
     required String conversationId,
     required String content,
@@ -143,10 +161,6 @@ class GeminiChatService extends ChangeNotifier {
     List<File>? attachments,
     String? ragContext,
   }) async* {
-    if (!hasApiKey) {
-      throw Exception('Gemini API key not configured');
-    }
-
     _isTyping = true;
     notifyListeners();
 
@@ -166,17 +180,12 @@ class GeminiChatService extends ChangeNotifier {
       if (ragContext != null) {
         final cachedResponse = _getCachedResponse(content);
         if (cachedResponse != null) {
-          debugPrint('RAG Cache HIT (streaming): ${content.substring(0, content.length.clamp(0, 50))}...');
-          
+          debugPrint(
+              'RAG Cache HIT (streaming): ${content.substring(0, content.length.clamp(0, 50))}...');
+
           // Simulate streaming for cached response
-          final words = cachedResponse.split(' ');
-          final buffer = StringBuffer();
-          for (final word in words) {
-            buffer.write('$word ');
-            yield buffer.toString();
-            await Future.delayed(const Duration(milliseconds: 20));
-          }
-          
+          yield* _simulateStreaming(cachedResponse);
+
           // Save to history
           final aiMessage = ChatMessage(
             id: _generateMessageId(),
@@ -192,97 +201,88 @@ class GeminiChatService extends ChangeNotifier {
         }
       }
 
-      // Get conversation history
-      final history = await _historyService.getConversationMessages(conversationId);
+      // Build backend request
+      // Build backend request with RAG context INJECTED into command
+      String commandWithContext = content;
+      if (ragContext != null && ragContext.isNotEmpty) {
+        commandWithContext = '''
+[KONTEKS FAKULTI UTHM - Gunakan data ini untuk menjawab soalan]
+$ragContext
+[TAMAT KONTEKS]
 
-      // Build request
-      final requestBody = await _buildGeminiRequest(content, history, attachments, ragContext);
-
-      // Use streaming endpoint
-      final client = http.Client();
-      try {
-        final request = http.Request(
-          'POST',
-          Uri.parse('$_baseUrl/models/$_model:streamGenerateContent?alt=sse&key=$_apiKey'),
-        );
-        request.headers['Content-Type'] = 'application/json';
-        request.body = jsonEncode(requestBody);
-
-        final streamedResponse = await client.send(request);
-
-        if (streamedResponse.statusCode != 200) {
-          final errorBody = await streamedResponse.stream.bytesToString();
-          throw Exception('Gemini API error: ${streamedResponse.statusCode} - $errorBody');
-        }
-
-        final fullContent = StringBuffer();
-
-        await for (final chunk in streamedResponse.stream.transform(utf8.decoder)) {
-          // Parse SSE data
-          final lines = chunk.split('\n');
-          for (final line in lines) {
-            if (line.startsWith('data: ')) {
-              final jsonStr = line.substring(6).trim();
-              if (jsonStr.isEmpty || jsonStr == '[DONE]') continue;
-
-              try {
-                final data = jsonDecode(jsonStr);
-                final text = _extractTextFromStreamChunk(data);
-                if (text.isNotEmpty) {
-                  fullContent.write(text);
-                  yield fullContent.toString();
-                }
-              } catch (e) {
-                debugPrint('Stream parse error: $e');
-              }
-            }
-          }
-        }
-
-        final finalContent = fullContent.toString();
-        
-        // Cache response for FSKTM queries
-        if (ragContext != null && finalContent.isNotEmpty) {
-          _cacheResponse(content, finalContent);
-        }
-
-        // Save final AI message
-        final aiMessage = ChatMessage(
-          id: _generateMessageId(),
-          conversationId: conversationId,
-          userId: 'stap_advisor',
-          content: finalContent,
-          role: MessageRole.assistant,
-          timestamp: DateTime.now(),
-          tokens: _calculateTokens(finalContent),
-        );
-        await _historyService.saveMessage(aiMessage);
-        
-      } finally {
-        client.close();
+Soalan user: $content''';
       }
+
+      final requestBody = {
+        'command': commandWithContext,
+        'session_id': conversationId,
+        'context': {
+          'user_id': userId,
+        },
+      };
+
+      // Get auth token
+      final authToken = _authToken;
+      if (authToken == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // Send to Backend AI endpoint
+      final response = await http.post(
+        Uri.parse(_backendAiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $authToken',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception(
+            'Backend AI error: ${response.statusCode} - ${response.body}');
+      }
+
+      final responseData = jsonDecode(response.body);
+      final fullContent = responseData['message'] ?? 'Maaf, tiada respons.';
+
+      // Cache response for FSKTM queries
+      if (ragContext != null && fullContent.isNotEmpty) {
+        _cacheResponse(content, fullContent);
+      }
+
+      // Simulate streaming by yielding words progressively
+      yield* _simulateStreaming(fullContent);
+
+      // Save final AI message
+      final aiMessage = ChatMessage(
+        id: _generateMessageId(),
+        conversationId: conversationId,
+        userId: 'stap_advisor',
+        content: fullContent,
+        role: MessageRole.assistant,
+        timestamp: DateTime.now(),
+        tokens: _calculateTokens(fullContent),
+      );
+      await _historyService.saveMessage(aiMessage);
     } finally {
       _isTyping = false;
       notifyListeners();
     }
   }
 
-  /// Extract text from streaming chunk
-  String _extractTextFromStreamChunk(Map<String, dynamic> data) {
-    try {
-      final candidates = data['candidates'] as List?;
-      if (candidates != null && candidates.isNotEmpty) {
-        final content = candidates[0]['content'];
-        final parts = content?['parts'] as List?;
-        if (parts != null && parts.isNotEmpty) {
-          return parts[0]['text'] ?? '';
-        }
-      }
-    } catch (e) {
-      debugPrint('Error extracting stream text: $e');
+  /// Simulate streaming by yielding words progressively
+  Stream<String> _simulateStreaming(String content) async* {
+    final words = content.split(' ');
+    final buffer = StringBuffer();
+    for (final word in words) {
+      buffer.write('$word ');
+      yield buffer.toString();
+      await Future.delayed(const Duration(milliseconds: 25));
     }
-    return '';
   }
+
+  // NOTE: _extractTextFromStreamChunk removed - no longer used with backend proxy
+  // NOTE: _buildGeminiRequest removed - no longer used with backend proxy
 
   /// Build Gemini API request with multimodal support and RAG context
   Future<Map<String, dynamic>> _buildGeminiRequest(
@@ -297,15 +297,16 @@ class GeminiChatService extends ChangeNotifier {
     // If history is long, create a summary of older messages
     String? conversationSummary;
     List<ChatMessage> recentHistory;
-    
+
     if (history.length > 10) {
       // Keep last 6 messages as detailed context
       recentHistory = history.sublist(history.length - 6);
-      
+
       // Summarize older messages (messages 0 to n-6)
       final olderMessages = history.sublist(0, history.length - 6);
       conversationSummary = _createConversationSummary(olderMessages);
-      debugPrint('RAG Memory: Created summary of ${olderMessages.length} older messages');
+      debugPrint(
+          'RAG Memory: Created summary of ${olderMessages.length} older messages');
     } else {
       recentHistory = history;
     }
@@ -315,13 +316,19 @@ class GeminiChatService extends ChangeNotifier {
       contents.add({
         'role': 'user',
         'parts': [
-          {'text': '[RINGKASAN PERBUALAN SEBELUM]\n$conversationSummary\n[TAMAT RINGKASAN]'}
+          {
+            'text':
+                '[RINGKASAN PERBUALAN SEBELUM]\n$conversationSummary\n[TAMAT RINGKASAN]'
+          }
         ],
       });
       contents.add({
         'role': 'model',
         'parts': [
-          {'text': 'Terima kasih. Saya faham konteks perbualan kita sebelum ini.'}
+          {
+            'text':
+                'Terima kasih. Saya faham konteks perbualan kita sebelum ini.'
+          }
         ],
       });
     }
@@ -438,7 +445,7 @@ class GeminiChatService extends ChangeNotifier {
   /// Build system prompt for STAP UTHM Advisor with optional RAG context
   String _buildSystemPrompt(String? ragContext) {
     final basePrompt = StringBuffer();
-    
+
     basePrompt.writeln('''
 You are STAP UTHM Advisor, an AI academic advisor for UTHM Student Talent Profiling app, specifically for FSKTM (Fakulti Sains Komputer dan Teknologi Maklumat).
 
@@ -455,9 +462,10 @@ Your role is to provide guidance on:
     // Inject RAG context into system prompt if available
     if (ragContext != null && ragContext.isNotEmpty) {
       // Check if context has relevant staff data
-      final hasStaffData = ragContext.contains('STAFF BERKAITAN') || ragContext.contains('SENARAI STAFF');
+      final hasStaffData = ragContext.contains('STAFF BERKAITAN') ||
+          ragContext.contains('SENARAI STAFF');
       final hasMinimalContext = ragContext.length < 500;
-      
+
       basePrompt.writeln('''
 
 === FSKTM KNOWLEDGE BASE (Use this data to answer FSKTM-related questions) ===
@@ -553,92 +561,99 @@ If the question is off-topic: "Saya di sini untuk membantu dengan pembangunan ak
   String _generateMessageId() {
     return 'msg_${DateTime.now().millisecondsSinceEpoch}';
   }
-  
+
   // ============== CONVERSATION MEMORY METHODS ==============
-  
+
   /// Create a summary of older conversation messages
   /// This helps maintain context without using too many tokens
   String _createConversationSummary(List<ChatMessage> messages) {
     if (messages.isEmpty) return '';
-    
+
     final summary = StringBuffer();
     summary.writeln('Topik yang telah dibincangkan:');
-    
+
     // Extract key topics from messages
     final topics = <String>{};
     final userQuestions = <String>[];
-    
+
     for (final message in messages) {
       if (message.role == MessageRole.user) {
         // Extract short version of user question
-        final shortContent = message.content.length > 100 
-            ? '${message.content.substring(0, 100)}...' 
+        final shortContent = message.content.length > 100
+            ? '${message.content.substring(0, 100)}...'
             : message.content;
         userQuestions.add('- $shortContent');
-        
+
         // Detect topics mentioned
         final content = message.content.toLowerCase();
-        if (content.contains(RegExp(r'staff|pensyarah|lecturer'))) topics.add('Staff/Pensyarah');
-        if (content.contains(RegExp(r'program|course|kursus'))) topics.add('Program Akademik');
-        if (content.contains(RegExp(r'research|penyelidikan'))) topics.add('Penyelidikan');
-        if (content.contains(RegExp(r'contact|telefon|email'))) topics.add('Maklumat Hubungan');
-        if (content.contains(RegExp(r'jabatan|department'))) topics.add('Jabatan');
+        if (content.contains(RegExp(r'staff|pensyarah|lecturer')))
+          topics.add('Staff/Pensyarah');
+        if (content.contains(RegExp(r'program|course|kursus')))
+          topics.add('Program Akademik');
+        if (content.contains(RegExp(r'research|penyelidikan')))
+          topics.add('Penyelidikan');
+        if (content.contains(RegExp(r'contact|telefon|email')))
+          topics.add('Maklumat Hubungan');
+        if (content.contains(RegExp(r'jabatan|department')))
+          topics.add('Jabatan');
       }
     }
-    
+
     // Add detected topics
     if (topics.isNotEmpty) {
       summary.writeln('Kategori: ${topics.join(', ')}');
     }
-    
+
     // Add last 3 user questions as reference
     summary.writeln('Soalan terdahulu:');
     for (final question in userQuestions.take(3)) {
       summary.writeln(question);
     }
-    
+
     return summary.toString();
   }
-  
+
   // ============== RAG CACHE METHODS ==============
-  
+
   /// Get cached response for similar queries
   String? _getCachedResponse(String query) {
     final normalizedQuery = _normalizeQuery(query);
     final cached = _responseCache[normalizedQuery];
-    
+
     if (cached != null && !cached.isExpired) {
       return cached.response;
     }
-    
+
     // Remove expired entry
     if (cached != null) {
       _responseCache.remove(normalizedQuery);
     }
-    
+
     return null;
   }
-  
+
   /// Cache response for future similar queries
   void _cacheResponse(String query, String response) {
     // Limit cache size
     if (_responseCache.length >= _maxCacheSize) {
       // Remove oldest entries
       final sortedKeys = _responseCache.keys.toList()
-        ..sort((a, b) => _responseCache[a]!.timestamp.compareTo(_responseCache[b]!.timestamp));
-      
+        ..sort((a, b) => _responseCache[a]!
+            .timestamp
+            .compareTo(_responseCache[b]!.timestamp));
+
       for (int i = 0; i < 10; i++) {
         _responseCache.remove(sortedKeys[i]);
       }
     }
-    
+
     final normalizedQuery = _normalizeQuery(query);
     _responseCache[normalizedQuery] = _CachedResponse(
       response: response,
       timestamp: DateTime.now(),
     );
   }
-  
+
   /// Normalize query for cache key
   String _normalizeQuery(String query) {
     return query
@@ -647,7 +662,7 @@ If the question is off-topic: "Saya di sini untuk membantu dengan pembangunan ak
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
   }
-  
+
   /// Clear RAG response cache
   static void clearCache() {
     _responseCache.clear();
@@ -658,12 +673,12 @@ If the question is off-topic: "Saya di sini untuk membantu dengan pembangunan ak
 class _CachedResponse {
   final String response;
   final DateTime timestamp;
-  
+
   _CachedResponse({
     required this.response,
     required this.timestamp,
   });
-  
-  bool get isExpired => 
+
+  bool get isExpired =>
       DateTime.now().difference(timestamp) > GeminiChatService._cacheExpiry;
 }
