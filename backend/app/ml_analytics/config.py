@@ -10,20 +10,17 @@ import logging
 from typing import Optional
 from datetime import timedelta
 
+from app.core.key_manager import key_manager, get_gemini_key
+
 logger = logging.getLogger(__name__)
 
 
+
 def _get_gemini_api_key() -> str:
-    """Get Gemini API key from environment, supporting both singular and plural keys."""
-    # Try singular first
-    key = os.getenv("GEMINI_API_KEY", "")
-    if key:
-        return key
-    # Try plural (comma-separated, take first)
-    keys = os.getenv("GEMINI_API_KEYS", "")
-    if keys:
-        return keys.split(",")[0].strip()
-    return ""
+    """Get Gemini API key using rotation from key_manager."""
+    key = get_gemini_key()
+    return key if key else ""
+
 
 
 class MLConfig:

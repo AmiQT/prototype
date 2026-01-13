@@ -13,6 +13,7 @@ import os
 
 from .config import MLConfig
 from .balance_analyzer import BalanceAnalyzer, BalanceMetrics, BalanceStatus
+from app.core.key_manager import get_gemini_key, key_manager
 
 logger = logging.getLogger(__name__)
 
@@ -31,12 +32,13 @@ class AIActionPlanGenerator:
         self._init_gemini()
     
     def _init_gemini(self):
-        """Initialize Gemini API."""
-        if self.config.GEMINI_API_KEY:
-            genai.configure(api_key=self.config.GEMINI_API_KEY)
+        """Initialize Gemini API with key rotation."""
+        api_key = get_gemini_key()
+        if api_key:
+            genai.configure(api_key=api_key)
             self.model = genai.GenerativeModel(self.config.GEMINI_MODEL)
             self.ai_enabled = True
-            logger.info("AI Action Plan Generator initialized with Gemini")
+            logger.info(f"AI Action Plan Generator initialized with Gemini ({key_manager.key_count} key(s))")
         else:
             self.ai_enabled = False
             logger.warning("Gemini API key not configured. Using rule-based plans only.")
@@ -87,6 +89,11 @@ class AIActionPlanGenerator:
         prompt = self._build_prompt(student_data, metrics, issues)
         
         try:
+            # Use rotated key for each request
+            rotated_key = get_gemini_key()
+            if rotated_key:
+                genai.configure(api_key=rotated_key)
+            
             response = await self.model.generate_content_async(
                 prompt,
                 generation_config=genai.types.GenerationConfig(
@@ -284,6 +291,11 @@ Format JSON (ikut TEPAT):
 Berikan ringkasan eksekutif dalam 3-4 ayat sahaja. Fokus pada insight utama dan cadangan tindakan untuk fakulti."""
 
         try:
+            # Use rotated key for batch summary
+            rotated_key = get_gemini_key()
+            if rotated_key:
+                genai.configure(api_key=rotated_key)
+            
             response = await self.model.generate_content_async(
                 prompt,
                 generation_config=genai.types.GenerationConfig(

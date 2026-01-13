@@ -13,6 +13,7 @@ from .config import MLConfig
 from .data_processor import DataProcessor
 from .feature_engineer import FeatureEngineer
 from .cache_manager import CacheManager
+from app.core.key_manager import get_gemini_key, key_manager
 
 logger = logging.getLogger(__name__)
 
@@ -41,13 +42,15 @@ class MLPredictor:
         self.data_processor = DataProcessor()
         self.feature_engineer = FeatureEngineer()
 
-        # Initialize Gemini API
-        if not self.config.GEMINI_API_KEY:
+        # Initialize Gemini API with key rotation
+        self._init_api_key = get_gemini_key()
+        if not self._init_api_key:
             logger.error("GEMINI_API_KEY not configured!")
         else:
-            genai.configure(api_key=self.config.GEMINI_API_KEY)
+            genai.configure(api_key=self._init_api_key)
             self.model = genai.GenerativeModel(self.config.GEMINI_MODEL)
             logger.info(f"Gemini model initialized: {self.config.GEMINI_MODEL}")
+            logger.info(f"🔑 Using key rotation with {key_manager.key_count} key(s)")
 
     async def predict_student_risk(self, student_data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -137,8 +140,11 @@ class MLPredictor:
                 student_data=student_profile
             )
 
-            # Call Gemini API
-            logger.debug("Calling Gemini API...")
+            # Call Gemini API with rotated key
+            rotated_key = get_gemini_key()
+            if rotated_key:
+                genai.configure(api_key=rotated_key)
+            logger.debug(f"Calling Gemini API with rotated key...")
             response = self.model.generate_content(
                 prompt,
                 generation_config={

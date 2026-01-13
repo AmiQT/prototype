@@ -84,11 +84,12 @@ class RAGSystem:
             self._vectorstore = None
     
     def _setup_llm(self):
-        """Setup LLM for generation."""
+        """Setup LLM for generation with key rotation."""
         try:
             from langchain_google_genai import ChatGoogleGenerativeAI
+            from app.core.key_manager import get_gemini_key, key_manager
             
-            api_key = os.getenv("GEMINI_API_KEY")
+            api_key = get_gemini_key()
             if not api_key:
                 logger.warning("⚠️ GEMINI_API_KEY not set")
                 return
@@ -100,7 +101,7 @@ class RAGSystem:
                 convert_system_message_to_human=True
             )
             
-            logger.info("✅ LLM initialized")
+            logger.info(f"✅ LLM initialized with {key_manager.key_count} key(s)")
             
         except Exception as e:
             logger.error(f"❌ Error setting up LLM: {e}")

@@ -24,6 +24,7 @@ import os
 from .prompts import CONCISE_SYSTEM_PROMPT
 from .tools import get_student_tools, get_all_tools
 from .memory import get_session_history, memory_manager
+from app.core.key_manager import get_gemini_key, key_manager
 
 logger = logging.getLogger(__name__)
 
@@ -40,13 +41,8 @@ class StudentTalentAgent:
         include_nlp_tools: bool = True
     ):
         self.db = db
-        # Support both GEMINI_API_KEY and GEMINI_API_KEYS (comma-separated)
-        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
-        if not self.api_key:
-            # Try GEMINI_API_KEYS (take first key)
-            api_keys = os.getenv("GEMINI_API_KEYS", "")
-            if api_keys:
-                self.api_key = api_keys.split(",")[0].strip()
+        # Use key rotation from key_manager
+        self.api_key = api_key or get_gemini_key()
         
         self.model_name = model_name
         self.temperature = temperature
