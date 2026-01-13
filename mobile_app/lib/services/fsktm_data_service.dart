@@ -979,7 +979,7 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
     return 1.0 - (distance / maxLength);
   }
 
-  /// Find relevant staff based on query with FUZZY MATCHING
+  /// Find relevant staff based on query with IMPROVED FUZZY MATCHING
   static List<Map<String, dynamic>> _findRelevantStaff(
       List staff, String query) {
     final results = <Map<String, dynamic>>[];
@@ -991,24 +991,44 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
       final title = member['title'].toString().toLowerCase();
       double matchScore = 0.0;
 
+      // IMPROVED: Direct substring check first (most reliable)
+      // Check if ANY query word is contained in staff name
+      for (final queryWord in queryWords) {
+        if (queryWord.length < 3) continue;
+
+        // Direct substring match (e.g., "muhaini" in "Dr. Muhaini binti...")
+        if (name.contains(queryWord)) {
+          matchScore += 2.0; // High score for direct match
+          debugPrint('Direct match: "$queryWord" found in "$name"');
+          continue;
+        }
+      }
+
       // Check name match (exact partial OR fuzzy)
       final nameParts = name.split(' ');
       for (final namePart in nameParts) {
         if (namePart.length < 3) continue;
 
-        // Exact partial match
-        if (query.contains(namePart)) {
-          matchScore += 1.0;
-          continue;
-        }
-
-        // Fuzzy match for each query word against name parts
+        // Reverse check: if name part contains query word
         for (final queryWord in queryWords) {
           if (queryWord.length < 3) continue;
 
+          // Name contains query (e.g., "muhaimin" contains "muhai")
+          if (namePart.contains(queryWord)) {
+            matchScore += 1.5;
+            continue;
+          }
+
+          // Query contains name part (existing logic)
+          if (query.contains(namePart)) {
+            matchScore += 1.0;
+            continue;
+          }
+
+          // Fuzzy match with LOWER threshold (0.5 instead of 0.7)
           final fuzzyScore = _fuzzyMatchScore(queryWord, namePart);
-          if (fuzzyScore >= 0.7) {
-            // 70% similarity threshold
+          if (fuzzyScore >= 0.5) {
+            // 50% similarity threshold (was 70%)
             matchScore += fuzzyScore;
             debugPrint(
                 'Fuzzy match: "$queryWord" ≈ "$namePart" (score: ${fuzzyScore.toStringAsFixed(2)})');
