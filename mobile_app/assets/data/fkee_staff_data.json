@@ -1,0 +1,1082 @@
+{
+    "faculty_info": {
+        "name": "Fakulti Kejuruteraan Elektrik dan Elektronik",
+        "name_en": "Faculty of Electrical and Electronic Engineering",
+        "acronym": "FKEE",
+        "university": "Universiti Tun Hussein Onn Malaysia (UTHM)",
+        "total_staff": 185,
+        "website": "https://community.uthm.edu.my/offices/info/26",
+        "last_updated": "2026-01-13",
+        "data_source": "AUTHENTIC - Scraped from UTHM Community Website"
+    },
+    "departments": [
+        {
+            "name": "Jabatan Kejuruteraan Elektronik",
+            "name_en": "Electronic Engineering Department"
+        },
+        {
+            "name": "Jabatan Kejuruteraan Elektrik",
+            "name_en": "Electrical Engineering Department"
+        },
+        {
+            "name": "Jabatan Pengurusan Makmal dan Aset",
+            "name_en": "Laboratory and Asset Management Department"
+        },
+        {
+            "name": "Pejabat Am",
+            "name_en": "General Office"
+        }
+    ],
+    "staff": [
+        {
+            "name": "PROF. MADYA Ir. Dr. ABD KADIR BIN MAHAMAD",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "kadir@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK ABDUL HAMID BIN SABRAN",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "ahamid@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Dr. ABU UBAIDAH BIN SHAMSUDIN",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "ubaidah@uthm.edu.my"
+        },
+        {
+            "name": "Dr. ABUL KHAIR BIN ANUAR",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "abul@uthm.edu.my"
+        },
+        {
+            "name": "Dr. AFARULRAZI BIN ABU BAKAR",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "afarul@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. AHMAD FATEH BIN MOHAMAD NOR",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "afateh@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK AHMAD NIZAM BIN ABD RAHMAN",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "anizam@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK AHMAD SUHAIMI BIN JASNI",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "asuhaimi@uthm.edu.my"
+        },
+        {
+            "name": "Dr. AINI BINTI HUSSAIN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "aini@uthm.edu.my"
+        },
+        {
+            "name": "PUAN AINI JATI BINTI ROZALI",
+            "title": "Kakitangan",
+            "department": "Pejabat Am",
+            "email": "ainijati@uthm.edu.my"
+        },
+        {
+            "name": "Dr. AIZAT FAIZ BIN RAMLI",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "aizatfaiz@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK ALADIN BIN SABRUN",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "aladin@uthm.edu.my"
+        },
+        {
+            "name": "Dr. ALI OTHMAN BIN MOHAMED",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "alimohamed@uthm.edu.my"
+        },
+        {
+            "name": "Ts. ALIZA BINTI ALIAS",
+            "title": "Pensyarah",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "aliza@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Dr. AMAR FAIZ BIN ZAINAL ABIDIN",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "amarfaiz@uthm.edu.my"
+        },
+        {
+            "name": "PROF. Ts. Dr. ASMARASHID BIN PONNIRAN",
+            "title": "Profesor",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "asmar@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Dr. AUDREY HUONG KAH CHING",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "audrey@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK AZHAN BIN AHMAD ZAIDI",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "azhan@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Ts. Dr. AZLI BIN YAHYA",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "azliy@uthm.edu.my"
+        },
+        {
+            "name": "Dr. AZMI BIN AWANG MD ISA",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "azmiawang@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK AZRUL BIN MAT RADZI",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "azrulradzi@uthm.edu.my"
+        },
+        {
+            "name": "PUAN CHE ANISAH BINTI ABDULLAH",
+            "title": "Kakitangan",
+            "department": "Pejabat Am",
+            "email": "anisah@uthm.edu.my"
+        },
+        {
+            "name": "Dr. CHE KU NURSHAFIENA BINTI CHE KU YAHAYA",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "shafiena@uthm.edu.my"
+        },
+        {
+            "name": "Dr. DAHAMAN BIN ISHAK",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "dahaman@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. DALILA BINTI MAT SAID",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "dalila@uthm.edu.my"
+        },
+        {
+            "name": "PROF. Ir. Dr. ERWAN BIN SULAIMAN",
+            "title": "Profesor",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "erwan@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK FAHRI BIN MD SAAD",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "fahri@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. FAIRUL AZHAR BIN ABDUL SHUKOR",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "fairul@uthm.edu.my"
+        },
+        {
+            "name": "PROF. Ir. Dr. FAUZIAHANIM BINTI CHE SEMAN",
+            "title": "Profesor",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "fauziahs@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. HAFIZ FAZLI BIN HELMY",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "hafizfazli@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK HAMDAN BIN WAHID",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "hamdanwahid@uthm.edu.my"
+        },
+        {
+            "name": "Dr. HANIM BINTI HUSSAIN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "hanimh@uthm.edu.my"
+        },
+        {
+            "name": "Ir. Dr. HASIMAH BINTI ABDUL RAHMAN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "hasimah@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK HATTA BIN ISMAIL",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "hatta@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. HAZILAH BINTI MAD KAIDI",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "hazilah@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. HERDAWATIE BINTI ABDUL KADIR",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "herdawatie@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. IEZONI BIN JAMIN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "iezoni@uthm.edu.my"
+        },
+        {
+            "name": "Dr. IZZATDIN BIN ABDUL AZIZ",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "izzatdin@uthm.edu.my"
+        },
+        {
+            "name": "PUAN JAMILAH BINTI KADIR",
+            "title": "Kakitangan",
+            "department": "Pejabat Am",
+            "email": "jami@uthm.edu.my"
+        },
+        {
+            "name": "Ts. JULIANA BINTI ABD HAMID",
+            "title": "Pensyarah",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "juliana@uthm.edu.my"
+        },
+        {
+            "name": "Dr. JUNAIDAH BINTI ATAN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "junaidaha@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. KASRUL ABDUL KARIM",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "kasrul@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK KHAIRULANUAR BIN MUSTAFA",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "khairulnur@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK KHAIRUL NIZAM BIN ABDUL MAULUD",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "nizammaulud@uthm.edu.my"
+        },
+        {
+            "name": "Ts. KHAIRUL OSMAN",
+            "title": "Pensyarah",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "kosmann@uthm.edu.my"
+        },
+        {
+            "name": "Dr. LATIFAH BINTI MUNIRAH KAMARUDIN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "latifah@uthm.edu.my"
+        },
+        {
+            "name": "Dr. LEONG WEI CHUN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "leongwc@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MAHFUDZAH BIN OTHMAN",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "mahfudzah@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Dr. MARLIA BINTI MORSIN",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "marlia@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. MASNANI BINTI MOHAMED",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "masnani@uthm.edu.my"
+        },
+        {
+            "name": "Ts. MAZLEENA BINTI MOHAMAD@KASIM",
+            "title": "Pensyarah",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "mazleena@uthm.edu.my"
+        },
+        {
+            "name": "Dr. MD DAUD BIN MD YUNUS",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "daud@uthm.edu.my"
+        },
+        {
+            "name": "Ir. Dr. MD NAZRI BIN OTHMAN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "mdnazri@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. MD PAUZI BIN ABDULLAH",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "mdpauzi@uthm.edu.my"
+        },
+        {
+            "name": "Dr. MD SAIDIN BIN WAHAB",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "msw@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. MD ZARAFI BIN AHMAD",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "zarafi@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHAMAD FAIZAL BIN MOHAMAD NASIR",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "mfaizal@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHAMAD FARHAN BIN MOHAMAD NOR",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "mfarhan@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHAMAD FAUZI BIN MOHAMAD YUSOP",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "mfauzi@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHAMAD HAFIZ BIN SULAIMAN",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "mhafiz@uthm.edu.my"
+        },
+        {
+            "name": "Dr. MOHAMAD JAMIL BIN MOHD SAAD",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "jamils@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHAMAD NOOR AZRIFF BIN RAZALI",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "azriff@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHAMAD RIDZUAN BIN MAT RUSDI",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "ridzuanmr@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHAMAD ZAKI BIN SALEH",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "mzaki@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. MOHAMED FAUZY BIN PACKEER MOHAMED",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "fauzy@uthm.edu.my"
+        },
+        {
+            "name": "Dr. MOHAMMAD NIZAM BIN IBRAHIM",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "mnizam@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Dr. MOHD AMRAN BIN MOHD RADZI",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "amranmr@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. MOHD FAIZAL BIN JAMLOS",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "faizalj@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHD FARHAN BIN MD ADUR",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "farhanadur@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHD FAUZAN BIN ZAINAL ABIDIN",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "fauzan@uthm.edu.my"
+        },
+        {
+            "name": "Ir. Ts. Dr. MOHD HAFIZI BIN AHMAD",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "hafizi@uthm.edu.my"
+        },
+        {
+            "name": "Dr. MOHD KHAIR BIN HASSAN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "mkhair@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHD NIZAM BIN YATIM",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "nizamy@uthm.edu.my"
+        },
+        {
+            "name": "Dr. MOHD NORAZIZI BIN SHAM MOHD SAYUTI",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "azizi@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHD NORFAISAL BIN ISMAIL",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "norfaisal@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. MOHD RASHIDI BIN CHE BESON",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "rashidi@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHD RAZALI BIN HASSIM",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "mrazali@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHD RIDHUAN BIN HAMID",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "ridhuan@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHD RUHAIZI BIN ABDUL RASHID",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "ruhaizi@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHD SAIFUL NIZAM BIN SULAIMAN",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "mnizam@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHD SANUSI BIN AZIZ",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "sanusi@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. MOHD SHAMIAN BIN ZAINAL",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "shamian@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHD SOLIHUDDIN BIN MOHMAD YUSOFF",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "solihuddin@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHD SYAFWAN SHAH BIN ABU HASSAN",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "syafwan@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHD ZAKARIA BIN AMRAN",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "zakariaa@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHD ZIKRI BIN MANAP",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "zikri@uthm.edu.my"
+        },
+        {
+            "name": "Dr. MUHAMMAD BADRI BIN ABD GHANI",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "mbadri@uthm.edu.my"
+        },
+        {
+            "name": "PROF. Dr. MUHAMMAD MAHADI BIN ABDUL JAMIL",
+            "title": "Profesor",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "mahadi@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MUHAMMAD NABIL BIN ZULKIFLI",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "nabil@uthm.edu.my"
+        },
+        {
+            "name": "Dr. MUHAMMAD NASIRUDDIN BIN MAHYUDDIN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "nasiruddin@uthm.edu.my"
+        },
+        {
+            "name": "Dr. MUHAMMAD NORFAUZI BIN DANI",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "norfauzi@uthm.edu.my"
+        },
+        {
+            "name": "Dr. MUHAMMAD SHUKRI BIN AHMAD",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "mshukri@uthm.edu.my"
+        },
+        {
+            "name": "Dr. MURIZAH BINTI KASSIM",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "murizah@uthm.edu.my"
+        },
+        {
+            "name": "PROF. Dr. NAFARIZAL BIN NAYAN",
+            "title": "Profesor",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "nafa@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK NAZAR BIN MOHD SHUKOR",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "nazar@uthm.edu.my"
+        },
+        {
+            "name": "Ir. NAZZARUL MOHI BIN TUANI IBRAHIM",
+            "title": "Pensyarah",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "nazzarul@uthm.edu.my"
+        },
+        {
+            "name": "Dr. NIK MOHD RIDZUAN BIN NIK HASSAN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "nikmohdridzuan@uthm.edu.my"
+        },
+        {
+            "name": "PUAN NOOR EZATY BINTI MOHAMAD",
+            "title": "Kakitangan",
+            "department": "Pejabat Am",
+            "email": "ezaty@uthm.edu.my"
+        },
+        {
+            "name": "PUAN NOOR HAFIZAH BINTI ISMAIL",
+            "title": "Kakitangan",
+            "department": "Pejabat Am",
+            "email": "noordah@uthm.edu.my"
+        },
+        {
+            "name": "PUAN NOOR HAZREEN BINTI MOHD TAIB",
+            "title": "Kakitangan",
+            "department": "Pejabat Am",
+            "email": "hazreen@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Dr. NOR AKMAL BINTI MOHD JAMAIL",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "norakmal@uthm.edu.my"
+        },
+        {
+            "name": "Dr. NOR ASIAH BINTI MUHAMAD SELAMAT",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "norasiah@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. NOR DIYANA BINTI MD. SIN",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "diyana@uthm.edu.my"
+        },
+        {
+            "name": "Dr. NOR HAYATI BINTI SAAD",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "nhsaad@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. NORAZLIANIE BINTI SAZALI",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "azlianie@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK NORFAZLI BIN MOHD YUSOF",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "norfazli@uthm.edu.my"
+        },
+        {
+            "name": "Dr. NORHAFIZAN BINTI AHMAD",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "hafizan@uthm.edu.my"
+        },
+        {
+            "name": "Dr. NORHANA BINTI ARSAD",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "norhana@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. NORHANISAH BINTI JAMALUDIN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "norhanisah@uthm.edu.my"
+        },
+        {
+            "name": "PUAN NORHASNIDA BINTI AHMAD",
+            "title": "Kakitangan",
+            "department": "Pejabat Am",
+            "email": "norhasnida@uthm.edu.my"
+        },
+        {
+            "name": "Dr. NORHIDAYAH BINTI MOHAMAD YATIM",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "norhidayah@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Ts. Dr. NORILMI AMILIA BINTI ISMAIL",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "norilmi@uthm.edu.my"
+        },
+        {
+            "name": "PUAN NORIZAN BINTI MOHAMAD",
+            "title": "Kakitangan",
+            "department": "Pejabat Am",
+            "email": "norizanm@uthm.edu.my"
+        },
+        {
+            "name": "Dr. NORJULIA BINTI MOHAMAD NORDIN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "norjulia@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. NORMAHIRA BINTI MAMAT",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "normahira@uthm.edu.my"
+        },
+        {
+            "name": "Dr. NORSHIDAH BINTI KATIRAN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "norshidah@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. NORUN FARHANAH BINTI BAHTIAR",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "norun@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Dr. NUR AZIEMAH BINTI AHMAD",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "nuraziemah@uthm.edu.my"
+        },
+        {
+            "name": "PUAN NUR HANIS BINTI HAYAZI",
+            "title": "Kakitangan",
+            "department": "Pejabat Am",
+            "email": "nurhanis@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. NUR HANA BINTI SAMSUDIN",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "nurhana@uthm.edu.my"
+        },
+        {
+            "name": "Dr. NUR IZZATI BINTI AB. RAZAK",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "nurizzati@uthm.edu.my"
+        },
+        {
+            "name": "Dr. NUR SHAHIDA BINTI MD ISA",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "nshahida@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. NURAL IZURA BINTI ELIAS",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "nuralizu@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. NURHAMIDAH BINTI ABDUL HALIM",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "nurhamidah@uthm.edu.my"
+        },
+        {
+            "name": "Dr. NURIN WAHIDAH BINTI MOHD ZULKIFLI",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "nurinwahidah@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. NURUL AMZIAH BINTI MD. YUNUS",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "amziah@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Dr. NURUL FADZLIN BINTI HASBULLAH",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "fadzlin@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Dr. NURUL HAZLINA BINTI NOORDIN",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "hazlina@uthm.edu.my"
+        },
+        {
+            "name": "PUAN NURUL HIDAYAH BINTI SAMSUDIN",
+            "title": "Kakitangan",
+            "department": "Pejabat Am",
+            "email": "hidayahfkee@uthm.edu.my"
+        },
+        {
+            "name": "Dr. NURUL WAHIDAH BINTI ARSHAD",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "nwahidah@uthm.edu.my"
+        },
+        {
+            "name": "Dr. NURZAL EFFIYANA BINTI GHAZALI",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "nurzal@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Dr. OMAR BIN ALIMAN",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "oaliman@uthm.edu.my"
+        },
+        {
+            "name": "Dr. PING JACK SOH",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "pingjack@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Dr. RAJA MOHD TAUFIKA BIN RAJA ISMAIL",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "taufika@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. RAMLI BIN SALLEH",
+            "title": "Profesor Madya",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "ramli@uthm.edu.my"
+        },
+        {
+            "name": "Dr. RASHIDAH BINTI ARSAT",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "rashidaha@uthm.edu.my"
+        },
+        {
+            "name": "Dr. RAZAIDI BIN HUSSIN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "razaidi@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK RIDUAN BIN MD ISA",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "riduan@uthm.edu.my"
+        },
+        {
+            "name": "Dr. ROHAIZAT BINTI MOHAMAD RADZI",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "rohaizat@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. ROSHAZITA BINTI CHE AMAT",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "roshazita@uthm.edu.my"
+        },
+        {
+            "name": "Dr. ROSZAIRI BIN HASSAN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "roszairi@uthm.edu.my"
+        },
+        {
+            "name": "Dr. ROZAINI BINTI TUKIMIN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "rozaini@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. ROZIAH BINTI AZIZ",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "roziaha@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. SAIFULNIZAM BIN ABD KHALID",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektroni",
+            "email": "saifulnizam@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Dr. SALBIAH BINTI SELIMAN",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "salbiah@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK SALIMIN BIN TAIB",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "salimin@uthm.edu.my"
+        },
+        {
+            "name": "PUAN SALMAH BINTI SHARIF",
+            "title": "Kakitangan",
+            "department": "Pejabat Am",
+            "email": "msalmah@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK SAMSUDDIN BIN AWANG",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "samsuddin@uthm.edu.my"
+        },
+        {
+            "name": "Dr. SHAMSUL FAISAL BIN MOHD HUSSEIN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "shamsul@uthm.edu.my"
+        },
+        {
+            "name": "Dr. SHAMSUL NIZAM BIN ABD NASIR",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "shamsulnizam@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. SITI HUZAIMAH BINTI HUSIN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "huzaimah@uthm.edu.my"
+        },
+        {
+            "name": "PUAN SITI KHOTIJAH BINTI AHMAD",
+            "title": "Kakitangan",
+            "department": "Pejabat Am",
+            "email": "khotijah@uthm.edu.my"
+        },
+        {
+            "name": "Dr. SITI MARIAM BINTI AB GHANI",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "sitimariam@uthm.edu.my"
+        },
+        {
+            "name": "PUAN SITI NOR BINTI ASMAWATI",
+            "title": "Kakitangan",
+            "department": "Pejabat Am",
+            "email": "sitinor@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. SITI NOORMIZA BINTI MAKHTAR",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "miza@uthm.edu.my"
+        },
+        {
+            "name": "Dr. SITI ZURA BINTI A. JALIL",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "sitizura@uthm.edu.my"
+        },
+        {
+            "name": "Dr. SUHAILA BINTI SULAIMAN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "suhaila@uthm.edu.my"
+        },
+        {
+            "name": "Dr. SUZIANA BINTI AHMAD",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "suziana@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. SYAHRIZAL BIN SALLEH",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "syahrizal@uthm.edu.my"
+        },
+        {
+            "name": "PUAN SYAKIRAH BINTI SAMSURI",
+            "title": "Kakitangan",
+            "department": "Pejabat Am",
+            "email": "syakirah@uthm.edu.my"
+        },
+        {
+            "name": "Dr. SYED MOHD FAIRUZ BIN SYED MOHD DARDIN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "fairuz@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK SYUHAIMI BIN AHMAD",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "syuhaimi@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK TEH SUHAIRI BIN ADU RAHMAN",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "tehsuhairi@uthm.edu.my"
+        },
+        {
+            "name": "Dr. UTHAYASANKAR BIN SIVARAJAH",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "uthaya@uthm.edu.my"
+        },
+        {
+            "name": "PUAN WAN EFFA HAZZIELIANA BINTI WAN AZMI",
+            "title": "Kakitangan",
+            "department": "Pejabat Am",
+            "email": "effa@uthm.edu.my"
+        },
+        {
+            "name": "Dr. WAN NURSHAZWANI BINTI WAN ZAKARIA",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "nurshazwani@uthm.edu.my"
+        },
+        {
+            "name": "PUAN YANTI BINTI MUSLIMAT",
+            "title": "Kakitangan",
+            "department": "Pejabat Am",
+            "email": "yanti@uthm.edu.my"
+        },
+        {
+            "name": "Dr. YEOH KENG HENG",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektronik",
+            "email": "yeohkh@uthm.edu.my"
+        },
+        {
+            "name": "PUAN YUSMAINAD BINTI MOKHTAR",
+            "title": "Kakitangan",
+            "department": "Pejabat Am",
+            "email": "yusmai@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK ZAINAL ARIFFIN BIN ABU TALIB",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "zainalat@uthm.edu.my"
+        },
+        {
+            "name": "PUAN ZAIRAH BINTI ALI",
+            "title": "Kakitangan",
+            "department": "Pejabat Am",
+            "email": "zairah@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. ZARINA BINTI MOHD KHALID",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "zarinak@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. ZULFADLI BIN RASHID",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Elektrik",
+            "email": "zulfadli@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK ZULKARNAINI BIN ZAINI",
+            "title": "Kakitangan",
+            "department": "Jabatan Pengurusan Makmal dan Aset",
+            "email": "zulkarnaini@uthm.edu.my"
+        },
+        {
+            "name": "PUAN ZURAIDA BINTI HASHIM",
+            "title": "Kakitangan",
+            "department": "Pejabat Am",
+            "email": "zuraidah@uthm.edu.my"
+        }
+    ]
+}

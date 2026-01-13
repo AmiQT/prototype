@@ -7,7 +7,20 @@ import 'package:flutter/services.dart';
 class FSKTMDataService {
   static Map<String, dynamic>? _cachedStaffData;
   static Map<String, dynamic>? _cachedKnowledgeBase;
-  
+
+  // FKAAB (Civil Engineering) cache
+  static Map<String, dynamic>? _cachedFKAABStaffData;
+
+  // FKEE (Electrical & Electronic Engineering) cache
+  static Map<String, dynamic>? _cachedFKEEStaffData;
+
+  /// Supported faculties enum
+  static const Map<String, String> supportedFaculties = {
+    'fsktm': 'Fakulti Sains Komputer dan Teknologi Maklumat',
+    'fkaab': 'Fakulti Kejuruteraan Awam dan Alam Bina',
+    'fkee': 'Fakulti Kejuruteraan Elektrik dan Elektronik',
+  };
+
   // ============== QUERY EXPANSION: Sinonim BM ↔ EN ==============
   /// Dictionary sinonim untuk expand query - supaya "pensyarah" match "lecturer" dll
   static const Map<String, List<String>> _synonymDictionary = {
@@ -22,7 +35,7 @@ class FSKTMDataService {
     'head': ['ketua', 'pengarah'],
     'staff': ['kakitangan', 'pekerja', 'staf'],
     'kakitangan': ['staff', 'pekerja', 'staf'],
-    
+
     // Academic
     'program': ['course', 'kursus', 'pengajian'],
     'course': ['program', 'kursus', 'pengajian'],
@@ -31,19 +44,19 @@ class FSKTMDataService {
     'degree': ['ijazah', 'sarjana muda'],
     'sarjana': ['master', 'pascasiswazah'],
     'master': ['sarjana', 'pascasiswazah'],
-    
+
     // Departments
     'jabatan': ['department', 'dept'],
     'department': ['jabatan', 'dept'],
     'fakulti': ['faculty'],
     'faculty': ['fakulti'],
-    
+
     // Research
     'penyelidikan': ['research', 'kajian'],
     'research': ['penyelidikan', 'kajian'],
     'kepakaran': ['expertise', 'specialization', 'bidang'],
     'expertise': ['kepakaran', 'specialization', 'bidang'],
-    
+
     // Contact
     'telefon': ['phone', 'tel', 'nombor'],
     'phone': ['telefon', 'tel', 'nombor'],
@@ -51,7 +64,7 @@ class FSKTMDataService {
     'address': ['alamat', 'lokasi', 'tempat'],
     'emel': ['email', 'e-mel'],
     'email': ['emel', 'e-mel'],
-    
+
     // Actions
     'cari': ['find', 'search', 'senarai', 'list'],
     'find': ['cari', 'search', 'senarai'],
@@ -61,26 +74,35 @@ class FSKTMDataService {
     'what': ['apa', 'apakah'],
     'berapa': ['how many', 'jumlah', 'bilangan'],
   };
-  
+
   // ============== CHUNKING: Document Chunks for Better Retrieval ==============
   /// Cached chunks for efficient retrieval
   static List<DocumentChunk>? _cachedChunks;
-  
+
   /// Create chunks from knowledge base for better retrieval
   static Future<List<DocumentChunk>> _createChunks() async {
     if (_cachedChunks != null) return _cachedChunks!;
-    
+
     final staffData = await loadStaffData();
     final knowledgeBase = await loadKnowledgeBase();
     final chunks = <DocumentChunk>[];
-    
+
     // Chunk 1: Faculty Identity
     if (knowledgeBase['faculty_identity'] != null) {
       final identity = knowledgeBase['faculty_identity'];
       chunks.add(DocumentChunk(
         id: 'faculty_identity',
         category: 'faculty',
-        keywords: ['fsktm', 'fakulti', 'faculty', 'uthm', 'visi', 'misi', 'vision', 'mission'],
+        keywords: [
+          'fsktm',
+          'fakulti',
+          'faculty',
+          'uthm',
+          'visi',
+          'misi',
+          'vision',
+          'mission'
+        ],
         content: '''
 IDENTITI FAKULTI:
 Nama: ${identity['official_name']?['malay'] ?? 'FSKTM'}
@@ -92,14 +114,22 @@ Misi: ${identity['mission'] ?? '-'}
 ''',
       ));
     }
-    
+
     // Chunk 2: Contact Information
     if (knowledgeBase['quick_answers'] != null) {
       final qa = knowledgeBase['quick_answers'];
       chunks.add(DocumentChunk(
         id: 'contact_info',
         category: 'contact',
-        keywords: ['telefon', 'phone', 'email', 'alamat', 'address', 'hubungi', 'contact'],
+        keywords: [
+          'telefon',
+          'phone',
+          'email',
+          'alamat',
+          'address',
+          'hubungi',
+          'contact'
+        ],
         content: '''
 MAKLUMAT HUBUNGAN FSKTM:
 Telefon: ${qa['phone'] ?? '+607 453 3606'}
@@ -109,7 +139,7 @@ Website: https://fsktm.uthm.edu.my
 ''',
       ));
     }
-    
+
     // Chunk 3: Statistics
     if (knowledgeBase['quick_answers'] != null) {
       final qa = knowledgeBase['quick_answers'];
@@ -125,7 +155,7 @@ Jumlah Program: ${qa['total_programs'] ?? '-'}
 ''',
       ));
     }
-    
+
     // Chunk 4: Departments
     final departments = staffData['departments'] as List? ?? [];
     if (departments.isNotEmpty) {
@@ -140,7 +170,7 @@ Jumlah Program: ${qa['total_programs'] ?? '-'}
         content: deptContent.toString(),
       ));
     }
-    
+
     // Chunk 5-N: Individual Staff (each staff as separate chunk)
     final staff = staffData['staff'] as List? ?? [];
     for (int i = 0; i < staff.length; i++) {
@@ -152,7 +182,9 @@ Jumlah Program: ${qa['total_programs'] ?? '-'}
         keywords: [
           ...nameParts.where((p) => p.length > 2),
           member['department'].toString().toLowerCase(),
-          'pensyarah', 'lecturer', 'staff',
+          'pensyarah',
+          'lecturer',
+          'staff',
         ],
         content: '''
 STAFF: ${member['name']}
@@ -163,19 +195,20 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
 ''',
       ));
     }
-    
+
     // Chunk: Programs
     if (knowledgeBase['academic_programs'] != null) {
       final programs = knowledgeBase['academic_programs'];
-      final progContent = StringBuffer('PROGRAM AKADEMIK FSKTM:\n\nSARJANA MUDA:\n');
-      
+      final progContent =
+          StringBuffer('PROGRAM AKADEMIK FSKTM:\n\nSARJANA MUDA:\n');
+
       if (programs['undergraduate'] != null) {
         final undergrad = programs['undergraduate']['programs'] as List? ?? [];
         for (var prog in undergrad) {
           progContent.writeln('- ${prog['title'] ?? prog['name']}');
         }
       }
-      
+
       if (programs['postgraduate'] != null) {
         progContent.writeln('\nPASCA SISWAZAH:');
         final postgrad = programs['postgraduate']['programs'] as List? ?? [];
@@ -183,32 +216,43 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
           progContent.writeln('- ${prog['title'] ?? prog['name']}');
         }
       }
-      
+
       chunks.add(DocumentChunk(
         id: 'programs',
         category: 'program',
-        keywords: ['program', 'course', 'kursus', 'ijazah', 'degree', 'sarjana', 'bachelor', 'master', 'phd'],
+        keywords: [
+          'program',
+          'course',
+          'kursus',
+          'ijazah',
+          'degree',
+          'sarjana',
+          'bachelor',
+          'master',
+          'phd'
+        ],
         content: progContent.toString(),
       ));
     }
-    
+
     _cachedChunks = chunks;
     debugPrint('RAG Chunking: Created ${chunks.length} chunks');
     return chunks;
   }
-  
+
   /// Get relevant chunks based on query
-  static Future<List<DocumentChunk>> getRelevantChunks(String query, {int maxChunks = 5}) async {
+  static Future<List<DocumentChunk>> getRelevantChunks(String query,
+      {int maxChunks = 5}) async {
     final chunks = await _createChunks();
     final expandedQuery = expandQueryWithSynonyms(query.toLowerCase());
     final queryWords = expandedQuery.split(RegExp(r'\s+'));
-    
+
     // Score each chunk
     final scoredChunks = <MapEntry<DocumentChunk, double>>[];
-    
+
     for (final chunk in chunks) {
       double score = 0.0;
-      
+
       // Check keyword matches
       for (final keyword in chunk.keywords) {
         if (expandedQuery.contains(keyword)) {
@@ -224,7 +268,7 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
           }
         }
       }
-      
+
       // Content match bonus
       final contentLower = chunk.content.toLowerCase();
       for (final queryWord in queryWords) {
@@ -232,22 +276,22 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
           score += 0.3;
         }
       }
-      
+
       if (score > 0) {
         scoredChunks.add(MapEntry(chunk, score));
       }
     }
-    
+
     // Sort by score and return top chunks
     scoredChunks.sort((a, b) => b.value.compareTo(a.value));
-    
+
     return scoredChunks.take(maxChunks).map((e) => e.key).toList();
   }
-  
+
   /// Expand query dengan sinonim untuk matching yang lebih baik
   static String expandQueryWithSynonyms(String query) {
     String expandedQuery = query.toLowerCase();
-    
+
     _synonymDictionary.forEach((word, synonyms) {
       if (expandedQuery.contains(word)) {
         // Add synonyms to query for better matching
@@ -258,7 +302,7 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
         }
       }
     });
-    
+
     return expandedQuery;
   }
 
@@ -296,6 +340,267 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
     }
   }
 
+  /// Load FKAAB (Civil Engineering) staff data dari local JSON file
+  static Future<Map<String, dynamic>> loadFKAABStaffData() async {
+    if (_cachedFKAABStaffData != null) {
+      return _cachedFKAABStaffData!;
+    }
+
+    try {
+      final String jsonString =
+          await rootBundle.loadString('assets/data/fkaab_staff_data.json');
+      _cachedFKAABStaffData = json.decode(jsonString);
+      return _cachedFKAABStaffData!;
+    } catch (e) {
+      if (kDebugMode) print('Error loading FKAAB staff data: $e');
+      return _getDefaultFKAABStaffData();
+    }
+  }
+
+  /// Detect which faculty the user is asking about
+  /// Returns: 'fsktm', 'fkaab', 'fkee', 'unclear', or 'general'
+  static String detectFacultyFromQuery(String query) {
+    final lowerQuery = query.toLowerCase();
+
+    // FSKTM keywords
+    final fsktmKeywords = [
+      'fsktm',
+      'sains komputer',
+      'computer science',
+      'it',
+      'software',
+      'multimedia',
+      'keselamatan maklumat',
+      'information security',
+      'web technology',
+      'teknologi web',
+      'kejuruteraan perisian',
+    ];
+
+    // FKAAB keywords
+    final fkaabKeywords = [
+      'fkaab',
+      'kejuruteraan awam',
+      'civil engineering',
+      'alam bina',
+      'built environment',
+      'senibina',
+      'architecture',
+      'struktur',
+      'geoteknik',
+      'hidrologi',
+      'pembinaan',
+      'construction',
+    ];
+
+    // FKEE keywords
+    final fkeeKeywords = [
+      'fkee',
+      'kejuruteraan elektrik',
+      'electrical engineering',
+      'kejuruteraan elektronik',
+      'electronic engineering',
+      'elektrik',
+      'elektronik',
+      'elektrikal',
+      'power system',
+      'sistem kuasa',
+      'robotik',
+      'robotics',
+      'automation',
+      'automasi',
+    ];
+
+    final hasFSKTM = fsktmKeywords.any((k) => lowerQuery.contains(k));
+    final hasFKAAB = fkaabKeywords.any((k) => lowerQuery.contains(k));
+    final hasFKEE = fkeeKeywords.any((k) => lowerQuery.contains(k));
+
+    // Count how many faculties detected
+    int facultyCount =
+        (hasFSKTM ? 1 : 0) + (hasFKAAB ? 1 : 0) + (hasFKEE ? 1 : 0);
+
+    if (facultyCount == 1) {
+      if (hasFSKTM) return 'fsktm';
+      if (hasFKAAB) return 'fkaab';
+      if (hasFKEE) return 'fkee';
+    }
+    if (facultyCount > 1) return 'unclear';
+
+    // Check for generic staff/lecturer queries without faculty specified
+    final genericStaffKeywords = [
+      'lecturer',
+      'pensyarah',
+      'staff',
+      'professor',
+      'prof',
+      'dr.',
+      'siapa',
+      'who',
+      'email',
+      'contact',
+    ];
+    if (genericStaffKeywords.any((k) => lowerQuery.contains(k))) {
+      return 'unclear'; // Need clarification which faculty
+    }
+
+    return 'general';
+  }
+
+  /// Get context for specific faculty
+  static Future<String> getFacultyContextForAI(
+      String faculty, String query) async {
+    if (faculty == 'fsktm') {
+      return await getFSKTMContextForAIWithQuery(query);
+    } else if (faculty == 'fkaab') {
+      return await getFKAABContextForAI(query);
+    } else if (faculty == 'fkee') {
+      return await getFKEEContextForAI(query);
+    }
+    return '';
+  }
+
+  /// Generate FKAAB context for AI
+  static Future<String> getFKAABContextForAI(String query) async {
+    final staffData = await loadFKAABStaffData();
+    final StringBuffer context = StringBuffer();
+    final lowerQuery = query.toLowerCase();
+    final expandedQuery = expandQueryWithSynonyms(lowerQuery);
+
+    context.writeln('=== FKAAB (Fakulti Kejuruteraan Awam dan Alam Bina) ===');
+
+    final facultyInfo = staffData['faculty_info'];
+    context.writeln('Nama: ${facultyInfo['name']}');
+    context.writeln('English: ${facultyInfo['name_en']}');
+    context.writeln('Total Staff: ${facultyInfo['total_staff']}');
+    context.writeln('');
+
+    // Add departments
+    final departments = staffData['departments'] as List? ?? [];
+    context.writeln('=== JABATAN ===');
+    for (var dept in departments) {
+      context.writeln('- ${dept['name']} (${dept['name_en']})');
+    }
+    context.writeln('');
+
+    // Smart staff search
+    final staff = staffData['staff'] as List? ?? [];
+    final relevantStaff = _findRelevantStaff(staff, expandedQuery);
+
+    if (relevantStaff.isNotEmpty) {
+      context.writeln('=== STAFF BERKAITAN ===');
+      for (var member in relevantStaff.take(10)) {
+        context.writeln('**${member['name']}**');
+        context.writeln('Jawatan: ${member['title']}');
+        context.writeln('Jabatan: ${member['department']}');
+        context.writeln('Email: ${member['email']}');
+        context.writeln('---');
+      }
+    } else {
+      context.writeln('=== SENARAI STAFF (${staff.length} orang) ===');
+      for (var member in staff) {
+        context.writeln(
+            '${member['name']} | ${member['title']} | ${member['email']}');
+      }
+    }
+
+    return context.toString();
+  }
+
+  /// Default FKAAB staff data fallback
+  static Map<String, dynamic> _getDefaultFKAABStaffData() {
+    return {
+      'faculty_info': {
+        'name': 'Fakulti Kejuruteraan Awam dan Alam Bina',
+        'name_en': 'Faculty of Civil Engineering and Built Environment',
+        'acronym': 'FKAAB',
+        'university': 'Universiti Tun Hussein Onn Malaysia (UTHM)',
+        'total_staff': 0,
+      },
+      'departments': [],
+      'staff': [],
+    };
+  }
+
+  /// Load FKEE (Electrical & Electronic Engineering) staff data
+  static Future<Map<String, dynamic>> loadFKEEStaffData() async {
+    if (_cachedFKEEStaffData != null) {
+      return _cachedFKEEStaffData!;
+    }
+
+    try {
+      final String jsonString =
+          await rootBundle.loadString('assets/data/fkee_staff_data.json');
+      _cachedFKEEStaffData = json.decode(jsonString);
+      return _cachedFKEEStaffData!;
+    } catch (e) {
+      if (kDebugMode) print('Error loading FKEE staff data: $e');
+      return _getDefaultFKEEStaffData();
+    }
+  }
+
+  /// Generate FKEE context for AI
+  static Future<String> getFKEEContextForAI(String query) async {
+    final staffData = await loadFKEEStaffData();
+    final StringBuffer context = StringBuffer();
+    final lowerQuery = query.toLowerCase();
+    final expandedQuery = expandQueryWithSynonyms(lowerQuery);
+
+    context
+        .writeln('=== FKEE (Fakulti Kejuruteraan Elektrik dan Elektronik) ===');
+
+    final facultyInfo = staffData['faculty_info'];
+    context.writeln('Nama: ${facultyInfo['name']}');
+    context.writeln('English: ${facultyInfo['name_en']}');
+    context.writeln('Total Staff: ${facultyInfo['total_staff']}');
+    context.writeln('');
+
+    // Add departments
+    final departments = staffData['departments'] as List? ?? [];
+    context.writeln('=== JABATAN ===');
+    for (var dept in departments) {
+      context.writeln('- ${dept['name']} (${dept['name_en']})');
+    }
+    context.writeln('');
+
+    // Smart staff search
+    final staff = staffData['staff'] as List? ?? [];
+    final relevantStaff = _findRelevantStaff(staff, expandedQuery);
+
+    if (relevantStaff.isNotEmpty) {
+      context.writeln('=== STAFF BERKAITAN ===');
+      for (var member in relevantStaff.take(10)) {
+        context.writeln('**${member['name']}**');
+        context.writeln('Jawatan: ${member['title']}');
+        context.writeln('Jabatan: ${member['department']}');
+        context.writeln('Email: ${member['email']}');
+        context.writeln('---');
+      }
+    } else {
+      context.writeln('=== SENARAI STAFF (${staff.length} orang) ===');
+      for (var member in staff) {
+        context.writeln(
+            '${member['name']} | ${member['title']} | ${member['email']}');
+      }
+    }
+
+    return context.toString();
+  }
+
+  /// Default FKEE staff data fallback
+  static Map<String, dynamic> _getDefaultFKEEStaffData() {
+    return {
+      'faculty_info': {
+        'name': 'Fakulti Kejuruteraan Elektrik dan Elektronik',
+        'name_en': 'Faculty of Electrical and Electronic Engineering',
+        'acronym': 'FKEE',
+        'university': 'Universiti Tun Hussein Onn Malaysia (UTHM)',
+        'total_staff': 0,
+      },
+      'departments': [],
+      'staff': [],
+    };
+  }
+
   /// ENHANCED: Generate comprehensive context string untuk AI chatbot
   static Future<String> getFSKTMContextForAI() async {
     final staffData = await loadStaffData();
@@ -323,7 +628,8 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
       context.writeln('University: ${identity['university']}');
       context.writeln('Vision: ${identity['vision']}');
       context.writeln('Mission: ${identity['mission']}');
-      context.writeln('Strategic Direction: ${identity['strategic_direction']}');
+      context
+          .writeln('Strategic Direction: ${identity['strategic_direction']}');
       context.writeln('');
     }
 
@@ -424,33 +730,35 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
 
     final StringBuffer context = StringBuffer();
     final lowerQuery = query.toLowerCase();
-    
+
     // FEATURE 1: Expand query dengan sinonim untuk better matching
     final expandedQuery = expandQueryWithSynonyms(lowerQuery);
     debugPrint('RAG Query Expansion: "$lowerQuery" → "$expandedQuery"');
-    
+
     // FEATURE 6: Use chunk-based retrieval for better relevance
     final relevantChunks = await getRelevantChunks(expandedQuery, maxChunks: 8);
     debugPrint('RAG Chunking: Found ${relevantChunks.length} relevant chunks');
-    
+
     // Add relevant chunks to context
     if (relevantChunks.isNotEmpty) {
-      context.writeln('=== MAKLUMAT BERKAITAN (dari ${relevantChunks.length} sumber) ===');
+      context.writeln(
+          '=== MAKLUMAT BERKAITAN (dari ${relevantChunks.length} sumber) ===');
       for (final chunk in relevantChunks) {
         context.writeln(chunk.content);
         context.writeln('---');
       }
       context.writeln('');
     }
-    
+
     // Determine query intent for smart context selection (use expanded query)
     final queryIntent = _detectQueryIntent(expandedQuery);
-    
+
     // === ALWAYS INCLUDE: Quick Answers (essential info) ===
     if (knowledgeBase['quick_answers'] != null) {
       context.writeln('=== FSKTM INFO PANTAS ===');
-      final quickAnswers = knowledgeBase['quick_answers'] as Map<String, dynamic>;
-      
+      final quickAnswers =
+          knowledgeBase['quick_answers'] as Map<String, dynamic>;
+
       // Only include relevant quick answers based on query
       if (_isContactQuery(expandedQuery)) {
         context.writeln('Telefon: ${quickAnswers['phone']}');
@@ -458,7 +766,8 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
         context.writeln('Alamat: ${quickAnswers['address']}');
       } else if (_isStatsQuery(expandedQuery)) {
         context.writeln('Jumlah Pelajar: ${quickAnswers['total_students']}');
-        context.writeln('Jumlah Akademik: ${quickAnswers['total_academicians']}');
+        context
+            .writeln('Jumlah Akademik: ${quickAnswers['total_academicians']}');
         context.writeln('Jumlah Program: ${quickAnswers['total_programs']}');
       } else {
         // Include all quick answers for general queries
@@ -490,7 +799,7 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
       if (knowledgeBase['academic_programs'] != null) {
         final programs = knowledgeBase['academic_programs'];
         context.writeln('=== PROGRAM AKADEMIK ===');
-        
+
         if (programs['undergraduate'] != null) {
           context.writeln('SARJANA MUDA:');
           final undergrad = programs['undergraduate']['programs'] as List;
@@ -498,7 +807,7 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
             context.writeln('- ${program['title'] ?? program['name']}');
           }
         }
-        
+
         if (programs['postgraduate'] != null && _isPostgradQuery(lowerQuery)) {
           context.writeln('PASCA SISWAZAH:');
           final postgrad = programs['postgraduate']['programs'] as List;
@@ -515,7 +824,7 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
       if (knowledgeBase['research_expertise'] != null) {
         final research = knowledgeBase['research_expertise'];
         context.writeln('=== PENYELIDIKAN ===');
-        
+
         if (research['research_centers'] != null) {
           context.writeln('PUSAT PENYELIDIKAN:');
           final centers = research['research_centers']['centers'] as List;
@@ -523,7 +832,7 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
             context.writeln('- ${center['name']} (${center['acronym']})');
           }
         }
-        
+
         if (research['focus_groups'] != null) {
           context.writeln('KUMPULAN FOKUS:');
           final groups = research['focus_groups']['groups'] as List;
@@ -538,21 +847,22 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
     // === STAFF DIRECTORY (smart retrieval) ===
     final staff = staffData['staff'] as List;
     final departments = staffData['departments'] as List;
-    
+
     // Add departments list
     context.writeln('=== JABATAN ===');
     for (var dept in departments) {
       context.writeln('- ${dept['name']} (${dept['name_en']})');
     }
     context.writeln('');
-    
+
     // Smart staff search - use EXPANDED query untuk better matching
     final relevantStaff = _findRelevantStaff(staff, expandedQuery);
-    
+
     if (relevantStaff.isNotEmpty) {
       // User mentioned specific staff/department - show detailed info
       context.writeln('=== STAFF BERKAITAN ===');
-      for (var member in relevantStaff.take(10)) { // Limit to top 10
+      for (var member in relevantStaff.take(10)) {
+        // Limit to top 10
         context.writeln('**${member['name']}**');
         context.writeln('Jawatan: ${member['title']}');
         context.writeln('Jabatan: ${member['department']}');
@@ -562,60 +872,68 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
         }
         context.writeln('---');
       }
-    } else if (queryIntent.contains('staff') || queryIntent.contains('lecturer')) {
+    } else if (queryIntent.contains('staff') ||
+        queryIntent.contains('lecturer')) {
       // General staff query - show compact list
       context.writeln('=== SENARAI STAFF (${staff.length} orang) ===');
       for (var member in staff) {
-        context.writeln('${member['name']} | ${member['title']} | ${member['email']}');
+        context.writeln(
+            '${member['name']} | ${member['title']} | ${member['email']}');
       }
     } else {
       // Non-staff query - just show count
       context.writeln('Jumlah Staff: ${staff.length} orang');
-      context.writeln('[Untuk maklumat staff, sebut nama atau jabatan dalam soalan]');
+      context.writeln(
+          '[Untuk maklumat staff, sebut nama atau jabatan dalam soalan]');
     }
 
     return context.toString();
   }
-  
+
   /// Detect query intent for smart context selection
   static Set<String> _detectQueryIntent(String query) {
     final intents = <String>{};
-    
+
     // Staff/Lecturer queries
-    if (query.contains(RegExp(r'staff|lecturer|pensyarah|professor|prof|dr\.|ketua|dekan|siapa'))) {
+    if (query.contains(RegExp(
+        r'staff|lecturer|pensyarah|professor|prof|dr\.|ketua|dekan|siapa'))) {
       intents.add('staff');
       intents.add('lecturer');
     }
-    
+
     // Program/Course queries
-    if (query.contains(RegExp(r'program|course|kursus|degree|ijazah|sarjana|bachelor|master|phd'))) {
+    if (query.contains(RegExp(
+        r'program|course|kursus|degree|ijazah|sarjana|bachelor|master|phd'))) {
       intents.add('program');
       intents.add('course');
     }
-    
+
     // Research queries
-    if (query.contains(RegExp(r'research|penyelidikan|center|pusat|focus|group|kepakaran|expertise'))) {
+    if (query.contains(RegExp(
+        r'research|penyelidikan|center|pusat|focus|group|kepakaran|expertise'))) {
       intents.add('research');
     }
-    
+
     // Faculty info queries
-    if (query.contains(RegExp(r'fsktm|fakulti|faculty|uthm|visi|misi|vision|mission|apa itu'))) {
+    if (query.contains(RegExp(
+        r'fsktm|fakulti|faculty|uthm|visi|misi|vision|mission|apa itu'))) {
       intents.add('faculty');
     }
-    
+
     // Contact queries
-    if (query.contains(RegExp(r'contact|telefon|phone|email|alamat|address|hubungi'))) {
+    if (query.contains(
+        RegExp(r'contact|telefon|phone|email|alamat|address|hubungi'))) {
       intents.add('contact');
     }
-    
+
     // If no specific intent, treat as general query
     if (intents.isEmpty) {
       intents.add('general');
     }
-    
+
     return intents;
   }
-  
+
   // ============== FUZZY MATCHING: Levenshtein Distance ==============
   /// Calculate Levenshtein distance between two strings
   /// Returns edit distance (0 = exact match, higher = more different)
@@ -623,17 +941,17 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
     if (s1 == s2) return 0;
     if (s1.isEmpty) return s2.length;
     if (s2.isEmpty) return s1.length;
-    
+
     List<int> prevRow = List.generate(s2.length + 1, (i) => i);
     List<int> currRow = List.filled(s2.length + 1, 0);
-    
+
     for (int i = 1; i <= s1.length; i++) {
       currRow[0] = i;
       for (int j = 1; j <= s2.length; j++) {
         int cost = s1[i - 1] == s2[j - 1] ? 0 : 1;
         currRow[j] = [
-          prevRow[j] + 1,      // deletion
-          currRow[j - 1] + 1,  // insertion
+          prevRow[j] + 1, // deletion
+          currRow[j - 1] + 1, // insertion
           prevRow[j - 1] + cost // substitution
         ].reduce((a, b) => a < b ? a : b);
       }
@@ -642,73 +960,79 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
       prevRow = currRow;
       currRow = temp;
     }
-    
+
     return prevRow[s2.length];
   }
-  
+
   /// Calculate fuzzy match score (0.0 - 1.0, higher = better match)
   static double _fuzzyMatchScore(String query, String target) {
     if (query.isEmpty || target.isEmpty) return 0.0;
-    
+
     final distance = _levenshteinDistance(query, target);
-    final maxLength = query.length > target.length ? query.length : target.length;
-    
+    final maxLength =
+        query.length > target.length ? query.length : target.length;
+
     // Convert distance to similarity score (0-1)
     return 1.0 - (distance / maxLength);
   }
-  
+
   /// Find relevant staff based on query with FUZZY MATCHING
-  static List<Map<String, dynamic>> _findRelevantStaff(List staff, String query) {
+  static List<Map<String, dynamic>> _findRelevantStaff(
+      List staff, String query) {
     final results = <Map<String, dynamic>>[];
     final queryWords = query.split(RegExp(r'\s+'));
-    
+
     for (var member in staff) {
       final name = member['name'].toString().toLowerCase();
       final department = member['department'].toString().toLowerCase();
       final title = member['title'].toString().toLowerCase();
       double matchScore = 0.0;
-      
+
       // Check name match (exact partial OR fuzzy)
       final nameParts = name.split(' ');
       for (final namePart in nameParts) {
         if (namePart.length < 3) continue;
-        
+
         // Exact partial match
         if (query.contains(namePart)) {
           matchScore += 1.0;
           continue;
         }
-        
+
         // Fuzzy match for each query word against name parts
         for (final queryWord in queryWords) {
           if (queryWord.length < 3) continue;
-          
+
           final fuzzyScore = _fuzzyMatchScore(queryWord, namePart);
-          if (fuzzyScore >= 0.7) { // 70% similarity threshold
+          if (fuzzyScore >= 0.7) {
+            // 70% similarity threshold
             matchScore += fuzzyScore;
-            debugPrint('Fuzzy match: "$queryWord" ≈ "$namePart" (score: ${fuzzyScore.toStringAsFixed(2)})');
+            debugPrint(
+                'Fuzzy match: "$queryWord" ≈ "$namePart" (score: ${fuzzyScore.toStringAsFixed(2)})');
           }
         }
       }
-      
+
       // Check department match
-      final deptMatch = query.contains('kejuruteraan perisian') && department.contains('kejuruteraan perisian') ||
-                        query.contains('software') && department.contains('perisian') ||
-                        query.contains('multimedia') && department.contains('multimedia') ||
-                        query.contains('keselamatan') && department.contains('keselamatan') ||
-                        query.contains('security') && department.contains('keselamatan') ||
-                        query.contains('web') && department.contains('web');
-      
+      final deptMatch = query.contains('kejuruteraan perisian') &&
+              department.contains('kejuruteraan perisian') ||
+          query.contains('software') && department.contains('perisian') ||
+          query.contains('multimedia') && department.contains('multimedia') ||
+          query.contains('keselamatan') && department.contains('keselamatan') ||
+          query.contains('security') && department.contains('keselamatan') ||
+          query.contains('web') && department.contains('web');
+
       if (deptMatch) matchScore += 0.8;
-      
+
       // Check title match
-      final titleMatch = query.contains('profesor') && title.contains('profesor') ||
-                         query.contains('professor') && title.contains('profesor') ||
-                         query.contains('dekan') && title.contains('dekan') ||
-                         query.contains('ketua') && title.contains('ketua');
-      
+      final titleMatch =
+          query.contains('profesor') && title.contains('profesor') ||
+              query.contains('professor') && title.contains('profesor') ||
+              query.contains('dekan') && title.contains('dekan') ||
+              query.contains('ketua') && title.contains('ketua');
+
       if (titleMatch) matchScore += 0.5;
-      
+
       // Add to results if any match found
       if (matchScore > 0) {
         // Store match score for sorting
@@ -717,30 +1041,34 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
         results.add(memberWithScore);
       }
     }
-    
+
     // Sort by match score (highest first) - for Relevance Scoring feature
-    results.sort((a, b) => (b['_matchScore'] as double).compareTo(a['_matchScore'] as double));
-    
+    results.sort((a, b) =>
+        (b['_matchScore'] as double).compareTo(a['_matchScore'] as double));
+
     return results;
   }
-  
+
   /// Check if query is about contact info
   static bool _isContactQuery(String query) {
-    return query.contains(RegExp(r'contact|telefon|phone|email|alamat|address|hubungi|call'));
+    return query.contains(
+        RegExp(r'contact|telefon|phone|email|alamat|address|hubungi|call'));
   }
-  
+
   /// Check if query is about statistics
   static bool _isStatsQuery(String query) {
     return query.contains(RegExp(r'berapa|how many|jumlah|total|ramai|banyak'));
   }
-  
+
   /// Check if query is about postgraduate programs
   static bool _isPostgradQuery(String query) {
-    return query.contains(RegExp(r'master|phd|pasca|postgrad|doctorate|sarjana(?! muda)'));
+    return query.contains(
+        RegExp(r'master|phd|pasca|postgrad|doctorate|sarjana(?! muda)'));
   }
 
   /// ENHANCED: Search staff by name (unchanged - works with staff data)
-  static Future<List<Map<String, dynamic>>> searchStaffByName(String query) async {
+  static Future<List<Map<String, dynamic>>> searchStaffByName(
+      String query) async {
     final data = await loadStaffData();
     final staff = data['staff'] as List;
 
@@ -755,7 +1083,8 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
   }
 
   /// ENHANCED: Search staff by department (unchanged)
-  static Future<List<Map<String, dynamic>>> searchStaffByDepartment(String department) async {
+  static Future<List<Map<String, dynamic>>> searchStaffByDepartment(
+      String department) async {
     final data = await loadStaffData();
     final staff = data['staff'] as List;
 
@@ -778,7 +1107,8 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
 
     // Search undergraduate programs
     if (kb['academic_programs']['undergraduate'] != null) {
-      final undergrad = kb['academic_programs']['undergraduate']['programs'] as List;
+      final undergrad =
+          kb['academic_programs']['undergraduate']['programs'] as List;
       for (var program in undergrad) {
         if (program['name'].toString().toLowerCase().contains(lowerQuery)) {
           programs.add({...program, 'level': 'Undergraduate'});
@@ -788,7 +1118,8 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
 
     // Search postgraduate programs
     if (kb['academic_programs']['postgraduate'] != null) {
-      final postgrad = kb['academic_programs']['postgraduate']['programs'] as List;
+      final postgrad =
+          kb['academic_programs']['postgraduate']['programs'] as List;
       for (var program in postgrad) {
         if (program['name'].toString().toLowerCase().contains(lowerQuery)) {
           programs.add({...program, 'level': 'Postgraduate'});
@@ -861,27 +1192,44 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
     };
   }
 
-  /// ENHANCED: Check if query is FSKTM-related (expanded keywords)
+  /// ENHANCED: Check if query is UTHM faculty-related (FSKTM, FKAAB, etc.)
   static bool isFSKTMQuery(String query) {
+    return isUTHMFacultyQuery(query);
+  }
+
+  /// Check if query is related to any UTHM faculty (FSKTM, FKAAB)
+  static bool isUTHMFacultyQuery(String query) {
     final lowerQuery = query.toLowerCase();
 
-    final fsktmKeywords = [
-      // Staff & People
+    final uthmKeywords = [
+      // Generic Staff & People
       'staff', 'lecturer', 'professor', 'dr.', 'prof.', 'pensyarah',
       'dekan', 'dean', 'ketua jabatan', 'head of department',
 
-      // Faculty & Organization
+      // FSKTM specific
       'fsktm', 'fakulti sains komputer', 'faculty of computer science',
+      'multimedia', 'kejuruteraan perisian', 'software engineering',
+      'keselamatan maklumat', 'information security', 'sains komputer',
+      'computer science', 'teknologi web', 'web technology',
+
+      // FKAAB specific
+      'fkaab', 'kejuruteraan awam', 'civil engineering', 'alam bina',
+      'built environment', 'senibina', 'architecture', 'struktur',
+      'geoteknik', 'hidrologi', 'pembinaan', 'construction',
+
+      // FKEE specific
+      'fkee', 'kejuruteraan elektrik', 'electrical engineering',
+      'kejuruteraan elektronik', 'electronic engineering',
+      'elektrik', 'elektronik', 'elektrikal', 'power system',
+      'sistem kuasa', 'robotik', 'robotics', 'automation', 'automasi',
+
+      // General Faculty & Organization
       'jabatan', 'department', 'uthm', 'universiti tun hussein',
+      'fakulti', 'faculty',
 
       // Academic Programs
       'program', 'course', 'degree', 'bachelor', 'master', 'phd', 'ijazah',
       'sarjana muda', 'sarjana', 'kedoktoran',
-
-      // Departments & Fields
-      'multimedia', 'kejuruteraan perisian', 'software engineering',
-      'keselamatan maklumat', 'information security', 'sains komputer',
-      'computer science', 'teknologi web', 'web technology',
 
       // Contact & Information
       'email lecturer', 'contact lecturer', 'phone', 'telefon', 'alamat',
@@ -893,7 +1241,7 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
       'research', 'penyelidikan', 'center', 'pusat'
     ];
 
-    return fsktmKeywords.any((keyword) => lowerQuery.contains(keyword));
+    return uthmKeywords.any((keyword) => lowerQuery.contains(keyword));
   }
 
   /// LEGACY: Maintain backward compatibility
@@ -922,7 +1270,8 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
       'quick_answers': {
         'phone': '+607 453 3606',
         'email': 'fsktm@uthm.edu.my',
-        'what_is_fsktm': 'Faculty of Computer Science and Information Technology, UTHM'
+        'what_is_fsktm':
+            'Faculty of Computer Science and Information Technology, UTHM'
       },
       'faculty_identity': {},
       'academic_programs': {},
@@ -938,14 +1287,15 @@ class DocumentChunk {
   final String category;
   final List<String> keywords;
   final String content;
-  
+
   DocumentChunk({
     required this.id,
     required this.category,
     required this.keywords,
     required this.content,
   });
-  
+
   @override
-  String toString() => 'Chunk[$category]: ${content.substring(0, content.length.clamp(0, 50))}...';
+  String toString() =>
+      'Chunk[$category]: ${content.substring(0, content.length.clamp(0, 50))}...';
 }

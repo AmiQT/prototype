@@ -170,24 +170,60 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
         _messages.add(streamingMessage);
       });
 
-      // Intelligent routing: FSKTM vs General AI
-      String? fsktmContext;
-      if (_isFSKTMQuestion(content)) {
-        // debugPrint('RAG: Detected FSKTM query, fetching context...');
-        fsktmContext =
-            await FSKTMDataService.getFSKTMContextForAIWithQuery(content);
-        // debugPrint('RAG: Context size = ${fsktmContext.length} chars');
-      } else {
-        // debugPrint('RAG: General query, no FSKTM context needed');
+      // Intelligent routing: Multi-faculty RAG with clarification
+      String? facultyContext;
+      String? clarificationPrompt;
+
+      if (FSKTMDataService.isUTHMFacultyQuery(content)) {
+        final detectedFaculty =
+            FSKTMDataService.detectFacultyFromQuery(content);
+        // debugPrint('RAG: Detected faculty = $detectedFaculty');
+
+        switch (detectedFaculty) {
+          case 'fsktm':
+            // Clear FSKTM query
+            facultyContext =
+                await FSKTMDataService.getFSKTMContextForAIWithQuery(content);
+            break;
+          case 'fkaab':
+            // Clear FKAAB query
+            facultyContext =
+                await FSKTMDataService.getFKAABContextForAI(content);
+            break;
+          case 'fkee':
+            // Clear FKEE query
+            facultyContext =
+                await FSKTMDataService.getFKEEContextForAI(content);
+            break;
+          case 'unclear':
+            // Need clarification - add prompt for AI to ask user
+            clarificationPrompt = '''
+PENTING: User bertanya tentang staff/pensyarah tanpa menyatakan fakulti yang spesifik.
+UTHM mempunyai beberapa fakulti. Sila tanya user fakulti mana yang mereka maksudkan:
+- FSKTM (Fakulti Sains Komputer dan Teknologi Maklumat) - 104 staff
+- FKAAB (Fakulti Kejuruteraan Awam dan Alam Bina) - 181 staff
+- FKEE (Fakulti Kejuruteraan Elektrik dan Elektronik) - 185 staff
+
+Contoh respons: "Maaf, boleh saya tahu fakulti mana yang awak maksudkan? FSKTM, FKAAB, atau FKEE?"
+''';
+            break;
+          default:
+            // General UTHM query - provide FSKTM as default
+            facultyContext =
+                await FSKTMDataService.getFSKTMContextForAIWithQuery(content);
+        }
       }
 
       // Use streaming for real-time response
+      // Combine faculty context with clarification prompt if needed
+      final ragContext = clarificationPrompt ?? facultyContext;
+
       await for (final partialContent in _geminiService.sendMessageStreaming(
         conversationId: _currentConversationId!,
         content: content,
         userId: userId,
         attachments: _selectedFiles.isNotEmpty ? _selectedFiles : null,
-        ragContext: fsktmContext,
+        ragContext: ragContext,
       )) {
         // Update the streaming message with new content
         final index = _messages.indexWhere((m) => m.id == aiMessageId);
@@ -228,11 +264,6 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
         );
       }
     });
-  }
-
-  /// Check if question is about FSKTM using local data service
-  bool _isFSKTMQuestion(String message) {
-    return FSKTMDataService.isFSKTMQuery(message);
   }
 
   void _onFilesSelected(List<File> files) {

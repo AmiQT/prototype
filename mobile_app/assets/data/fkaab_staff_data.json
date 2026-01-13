@@ -1,0 +1,1118 @@
+{
+    "faculty_info": {
+        "name": "Fakulti Kejuruteraan Awam dan Alam Bina",
+        "name_en": "Faculty of Civil Engineering and Built Environment",
+        "acronym": "FKAAB",
+        "university": "Universiti Tun Hussein Onn Malaysia (UTHM)",
+        "total_staff": 181,
+        "website": "https://community.uthm.edu.my/offices/info/88",
+        "last_updated": "2026-01-13",
+        "data_source": "AUTHENTIC - Scraped from UTHM Community Website"
+    },
+    "departments": [
+        {
+            "name": "Jabatan Kejuruteraan Awam",
+            "name_en": "Civil Engineering Department"
+        },
+        {
+            "name": "Jabatan Senibina",
+            "name_en": "Architecture Department"
+        },
+        {
+            "name": "Pengurusan Makmal",
+            "name_en": "Laboratory Management"
+        },
+        {
+            "name": "Pejabat Am",
+            "name_en": "General Office"
+        }
+    ],
+    "staff": [
+        {
+            "name": "PROF. MADYA Ir. Ts. Dr. ABDUL HALIM BIN ABDUL GHANI",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "abdulhalim@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. ABDULLAH FAISAL ABDULAZIZ AL-SHALIF",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "afaisal@uthm.edu.my"
+        },
+        {
+            "name": "PROF. Ir. Ts. Dr. ADNAN BIN ZAINORABIDIN",
+            "title": "Profesor",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "adnanz@uthm.edu.my"
+        },
+        {
+            "name": "PROF. Ts. Dr. AESLINA BINTI ABDUL KADIR",
+            "title": "Profesor",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "aeslina@uthm.edu.my"
+        },
+        {
+            "name": "Tc. AFANDI BIN ABU BAKAR",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "afandi@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. AHMAD FAHMY BIN KAMARUDIN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "fahmy@uthm.edu.my"
+        },
+        {
+            "name": "Ts. AHMAD RAQIB BIN AB GHANI",
+            "title": "Pensyarah",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "ahmadraqib@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. AKRAM MOHAMED RAJAB MHAYA",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "akram@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Ts. Dr. ALVIN JOHN LIM MENG SIANG",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "alvin@uthm.edu.my"
+        },
+        {
+            "name": "PUAN AMINATUL AHMAM BINTI MOHAMAD",
+            "title": "Kakitangan Am",
+            "department": "Pejabat Am",
+            "email": "aminatul@uthm.edu.my"
+        },
+        {
+            "name": "Sr. Dr. ANUAR BIN MOHD SALLEH",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "anuarms@uthm.edu.my"
+        },
+        {
+            "name": "Tc. ASMAH BINTI IBRAHIM",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "asma@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. AZEANITA BINTI SURATKON",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "azeanita@uthm.edu.my"
+        },
+        {
+            "name": "PROF. Dr. AZIMAN BIN MADUN",
+            "title": "Profesor",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "aziman@uthm.edu.my"
+        },
+        {
+            "name": "Dr. AZMAL BIN SABIL",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Senibina",
+            "email": "azmal@uthm.edu.my"
+        },
+        {
+            "name": "Tc. AZUAN BIN POHARAN @ BUNARI",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "azuan@uthm.edu.my"
+        },
+        {
+            "name": "Dr. BASIL A/L DAVID DANIEL",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "basil@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Dr. DAVID YEOH ENG CHUAN",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "david@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. EBRAHIM HAMID HUSSEIN AL-QADAMI",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "ebrahim@uthm.edu.my"
+        },
+        {
+            "name": "Dr. EMEDYA MURNIWATY BINTI SAMSUDIN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "emedya@uthm.edu.my"
+        },
+        {
+            "name": "PROF. Dr. ISMAIL BIN ABDUL RAHMAN",
+            "title": "Profesor",
+            "department": "Jabatan Senibina",
+            "email": "ismailar@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK KASIM BIN SEBLI",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "kasim@uthm.edu.my"
+        },
+        {
+            "name": "Ir. Dr. MUHAMMAD NIZAM BIN ZAKARIA",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "mnizam@uthm.edu.my"
+        },
+        {
+            "name": "PROF. Ir. Dr. NORIDAH BINTI MOHAMAD",
+            "title": "Profesor",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "noridah@uthm.edu.my"
+        },
+        {
+            "name": "Ir. Ts. SHAMRUL-MAR BIN SHAMSUDDIN",
+            "title": "Pensyarah",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "shamrul@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK ERWIN BIN EDDY",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "erwin@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Ts. Dr. FAISAL BIN SHEIKH KHALID",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "faisalsh@uthm.edu.my"
+        },
+        {
+            "name": "Ir. Dr. FAIZAL BIN PAKIR",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "faizalp@uthm.edu.my"
+        },
+        {
+            "name": "Dr. FARZANEH MOAYEDI",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "farzaneh@uthm.edu.my"
+        },
+        {
+            "name": "ChM FAZLYANA BINTI MUSTAFA",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "fazlyana@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Ts. Dr. FELIX LING NGEE LEH",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "felix@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Dr. GOH WAN INN",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "wigoh@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. HANITA BINTI YUSOF",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Senibina",
+            "email": "hanita@uthm.edu.my"
+        },
+        {
+            "name": "PUAN HANNIFAH BINTI TAMI",
+            "title": "Pensyarah",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "hannifah@uthm.edu.my"
+        },
+        {
+            "name": "Ir. Dr. HARTINI BINTI KASMIN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "hartini@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. HASNIZA BINTI ABU BAKAR",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "hasniza@uthm.edu.my"
+        },
+        {
+            "name": "Tc. HAZLIANA BINTI PADALILAH",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "hazliana@uthm.edu.my"
+        },
+        {
+            "name": "Ar. HAZRI BIN ABDUL AZIZ",
+            "title": "Pensyarah",
+            "department": "Jabatan Senibina",
+            "email": "hazriaziz@uthm.edu.my"
+        },
+        {
+            "name": "PUAN HERNI ZALINA BINTI MUSTAPHA",
+            "title": "Kakitangan Am",
+            "department": "Pejabat Am",
+            "email": "herni@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Dr. HILTON @ MOHD HILTON BIN AHMAD",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "hilton@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK ISHAM BIN ISMAIL",
+            "title": "Pensyarah",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "isham@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. IZUDINSHAH BIN ABD WAHAB",
+            "title": "Profesor Madya",
+            "department": "Jabatan Senibina",
+            "email": "izudin@uthm.edu.my"
+        },
+        {
+            "name": "PUAN JALILAH BINTI MD MOHTAR",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "jalila@uthm.edu.my"
+        },
+        {
+            "name": "Dr. JAMILIA BINTI MOHD MARSIN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Senibina",
+            "email": "jamilia@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Dr. JUNAIDAH BINTI JAILANI",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "junaida@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. KAMARUDIN BIN AMBAK",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "kamardin@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK KHAIROL AZMI BIN KAMSIRAN",
+            "title": "Kakitangan Am",
+            "department": "Pejabat Am",
+            "email": "khairolk@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK KHAIRUL ASYRAF BIN MOHD RODZI",
+            "title": "Pensyarah",
+            "department": "Jabatan Senibina",
+            "email": "asyrafr@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK KHAIRUL NIZAM BIN MOHD YUNUS",
+            "title": "Pensyarah",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "khairuln@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK KOH HENG BOON",
+            "title": "Pensyarah",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "koh@uthm.edu.my"
+        },
+        {
+            "name": "PROF. Sr. Ts. Dr. LOKMAN HAKIM BIN ISMAIL",
+            "title": "Profesor",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "lokman@uthm.edu.my"
+        },
+        {
+            "name": "Dr. MASNI BINTI A.MAJID",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "masni@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. MOHAMAD YUSRI BIN AMAN",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "mdyusri@uthm.edu.my"
+        },
+        {
+            "name": "Dr. MOHAMMAD NASIR BIN MOHAMAD TAHER",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "nasirt@uthm.edu.my"
+        },
+        {
+            "name": "Ir. Dr. MOHAMMAD SOFFI BIN MD NOH",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "soffi@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Dr. MOHD ADIB BIN MOHAMMAD RAZI",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "adib@uthm.edu.my"
+        },
+        {
+            "name": "Ir. Ts. Dr. MOHD ARIFF BIN AHMAD NAZRI",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "ariffn@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHD AYOB BIN SAHLAN",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "mohdayob@uthm.edu.my"
+        },
+        {
+            "name": "Dr. MOHD AZUAN BIN ZAKARIA",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "azuanz@uthm.edu.my"
+        },
+        {
+            "name": "Dr. MOHD BAHARUDIN BIN RIDZUAN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "mdbahar@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHD BAHTIAR BIN MOHD BASRI",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "bahtiar@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Sr. Dr. MOHD EFFENDI BIN DAUD",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "effendi@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHD ELHAM BIN KASIAN",
+            "title": "Kakitangan Am",
+            "department": "Pejabat Am",
+            "email": "elham@uthm.edu.my"
+        },
+        {
+            "name": "PROF. Ir. Ts. Dr. MOHD EZREE BIN ABDULLAH",
+            "title": "Profesor",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "ezree@uthm.edu.my"
+        },
+        {
+            "name": "Ts. MOHD FAIRUS BIN YUSOF",
+            "title": "Pensyarah",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "fairus@uthm.edu.my"
+        },
+        {
+            "name": "Ir. Ts. Dr. MOHD FIRDAUS BIN MD DAN @ AZLAN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "firdausd@uthm.edu.my"
+        },
+        {
+            "name": "Dr. MOHD HAFIZAL BIN HANIPAH",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "hafizal@uthm.edu.my"
+        },
+        {
+            "name": "Dr. MOHD HAIRUL BIN KHAMIDUN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "hairulk@uthm.edu.my"
+        },
+        {
+            "name": "Ir. Ts. Dr. MOHD HANIF BIN ISMAIL",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "mohdhanif@uthm.edu.my"
+        },
+        {
+            "name": "Ir. Dr. MOHD HANIFI BIN OTHMAN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "hanifi@uthm.edu.my"
+        },
+        {
+            "name": "PROF. Ir. Dr. MOHD HAZIMAN BIN WAN IBRAHIM",
+            "title": "Profesor",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "haziman@uthm.edu.my"
+        },
+        {
+            "name": "PROF. Ir. Ts. Dr. MOHD IRWAN BIN JUKI",
+            "title": "Profesor",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "irwan@uthm.edu.my"
+        },
+        {
+            "name": "Ar. MOHD JAMIL BIN MOHD HAMBERI",
+            "title": "Pensyarah",
+            "department": "Jabatan Senibina",
+            "email": "mohdjamil@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Dr. MOHD KHAIDIR BIN ABU TALIB",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "khaidir@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHD KHAIRI BIN ZAINAL",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "khairi@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHD KHAIRY BIN BURHANUDIN",
+            "title": "Pensyarah",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "khairy@uthm.edu.my"
+        },
+        {
+            "name": "Ir. ChPMP. ChFM. Dr. MOHD NORAZAM BIN YASIN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "norazam@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MOHD RAWI BIN DERIS",
+            "title": "Kakitangan Am",
+            "department": "Pejabat Am",
+            "email": "rawi@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Dr. MOHD SHALAHUDDIN BIN ADNAN",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "shalahudin@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MUHAMAD ADLI FAEZAL BIN ROSNAN",
+            "title": "Pensyarah",
+            "department": "Jabatan Senibina",
+            "email": "adli@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK MUHAMAD HANAFI BIN RAHMAT",
+            "title": "Pensyarah",
+            "department": "Jabatan Senibina",
+            "email": "mdhanafi@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. MUHAMMAD FIKRI BIN HASMORI",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "mfikri@uthm.edu.my"
+        },
+        {
+            "name": "Tc. MUHAMMAD IZZAT IZZUDDIN BIN ZAINAL",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "izzatz@uthm.edu.my"
+        },
+        {
+            "name": "Ir. Dr. MUHAMMAD SALLEH BIN HAJI ABUSTAN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "sallehb@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Dr. MUNZILAH BINTI MD. ROHANI",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "munzilah@uthm.edu.my"
+        },
+        {
+            "name": "Ir. MUSTAFA KAMAL BIN SHAMSHUDDIN",
+            "title": "Pensyarah",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "mkamal@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Sr. Dr. MUSTAFFA BIN ANJANG AHMAD",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "mustafa@uthm.edu.my"
+        },
+        {
+            "name": "ChM NADIAH BINTI KHALED",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "nadiah@uthm.edu.my"
+        },
+        {
+            "name": "PUAN NADIYAH BINTI NOOR HISHAM",
+            "title": "Pensyarah",
+            "department": "Jabatan Senibina",
+            "email": "nadiyah@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK NASRUL AIMAN BIN KOSRIN",
+            "title": "Kakitangan Am",
+            "department": "Pejabat Am",
+            "email": "nasrul@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK NASRUL ARIF BIN AHMAD MAHMUD",
+            "title": "Pensyarah",
+            "department": "Jabatan Senibina",
+            "email": "nasrularif@uthm.edu.my"
+        },
+        {
+            "name": "DR. NIK MOHD ZAINI BIN NIK SOH",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "nikzaini@uthm.edu.my"
+        },
+        {
+            "name": "PUAN NOOR ALIZA BINTI AHMAD",
+            "title": "Pensyarah",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "aliza@uthm.edu.my"
+        },
+        {
+            "name": "Dr. NOOR AMIRA BINTI SARANI",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "nooramira@uthm.edu.my"
+        },
+        {
+            "name": "Dr. NOOR AZLINA BINTI ABDUL HAMID",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "azlinah@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. NOOR DINA BINTI MD AMIN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Senibina",
+            "email": "dina@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Dr. NOOR YASMIN BINTI ZAINUN",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "nryasmin@uthm.edu.my"
+        },
+        {
+            "name": "PUAN NOORASHIKIN BINTI ABDUL WAHAB",
+            "title": "Kakitangan Am",
+            "department": "Pejabat Am",
+            "email": "shikin@uthm.edu.my"
+        },
+        {
+            "name": "Ir. Ts. Dr. NOORASYIKIN BINTI MOHAMMAD NOH",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "norasyikin@uthm.edu.my"
+        },
+        {
+            "name": "Dr. NOORLI BINTI ISMAIL",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "noorli@uthm.edu.my"
+        },
+        {
+            "name": "PUAN NOORLIYANA BINTI OMAR",
+            "title": "Pensyarah",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "liyana@uthm.edu.my"
+        },
+        {
+            "name": "Dr. NOORWIRDAWATI BINTI ALI",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "wirda@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Dr. NOR AMANI FILZAH BINTI MOHD KAMIL",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "noramani@uthm.edu.my"
+        },
+        {
+            "name": "PUAN NOR AZIZAH BINTI ADNAN",
+            "title": "Pensyarah",
+            "department": "Jabatan Senibina",
+            "email": "noraziza@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. NOR AZIZI BIN YUSOFF",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "azizy@uthm.edu.my"
+        },
+        {
+            "name": "PUAN NOR AZWA BINTI MOHAMMAD",
+            "title": "Kakitangan Am",
+            "department": "Pejabat Am",
+            "email": "azwa@uthm.edu.my"
+        },
+        {
+            "name": "PUAN NOR HAIRANI BINTI HASHIM",
+            "title": "Kakitangan Am",
+            "department": "Pejabat Am",
+            "email": "nhairani@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Ts. Dr. NOR HASLINDA BINTI ABAS",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "nhaslin@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Dr. NOR HAYATI BINTI ABD GHAFAR",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "noryati@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Dr. NOR HAZURINA BINTI OTHMAN",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "hazurina@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Ts. Dr. NORASHIDAH BINTI ABD RAHMAN",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "nrashida@uthm.edu.my"
+        },
+        {
+            "name": "PUAN NORFAIZAH BINTI ISMAIL",
+            "title": "Kakitangan Am",
+            "department": "Pejabat Am",
+            "email": "nfaizah@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. NORFANIZA BINTI MOKHTAR",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "norfaniza@uthm.edu.my"
+        },
+        {
+            "name": "PUAN NORHAFIZA BINTI AHMAD",
+            "title": "Kakitangan Am",
+            "department": "Pejabat Am",
+            "email": "nrhafiza@uthm.edu.my"
+        },
+        {
+            "name": "Dr. NORHAFIZAH BINTI SALLEH",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "nhafizah@uthm.edu.my"
+        },
+        {
+            "name": "PUAN NORITA BINTI SAMSUDIN",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "norita@uthm.edu.my"
+        },
+        {
+            "name": "PUAN NORKAMA AZURA BINTI DOLAH",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "norkama@uthm.edu.my"
+        },
+        {
+            "name": "PROF. Ts. Dr. NORSHUHAILA BINTI MOHAMED SUNAR",
+            "title": "Profesor",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "shuhaila@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Dr. NORWATI BINTI JAMALUDDIN",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "norwati@uthm.edu.my"
+        },
+        {
+            "name": "PROF. Ts. Dr. NORZILA BINTI OTHMAN",
+            "title": "Profesor",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "norzila@uthm.edu.my"
+        },
+        {
+            "name": "Dr. NUR ADILA BINTI AB. AZIZ",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "nuradila@uthm.edu.my"
+        },
+        {
+            "name": "Dr. NUR AIN BINTI EBAS",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "nuraine@uthm.edu.my"
+        },
+        {
+            "name": "PUAN NUR AISHAH BINTI ATAN HASHIM",
+            "title": "Kakitangan Am",
+            "department": "Pejabat Am",
+            "email": "aishahatan@uthm.edu.my"
+        },
+        {
+            "name": "CIK NUR AMALINA BINTI HANAPI",
+            "title": "Pensyarah",
+            "department": "Jabatan Senibina",
+            "email": "amalina@uthm.edu.my"
+        },
+        {
+            "name": "PUAN NUR NASUHA BINTI ABD. SALAM",
+            "title": "Pensyarah",
+            "department": "Jabatan Senibina",
+            "email": "nurnasuha@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Dr. NUR SHAYLINDA BINTI MOHD ZIN",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "nursha@uthm.edu.my"
+        },
+        {
+            "name": "Dr. NURAZUWA BINTI MD NOOR",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "nurazuwa@uthm.edu.my"
+        },
+        {
+            "name": "Dr. NURSITIHAZLIN BINTI AHMAD TERMIDA",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "hazlin@uthm.edu.my"
+        },
+        {
+            "name": "Tc. NURUL ADILA BINTI JABLAN",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "nuruladila@uthm.edu.my"
+        },
+        {
+            "name": "Dr. NURUL HIDAYAH BINTI MOHD KAMARUDDIN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "hidayahk@uthm.edu.my"
+        },
+        {
+            "name": "PUAN NURUL SYAHEERA BINTI AZIZ",
+            "title": "Pensyarah",
+            "department": "Jabatan Senibina",
+            "email": "syaheera@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK OSMAN BIN ABDUL RAHMAN",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "osmanr@uthm.edu.my"
+        },
+        {
+            "name": "PROF. Ts. ChM. Dr. RADIN MAYA SAPHIRA BINTI RADIN MOHAMED",
+            "title": "Profesor",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "maya@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. RAFIDAH BINTI HAMDAN",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "rafidahh@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. RAFIKULLAH BIN DERAMAN",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "rafikullah@uthm.edu.my"
+        },
+        {
+            "name": "Ir. Ts. Dr. RAHA BINTI ABD RAHMAN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "raha@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK RAZALI BIN SLAMAT",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "razalis@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Ts. Dr. RIDUAN BIN YUNUS",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "riduan@uthm.edu.my"
+        },
+        {
+            "name": "Tc. ROSLINA BINTI JAMIL",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "roslina@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. ROSLINDA BINTI SESWOYA",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "roslinda@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. ROSNAWATI BINTI BUHARI",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "rosna@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. RUZAIMAH BINTI RAZMAN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "ruzaimahr@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. SABARIAH BINTI MUSA",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "sabariah@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK SAHIDIN BIN GHAZALI",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "sahidin@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Dr. SAIFUL AZHAR BIN AHMAD TAJUDIN",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "saifulaz@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK SAIFULLIZAN BIN MOHD BUKARI",
+            "title": "Pensyarah",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "saifulz@uthm.edu.my"
+        },
+        {
+            "name": "Ir. Dr. SALLEHUDDIN SHAH BIN AYOP",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "sallehs@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. SASITHARAN A/L NAGAPAN",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "sasitharan@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. SEYED JAMALALDIN SEYED HAKIM",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "seyedhakim@uthm.edu.my"
+        },
+        {
+            "name": "PROF. Eur Ing. Ir. Ts. Dr. SHAHIRON BIN SHAHIDAN",
+            "title": "Profesor",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "shahiron@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Dr. SHAHRUL NIZA BIN MOKHATAR",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "shahruln@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK SHAIFUL HISHAM BIN SAABAN",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "shaiful@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. SHARIFAH SALWA BINTI MOHD ZUKI",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "sharifahs@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK SHARUDDEEN BIN ZAINAL",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "sharuden@uthm.edu.my"
+        },
+        {
+            "name": "Tc. SITI FADZILAH BINTI KASNO",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "fadzilah@uthm.edu.my"
+        },
+        {
+            "name": "Dr. SITI HIDAYAH BINTI ABU TALIB",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "hidayaht@uthm.edu.my"
+        },
+        {
+            "name": "PUAN SITI KHALIJAH BINTI YAMAN",
+            "title": "Pensyarah",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "khalijah@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Dr. SITI NAZAHIYAH BINTI RAHMAT",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "nazahiya@uthm.edu.my"
+        },
+        {
+            "name": "Dr. SITI RADZIAH BINTI ABDULLAH",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "radzia@uthm.edu.my"
+        },
+        {
+            "name": "PUAN SUHAILAH BINTI M MOHD SIRAJ",
+            "title": "Pensyarah",
+            "department": "Jabatan Senibina",
+            "email": "suhailahms@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK SUHAIMI BIN HARUN",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "suhaimih@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK SUHARDI BIN ISMAIL",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "suhardi@uthm.edu.my"
+        },
+        {
+            "name": "Dr. SUSHILAWATI BINTI ISMAIL",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "sushila@uthm.edu.my"
+        },
+        {
+            "name": "Ts. Dr. SYED BURHANUDDIN HILMI BIN SYED MOHAMAD",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "burhan@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ir. Ts. Dr. TAN LAI WAI",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "laiwai@uthm.edu.my"
+        },
+        {
+            "name": "Dr. TOH YOKE TENG",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "toh@uthm.edu.my"
+        },
+        {
+            "name": "Ir. Ts. Dr. TONG YEAN GHING",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "ygtong@uthm.edu.my"
+        },
+        {
+            "name": "Dr. TUAN NORHAYATI BINTI TUAN CHIK",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "thayati@uthm.edu.my"
+        },
+        {
+            "name": "PUAN W ZULIANA BINTI W NIK",
+            "title": "Kakitangan Am",
+            "department": "Pejabat Am",
+            "email": "wzuliana@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK WAN AFNIZAN BIN WAN MOHAMED @ WAN ABD GHANI",
+            "title": "Pensyarah",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "afnizan@uthm.edu.my"
+        },
+        {
+            "name": "PUAN YASMIN BINTI BAJURI",
+            "title": "Kakitangan Am",
+            "department": "Pejabat Am",
+            "email": "yasmin@uthm.edu.my"
+        },
+        {
+            "name": "Dr. ZAIHASRA BINTI ABU TALIB",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "zaihasra@uthm.edu.my"
+        },
+        {
+            "name": "Ir. Dr. ZAINORIZUAN BIN MOHD JAINI",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "rizuan@uthm.edu.my"
+        },
+        {
+            "name": "Dr. ZALIPAH BINTI JAMELLODIN",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "zalipah@uthm.edu.my"
+        },
+        {
+            "name": "PUAN ZAMRA BINTI JASMAN",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "zamra@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK ZAMRI BIN AHMAD",
+            "title": "Kakitangan Am",
+            "department": "Pejabat Am",
+            "email": "zamry@uthm.edu.my"
+        },
+        {
+            "name": "PUAN ZARINA BINTI ATAN",
+            "title": "Kakitangan Am",
+            "department": "Pejabat Am",
+            "email": "zarina@uthm.edu.my"
+        },
+        {
+            "name": "PUAN ZARINA BINTI MD ALI",
+            "title": "Pensyarah",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "zarinaa@uthm.edu.my"
+        },
+        {
+            "name": "PROF. MADYA Ts. Dr. ZAWAWI BIN DAUD",
+            "title": "Profesor Madya",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "zawawi@uthm.edu.my"
+        },
+        {
+            "name": "Ir. Ts. Dr. ZEETY BINTI MD YUSOF",
+            "title": "Pensyarah Kanan",
+            "department": "Jabatan Kejuruteraan Awam",
+            "email": "zeety@uthm.edu.my"
+        },
+        {
+            "name": "ENCIK ZULKEPLI BIN BUNAWAN",
+            "title": "Juruteknik",
+            "department": "Pengurusan Makmal",
+            "email": "zulkepli@uthm.edu.my"
+        }
+    ]
+}
