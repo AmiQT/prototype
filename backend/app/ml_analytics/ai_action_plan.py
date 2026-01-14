@@ -1,26 +1,25 @@
 """
 AI Action Plan Generator
 
-Uses Gemini AI to generate personalized action plans for students
+Uses LLM Factory (Gemini or Ollama) to generate personalized action plans for students
 based on their academic-kokurikulum balance analysis.
 """
 
 from typing import Dict, Any, List, Optional
-import google.generativeai as genai
 import logging
 import json
 import os
 
 from .config import MLConfig
 from .balance_analyzer import BalanceAnalyzer, BalanceMetrics, BalanceStatus
-from app.core.key_manager import get_gemini_key, key_manager
+from app.ai_assistant.llm_factory import LLMFactory
 
 logger = logging.getLogger(__name__)
 
 
 class AIActionPlanGenerator:
     """
-    Generates personalized action plans using Gemini AI.
+    Generates personalized action plans using LLM (Gemini or Ollama).
     
     Combines rule-based analysis with AI-generated recommendations
     for more contextual and personalized student guidance.
@@ -29,19 +28,18 @@ class AIActionPlanGenerator:
     def __init__(self):
         self.config = MLConfig
         self.balance_analyzer = BalanceAnalyzer()
-        self._init_gemini()
+        self._init_llm()
     
-    def _init_gemini(self):
-        """Initialize Gemini API with key rotation."""
-        api_key = get_gemini_key()
-        if api_key:
-            genai.configure(api_key=api_key)
-            self.model = genai.GenerativeModel(self.config.GEMINI_MODEL)
+    def _init_llm(self):
+        """Initialize LLM using factory (supports Gemini and Ollama)."""
+        try:
+            self.llm = LLMFactory.create_llm()
+            provider_info = LLMFactory.get_provider_info()
             self.ai_enabled = True
-            logger.info(f"AI Action Plan Generator initialized with Gemini ({key_manager.key_count} key(s))")
-        else:
+            logger.info(f"AI Action Plan Generator initialized with {provider_info['provider']} ({provider_info['model']})")
+        except Exception as e:
             self.ai_enabled = False
-            logger.warning("Gemini API key not configured. Using rule-based plans only.")
+            logger.warning(f"LLM initialization failed: {e}. Using rule-based plans only.")
     
     async def generate_action_plan(
         self, 
@@ -81,7 +79,7 @@ class AIActionPlanGenerator:
         student_data: Dict[str, Any],
         analysis: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Generate AI-powered action plan using Gemini."""
+        """Generate AI-powered action plan using LLM (Gemini or Ollama)."""
         
         metrics = analysis["metrics"]
         issues = analysis["issues"]
@@ -89,24 +87,16 @@ class AIActionPlanGenerator:
         prompt = self._build_prompt(student_data, metrics, issues)
         
         try:
-            # Use rotated key for each request
-            rotated_key = get_gemini_key()
-            if rotated_key:
-                genai.configure(api_key=rotated_key)
+            # Use LangChain LLM interface
+            from langchain_core.messages import HumanMessage
             
-            response = await self.model.generate_content_async(
-                prompt,
-                generation_config=genai.types.GenerationConfig(
-                    temperature=0.7,
-                    max_output_tokens=2000,
-                )
-            )
+            response = await self.llm.ainvoke([HumanMessage(content=prompt)])
             
             # Parse the response
-            return self._parse_ai_response(response.text)
+            return self._parse_ai_response(response.content)
             
         except Exception as e:
-            logger.error(f"Gemini API error: {e}")
+            logger.error(f"LLM API error: {e}")
             raise
     
     def _build_prompt(
@@ -291,19 +281,12 @@ Format JSON (ikut TEPAT):
 Berikan ringkasan eksekutif dalam 3-4 ayat sahaja. Fokus pada insight utama dan cadangan tindakan untuk fakulti."""
 
         try:
-            # Use rotated key for batch summary
-            rotated_key = get_gemini_key()
-            if rotated_key:
-                genai.configure(api_key=rotated_key)
+            # Use LangChain LLM interface
+            from langchain_core.messages import HumanMessage
             
-            response = await self.model.generate_content_async(
-                prompt,
-                generation_config=genai.types.GenerationConfig(
-                    temperature=0.5,
-                    max_output_tokens=300,
-                )
-            )
-            return response.text
+            response = await self.llm.ainvoke([HumanMessage(content=prompt)])
+            return response.content
         except Exception as e:
             logger.error(f"Batch summary generation failed: {e}")
             return None
+
