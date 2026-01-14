@@ -50,6 +50,7 @@ async def health_check():
 async def predict_student_risk(
     student_id: str,
     student_data: Optional[dict] = None,
+    db: Session = Depends(get_db),
 ):
     """
     Predict student risk
@@ -58,22 +59,67 @@ async def predict_student_risk(
     Results are cached for 24 hours to respect API rate limits.
 
     Args:
-        student_id: Student ID
-        student_data: Student data dictionary with features
+        student_id: Student ID (e.g., CE210002)
+        student_data: Student data dictionary with features (optional, will fetch from DB)
 
     Returns:
         Risk prediction with factors, strengths, recommendations
     """
     try:
-        if not student_data:
-            student_data = {"id": student_id}
+        # If no student_data provided, fetch from database
+        if not student_data or not student_data.get("cgpa"):
+            # Try to find student by student_id first
+            profile = db.query(Profile).filter(Profile.student_id == student_id).first()
+            
+            # If not found, try UUID
+            if not profile:
+                try:
+                    val = uuid.UUID(student_id, version=4)
+                    profile = db.query(Profile).filter(Profile.id == student_id).first()
+                except ValueError:
+                    pass
+            
+            if profile:
+                # Build full student data from database
+                cgpa_value = 0.0
+                if profile.cgpa:
+                    try:
+                        cgpa_value = float(profile.cgpa)
+                    except (ValueError, TypeError):
+                        logger.warning(f"Invalid CGPA for {student_id}: {profile.cgpa}")
+                
+                student_data = {
+                    "id": str(profile.id),
+                    "student_id": profile.student_id or str(profile.id)[:8],
+                    "name": profile.full_name,
+                    "full_name": profile.full_name,
+                    "cgpa": cgpa_value,
+                    "department": profile.department,
+                    "faculty": profile.faculty,
+                    "kokurikulum_score": float(profile.kokurikulum_score) if profile.kokurikulum_score else 0,
+                    "academic_info": profile.academic_info or {},
+                }
+                logger.info(f"Fetched from DB - Student {student_id}: CGPA={cgpa_value}, Koku={student_data['kokurikulum_score']}")
+            else:
+                # Student not found
+                logger.warning(f"Student {student_id} not found in database")
+                student_data = {"id": student_id, "student_id": student_id}
 
         prediction = await predictor.predict_student_risk(student_data)
+        
+        # Add display fields
+        prediction["display_id"] = student_data.get("student_id", student_id)
+        prediction["full_name"] = student_data.get("full_name", "Unknown")
+        prediction["current_cgpa"] = student_data.get("cgpa", 0.0)
+        prediction["kokurikulum_score"] = student_data.get("kokurikulum_score", 0)
+        
         return prediction
 
     except Exception as e:
         logger.error(f"Error predicting risk for {student_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+
+
 
 
 @router.get("/student/{student_id}/performance")
