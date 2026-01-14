@@ -486,7 +486,7 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
                 supabase
                     .from("profiles")
                     .select(
-                        "academic_info, skills, personal_advisor, user_id, kokurikulum_score",
+                        "academic_info, skills, personal_advisor, user_id, kokurikulum_score, cgpa",
                     ),
                 supabase.from("events").select("*"),
                 supabase.from("event_participations").select("*"),
@@ -528,8 +528,11 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
             });
 
             profiles?.forEach((p) => {
-                // CGPA
-                const cgpa = parseFloat(p.academic_info?.cgpa) || 0;
+                // CGPA - read from p.cgpa directly (not academic_info)
+                const cgpa =
+                    parseFloat(p.cgpa) ||
+                    parseFloat(p.academic_info?.cgpa) ||
+                    0;
                 if (cgpa > 0) {
                     totalCgpa += cgpa;
                     cgpaCount++;
@@ -583,36 +586,48 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
     async function updateQuickStats(stats: any) {
         if (!stats) return;
-        
+
         const totalStudentsEl = document.getElementById("total-students");
-        if (totalStudentsEl) totalStudentsEl.textContent = stats.users
-            .filter((u: any) => u.role === "student")
-            .length.toString();
-            
+        if (totalStudentsEl)
+            totalStudentsEl.textContent = stats.users
+                .filter((u: any) => u.role === "student")
+                .length.toString();
+
         const avgCgpaEl = document.getElementById("avg-cgpa");
         if (avgCgpaEl) avgCgpaEl.textContent = stats.avgCgpa;
-        
+
         const cgpaCountEl = document.getElementById("cgpa-count");
-        if (cgpaCountEl) cgpaCountEl.textContent = stats.profiles.length.toString();
-        
+        if (cgpaCountEl)
+            cgpaCountEl.textContent = stats.profiles.length.toString();
+
         const activeEventsEl = document.getElementById("active-events");
-        if (activeEventsEl) activeEventsEl.textContent = stats.events.length.toString();
-        
-        const eventParticipationEl = document.getElementById("event-participation");
-        if (eventParticipationEl) eventParticipationEl.textContent = stats.participations.length.toString();
-        
+        if (activeEventsEl)
+            activeEventsEl.textContent = stats.events.length.toString();
+
+        const eventParticipationEl = document.getElementById(
+            "event-participation",
+        );
+        if (eventParticipationEl)
+            eventParticipationEl.textContent =
+                stats.participations.length.toString();
+
         const totalPakEl = document.getElementById("total-pak");
-        if (totalPakEl) totalPakEl.textContent = Object.keys(stats.paks).length.toString();
-        
-        const supervisedStudentsEl = document.getElementById("supervised-students");
-        if (supervisedStudentsEl) supervisedStudentsEl.textContent = stats.profiles.length.toString();
+        if (totalPakEl)
+            totalPakEl.textContent = Object.keys(stats.paks).length.toString();
+
+        const supervisedStudentsEl = document.getElementById(
+            "supervised-students",
+        );
+        if (supervisedStudentsEl)
+            supervisedStudentsEl.textContent = stats.profiles.length.toString();
 
         // Kokurikulum stats
         const avgKokuEl = document.getElementById("avg-koku");
         if (avgKokuEl) avgKokuEl.textContent = stats.avgKoku + "%";
-        
+
         const kokuBalancedEl = document.getElementById("koku-balanced");
-        if (kokuBalancedEl) kokuBalancedEl.textContent = stats.balancedCount.toString();
+        if (kokuBalancedEl)
+            kokuBalancedEl.textContent = stats.balancedCount.toString();
     }
 
     async function initializeCharts(stats: any) {
@@ -705,7 +720,11 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
             };
 
             stats.profiles.forEach((p: any) => {
-                const cgpa = parseFloat(p.academic_info?.cgpa) || 0;
+                // CGPA - read from p.cgpa directly (not academic_info)
+                const cgpa =
+                    parseFloat(p.cgpa) ||
+                    parseFloat(p.academic_info?.cgpa) ||
+                    0;
                 const koku = parseFloat(p.kokurikulum_score) || 0;
 
                 if (cgpa === 0 || koku === 0) {
@@ -1697,37 +1716,38 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
                 planModal.classList.add("flex");
                 modalStudentId.textContent = `Generating plan for ${studentId}...`;
 
-            // Show Loading State
-            planContent.innerHTML = `
+                // Show Loading State
+                planContent.innerHTML = `
             <div class="flex flex-col items-center justify-center py-12 space-y-4">
                 <i class="fas fa-brain fa-spin text-4xl text-[#667eea]"></i>
                 <p class="text-gray-500 font-medium">Analyzing student profile...</p>
             </div>
         `;
 
-            // Generate Plan
-            const result = await mlAnalyticsService.generateInterventionPlan(
-                studentId,
-                riskContext,
-            );
+                // Generate Plan
+                const result =
+                    await mlAnalyticsService.generateInterventionPlan(
+                        studentId,
+                        riskContext,
+                    );
 
-            if (result.success && result.plan) {
-                modalStudentId.textContent = `Intervention Plan for ${studentId}`;
+                if (result.success && result.plan) {
+                    modalStudentId.textContent = `Intervention Plan for ${studentId}`;
 
-                // Format MD to HTML (simple conversion)
-                const htmlContent = result.plan
-                    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                    .replace(
-                        /### (.*?)\n/g,
-                        '<h4 class="text-lg font-bold text-gray-800 mt-4 mb-2">$1</h4>',
-                    )
-                    .replace(
-                        /- (.*?)\n/g,
-                        '<li class="ml-4 list-disc text-gray-600">$1</li>',
-                    )
-                    .replace(/\n/g, "<br>");
+                    // Format MD to HTML (simple conversion)
+                    const htmlContent = result.plan
+                        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                        .replace(
+                            /### (.*?)\n/g,
+                            '<h4 class="text-lg font-bold text-gray-800 mt-4 mb-2">$1</h4>',
+                        )
+                        .replace(
+                            /- (.*?)\n/g,
+                            '<li class="ml-4 list-disc text-gray-600">$1</li>',
+                        )
+                        .replace(/\n/g, "<br>");
 
-                planContent.innerHTML = `
+                    planContent.innerHTML = `
                 <div class="prose max-w-none">
                     ${htmlContent}
                 </div>
@@ -1737,15 +1757,15 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
                     </button>
                 </div>
             `;
-            } else {
-                planContent.innerHTML = `
+                } else {
+                    planContent.innerHTML = `
                 <div class="text-center py-12 text-red-500 space-y-4">
                     <i class="fas fa-exclamation-circle text-4xl"></i>
                     <p>Failed to generate plan. Please try again.</p>
                     <p class="text-sm text-gray-400">${result.error || "Unknown error"}</p>
                 </div>
             `;
-            }
-        });
+                }
+            });
     }
 </script>
