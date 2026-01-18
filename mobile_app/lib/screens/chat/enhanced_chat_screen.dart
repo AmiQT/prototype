@@ -177,7 +177,7 @@ class _EnhancedChatScreenState extends State<EnhancedChatScreen> {
       if (FSKTMDataService.isUTHMFacultyQuery(content)) {
         final detectedFaculty =
             FSKTMDataService.detectFacultyFromQuery(content);
-        // debugPrint('RAG: Detected faculty = $detectedFaculty');
+        debugPrint('RAG: Detected faculty = $detectedFaculty');
 
         switch (detectedFaculty) {
           case 'fsktm':
@@ -211,6 +211,71 @@ Contoh respons: "Maaf, boleh saya tahu fakulti mana yang awak maksudkan? FSKTM, 
             // General UTHM query - provide FSKTM as default
             facultyContext =
                 await FSKTMDataService.getFSKTMContextForAIWithQuery(content);
+        }
+      } else {
+        // SMART FALLBACK: If query contains potential name (Capitalized words),
+        // load FSKTM context anyway - might be asking about staff
+        final hasProperName = RegExp(r'\b[A-Z][a-z]+\b').hasMatch(content) ||
+            content.toLowerCase().split(' ').any((word) =>
+                word.length >= 4 &&
+                ![
+                  'what',
+                  'this',
+                  'that',
+                  'with',
+                  'from',
+                  'your',
+                  'have',
+                  'will',
+                  'been',
+                  'were',
+                  'they',
+                  'their',
+                  'about',
+                  'which',
+                  'would',
+                  'there',
+                  'could',
+                  'other',
+                  'after',
+                  'first',
+                  'also',
+                  'make',
+                  'like',
+                  'just',
+                  'over',
+                  'such',
+                  'into',
+                  'year',
+                  'some',
+                  'them',
+                  'than',
+                  'look',
+                  'only',
+                  'come',
+                  'most',
+                  'very',
+                  'when',
+                  'being',
+                  'these',
+                  'more',
+                  'many',
+                  'those',
+                  'then',
+                  'must',
+                  'said',
+                  'each',
+                  'tell',
+                  'good',
+                  'know',
+                  'want'
+                ].contains(word));
+
+        if (hasProperName) {
+          debugPrint(
+              'RAG: Smart fallback - loading FSKTM context for potential name query');
+          facultyContext =
+              await FSKTMDataService.getFSKTMContextForAIWithQuery(content);
         }
       }
 

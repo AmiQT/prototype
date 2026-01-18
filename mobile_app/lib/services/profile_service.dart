@@ -217,6 +217,8 @@ class ProfileService {
           .single();
 
       // Convert Supabase response to ProfileModel
+      debugPrint(
+          'ProfileService: talent_quiz_results from DB = ${response['talent_quiz_results']}');
       return ProfileModel(
         id: response['id'] ?? '',
         userId: response['user_id'] ?? userId,
@@ -256,7 +258,9 @@ class ProfileService {
                   ?.map((h) => HobbyModel.fromJson(h))
                   .toList() ??
               [],
-          quizResults: response['talent_quiz_results'] != null
+          quizResults: (response['talent_quiz_results'] != null &&
+                  response['talent_quiz_results'] is Map &&
+                  (response['talent_quiz_results'] as Map).isNotEmpty)
               ? TalentQuizResultModel.fromJson(response['talent_quiz_results'])
               : null,
           updatedAt: response['updated_at'] != null

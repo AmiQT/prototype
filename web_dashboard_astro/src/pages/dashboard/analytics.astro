@@ -352,6 +352,191 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
             </div>
         </div>
     </div>
+
+    <!-- PDF Export Customization Modal -->
+    <div
+        id="export-pdf-modal"
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4"
+    >
+        <div
+            class="bg-white rounded-2xl max-w-md w-full mx-4 shadow-2xl overflow-hidden"
+        >
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-red-500 to-pink-600 p-6">
+                <h3
+                    class="text-xl font-bold text-white flex items-center gap-3"
+                >
+                    <i class="fas fa-file-pdf"></i>
+                    Export PDF Report
+                </h3>
+                <p class="text-white/80 text-sm mt-1">
+                    Customize your report data
+                </p>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6 space-y-5">
+                <!-- Date Range -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-calendar-alt text-gray-400 mr-2"
+                        ></i>Date Range
+                    </label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <input
+                            type="date"
+                            id="export-date-from"
+                            class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+                        />
+                        <input
+                            type="date"
+                            id="export-date-to"
+                            class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+                        />
+                    </div>
+                </div>
+
+                <!-- Department Filter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-building text-gray-400 mr-2"
+                        ></i>Department
+                    </label>
+                    <select
+                        id="export-department"
+                        class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+                    >
+                        <option value="">All Departments</option>
+                        <option value="FSKTM">FSKTM</option>
+                        <option value="FKAAB">FKAAB</option>
+                        <option value="FKEE">FKEE</option>
+                        <option value="FKMP">FKMP</option>
+                        <option value="FPTP">FPTP</option>
+                    </select>
+                </div>
+
+                <!-- Report Template -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-layer-group text-gray-400 mr-2"
+                        ></i>Report Template
+                    </label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label
+                            class="flex items-center gap-2 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors has-[:checked]:border-red-500 has-[:checked]:bg-red-50"
+                        >
+                            <input
+                                type="radio"
+                                name="export-template"
+                                value="summary"
+                                checked
+                                class="text-red-500"
+                            />
+                            <div>
+                                <div class="font-medium text-gray-800">
+                                    Summary
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    Key stats only
+                                </div>
+                            </div>
+                        </label>
+                        <label
+                            class="flex items-center gap-2 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors has-[:checked]:border-red-500 has-[:checked]:bg-red-50"
+                        >
+                            <input
+                                type="radio"
+                                name="export-template"
+                                value="detailed"
+                                class="text-red-500"
+                            />
+                            <div>
+                                <div class="font-medium text-gray-800">
+                                    Detailed
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    Full report
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Include Sections -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-list-check text-gray-400 mr-2"
+                        ></i>Include Sections
+                    </label>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                id="export-inc-students"
+                                checked
+                                class="w-4 h-4 rounded text-red-500"
+                            />
+                            <span class="text-sm text-gray-600"
+                                >Student Statistics</span
+                            >
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                id="export-inc-events"
+                                checked
+                                class="w-4 h-4 rounded text-red-500"
+                            />
+                            <span class="text-sm text-gray-600"
+                                >Event Analytics</span
+                            >
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                id="export-inc-cgpa"
+                                checked
+                                class="w-4 h-4 rounded text-red-500"
+                            />
+                            <span class="text-sm text-gray-600"
+                                >CGPA Distribution</span
+                            >
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                id="export-inc-departments"
+                                checked
+                                class="w-4 h-4 rounded text-red-500"
+                            />
+                            <span class="text-sm text-gray-600"
+                                >Department Breakdown</span
+                            >
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div
+                class="border-t border-gray-100 p-4 bg-gray-50 flex justify-end gap-3"
+            >
+                <button
+                    id="close-export-modal-btn"
+                    class="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
+                >
+                    Cancel
+                </button>
+                <button
+                    id="confirm-export-btn"
+                    class="px-6 py-2 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-lg hover:opacity-90 transition-all font-medium flex items-center gap-2 shadow-lg shadow-red-500/30"
+                >
+                    <i class="fas fa-download"></i>
+                    Export PDF
+                </button>
+            </div>
+        </div>
+    </div>
 </DashboardLayout>
 
 <script>
@@ -835,9 +1020,10 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
     }
 
     function setupEventListeners() {
+        // Open export modal instead of direct generate
         document
             .getElementById("generate-report-btn")
-            ?.addEventListener("click", generateReport);
+            ?.addEventListener("click", openExportModal);
         document
             .getElementById("export-csv-btn")
             ?.addEventListener("click", exportToCSV);
@@ -848,8 +1034,45 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
             .getElementById("modal-close-footer-btn")
             ?.addEventListener("click", closeModal);
 
+        // Export modal handlers
+        document
+            .getElementById("close-export-modal-btn")
+            ?.addEventListener("click", closeExportModal);
+        document
+            .getElementById("confirm-export-btn")
+            ?.addEventListener("click", generateReport);
+
         // Initialize tabs
         initializeTabs();
+    }
+
+    function openExportModal() {
+        const modal = document.getElementById("export-pdf-modal");
+        // Set default dates
+        const today = new Date();
+        const thirtyDaysAgo = new Date(
+            today.getTime() - 30 * 24 * 60 * 60 * 1000,
+        );
+
+        const dateFrom = document.getElementById(
+            "export-date-from",
+        ) as HTMLInputElement;
+        const dateTo = document.getElementById(
+            "export-date-to",
+        ) as HTMLInputElement;
+
+        if (dateFrom)
+            dateFrom.value = thirtyDaysAgo.toISOString().split("T")[0];
+        if (dateTo) dateTo.value = today.toISOString().split("T")[0];
+
+        modal?.classList.remove("hidden");
+        modal?.classList.add("flex");
+    }
+
+    function closeExportModal() {
+        const modal = document.getElementById("export-pdf-modal");
+        modal?.classList.add("hidden");
+        modal?.classList.remove("flex");
     }
 
     function initializeTabs() {
@@ -1052,100 +1275,286 @@ import DashboardLayout from "../../layouts/DashboardLayout.astro";
 
     // Export Functions
     async function generateReport() {
-        const btn = document.getElementById("generate-report-btn");
-        if (btn) {
-            btn.innerHTML =
+        const confirmBtn = document.getElementById("confirm-export-btn");
+        const mainBtn = document.getElementById("generate-report-btn");
+
+        if (confirmBtn) {
+            confirmBtn.innerHTML =
                 '<i class="fas fa-spinner fa-spin"></i> Generating...';
-            (btn as HTMLButtonElement).disabled = true;
+            (confirmBtn as HTMLButtonElement).disabled = true;
         }
 
         try {
-            // Fetch Data
-            const { data: users } = await supabase.from("users").select("*");
-            const { data: events } = await supabase.from("events").select("*");
-            const { data: profiles } = await supabase
-                .from("profiles")
-                .select("*");
+            // Get filter values from modal
+            const dateFrom = (
+                document.getElementById("export-date-from") as HTMLInputElement
+            )?.value;
+            const dateTo = (
+                document.getElementById("export-date-to") as HTMLInputElement
+            )?.value;
+            const department = (
+                document.getElementById(
+                    "export-department",
+                ) as HTMLSelectElement
+            )?.value;
+            const template =
+                (
+                    document.querySelector(
+                        'input[name="export-template"]:checked',
+                    ) as HTMLInputElement
+                )?.value || "summary";
+
+            const includeStudents = (
+                document.getElementById(
+                    "export-inc-students",
+                ) as HTMLInputElement
+            )?.checked;
+            const includeEvents = (
+                document.getElementById("export-inc-events") as HTMLInputElement
+            )?.checked;
+            const includeCgpa = (
+                document.getElementById("export-inc-cgpa") as HTMLInputElement
+            )?.checked;
+            const includeDepartments = (
+                document.getElementById(
+                    "export-inc-departments",
+                ) as HTMLInputElement
+            )?.checked;
+
+            // Fetch Data with filters
+            let usersQuery = supabase.from("users").select("*");
+            let eventsQuery = supabase.from("events").select("*");
+            let profilesQuery = supabase.from("profiles").select("*");
+
+            // Apply date filters
+            if (dateFrom) {
+                usersQuery = usersQuery.gte("created_at", dateFrom);
+                eventsQuery = eventsQuery.gte("event_date", dateFrom);
+            }
+            if (dateTo) {
+                usersQuery = usersQuery.lte("created_at", dateTo + "T23:59:59");
+                eventsQuery = eventsQuery.lte(
+                    "event_date",
+                    dateTo + "T23:59:59",
+                );
+            }
+
+            // Apply department filter
+            if (department) {
+                profilesQuery = profilesQuery.ilike(
+                    "department",
+                    `%${department}%`,
+                );
+            }
+
+            const [{ data: users }, { data: events }, { data: profiles }] =
+                await Promise.all([usersQuery, eventsQuery, profilesQuery]);
 
             const doc = new jsPDF();
 
             // Header
             doc.setFontSize(20);
-            doc.setTextColor(44, 62, 80);
+            doc.setTextColor(102, 126, 234);
             doc.text("UTHM Talent Analytics Report", 105, 20, {
                 align: "center",
             });
 
-            doc.setFontSize(12);
-            doc.setTextColor(52, 73, 94);
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
             doc.text(
-                `Generated on: ${new Date().toLocaleString("en-MY")}`,
+                `Generated: ${new Date().toLocaleString("en-MY")} | Template: ${template.toUpperCase()}`,
                 105,
-                30,
+                28,
                 { align: "center" },
             );
 
-            // Summary Section
-            doc.setFontSize(16);
+            // Filter info
+            doc.setFontSize(9);
+            doc.setTextColor(120, 120, 120);
+            let filterText = `Filters: ${dateFrom || "All dates"} to ${dateTo || "Present"}`;
+            if (department) filterText += ` | Dept: ${department}`;
+            doc.text(filterText, 105, 34, { align: "center" });
+
+            let y = 50;
+
+            // Summary Section (always included)
+            doc.setFontSize(14);
             doc.setTextColor(44, 62, 80);
-            doc.text("Executive Summary", 20, 50);
+            doc.text("Executive Summary", 20, y);
 
             doc.setFontSize(10);
             doc.setTextColor(52, 73, 94);
-            let y = 60;
-            doc.text(`Total Users: ${users?.length || 0}`, 20, y);
-            y += 7;
-            doc.text(`Total Events: ${events?.length || 0}`, 20, y);
-            y += 7;
-            doc.text(
-                `Students: ${users?.filter((u) => u.role === "student").length || 0}`,
-                20,
-                y,
-            );
-            y += 7;
-            doc.text(
-                `Lecturers: ${users?.filter((u) => u.role === "lecturer").length || 0}`,
-                20,
-                y,
-            );
+            y += 10;
 
-            // Tables
-            y += 15;
-            doc.setFontSize(14);
-            doc.setTextColor(44, 62, 80);
-            doc.text("Department Distribution", 20, y);
+            const studentCount =
+                users?.filter((u) => u.role === "student").length || 0;
+            const lecturerCount =
+                users?.filter((u) => u.role === "lecturer").length || 0;
 
-            const deptCounts: Record<string, number> = {};
-            profiles?.forEach((p) => {
-                const dept =
-                    p.academic_info?.department || p.department || "Unknown";
-                deptCounts[dept] = (deptCounts[dept] || 0) + 1;
-            });
+            doc.text(`• Total Users: ${users?.length || 0}`, 25, y);
+            y += 6;
+            doc.text(`• Students: ${studentCount}`, 25, y);
+            y += 6;
+            doc.text(`• Lecturers: ${lecturerCount}`, 25, y);
+            y += 6;
+            doc.text(`• Total Events: ${events?.length || 0}`, 25, y);
+            y += 10;
 
-            const tableData = Object.entries(deptCounts).map(
-                ([dept, count]) => [dept, count],
-            );
+            // Student Statistics Section
+            if (includeStudents && template === "detailed") {
+                doc.setFontSize(14);
+                doc.setTextColor(44, 62, 80);
+                doc.text("Student Statistics", 20, y);
+                y += 8;
 
-            autoTable(doc, {
-                startY: y + 5,
-                head: [["Department", "Student Count"]],
-                body: tableData,
-                theme: "grid",
-                headStyles: { fillColor: [102, 126, 234] },
-            });
+                doc.setFontSize(10);
+                doc.setTextColor(52, 73, 94);
 
-            doc.save(
-                `uthm-analytics-report-${new Date().toISOString().split("T")[0]}.pdf`,
-            );
-            alert("PDF Report generated successfully!");
+                // Calculate average CGPA
+                const cgpaValues =
+                    profiles
+                        ?.filter((p) => p.cgpa && parseFloat(p.cgpa) > 0)
+                        .map((p) => parseFloat(p.cgpa)) || [];
+                const avgCgpa =
+                    cgpaValues.length > 0
+                        ? (
+                              cgpaValues.reduce((a, b) => a + b, 0) /
+                              cgpaValues.length
+                          ).toFixed(2)
+                        : "N/A";
+
+                doc.text(`• Average CGPA: ${avgCgpa}`, 25, y);
+                y += 6;
+                doc.text(`• Profiles with CGPA: ${cgpaValues.length}`, 25, y);
+                y += 10;
+            }
+
+            // Events Section
+            if (includeEvents) {
+                doc.setFontSize(14);
+                doc.setTextColor(44, 62, 80);
+                doc.text("Event Analytics", 20, y);
+                y += 8;
+
+                if (events && events.length > 0 && template === "detailed") {
+                    const eventData = events
+                        .slice(0, 10)
+                        .map((e) => [
+                            e.title?.substring(0, 30) || "Untitled",
+                            new Date(e.event_date).toLocaleDateString("en-MY"),
+                            e.category || "General",
+                            e.current_participants?.toString() || "0",
+                        ]);
+
+                    autoTable(doc, {
+                        startY: y,
+                        head: [["Event", "Date", "Category", "Participants"]],
+                        body: eventData,
+                        theme: "striped",
+                        headStyles: { fillColor: [102, 126, 234] },
+                        styles: { fontSize: 8 },
+                    });
+
+                    y = (doc as any).lastAutoTable.finalY + 10;
+                } else {
+                    doc.setFontSize(10);
+                    doc.text(
+                        `• Events in period: ${events?.length || 0}`,
+                        25,
+                        y,
+                    );
+                    y += 10;
+                }
+            }
+
+            // CGPA Distribution Section
+            if (includeCgpa) {
+                doc.setFontSize(14);
+                doc.setTextColor(44, 62, 80);
+                doc.text("CGPA Distribution", 20, y);
+                y += 8;
+
+                const cgpaDist: Record<string, number> = {
+                    "Excellent (3.5-4.0)": 0,
+                    "Good (3.0-3.49)": 0,
+                    "Average (2.5-2.99)": 0,
+                    "Pass (2.0-2.49)": 0,
+                    "Below (<2.0)": 0,
+                };
+
+                profiles?.forEach((p) => {
+                    const cgpa = parseFloat(p.cgpa) || 0;
+                    if (cgpa >= 3.5) cgpaDist["Excellent (3.5-4.0)"]++;
+                    else if (cgpa >= 3.0) cgpaDist["Good (3.0-3.49)"]++;
+                    else if (cgpa >= 2.5) cgpaDist["Average (2.5-2.99)"]++;
+                    else if (cgpa >= 2.0) cgpaDist["Pass (2.0-2.49)"]++;
+                    else if (cgpa > 0) cgpaDist["Below (<2.0)"]++;
+                });
+
+                const cgpaData = Object.entries(cgpaDist)
+                    .filter(([_, count]) => count > 0)
+                    .map(([range, count]) => [range, count.toString()]);
+
+                if (cgpaData.length > 0) {
+                    autoTable(doc, {
+                        startY: y,
+                        head: [["CGPA Range", "Count"]],
+                        body: cgpaData,
+                        theme: "grid",
+                        headStyles: { fillColor: [34, 197, 94] },
+                        styles: { fontSize: 9 },
+                    });
+                    y = (doc as any).lastAutoTable.finalY + 10;
+                }
+            }
+
+            // Department Breakdown Section
+            if (includeDepartments) {
+                doc.setFontSize(14);
+                doc.setTextColor(44, 62, 80);
+                doc.text("Department Breakdown", 20, y);
+                y += 8;
+
+                const deptCounts: Record<string, number> = {};
+                profiles?.forEach((p) => {
+                    const dept = p.department || "Unknown";
+                    deptCounts[dept] = (deptCounts[dept] || 0) + 1;
+                });
+
+                const deptData = Object.entries(deptCounts)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([dept, count]) => [dept, count.toString()]);
+
+                if (deptData.length > 0) {
+                    autoTable(doc, {
+                        startY: y,
+                        head: [["Department", "Student Count"]],
+                        body: deptData,
+                        theme: "grid",
+                        headStyles: { fillColor: [102, 126, 234] },
+                        styles: { fontSize: 9 },
+                    });
+                }
+            }
+
+            // Close modal and save
+            closeExportModal();
+
+            const filename = `uthm-report-${template}-${new Date().toISOString().split("T")[0]}.pdf`;
+            doc.save(filename);
+            alert(`✅ PDF Report "${filename}" generated successfully!`);
         } catch (error: any) {
             console.error("Error generating report:", error);
             alert("Error generating report: " + error.message);
         } finally {
-            if (btn) {
-                btn.innerHTML =
+            if (confirmBtn) {
+                confirmBtn.innerHTML =
+                    '<i class="fas fa-download"></i> Export PDF';
+                (confirmBtn as HTMLButtonElement).disabled = false;
+            }
+            if (mainBtn) {
+                mainBtn.innerHTML =
                     '<i class="fas fa-file-pdf text-red-500"></i> Generate Report';
-                (btn as HTMLButtonElement).disabled = false;
             }
         }
     }

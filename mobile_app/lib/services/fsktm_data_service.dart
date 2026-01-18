@@ -21,58 +21,249 @@ class FSKTMDataService {
     'fkee': 'Fakulti Kejuruteraan Elektrik dan Elektronik',
   };
 
-  // ============== QUERY EXPANSION: Sinonim BM ↔ EN ==============
+  // ============== QUERY EXPANSION: Sinonim BM ↔ EN + SLANG ==============
   /// Dictionary sinonim untuk expand query - supaya "pensyarah" match "lecturer" dll
+  /// ENHANCED V2: 150+ terms with casual/slang, typos, abbreviations, greetings
   static const Map<String, List<String>> _synonymDictionary = {
-    // Staff/People
-    'pensyarah': ['lecturer', 'pengajar', 'tenaga pengajar'],
-    'lecturer': ['pensyarah', 'pengajar', 'tenaga pengajar'],
-    'profesor': ['professor', 'prof'],
-    'professor': ['profesor', 'prof'],
-    'dekan': ['dean'],
-    'dean': ['dekan'],
-    'ketua': ['head', 'pengarah', 'director'],
-    'head': ['ketua', 'pengarah'],
-    'staff': ['kakitangan', 'pekerja', 'staf'],
-    'kakitangan': ['staff', 'pekerja', 'staf'],
+    // ===========================================
+    // STAFF/PEOPLE - Comprehensive
+    // ===========================================
+    'pensyarah': [
+      'lecturer',
+      'pengajar',
+      'tenaga pengajar',
+      'cikgu',
+      'teacher',
+      'lec',
+      'lecturers'
+    ],
+    'lecturer': ['pensyarah', 'pengajar', 'tenaga pengajar', 'cikgu', 'lec'],
+    'profesor': [
+      'professor',
+      'prof',
+      'proffesor',
+      'proffessor',
+      'profssor'
+    ], // typos
+    'professor': ['profesor', 'prof', 'proffesor', 'proffessor'],
+    'dekan': ['dean', 'ketua fakulti', 'pengetua'],
+    'dean': ['dekan', 'ketua fakulti'],
+    'ketua': ['head', 'pengarah', 'director', 'boss', 'chief', 'leader', 'kj'],
+    'head': ['ketua', 'pengarah', 'boss', 'leader'],
+    'staff': [
+      'kakitangan',
+      'pekerja',
+      'staf',
+      'orang',
+      'worker',
+      'workers',
+      'employees'
+    ],
+    'kakitangan': ['staff', 'pekerja', 'staf', 'worker', 'workers'],
+    'dr': ['doctor', 'doktor', 'dr.', 'doc'],
+    'doctor': ['dr', 'doktor', 'dr.', 'doc'],
+    'encik': ['mr', 'mister', 'en', 'en.', 'cik'],
+    'puan': ['mrs', 'madam', 'mdm', 'pn', 'pn.', 'cik'],
+    'tuan': ['sir', 'tn', 'tn.'],
 
-    // Academic
-    'program': ['course', 'kursus', 'pengajian'],
-    'course': ['program', 'kursus', 'pengajian'],
-    'kursus': ['course', 'program', 'pengajian'],
-    'ijazah': ['degree', 'sarjana muda'],
-    'degree': ['ijazah', 'sarjana muda'],
-    'sarjana': ['master', 'pascasiswazah'],
-    'master': ['sarjana', 'pascasiswazah'],
+    // ===========================================
+    // ACADEMIC - Comprehensive
+    // ===========================================
+    'program': ['course', 'kursus', 'pengajian', 'subjek', 'major', 'jurusan'],
+    'course': ['program', 'kursus', 'pengajian', 'subjek', 'kelas'],
+    'kursus': ['course', 'program', 'pengajian', 'class', 'kelas'],
+    'ijazah': ['degree', 'sarjana muda', 'diploma', 'bachelor', 'sijil'],
+    'degree': ['ijazah', 'sarjana muda', 'diploma', 'bachelor'],
+    'sarjana': [
+      'master',
+      'pascasiswazah',
+      'masters',
+      'postgrad',
+      'postgraduate'
+    ],
+    'master': ['sarjana', 'pascasiswazah', 'masters', 'postgrad'],
+    'phd': ['doctorate', 'doktoral', 'kedoktoran', 'doktor falsafah'],
+    'belajar': ['study', 'studying', 'pelajar', 'student', 'blaja', 'blajr'],
+    'study': ['belajar', 'studying', 'pelajar', 'blaja'],
+    'pelajar': ['student', 'students', 'murid', 'anak murid', 'budak'],
+    'student': ['pelajar', 'students', 'murid', 'budak'],
 
-    // Departments
-    'jabatan': ['department', 'dept'],
-    'department': ['jabatan', 'dept'],
-    'fakulti': ['faculty'],
-    'faculty': ['fakulti'],
+    // ===========================================
+    // DEPARTMENTS & FACULTY - Comprehensive
+    // ===========================================
+    'jabatan': ['department', 'dept', 'unit', 'bahagian', 'jab'],
+    'department': ['jabatan', 'dept', 'unit', 'bahagian'],
+    'fakulti': ['faculty', 'fak', 'fakulty', 'fac'], // typos
+    'faculty': ['fakulti', 'fak', 'fac'],
+    'fsktm': [
+      'fakulti sains komputer',
+      'computer science',
+      'it faculty',
+      'fskpm'
+    ], // typo
+    'fkaab': ['kejuruteraan awam', 'civil engineering', 'civil', 'awam'],
+    'fkee': [
+      'kejuruteraan elektrik',
+      'electrical engineering',
+      'elektrik',
+      'elektronik'
+    ],
 
-    // Research
-    'penyelidikan': ['research', 'kajian'],
-    'research': ['penyelidikan', 'kajian'],
-    'kepakaran': ['expertise', 'specialization', 'bidang'],
-    'expertise': ['kepakaran', 'specialization', 'bidang'],
+    // ===========================================
+    // RESEARCH - Comprehensive
+    // ===========================================
+    'penyelidikan': ['research', 'kajian', 'projek', 'rresearch'], // typo
+    'research': [
+      'penyelidikan',
+      'kajian',
+      'projek',
+      'rnd',
+      'r&d',
+      'penyelidik'
+    ],
+    'kepakaran': [
+      'expertise',
+      'specialization',
+      'bidang',
+      'skill',
+      'expert',
+      'pakar'
+    ],
+    'expertise': ['kepakaran', 'specialization', 'bidang', 'skill', 'pakar'],
+    'pakar': ['expert', 'specialist', 'kepakaran'],
 
-    // Contact
-    'telefon': ['phone', 'tel', 'nombor'],
-    'phone': ['telefon', 'tel', 'nombor'],
-    'alamat': ['address', 'lokasi', 'tempat'],
-    'address': ['alamat', 'lokasi', 'tempat'],
-    'emel': ['email', 'e-mel'],
-    'email': ['emel', 'e-mel'],
+    // ===========================================
+    // CONTACT INFO - Comprehensive
+    // ===========================================
+    'telefon': [
+      'phone',
+      'tel',
+      'nombor',
+      'number',
+      'call',
+      'fon',
+      'hp',
+      'handphone',
+      'no tel'
+    ],
+    'phone': ['telefon', 'tel', 'nombor', 'number', 'hp', 'handphone'],
+    'alamat': [
+      'address',
+      'lokasi',
+      'tempat',
+      'location',
+      'kat mana',
+      'dimana',
+      'mane',
+      'kt mana'
+    ],
+    'address': ['alamat', 'lokasi', 'tempat', 'location'],
+    'emel': ['email', 'e-mel', 'mail', 'mel', 'e-mail', 'gmail'],
+    'email': ['emel', 'e-mel', 'mail', 'mel', 'e-mail'],
+    'website': ['web', 'laman web', 'site', 'portal', 'homepage'],
+    'office': ['pejabat', 'bilik', 'room', 'ofis', 'opis'],
+    'pejabat': ['office', 'bilik', 'room', 'ofis', 'opis'],
 
-    // Actions
-    'cari': ['find', 'search', 'senarai', 'list'],
-    'find': ['cari', 'search', 'senarai'],
-    'siapa': ['who', 'sapa'],
-    'who': ['siapa', 'sapa'],
-    'apa': ['what', 'apakah'],
-    'what': ['apa', 'apakah'],
-    'berapa': ['how many', 'jumlah', 'bilangan'],
+    // ===========================================
+    // QUESTIONS/ACTIONS - Casual BM Slang
+    // ===========================================
+    'cari': [
+      'find',
+      'search',
+      'senarai',
+      'list',
+      'carikan',
+      'tolong cari',
+      'carik',
+      'cr'
+    ],
+    'find': ['cari', 'search', 'senarai', 'carikan', 'carik'],
+    'siapa': ['who', 'sapa', 'sape', 'ape nama', 'sp', 'who is', 'whos'],
+    'who': ['siapa', 'sapa', 'sape', 'sp'],
+    'apa': ['what', 'apakah', 'ape', 'pe', 'ap', 'whats'],
+    'what': ['apa', 'apakah', 'ape', 'pe'],
+    'berapa': [
+      'how many',
+      'jumlah',
+      'bilangan',
+      'brapa',
+      'bape',
+      'brape',
+      'brp'
+    ],
+    'mana': [
+      'where',
+      'kat mana',
+      'dekat mana',
+      'kt mane',
+      'mn',
+      'dmn',
+      'di mana'
+    ],
+    'where': ['mana', 'kat mana', 'dekat mana', 'kt mane'],
+    'kenapa': ['why', 'knp', 'nape', 'mengapa', 'knape', 'y'],
+    'why': ['kenapa', 'mengapa', 'nape', 'knp'],
+    'macam mana': [
+      'how',
+      'mcm mane',
+      'camne',
+      'cara',
+      'mcmne',
+      'canne',
+      'cmne'
+    ],
+    'how': ['macam mana', 'bagaimana', 'cara', 'mcm mane', 'camne'],
+    'bila': ['when', 'bile', 'bl', 'when is'],
+    'when': ['bila', 'bile', 'bl'],
+
+    // ===========================================
+    // COMMON CASUAL/SLANG WORDS
+    // ===========================================
+    'boleh': ['can', 'bole', 'blh', 'could', 'bleh', 'bley'],
+    'nak': ['want', 'mahu', 'nk', 'wanna', 'mau'],
+    'ada': ['have', 'got', 'ade', 'ad', 'ader'],
+    'tak': ['not', 'x', 'xde', 'takde', 'tiada', 'tk', 'xda', 'xdk'],
+    'tidak': ['no', 'not', 'tak', 'x', 'xde'],
+    'dgn': ['dengan', 'with', 'ngn', 'ngan'],
+    'dengan': ['with', 'dgn', 'ngn', 'ngan'],
+    'yg': ['yang', 'which', 'that', 'y'],
+    'yang': ['which', 'that', 'yg', 'y'],
+    'utk': ['untuk', 'for', 'tok', 'tuk'],
+    'untuk': ['for', 'utk', 'tok', 'tuk'],
+    'dlm': ['dalam', 'in', 'inside', 'dlem'],
+    'dalam': ['in', 'inside', 'dlm'],
+    'ni': ['this', 'ini', 'nih'],
+    'tu': ['that', 'itu', 'tuh'],
+    'je': ['only', 'just', 'sahaja', 'saje', 'jer'],
+    'pun': ['also', 'too', 'pon'],
+    'dah': ['already', 'sudah', 'dh'],
+    'lagi': ['more', 'again', 'lg', 'lgi'],
+    'saya': ['i', 'me', 'sy', 'aku', 'ak', 'gua', 'gue'],
+    'kamu': ['you', 'awak', 'kau', 'ko', 'u', 'hang', 'demo'],
+    'awak': ['you', 'kamu', 'kau', 'ko', 'u'],
+    'dia': ['he', 'she', 'dy', 'die'],
+
+    // ===========================================
+    // GREETINGS & POLITE PHRASES
+    // ===========================================
+    'tolong': ['help', 'please', 'tlg', 'pls', 'plz', 'tlng'],
+    'help': ['tolong', 'bantu', 'tlg'],
+    'terima kasih': ['thank you', 'thanks', 'tq', 'ty', 'tks', 'tkasih'],
+    'thanks': ['terima kasih', 'tq', 'ty', 'tks'],
+    'hai': ['hi', 'hey', 'hello', 'hye', 'hai2'],
+    'hello': ['hai', 'hi', 'hey', 'helo', 'hye'],
+    'assalamualaikum': ['salam', 'slm', 'assalam', 'wsalam'],
+    'salam': ['assalamualaikum', 'slm', 'assalam'],
+
+    // ===========================================
+    // COMMON TYPOS & ABBREVIATIONS
+    // ===========================================
+    'information': ['info', 'maklumat', 'informasi'],
+    'maklumat': ['information', 'info', 'informasi', 'mklmt'],
+    'nama': ['name', 'nm'],
+    'name': ['nama', 'nm'],
+    'senarai': ['list', 'listing', 'senari'], // typo
+    'list': ['senarai', 'listing'],
   };
 
   // ============== CHUNKING: Document Chunks for Better Retrieval ==============
@@ -1225,43 +1416,86 @@ ${member['specialization'] != null ? 'Kepakaran: ${member['specialization']}' : 
     final lowerQuery = query.toLowerCase();
 
     final uthmKeywords = [
-      // Generic Staff & People
-      'staff', 'lecturer', 'professor', 'dr.', 'prof.', 'pensyarah',
-      'dekan', 'dean', 'ketua jabatan', 'head of department',
+      // ===========================================
+      // Generic Staff & People - COMPREHENSIVE
+      // ===========================================
+      'staff', 'lecturer', 'professor', 'dr.', 'dr ', 'prof.', 'prof ',
+      'pensyarah', 'dekan', 'dean', 'ketua jabatan', 'head of department',
+      'siapa', 'sapa', 'sape', 'who is', 'who', 'whos',
+      'cikgu', 'encik', 'puan', 'tuan', 'ts.', 'ts ', 'en.', 'pn.',
+      'kakitangan', 'staf', 'pekerja', 'orang', 'lecturers', 'lec',
+      'doc', 'doktor', 'pengarah', 'director',
 
+      // ===========================================
       // FSKTM specific
-      'fsktm', 'fakulti sains komputer', 'faculty of computer science',
+      // ===========================================
+      'fsktm', 'fskpm', 'fakulti sains komputer', 'faculty of computer science',
       'multimedia', 'kejuruteraan perisian', 'software engineering',
       'keselamatan maklumat', 'information security', 'sains komputer',
-      'computer science', 'teknologi web', 'web technology',
+      'computer science', 'teknologi web', 'web technology', 'it faculty',
 
+      // ===========================================
       // FKAAB specific
+      // ===========================================
       'fkaab', 'kejuruteraan awam', 'civil engineering', 'alam bina',
       'built environment', 'senibina', 'architecture', 'struktur',
-      'geoteknik', 'hidrologi', 'pembinaan', 'construction',
+      'geoteknik', 'hidrologi', 'pembinaan', 'construction', 'civil',
 
+      // ===========================================
       // FKEE specific
+      // ===========================================
       'fkee', 'kejuruteraan elektrik', 'electrical engineering',
       'kejuruteraan elektronik', 'electronic engineering',
       'elektrik', 'elektronik', 'elektrikal', 'power system',
       'sistem kuasa', 'robotik', 'robotics', 'automation', 'automasi',
 
+      // ===========================================
       // General Faculty & Organization
-      'jabatan', 'department', 'uthm', 'universiti tun hussein',
-      'fakulti', 'faculty',
+      // ===========================================
+      'jabatan', 'jab', 'department', 'dept', 'uthm', 'universiti tun hussein',
+      'fakulti', 'fak', 'faculty', 'fac', 'bahagian', 'unit',
 
+      // ===========================================
       // Academic Programs
-      'program', 'course', 'degree', 'bachelor', 'master', 'phd', 'ijazah',
-      'sarjana muda', 'sarjana', 'kedoktoran',
+      // ===========================================
+      'program', 'course', 'kursus', 'degree', 'bachelor', 'master', 'phd',
+      'ijazah', 'sarjana muda', 'sarjana', 'kedoktoran', 'diploma',
+      'subjek', 'class', 'kelas', 'postgrad', 'undergraduate',
 
+      // ===========================================
       // Contact & Information
-      'email lecturer', 'contact lecturer', 'phone', 'telefon', 'alamat',
-      'address', 'website', 'vision', 'mission', 'visi', 'misi',
+      // ===========================================
+      'email', 'emel', 'mail', 'contact', 'phone', 'telefon', 'tel', 'fon',
+      'alamat', 'address', 'lokasi', 'location', 'tempat', 'kat mana',
+      'kt mane',
+      'website', 'web', 'portal', 'vision', 'mission', 'visi', 'misi',
+      'office', 'pejabat', 'bilik', 'room', 'hp', 'nombor', 'number',
 
-      // Queries
-      'siapa lecturer', 'berapa ramai staff', 'senarai lecturer',
-      'what is fsktm', 'apa itu fsktm', 'how many', 'berapa',
-      'research', 'penyelidikan', 'center', 'pusat'
+      // ===========================================
+      // Query Patterns - CASUAL BM SLANG
+      // ===========================================
+      'siapa lecturer', 'sapa lec', 'sape cikgu',
+      'berapa ramai', 'brapa', 'bape', 'brp', 'how many',
+      'senarai', 'list', 'cari', 'carik', 'cr', 'find', 'search',
+      'what is', 'apa itu', 'ape tu', 'apetu',
+      'mana', 'dmn', 'dimana', 'di mana', 'where',
+      'kenapa', 'knp', 'nape', 'why',
+      'macam mana', 'mcm mane', 'camne', 'cmne', 'how to',
+      'tolong', 'tlg', 'pls', 'help', 'bantu',
+      'boleh', 'bole', 'blh', 'can',
+      'nak', 'nk', 'want', 'mahu',
+      'ada', 'ade', 'have', 'got',
+
+      // ===========================================
+      // Research
+      // ===========================================
+      'research', 'penyelidikan', 'kajian', 'center', 'pusat',
+      'kepakaran', 'expertise', 'pakar', 'expert', 'r&d', 'rnd',
+
+      // ===========================================
+      // Common Names/Titles Patterns
+      // ===========================================
+      'nama', 'name', 'info', 'maklumat', 'tentang', 'about',
     ];
 
     return uthmKeywords.any((keyword) => lowerQuery.contains(keyword));

@@ -97,12 +97,22 @@ class _ShowcaseScreenState extends State<ShowcaseScreen> {
   }
 
   /// Navigate to Post Creation screen
-  void _navigateToNewPost(BuildContext context) {
-    Navigator.push(
+  Future<void> _navigateToNewPost(BuildContext context) async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => const PostCreationScreen(),
       ),
     );
+
+    // If post was created successfully, refresh the feed
+    if (result == true) {
+      debugPrint('ShowcaseScreen: Post created, triggering feed refresh...');
+      // Access the ShowcaseFeedScreen state via GlobalKey and refresh
+      final feedState = _feedScreenKey.currentState;
+      if (feedState != null) {
+        (feedState as dynamic).forceRefreshFeed();
+      }
+    }
   }
 }

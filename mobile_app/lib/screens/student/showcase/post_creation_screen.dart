@@ -1426,10 +1426,13 @@ class _PostCreationScreenState extends State<PostCreationScreen>
   }
 
   void _showSuccessDialog(String postId, {bool isUpdate = false}) {
+    // Capture the PARENT context BEFORE showing dialog
+    final parentNavigator = Navigator.of(context);
+
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Row(
           children: [
             const Icon(Icons.check_circle, color: Colors.green),
@@ -1444,8 +1447,9 @@ class _PostCreationScreenState extends State<PostCreationScreen>
           TextButton(
             onPressed: () {
               debugPrint('PostCreation: Done button pressed, returning true');
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context, true); // Close creation screen with result
+              Navigator.pop(dialogContext); // Close dialog using dialog context
+              parentNavigator
+                  .pop(true); // Close creation screen using parent context
             },
             child: const Text('Done'),
           ),
@@ -1453,9 +1457,9 @@ class _PostCreationScreenState extends State<PostCreationScreen>
             onPressed: () {
               debugPrint(
                   'PostCreation: View Post button pressed, returning true');
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context, true); // Close creation screen with result
-              // Navigate to post detail or feed
+              Navigator.pop(dialogContext); // Close dialog using dialog context
+              parentNavigator
+                  .pop(true); // Close creation screen using parent context
             },
             child: const Text('View Post'),
           ),

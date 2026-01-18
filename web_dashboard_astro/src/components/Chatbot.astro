@@ -191,6 +191,39 @@
         }
     });
 
+    function parseMarkdown(text: string): string {
+        // Convert markdown to HTML for chat display
+        return (
+            text
+                // Headers: ### text
+                .replace(
+                    /^###\s+(.+)$/gm,
+                    '<strong class="text-purple-600">$1</strong>',
+                )
+                .replace(/^##\s+(.+)$/gm, '<strong class="text-lg">$1</strong>')
+                // Bold: **text** or __text__
+                .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+                .replace(/__(.+?)__/g, "<strong>$1</strong>")
+                // Italic: *text* or _text_
+                .replace(/\*(.+?)\*/g, "<em>$1</em>")
+                .replace(/_(.+?)_/g, "<em>$1</em>")
+                // Bullet points: • item, - item, or * item at start of line
+                .replace(
+                    /^[•\-\*]\s+(.+)$/gm,
+                    '<div class="flex gap-2 ml-2"><span class="text-purple-500">•</span><span>$1</span></div>',
+                )
+                // Numbered lists: 1. item
+                .replace(
+                    /^(\d+)\.\s+(.+)$/gm,
+                    '<div class="flex gap-2 ml-2"><span class="text-purple-500 font-bold">$1.</span><span>$2</span></div>',
+                )
+                // Multiple line breaks become proper spacing
+                .replace(/\n\n+/g, '<div class="h-3"></div>')
+                // Single line breaks
+                .replace(/\n/g, "<br>")
+        );
+    }
+
     function addMessage(text: string, sender: "user" | "ai") {
         if (!chatMessages) return;
 
@@ -202,9 +235,12 @@
                 ? `<div class="w-8 h-8 rounded-full bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center text-white flex-shrink-0 text-xs"><i class="fas fa-robot"></i></div>`
                 : `<div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 flex-shrink-0 text-xs"><i class="fas fa-user"></i></div>`;
 
+        // Parse markdown for AI messages
+        const formattedText = sender === "ai" ? parseMarkdown(text) : text;
+
         const bubble = `
             <div class="${sender === "ai" ? "bg-white border border-gray-100 text-gray-600" : "bg-[#667eea] text-white shadow-md shadow-blue-200"} p-3 rounded-2xl ${sender === "ai" ? "rounded-tl-none" : "rounded-tr-none"} text-sm max-w-[80%]">
-                ${text}
+                ${formattedText}
             </div>
         `;
 

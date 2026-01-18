@@ -429,7 +429,192 @@ class StudentToolsProvider:
                     "data": []
                 }
         
-        return [query_students, query_events, get_system_stats, query_analytics]
+        @tool
+        def create_event(
+            title: str,
+            description: str,
+            event_date: str,
+            location: Optional[str] = None,
+            category: str = "general",
+            max_participants: Optional[int] = None
+        ) -> Dict[str, Any]:
+            """Cipta acara/event baru dalam sistem (ADMIN ONLY).
+            
+            Gunakan tool ini untuk:
+            - Mencipta event/acara baru
+            - Menambah program universiti
+            - Mendaftarkan workshop, seminar, atau aktiviti
+            
+            Args:
+                title: Tajuk acara (WAJIB)
+                description: Penerangan acara (WAJIB)
+                event_date: Tarikh acara dalam format YYYY-MM-DD atau YYYY-MM-DD HH:MM
+                location: Lokasi acara (optional)
+                category: Kategori acara - 'seminar', 'workshop', 'conference', 'competition', 'talk', 'ceremony', 'general'
+                max_participants: Had peserta maksimum (optional, None = unlimited)
+            
+            Returns:
+                Dict dengan maklumat event yang dicipta
+            """
+            try:
+                from app.models.event import Event
+                from datetime import datetime
+                import uuid
+                
+                # Parse event date
+                try:
+                    if " " in event_date:
+                        parsed_date = datetime.strptime(event_date, "%Y-%m-%d %H:%M")
+                    else:
+                        parsed_date = datetime.strptime(event_date, "%Y-%m-%d")
+                except ValueError:
+                    return {
+                        "success": False,
+                        "error": f"Format tarikh tidak sah: {event_date}. Gunakan format YYYY-MM-DD atau YYYY-MM-DD HH:MM"
+                    }
+                
+                # Create new event
+                new_event = Event(
+                    id=uuid.uuid4(),
+                    title=title,
+                    description=description,
+                    event_date=parsed_date,
+                    location=location,
+                    category=category,
+                    max_participants=max_participants,
+                    is_active=True
+                )
+                
+                self.db.add(new_event)
+                self.db.commit()
+                self.db.refresh(new_event)
+                
+                logger.info(f"✅ Event created: {title} (ID: {new_event.id})")
+                
+                return {
+                    "success": True,
+                    "message": f"Acara '{title}' berjaya dicipta!",
+                    "event": {
+                        "id": str(new_event.id),
+                        "title": new_event.title,
+                        "description": new_event.description[:100] if new_event.description else "",
+                        "event_date": new_event.event_date.isoformat() if new_event.event_date else None,
+                        "location": new_event.location,
+                        "category": new_event.category,
+                        "max_participants": new_event.max_participants
+                    }
+                }
+                
+            except Exception as e:
+                self.db.rollback()
+                logger.error(f"Error creating event: {e}")
+                return {
+                    "success": False,
+                    "error": str(e)
+                }
+        
+        @tool
+        def update_event(
+            event_id: str,
+            title: Optional[str] = None,
+            description: Optional[str] = None,
+            event_date: Optional[str] = None,
+            location: Optional[str] = None,
+            category: Optional[str] = None,
+            is_active: Optional[bool] = None
+        ) -> Dict[str, Any]:
+            """Kemaskini maklumat acara sedia ada (ADMIN ONLY).
+            
+            Gunakan tool ini untuk:
+            - Mengubah tajuk atau penerangan acara
+            - Menukar tarikh atau lokasi
+            - Mengaktifkan atau menyahaktifkan acara
+            
+            Args:
+                event_id: ID acara untuk dikemaskini (WAJIB)
+                title: Tajuk baru (optional)
+                description: Penerangan baru (optional)
+                event_date: Tarikh baru dalam format YYYY-MM-DD (optional)
+                location: Lokasi baru (optional)
+                category: Kategori baru (optional)
+                is_active: Status aktif (True/False) (optional)
+            
+            Returns:
+                Dict dengan maklumat event yang dikemaskini
+            """
+            try:
+                from app.models.event import Event
+                from datetime import datetime
+                import uuid
+                
+                # Find the event
+                try:
+                    event_uuid = uuid.UUID(event_id)
+                except ValueError:
+                    return {
+                        "success": False,
+                        "error": f"ID acara tidak sah: {event_id}"
+                    }
+                
+                event = self.db.query(Event).filter(Event.id == event_uuid).first()
+                
+                if not event:
+                    return {
+                        "success": False,
+                        "error": f"Acara dengan ID {event_id} tidak ditemui"
+                    }
+                
+                # Update fields if provided
+                if title:
+                    event.title = title
+                if description:
+                    event.description = description
+                if location:
+                    event.location = location
+                if category:
+                    event.category = category
+                if is_active is not None:
+                    event.is_active = is_active
+                if event_date:
+                    try:
+                        if " " in event_date:
+                            event.event_date = datetime.strptime(event_date, "%Y-%m-%d %H:%M")
+                        else:
+                            event.event_date = datetime.strptime(event_date, "%Y-%m-%d")
+                    except ValueError:
+                        return {
+                            "success": False,
+                            "error": f"Format tarikh tidak sah: {event_date}"
+                        }
+                
+                self.db.commit()
+                self.db.refresh(event)
+                
+                logger.info(f"✅ Event updated: {event.title} (ID: {event.id})")
+                
+                return {
+                    "success": True,
+                    "message": f"Acara '{event.title}' berjaya dikemaskini!",
+                    "event": {
+                        "id": str(event.id),
+                        "title": event.title,
+                        "description": event.description[:100] if event.description else "",
+                        "event_date": event.event_date.isoformat() if event.event_date else None,
+                        "location": event.location,
+                        "category": event.category,
+                        "is_active": event.is_active
+                    }
+                }
+                
+            except Exception as e:
+                self.db.rollback()
+                logger.error(f"Error updating event: {e}")
+                return {
+                    "success": False,
+                    "error": str(e)
+                }
+        
+        return [query_students, query_events, get_system_stats, query_analytics, create_event, update_event]
     
     def get_nlp_tools(self):
         """Return list of NLP-enhanced tools."""

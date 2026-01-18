@@ -1,5 +1,6 @@
 /// Talent-related models for soft skills, hobbies, and quiz results
 /// Used for talent detection and recommendation system
+import 'package:flutter/foundation.dart';
 
 // ==================== ENUMS ====================
 
@@ -344,6 +345,11 @@ class TalentQuizResultModel {
   });
 
   factory TalentQuizResultModel.fromJson(Map<String, dynamic> json) {
+    debugPrint('TalentQuizResultModel.fromJson: Raw JSON = $json');
+    debugPrint(
+        'TalentQuizResultModel.fromJson: category_scores = ${json['category_scores']}');
+    debugPrint(
+        'TalentQuizResultModel.fromJson: top_talents = ${json['top_talents']}');
     return TalentQuizResultModel(
       id: json['id'] ?? '',
       oderId: json['user_id'] ?? '',
@@ -370,7 +376,20 @@ class TalentQuizResultModel {
   bool get isCompleted => answers.isNotEmpty;
 
   /// Get highest scoring category
-  String? get primaryTalent => topTalents.isNotEmpty ? topTalents.first : null;
+  String? get primaryTalent {
+    if (topTalents.isNotEmpty) {
+      return topTalents.first;
+    }
+
+    // Fallback: Calculate from categoryScores if topTalents is empty
+    if (categoryScores.isNotEmpty) {
+      final sortedEntries = categoryScores.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
+      return sortedEntries.first.key;
+    }
+
+    return null;
+  }
 }
 
 /// Combined talent profile model

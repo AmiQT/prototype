@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presentation Slides - Student Talent Profiling App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #64748b;
+            --bg: #f8fafc;
+            --text: #1e293b;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+        }
+
+        .slide {
+            width: 297mm;
+            height: 210mm;
+            background: var(--white);
+            margin: 20px auto;
+            padding: 40px 60px;
+            box-sizing: border-box;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            page-break-after: always;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 8px;
+            height: 100%;
+            background: var(--primary);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            height: 60px;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 38px;
+            margin: 0;
+            border-bottom: 4px solid var(--primary);
+            display: inline-block;
+            padding-bottom: 5px;
+        }
+
+        h2 {
+            color: var(--secondary);
+            font-size: 22px;
+            margin-top: 10px;
+            margin-bottom: 30px;
+        }
+
+        .content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        ul {
+            font-size: 20px;
+            line-height: 1.6;
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 12px;
+        }
+
+        .highlight {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 18px;
+        }
+
+        th {
+            background-color: var(--primary);
+            color: white;
+            text-align: left;
+            padding: 12px;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f1f5f9;
+        }
+
+        .image-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .preview-img {
+            max-height: 350px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 2px solid #e2e8f0;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 30px;
+            right: 60px;
+            font-size: 14px;
+            color: var(--secondary);
+        }
+
+        @media print {
+            body { background: none; }
+            .slide { 
+                margin: 0; 
+                box-shadow: none; 
+                width: 100%;
+                height: 100vh;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Slide 1: Background -->
+    <div class="slide">
+        <div class="header">
+            <h1>Project Background</h1>
+            <img src="assets/uthm.png" alt="UTHM Logo" class="logo">
+        </div>
+        <h2>Student Talent Profiling App (UTHM)</h2>
+        <div class="content">
+            <ul>
+                <li>A comprehensive <span class="highlight">Talent Management System</span> specifically designed for Universiti Tun Hussein Onn Malaysia.</li>
+                <li>Integrates a <span class="highlight">Flutter Mobile App</span> for students and an <span class="highlight">Astro Web Dashboard</span> for administrators.</li>
+                <li>Aims to transition from traditional manual record-keeping to a centralized digital ecosystem.</li>
+                <li>Leverages <span class="highlight">Google Gemini AI</span> to provide automated insights and talent forecasting.</li>
+            </ul>
+        </div>
+        <div class="footer">Presentation 2026 | Student Talent Profiling</div>
+    </div>
+
+    <!-- Slide 2: Problem Statement -->
+    <div class="slide">
+        <div class="header">
+            <h1>Problem Statement</h1>
+            <img src="assets/uthm.png" alt="UTHM Logo" class="logo">
+        </div>
+        <h2>Current Challenges</h2>
+        <div class="content">
+            <ul>
+                <li><span class="highlight">Fragmented Data:</span> Student achievements and extracurricular records are scattered across various formats.</li>
+                <li><span class="highlight">Manual Tracking:</span> High administrative burden in verifying certificates and compiling reports.</li>
+                <li><span class="highlight">Invisibility of Talent:</span> Exceptional student skills often go unnoticed due to lack of real-time visualization.</li>
+                <li><span class="highlight">Reactive Intervention:</span> Difficulty in identifying "at-risk" students early for effective support.</li>
+            </ul>
+        </div>
+        <div class="footer">Presentation 2026 | Student Talent Profiling</div>
+    </div>
+
+    <!-- Slide 3: Proposed Solution -->
+    <div class="slide">
+        <div class="header">
+            <h1>Proposed Solution</h1>
+            <img src="assets/uthm.png" alt="UTHM Logo" class="logo">
+        </div>
+        <h2>AI-Driven Talent Ecosystem</h2>
+        <div class="content">
+            <ul>
+                <li><span class="highlight">Centralized Digital Portfolio:</span> A single platform for students to store and showcase verified achievements.</li>
+                <li><span class="highlight">Agentic AI Integration:</span> Using Gemini AI to automatically parse certificates and suggest skill tags.</li>
+                <li><span class="highlight">Real-time Analytics:</span> Instant dashboard visualization of talent distribution and CGPA trends.</li>
+                <li><span class="highlight">Automated Reporting:</span> One-click PDF generation for administrative reviews and risk analysis.</li>
+            </ul>
+        </div>
+        <div class="footer">Presentation 2026 | Student Talent Profiling</div>
+    </div>
+
+    <!-- Slide 4: Project Scope -->
+    <div class="slide">
+        <div class="header">
+            <h1>Project Scope</h1>
+            <img src="assets/uthm.png" alt="UTHM Logo" class="logo">
+        </div>
+        <h2>Functional Modules</h2>
+        <div class="content">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Module</th>
+                        <th>Key Functions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>Student Profiling</b></td>
+                        <td>Academic data entry, Certificate uploading, AI-suggested skill tagging.</td>
+                    </tr>
+                    <tr>
+                        <td><b>AI Analytics</b></td>
+                        <td>Predictive "At-Risk" analysis, Automated PDF report generation, Talent trends.</td>
+                    </tr>
+                    <tr>
+                        <td><b>Event Management</b></td>
+                        <td>Campus event publishing, QR-based check-in, Co-curricular score tracking.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="footer">Presentation 2026 | Student Talent Profiling</div>
+    </div>
+
+    <!-- Slide 5: System Previews -->
+    <div class="slide">
+        <div class="header">
+            <h1>System Previews</h1>
+            <img src="assets/uthm.png" alt="UTHM Logo" class="logo">
+        </div>
+        <h2>Mobile App & Web Dashboard</h2>
+        <div class="content">
+            <div class="image-container">
+                <img src="assets/mobile_home_demo.png" alt="Mobile App" class="preview-img">
+                <img src="assets/dashboard_demo.png" alt="Web Dashboard" class="preview-img">
+            </div>
+        </div>
+        <div class="footer">Presentation 2026 | Student Talent Profiling</div>
+    </div>
+
+</body>
+</html>

@@ -33,8 +33,7 @@ AVAILABLE_TOOLS = [
                 "properties": {
                     "department": {
                         "type": "string",
-                        "description": "Filter by department (e.g., 'Computer Science', 'Civil Engineering', 'FSKTM')",
-                        "enum": ["Computer Science", "Data Science", "Computer Network", "Computer Security", "Civil Engineering", "Mechanical Engineering", "Electrical Engineering"]
+                        "description": "Filter by department/faculty. Accept any format - AI should normalize to database values. Common mappings: 'Computer Science'/'Sains Komputer'/'CS'/'IT' -> 'FSKTM', 'Electrical'/'Elektrik'/'EE' -> 'FKEE', 'Civil'/'Awam' -> 'FKAAB', 'Mechanical'/'Mekanikal' -> 'FTK'. Use the faculty code (FSKTM, FKEE, FKAAB, FTK) when querying database."
                     },
                     "limit": {
                         "type": "integer",

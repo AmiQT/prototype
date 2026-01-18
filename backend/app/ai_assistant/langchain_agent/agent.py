@@ -116,9 +116,8 @@ class StudentTalentAgent:
         builder.add_conditional_edges("agent", should_continue, ["tools", END])
         builder.add_edge("tools", "agent")  # Loop back after tool execution
         
-        # Compile with memory checkpointer
-        checkpointer = MemorySaver()
-        return builder.compile(checkpointer=checkpointer)
+        # Compile WITHOUT memory checkpointer (we handle history manually)
+        return builder.compile()
     
     async def invoke(
         self, 
@@ -142,17 +141,15 @@ class StudentTalentAgent:
             history = get_session_history(session_id)
             
             # Build messages with history
+            # IMPORTANT: We manually inject history into the graph input
             messages = list(history.messages) + [HumanMessage(content=message)]
             
-            # Configure the run
-            run_config = RunnableConfig(
-                configurable={"thread_id": session_id}
-            )
+            logger.info(f"🤖 Invoking agent with {len(messages)} messages (Session: {session_id})")
             
             # Invoke the graph
+            # We don't pass thread_id because we're injecting full history manually
             result = await self.graph.ainvoke(
-                {"messages": messages},
-                config=run_config
+                {"messages": messages}
             )
             
             # Extract final response
@@ -263,15 +260,11 @@ class StudentTalentAgent:
             # Prepend system message
             messages = [SystemMessage(content=CONCISE_SYSTEM_PROMPT)] + messages
             
-            # Configure the run
-            run_config = RunnableConfig(
-                configurable={"thread_id": session_id}
-            )
+            logger.info(f"🤖 Invoking agent_sync with {len(messages)} messages (Session: {session_id})")
             
             # Invoke the graph synchronously
             result = self.graph.invoke(
-                {"messages": messages},
-                config=run_config
+                {"messages": messages}
             )
             
             # Extract final response
